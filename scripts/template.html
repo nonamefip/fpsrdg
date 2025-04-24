@@ -10761,7 +10761,7 @@ function openCampionato(camp){
 
         // Genera HTML per ogni fase/girone
         const fasiHtml=allFasiGironi.map((fg,fgIdx)=>{
-          const _fi=fasiUnique.indexOf(fg.fase);
+          const _fi=fasiUniche.indexOf(fg.fase);
           // VISTA CLASSICA
           function renderGiornataClassica(turno,n,isRitorno){
             const allDone=turno.every(g=>g['Risultato']);
