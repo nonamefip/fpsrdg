@@ -10659,9 +10659,9 @@ function openCampionato(camp){
             }
             const totalTurni=tuttiTurni.length;
             // Pair-based detection: controlla se alcune coppie appaiono invertite
-            const gareSorted=allG.filter(g=>g['Risultato']);
-            const _allPairsRR=new Set(gareSorted.map(g=>g['Squadra Casa']+'|||'+g['Squadra Ospite']));
-            const isDoubleRRData=nSq>2&&gareSorted.some(g=>_allPairsRR.has(g['Squadra Ospite']+'|||'+g['Squadra Casa']));
+            const _gareConRis=allG.filter(g=>g['Risultato']);
+            const _allPairsRR=new Set(_gareConRis.map(g=>g['Squadra Casa']+'|||'+g['Squadra Ospite']));
+            const isDoubleRRData=nSq>2&&_gareConRis.some(g=>_allPairsRR.has(g['Squadra Ospite']+'|||'+g['Squadra Casa']));
             // Cerca il punto di svolta: il ritorno inizia quando un turno è speculare al turno 0
             let andataCount=totalTurni; // default: tutto andata (singolo RR)
             if(isDoubleRRData){
@@ -16918,4 +16918,4 @@ function _renderFipClassifica(girone,clr){
     var pf=r.pf!==undefined?r.pf:'–';
     var ps=r.ps!==undefined?r.ps:'–';
     var diff=(r.pf!==undefined&&r.ps!==undefined)?(r.pf-r.ps):'–';
-    var diffStr=typeof diff==='number'?(d
+    var diffStr=typeof diff==='number'
