@@ -7802,15 +7802,14 @@ function openPersona(nome,campFilter){
           <div class="card-title">📅 Per giorno settimana <span style="font-size:.6rem;font-weight:400;color:var(--mu)">(numero gare arbitrate)</span></div>
           <div class="dow-chart">${dowBars}</div>
         </div>
-      </div>
-      <!-- Km + Copertura (Attività mensile è nel Trend sotto) -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-        ${km>0?`<div class="card" style="margin-bottom:0">
+        ${km>0?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
           <div class="card-title">🚗 Km stimati stagione</div>
           <div style="font-size:1.6rem;font-weight:900;color:var(--bl)">${km.toLocaleString('it')}</div>
           <div style="font-size:.72rem;color:var(--mu);margin-top:4px">${p.n_gare_arbitro||allG.length} trasferte · media ${kmGara} km/gara</div>
-        </div>`:'<div></div>'}
-        <div class="card" style="margin-bottom:0">
+        </div>`:''}
+      </div>
+      <!-- Copertura full-width -->
+      <div class="card" style="margin-top:10px">
           <div class="card-title">🔵 Copertura arbitrale</div>
           ${(()=>{
             const nArb=p.n_gare_arbitro||0, nSing=p.n_singolo||0, nDopp=nArb-nSing;
@@ -7877,7 +7876,6 @@ function openPersona(nome,campFilter){
             ${campLvlRows?`<div style="margin-top:8px"><div style="font-size:.65rem;font-weight:700;color:var(--mu);margin-bottom:4px">% per campionato:</div>${campLvlRows}</div>`:''}
             ${pvRows?`<div style="margin-top:8px"><div style="font-size:.65rem;font-weight:700;color:var(--mu);margin-bottom:4px">% per provincia:</div>${pvRows}</div>`:''}`;
           })()}
-        </div>
       </div>
 
       <!-- ⭐ IQA — Indice Qualità Arbitrale -->
@@ -16918,4 +16916,51 @@ function _renderFipClassifica(girone,clr){
     var pf=r.pf!==undefined?r.pf:'–';
     var ps=r.ps!==undefined?r.ps:'–';
     var diff=(r.pf!==undefined&&r.ps!==undefined)?(r.pf-r.ps):'–';
-    var diffStr=typeof diff==='number'
+    var diffStr=typeof diff==='number'?(diff>0?'+'+diff:diff):'–';
+    var diffClr=typeof diff==='number'?(diff>0?'var(--green)':diff<0?'var(--red)':'var(--mu)'):'var(--mu)';
+    var win=r.pg?(((r.vinte||0)/r.pg)*100).toFixed(0)+'%':'–';
+    var sqNome=r.squadra||r.nome||'–';
+    // Evidenzia se squadra presente nel dataset locale
+    var sqLink=SQ&&SQ[sqNome]?`<span style="cursor:pointer;color:var(--bl2);text-decoration:underline dotted" onclick="openSquadra('${esc(sqNome)}')">${escH(sqNome)}</span>`:escH(sqNome);
+    h+=`<tr style="${odd}">
+      <td style="text-align:center;padding:4px 6px">${_posIcon(pos)}</td>
+      <td style="padding:4px 8px;${isBold}">${sqLink}</td>
+      <td style="text-align:center">${r.pg||'–'}</td>
+      <td style="text-align:center;color:var(--green)">${r.vinte||0}</td>
+      <td style="text-align:center;color:var(--red)">${r.perse||0}</td>
+      <td style="text-align:center;font-weight:700;color:var(--bl)">${pt}</td>
+      <td style="text-align:center">${pf}</td>
+      <td style="text-align:center">${ps}</td>
+      <td style="text-align:center;color:${diffClr};font-weight:600">${diffStr}</td>
+      <td style="text-align:center;color:var(--mu)">${win}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  return h;
+}
+
+function _renderFipRisultati(girone,clr){
+  var rows=girone.risultati||[];
+  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessun risultato disponibile.</div>';
+  // Raggruppa per giornata
+  var byGiornata={};
+  rows.forEach(r=>{var g=r.giornata||'—';if(!byGiornata[g])byGiornata[g]=[];byGiornata[g].push(r);});
+  var h='<div style="margin-bottom:14px">';
+  // Ordina giornate numericamente (desc: più recenti prima)
+  var giornateKeys=Object.keys(byGiornata).sort((a,b)=>{
+    var na=parseInt(a,10),nb=parseInt(b,10);
+    if(!isNaN(na)&&!isNaN(nb))return nb-na;
+    return b>a?1:-1;
+  });
+  giornateKeys.forEach(g=>{
+    var gare=byGiornata[g];
+    h+=`<div style="font-size:.75rem;font-weight:700;color:${clr};text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px 4px">Giornata ${g}</div>`;
+    gare.forEach(r=>{
+      var data=r.data||'';
+      var casa=r.casa||'–';var osp=r.ospite||'–';
+      var sc=r.punteggio||'';var pf=sc.split('-')[0]||'';var ps=sc.split('-')[1]||'';
+      var casaW=pf&&ps&&parseInt(pf)>parseInt(ps);var ospW=pf&&ps&&parseInt(ps)>parseInt(pf);
+      h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
+      h+=`<span style="color:var(--mu);width:70px;flex-shrink:0;font-size:.7rem">${escH(data)}</span>`;
+      h+=`<span style="flex:1;text-align:right;font-weight:${casaW?'700':'400'}">${escH(casa)}</span>`;
+      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;tex
