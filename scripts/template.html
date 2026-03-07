@@ -124,8 +124,8 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 .fd-{background:#e0e0e0;}
 
 /* ══════════ MAIN ══════════ */
-.main{padding:14px 20px 60px;}
-.ps{display:none;}.ps.active{display:block;}
+.main{padding:14px 20px 60px;width:100%;box-sizing:border-box;}
+.ps{display:none;}.ps.active{display:block;width:100%;}
 .st{font-size:.86rem;font-weight:700;color:var(--bl);margin:14px 0 8px;
   display:flex;align-items:center;gap:8px;}
 .st::after{content:'';flex:1;height:1px;background:var(--br);}
@@ -155,7 +155,7 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 .tbl-customizer.open{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;}
 
 /* ══════════ TABLES ══════════ */
-.rtbl,.mtbl,.gtbl{width:100%;border-collapse:collapse;font-size:var(--tbl-fs);}
+.rtbl,.mtbl,.gtbl{width:100%;border-collapse:collapse;font-size:var(--tbl-fs);table-layout:auto;}
 .rtbl{background:#fff;border-radius:var(--radius);overflow:hidden;
   box-shadow:var(--shadow);}
 .rtbl thead,.mtbl thead,.gtbl thead{background:var(--tbl-hdr);}
@@ -492,12 +492,7 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="sum-item" onclick="showPage('campionati')"><div class="slabel">Campionati</div><div class="svalue" id="s-camp">–</div><div class="ssub">↗ dettaglio</div></div>
   <div class="sum-item" onclick="showPage('province')"><div class="slabel">Province</div><div class="svalue" id="s-pv">5</div><div class="ssub">CA·SS·SU·OR·NU</div></div>
   <div style="margin-left:auto;display:flex;align-items:center;padding:0 12px">
-    <div style="position:relative">
-      <button onclick="openSpotlight()" style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 14px;border-radius:16px;font-size:.76rem;cursor:pointer;outline:none" title="Apri ricerca (Ctrl+K)">
-        <span>🔍 Cerca...</span>
-        <kbd style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:0 5px;font-size:.62rem;font-family:monospace">Ctrl K</kbd>
-      </button>
-    </div>
+    <div style="position:relative"><button onclick="openSpotlight()" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.75rem;font-weight:600" title="Cerca (Ctrl+K)">🔍 Cerca <kbd style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:3px;padding:0 4px;font-size:.6rem">Ctrl K</kbd></button></div>
 </div>
 <div class="main">
 
@@ -780,11 +775,28 @@ tr.loss-row td{background:#fdecea!important;}
 <!-- COPERTURA -->
 <div class="ps" id="page-copertura">
   <div class="st">🔎 Copertura Gare</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-    <div class="card"><div class="card-title">Arbitri presenti</div><div id="cop-arb"></div></div>
-    <div class="card"><div class="card-title">Figure tecniche</div><div id="cop-fig"></div></div>
+  <div class="fb" style="margin-bottom:12px">
+    <div class="fg"><label>Campionato</label>
+      <select id="cop-camp" onchange="renderCopertura()" style="min-width:200px">
+        <option value="">Tutti i campionati</option>
+      </select>
+    </div>
+    <div class="fg"><label>Girone</label>
+      <select id="cop-girone" onchange="renderCopertura()" style="min-width:160px">
+        <option value="">Tutti i gironi</option>
+      </select>
+    </div>
+    <button class="btn b-gr" onclick="document.getElementById('cop-camp').value='';document.getElementById('cop-girone').value='';renderCopertura()">↺ Reset</button>
   </div>
-  <div class="card" style="margin-top:10px"><div class="card-title">Riepilogo completo</div><div id="cop-tbl"></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+    <div class="card"><div class="card-title">👨‍⚖️ Arbitri presenti</div><div id="cop-arb"></div></div>
+    <div class="card"><div class="card-title">🎯 Figure tecniche</div><div id="cop-fig"></div></div>
+    <div class="card"><div class="card-title">📊 Riepilogo</div><div id="cop-tbl"></div></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">📋 Copertura per campionato</div>
+    <div id="cop-by-camp"></div>
+  </div>
 </div>
 
 <!-- MAPPA -->
@@ -799,8 +811,14 @@ tr.loss-row td{background:#fdecea!important;}
     </div>
     <div class="fg">
       <label>🏆 Campionato</label>
-      <select id="map-camp-filter" onchange="mapApplyFilter()" style="min-width:175px">
+      <select id="map-camp-filter" onchange="mapCampChange()" style="min-width:175px">
         <option value="">Tutti i campionati</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>📐 Girone</label>
+      <select id="map-girone-filter" onchange="mapApplyFilter()" style="min-width:150px">
+        <option value="">Tutti i gironi</option>
       </select>
     </div>
     <div class="fg">
@@ -890,9 +908,23 @@ tr.loss-row td{background:#fdecea!important;}
 <div class="ps" id="page-resoconto">
   <div class="st">📋 Resoconto a data</div>
   <div class="fb" style="gap:10px;flex-wrap:wrap;margin-bottom:12px">
-    <div class="fg"><label>Data</label><input type="date" id="res-data" oninput="renderResoconto()" style="width:160px"></div>
+    <div class="fg">
+      <label>Modalità</label>
+      <select id="res-mode" onchange="toggleResocontoMode()" style="min-width:120px">
+        <option value="giorno">Giorno singolo</option>
+        <option value="periodo">Periodo</option>
+      </select>
+    </div>
+    <div id="res-giorno-wrap" class="fg">
+      <label>Data</label>
+      <input type="date" id="res-data" oninput="renderResoconto()" style="width:160px">
+    </div>
+    <div id="res-periodo-wrap" style="display:none;display:flex;gap:8px;align-items:flex-end">
+      <div class="fg"><label>Dal</label><input type="date" id="res-dal" style="width:150px"></div>
+      <div class="fg"><label>Al</label><input type="date" id="res-al" style="width:150px"></div>
+    </div>
     <button class="btn b-bl" onclick="renderResoconto()">🔍 Cerca</button>
-    <button class="btn" onclick="(function(){document.getElementById('res-data').value=new Date().toISOString().split('T')[0];renderResoconto();})()">📅 Oggi</button>
+    <button class="btn b-gr" onclick="(function(){document.getElementById('res-data').value=new Date().toISOString().split('T')[0];renderResoconto();})()" id="res-oggi-btn">📅 Oggi</button>
     <span id="res-info" class="il"></span>
   </div>
   <div id="res-content"><div style="color:var(--mu);padding:20px;text-align:center">Seleziona una data per vedere il resoconto completo della giornata</div></div>
@@ -1011,9 +1043,23 @@ const RTX={Arbitro:'#7d5a00',UDC:'#0c5460',Osservatore:'#155724'};
 function showPage(id){
   document.querySelectorAll('.ps').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+id)?.classList.add('active');
-  const pages=['home','tutti','arbitri','udc','osservatori','squadre','h2h','gruppi','campionati','province','gare'];
-  document.querySelectorAll('.nav-btn')[pages.indexOf(id)]?.classList.add('active');
+  const page=document.getElementById('page-'+id);
+  if(page)page.classList.add('active');
+  // Attiva nav button corretto
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    if(b.getAttribute('onclick')===`showPage('${id}')`)b.classList.add('active');
+  });
+  // Init lazy per pagine specifiche
+  if(id==='classifica'){initClassificaPage();renderClassifica();}
+  if(id==='copertura'){renderCopertura();}
+  if(id==='resoconto'){/* niente - aspetta input utente */}
+  if(id==='mappa'){setTimeout(()=>renderMappa(),100);}
+  if(id==='home'){renderHome();}
+  if(id==='gruppi'){renderGruppi();}
+  if(id==='gare'){renderGare();}
+  if(id==='prossime'){renderProssime();}
+  if(id==='province'){renderProvCards();}
+  if(id==='campi'){renderCampi();}
 }
 
 // HELPERS
@@ -1127,6 +1173,9 @@ function renderPersonsTable(cid,persons,opts={}){
   const mainGareKey=mainGare||'n_gare';
   const max=Math.max(...persons.map(p=>p[mainGareKey]||0),1);
   const co=showCat?1:0;
+  const today=new Date().toISOString().split('T')[0];
+  const futEnd=(new Date(Date.now()+14*86400000)).toISOString().split('T')[0];
+
   document.getElementById(cid).innerHTML=`<p class="il">${persons.length} persone — i numeri evidenziati aprono il dettaglio</p>
   <div style="overflow-x:auto"><table class="rtbl" id="${tableId}"><thead><tr>
     <th onclick="sT('${tableId}',0)">#</th>
@@ -1139,47 +1188,59 @@ function renderPersonsTable(cid,persons,opts={}){
     <th onclick="sT('${tableId}',${6+co})" title="Come UDC">UDC</th>
     <th onclick="sT('${tableId}',${7+co})" title="Come osservatore">Oss.</th>
     <th onclick="sT('${tableId}',${8+co})" title="Giorni">Gg.</th>
-    <th onclick="sT('${tableId}',${9+co})" title="Campi diversi (clicca)">🏟</th>
-    <th onclick="sT('${tableId}',${10+co})" title="Colleghi (clicca)">🤝</th>
-    <th onclick="sT('${tableId}',${11+co})" title="Squadre (clicca)">🏀</th>
-    <th onclick="sT('${tableId}',${12+co})" title="Camp. principale">Camp.</th>
-    <th title="Forma recente (ultime 5)">Forma</th>
+    <th onclick="sT('${tableId}',${9+co})" title="Campi diversi">🏟</th>
+    <th onclick="sT('${tableId}',${10+co})" title="Colleghi">🤝</th>
+    <th onclick="sT('${tableId}',${11+co})" title="Campionati">Camp.</th>
+    <th title="Prossime gare (14gg)">Pros.</th>
+    <th title="Forma recente">Forma</th>
     <th>Barra</th>
   </tr></thead><tbody>${persons.map((p,i)=>{
-    const tc=Object.entries(p.campionati||{}).sort((a,b)=>b[1]-a[1])[0];
+    const nCamp=Object.keys(p.campionati||{}).length;
     const nG=Object.keys(p.giorni||{}).length;
     const nColl=Object.keys(p.colleghi||{}).length;
     const nCampi=Object.keys(p.campi||{}).length;
-    const nSq=Object.keys(p.squadre||{}).length;
     const isDual=(p.categorie||[]).length>1;
-    const bl=`border-left:3px solid ${RBG[p.categoria]||'#eee'}`;
+    const pvColor=PC[p.provincia]||'var(--bl)';
+    // Colore nome per provincia
+    const nameStyle=`font-weight:700;cursor:pointer;color:${pvColor}`;
+    // Pallino sesso
+    const sexDot=p.genere==='F'
+      ?`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#e91e8c;margin-left:4px;flex-shrink:0" title="F"></span>`
+      :`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#1565c0;margin-left:4px;flex-shrink:0" title="M"></span>`;
+    // Prossime gare (14gg)
+    const nFut=(D.gare_future||[]).filter(g=>[g['Arbitro 1'],g['Arbitro 2'],g['Segnapunti'],g['Cronometrista'],g['24 Secondi'],g['Addetto Referto'],g['Osservatore']].some(f=>pns(f||'')===p.nome)).length;
     const mv=mainGare!=null?p[mainGareKey]:p.n_gare;
     const mkLink=(val,tabIdx,clr='var(--bl)')=>
-      `<span style="font-weight:700;color:${clr};cursor:pointer;text-decoration:underline" onclick="openPersona('${esc(p.nome)}');setTimeout(()=>{const b=document.querySelectorAll('#mp-body .mt');if(b[${tabIdx}])b[${tabIdx}].click();},280)">${val}</span>`;
-    return`<tr style="${bl}">
+      `<span style="color:${clr};font-weight:700;cursor:pointer" onclick="openPersona('${esc(p.nome)}');setTimeout(()=>{document.querySelectorAll('#mp-body .mt')[${tabIdx}]?.click();},280)">${val}</span>`;
+    return`<tr>
       <td class="rpos ${i<3?'g'+(i+1):''}" data-val="${i+1}">${i+1}</td>
-      <td><span class="rn rn-${p.categoria}" onclick="openPersona('${esc(p.nome)}')">${p.genere==='F'?'👩 ':p.genere==='M'?'👨 ':''}${escH(p.nome)}</span>${isDual?'<span class="badge" style="background:#e74c3c;color:#fff;margin-left:3px">⚡</span>':''}</td>
+      <td style="white-space:nowrap">
+        <div style="display:flex;align-items:center;gap:3px">
+          <span style="${nameStyle}" onclick="openPersona('${esc(p.nome)}')">${escH(p.nome)}</span>
+          ${sexDot}
+          ${isDual?`<span style="font-size:.6rem;background:#fff3cd;border:1px solid #ffe082;border-radius:3px;padding:0 4px;color:#8a6200;margin-left:2px">dual</span>`:''}
+        </div>
+      </td>
       <td>${pvB(p.provincia)}</td>
-      <td style="font-size:.72rem;color:var(--mu)">${escH(p.citta||'–')}</td>
-      ${showCat?`<td>${catB(p.categoria)}</td>`:''}
-      <td data-val="${mv||0}" style="font-weight:800;text-align:center;font-size:.95rem">${mv||0}</td>
-      <td data-val="${p.n_gare_arbitro||0}" style="color:var(--arb-tx);text-align:center;font-weight:700">${p.n_gare_arbitro||0}</td>
-      <td data-val="${p.n_gare_udc||0}" style="color:var(--udc-tx);text-align:center">${p.n_gare_udc||0}</td>
-      <td data-val="${p.n_gare_osservatore||0}" style="color:var(--oss-tx);text-align:center">${p.n_gare_osservatore||0}</td>
-      <td data-val="${nG}" style="text-align:center">${nG}</td>
-      <td data-val="${nCampi}" style="text-align:center">${mkLink(nCampi,3,'#1a4db3')}</td>
-      <td data-val="${nColl}" style="text-align:center">${mkLink(nColl,2,'#6c3dc8')}</td>
-      <td data-val="${nSq}" style="text-align:center">${mkLink(nSq,4,'#0a8c6a')}</td>
-      <td style="font-size:.69rem">${tc?`<span style="cursor:pointer;font-weight:700;color:${campColor(tc[0])}" onclick="openCampionato('${esc(tc[0])}')" title="${escH(tc[0])}">${escH(tc[0].split(' ').slice(0,3).join(' '))} (${tc[1]})</span>`:'–'}</td>
-      <td>${bBar(mv||0,max,PC[p.provincia]||'var(--bl)')}</td>
+      <td style="font-size:.72rem;color:var(--mu)">${escH(p.citta||'')}</td>
+      ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
+      <td data-val="${p.n_gare}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}" onclick="openPersona('${esc(p.nome)}')">${p.n_gare}</td>
+      <td data-val="${p.n_gare_arbitro||0}" style="text-align:center">${p.n_gare_arbitro?mkLink(p.n_gare_arbitro,1,pvColor):''}</td>
+      <td data-val="${p.n_gare_udc||0}" style="text-align:center">${p.n_gare_udc?mkLink(p.n_gare_udc,1,pvColor):''}</td>
+      <td data-val="${p.n_gare_osservatore||0}" style="text-align:center">${p.n_gare_osservatore?mkLink(p.n_gare_osservatore,1,pvColor):''}</td>
+      <td data-val="${nG}" style="text-align:center;color:var(--mu)">${nG}</td>
+      <td data-val="${nCampi}" style="text-align:center">${nCampi?mkLink(nCampi,3,pvColor):0}</td>
+      <td data-val="${nColl}" style="text-align:center">${nColl?mkLink(nColl,2,pvColor):0}</td>
+      <td data-val="${nCamp}" style="text-align:center;font-weight:700;color:${pvColor}">${nCamp}</td>
+      <td data-val="${nFut}" style="text-align:center">${nFut>0?`<span style="background:#e17055;color:#fff;border-radius:10px;padding:1px 7px;font-size:.68rem;font-weight:700;cursor:pointer" onclick="openPersona('${esc(p.nome)}');setTimeout(()=>{document.querySelectorAll('#mp-body .mt')[1]?.click();},280)">${nFut}</span>`:'<span style="color:var(--mu2)">–</span>'}</td>
       <td><div style="display:flex;gap:2px;align-items:center">
         ${(p.forma_recente||[]).slice(-5).map(()=>`<span class="forma-dot fd-V"></span>`).join('')}
         ${(p.streak_cur||0)>=5?`<span class="streak-badge" style="margin-left:2px;font-size:.58rem">${p.streak_cur}🔥</span>`:''}
       </div></td>
+      <td>${bBar(mv||0,max,pvColor)}</td>
     </tr>`;}).join('')}</tbody></table></div>`;
 }
 
-// HOME
 function toggleSection(wrId,togId){
   const wr=document.getElementById(wrId),tog=document.getElementById(togId);
   if(!wr)return;
@@ -1345,76 +1406,144 @@ function renderHome(){
 }
 
 // ── RESOCONTO A DATA ─────────────────────────────────────────
+function toggleResocontoMode(){
+  const mode=document.getElementById('res-mode')?.value;
+  document.getElementById('res-giorno-wrap').style.display=mode==='giorno'?'flex':'none';
+  document.getElementById('res-periodo-wrap').style.display=mode==='periodo'?'flex':'none';
+  document.getElementById('res-oggi-btn').style.display=mode==='giorno'?'':'none';
+}
+
 function renderResoconto(){
-  const data=document.getElementById('res-data').value;
+  const mode=document.getElementById('res-mode')?.value||'giorno';
   const el=document.getElementById('res-content');
   const info=document.getElementById('res-info');
   if(!el)return;
-  if(!data){el.innerHTML='<div style="color:var(--mu);padding:20px;text-align:center">Seleziona una data</div>';return;}
-  const garePlay=(D.gare||[]).filter(g=>g['Data']===data).sort((a,b)=>a['Ora'].localeCompare(b['Ora']));
-  const gareFut=(D.gare_future||[]).filter(g=>g['Data']===data).sort((a,b)=>a['Ora'].localeCompare(b['Ora']));
-  const isFut=garePlay.length===0&&gareFut.length>0;
-  const allG2=garePlay.length>0?garePlay:gareFut;
-  if(info)info.textContent=allG2.length+' gare'+(isFut?' (programmate)':garePlay.length>0?' (giocate)':'');
-  if(!allG2.length){el.innerHTML='<div style="color:var(--mu);padding:20px;text-align:center;background:#fff;border-radius:8px">Nessuna gara in questa data</div>';return;}
-  const arbsDay={},udcDay={},ossDay={},campDay={};
-  allG2.forEach(g=>{
-    ['Arbitro 1','Arbitro 2'].forEach(f=>{const n=pns(g[f]||'');if(n)arbsDay[n]=(arbsDay[n]||0)+1;});
-    ['Segnapunti','Cronometrista','24 Secondi','Addetto Referto'].forEach(f=>{const n=pns(g[f]||'');if(n)udcDay[n]=(udcDay[n]||0)+1;});
-    ['Osservatore'].forEach(f=>{const n=pns(g[f]||'');if(n)ossDay[n]=(ossDay[n]||0)+1;});
-    campDay[g['Campionato']]=(campDay[g['Campionato']]||0)+1;
-  });
-  const dow=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'][new Date(data).getDay()];
-  const df=data.substring(8)+'/'+data.substring(5,7)+'/'+data.substring(0,4);
-  let html=`<div style="font-size:1rem;font-weight:700;color:#003087;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #003087">
-    ${dow} ${df}${isFut?'<span style="background:#e17055;color:#fff;border-radius:8px;padding:1px 8px;font-size:.72rem;margin-left:8px">Programmata</span>':''}
-  </div>`;
-  // Badge campionati
-  html+=`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">`;
-  Object.entries(campDay).sort((a,b)=>b[1]-a[1]).forEach(([cn,cv])=>{
-    const cc=campColor(cn);
-    html+=`<span style="background:${cc};color:#fff;border-radius:12px;padding:2px 10px;font-size:.72rem">${escH(cn)} <b>${cv}</b></span>`;
-  });
-  html+=`</div>`;
-  // Tre colonne persone
-  const mkPersonBox=(title,color,bg,cat,dict)=>{
-    const entries=Object.entries(dict).sort((a,b)=>a[0].localeCompare(b[0]));
-    return`<div style="background:${bg};border-radius:8px;padding:8px 10px">
-      <div style="font-weight:700;color:${color};font-size:.75rem;margin-bottom:5px">${title} (${entries.length})</div>
-      ${entries.map(([n])=>`<div style="font-size:.7rem;padding:1px 0;cursor:pointer" onclick="openPersona('${esc(n)}')"><span class="rn rn-${cat}" style="font-size:.65rem">${escH(n)}</span></div>`).join('')}
-    </div>`;
-  };
-  html+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-    ${mkPersonBox('👨‍⚖️ Arbitri','#003087','#e8f0ff','Arbitro',arbsDay)}
-    ${mkPersonBox('📋 UDC','#0984e3','#e0f7fa','UDC',udcDay)}
-    ${mkPersonBox('🔭 Osservatori','#6c5ce7','#f3e5f5','Osservatore',ossDay)}
-  </div>`;
-  // Tabella gare
-  html+=`<div style="overflow-x:auto"><table class="gtbl" id="tbl-res"><thead><tr>
-    <th onclick="sT('tbl-res',0)">Ora</th><th>Camp.</th>
-    <th onclick="sT('tbl-res',2)">Casa</th><th>Ris.</th><th onclick="sT('tbl-res',4)">Ospite</th>
-    <th onclick="sT('tbl-res',5)">Arb.1</th><th onclick="sT('tbl-res',6)">Arb.2</th><th>Campo</th>
-  </tr></thead><tbody>`;
-  allG2.forEach(g=>{
-    const cc=campColor(g['Campionato']);
-    const a1=pns(g['Arbitro 1']||''); const a2=pns(g['Arbitro 2']||'');
-    const ris=g['Risultato']||'';
-    const campo=(g['Campo']||'').split(',')[0];
-    html+=`<tr>
-      <td style="font-size:.7rem">${escH(g['Ora']||'')}</td>
-      <td><span style="background:${cc};color:#fff;border-radius:3px;padding:1px 4px;font-size:.61rem;cursor:pointer" onclick="openCampionato('${esc(g['Campionato'])}')">${escH(g['Campionato'])}</span></td>
-      <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa']||'')}')">${escH(g['Squadra Casa']||'')}</span></td>
-      <td style="font-weight:700;text-align:center">${escH(ris||'–')}</td>
-      <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}')">${escH(g['Squadra Ospite']||'')}</span></td>
-      <td>${a1?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a1)}')" style="font-size:.65rem">${escH(a1)}</span>`:'—'}</td>
-      <td>${a2?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a2)}')" style="font-size:.65rem">${escH(a2)}</span>`:'—'}</td>
-      <td style="font-size:.65rem;color:var(--mu)">${escH(campo)}</td>
-    </tr>`;
-  });
-  html+=`</tbody></table></div>`;
-  el.innerHTML=html;
-}
 
+  let allG=[];
+  let titleStr='';
+
+  if(mode==='giorno'){
+    const data=document.getElementById('res-data')?.value;
+    if(!data){el.innerHTML='<div style="color:var(--mu);padding:20px;text-align:center">Seleziona una data</div>';return;}
+    const garePlay=(D.gare||[]).filter(g=>g['Data']===data);
+    const gareFut=(D.gare_future||[]).filter(g=>g['Data']===data);
+    allG=garePlay.length>0?garePlay:gareFut;
+    const d=new Date(data);
+    const giorni=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+    titleStr=`${giorni[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+  } else {
+    const dal=document.getElementById('res-dal')?.value;
+    const al=document.getElementById('res-al')?.value;
+    if(!dal||!al){el.innerHTML='<div style="color:var(--mu);padding:20px;text-align:center">Seleziona un periodo</div>';return;}
+    if(dal>al){el.innerHTML='<div style="color:var(--red);padding:20px;text-align:center">⚠️ La data iniziale deve essere precedente alla finale</div>';return;}
+    const garePlay=(D.gare||[]).filter(g=>g['Data']>=dal&&g['Data']<=al);
+    const gareFut=(D.gare_future||[]).filter(g=>g['Data']>=dal&&g['Data']<=al);
+    allG=[...garePlay,...gareFut];
+    titleStr=`${dal} → ${al}`;
+  }
+
+  allG.sort((a,b)=>(a['Data']+a['Ora']).localeCompare(b['Data']+b['Ora']));
+  if(info)info.textContent=`${allG.length} gare — ${titleStr}`;
+
+  if(!allG.length){
+    el.innerHTML='<div style="color:var(--mu);padding:20px;text-align:center">Nessuna gara trovata</div>';
+    return;
+  }
+
+  // Statistiche aggregate
+  const nArbs=new Set();
+  const nCamps=new Set();
+  const nCampi=new Set();
+  const nSq=new Set();
+  allG.forEach(g=>{
+    ['Arbitro 1','Arbitro 2'].forEach(f=>{const n=pns(g[f]||'');if(n)nArbs.add(n);});
+    if(g['Campionato'])nCamps.add(g['Campionato']);
+    if(g['Campo'])nCampi.add(g['Campo']);
+    if(g['Squadra Casa'])nSq.add(g['Squadra Casa']);
+    if(g['Squadra Ospite'])nSq.add(g['Squadra Ospite']);
+  });
+  const conRis=allG.filter(g=>g['Risultato']).length;
+  const con2=allG.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')).length;
+  const con1=allG.filter(g=>pns(g['Arbitro 1']||'')||pns(g['Arbitro 2']||'')).length-con2;
+  const senza=allG.length-con2-con1;
+
+  el.innerHTML=`
+    <div class="scs" style="margin-bottom:14px">
+      <div class="sc"><div class="sv">${allG.length}</div><div class="sl">Gare totali</div></div>
+      <div class="sc green"><div class="sv">${conRis}</div><div class="sl">Con risultato</div></div>
+      <div class="sc"><div class="sv">${nArbs.size}</div><div class="sl">Arbitri</div></div>
+      <div class="sc"><div class="sv">${nSq.size}</div><div class="sl">Squadre</div></div>
+      <div class="sc"><div class="sv">${nCamps.size}</div><div class="sl">Campionati</div></div>
+      <div class="sc"><div class="sv">${nCampi.size}</div><div class="sl">Campi</div></div>
+      <div class="sc green"><div class="sv">${con2}</div><div class="sl">Con 2 arb.</div></div>
+      <div class="sc gold"><div class="sv">${con1}</div><div class="sl">Con 1 arb.</div></div>
+      <div class="sc red"><div class="sv">${senza}</div><div class="sl">Senza arb.</div></div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">
+      ${[...nCamps].sort().map(c=>`<span style="background:${campColor(c)};color:#fff;border-radius:4px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="openCampionato('${esc(c)}')">${escH(c)}</span>`).join('')}
+    </div>
+    ${mode==='periodo'?`
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <div class="card" style="flex:1;min-width:200px;margin-bottom:0">
+        <div class="card-title">📅 Gare per giorno</div>
+        ${(()=>{
+          const byDay={};
+          allG.forEach(g=>{byDay[g['Data']]=(byDay[g['Data']]||0)+1;});
+          const days=Object.entries(byDay).sort((a,b)=>a[0].localeCompare(b[0]));
+          const maxD=Math.max(...days.map(d=>d[1]),1);
+          return days.map(([d,n])=>`<div style="display:flex;align-items:center;gap:6px;margin:2px 0;font-size:.73rem">
+            <span style="width:80px;color:var(--mu)">${d}</span>
+            <div style="flex:1;height:8px;background:var(--bl4);border-radius:4px">
+              <div style="height:8px;background:var(--bl2);border-radius:4px;width:${n/maxD*100}%"></div>
+            </div>
+            <span style="font-weight:700;width:24px;text-align:right">${n}</span>
+          </div>`).join('');
+        })()}
+      </div>
+      <div class="card" style="flex:1;min-width:200px;margin-bottom:0">
+        <div class="card-title">👨‍⚖️ Top arbitri del periodo</div>
+        ${(()=>{
+          const ac={};
+          allG.forEach(g=>{['Arbitro 1','Arbitro 2'].forEach(f=>{const n=pns(g[f]||'');if(n)ac[n]=(ac[n]||0)+1;});});
+          return Object.entries(ac).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([n,v],i)=>`
+            <div style="display:flex;align-items:center;gap:6px;margin:2px 0">
+              <span style="color:var(--mu2);font-size:.7rem;min-width:16px">${i+1}.</span>
+              <span class="rn rn-Arbitro" style="flex:1;font-size:.74rem" onclick="openPersona('${esc(n)}')">${escH(n)}</span>
+              <span style="font-weight:700;color:var(--bl)">${v}</span>
+            </div>`).join('');
+        })()}
+      </div>
+    </div>`:'' }
+    <div style="overflow-x:auto">
+    <table class="rtbl">
+      <thead><tr>
+        <th>Data</th><th>Campionato</th><th>Girone</th>
+        <th>Casa</th><th>Ospite</th><th>Risultato</th>
+        <th>Arb.</th><th>Arbitro 1</th><th>Arbitro 2</th><th>Campo</th>
+      </tr></thead>
+      <tbody>${allG.map(g=>{
+        const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
+        const nArb=(a1?1:0)+(a2?1:0);
+        const arbClr=nArb===2?'var(--green)':nArb===1?'var(--gold)':'var(--red)';
+        const [pc,po]=(g['Risultato']||'').split('-');
+        const casaW=pc&&po&&parseInt(pc)>parseInt(po);
+        const ospW=pc&&po&&parseInt(po)>parseInt(pc);
+        const isFut=!g['Risultato'];
+        return`<tr style="${isFut?'background:#fffbf0':''}">
+          <td style="font-size:.72rem;white-space:nowrap">${g['Data']||''}</td>
+          <td style="font-size:.7rem"><span style="cursor:pointer;color:${campColor(g['Campionato']||'')}" onclick="openCampionato('${esc(g['Campionato']||'')}')">${escH(g['Campionato']||'')}</span></td>
+          <td style="font-size:.68rem;color:var(--mu)">${escH(g['Girone']||'')}</td>
+          <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa']||'')}')" style="${casaW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Casa']||'')}</span></td>
+          <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}')" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite']||'')}</span></td>
+          <td style="font-weight:700;text-align:center">${g['Risultato']||'<span style="color:var(--mu2);font-size:.7rem">Prog.</span>'}</td>
+          <td style="text-align:center"><b style="color:${arbClr}">${nArb}</b></td>
+          <td style="font-size:.7rem">${a1?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a1)}')">${escH(a1)}</span>`:''}</td>
+          <td style="font-size:.7rem">${a2?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a2)}')">${escH(a2)}</span>`:''}</td>
+          <td style="font-size:.66rem">${g['Campo']?`<span style="cursor:pointer;color:var(--bl)" onclick="openCampoModal('${esc(g['Campo'])}')">${escH((g['Campo']||'').split(',')[0])}</span>`:''}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+}
 
 function openGiornoModal(ds){
   const perG=GS.per_giorno||{};
@@ -1678,21 +1807,17 @@ function onH2Hsq1Change(){
   campSel.innerHTML='<option value="">Tutti</option>';
   girSel.innerHTML='<option value="">Tutti</option>';
   if(!sq1){sq2sel.disabled=true;campSel.disabled=true;girSel.disabled=true;document.getElementById('h2h-result').innerHTML='';return;}
-  // Reset input ricerca sq2
   const sq2q=document.getElementById('h2h-sq2-q');if(sq2q)sq2q.value='';
-  // Trova avversari reali
+  // Avversari reali dalle gare
   const avvSet=new Set();
-  const campSet=new Set();
-  Object.values(SQ[sq1]?.gare||[]).forEach(g=>{
-    const avv=g['Squadra Casa']===sq1?g['Squadra Ospite']:g['Squadra Casa'];
-    avvSet.add(avv);
-    campSet.add(g['Campionato']);
+  GARE.filter(g=>g['Squadra Casa']===sq1||g['Squadra Ospite']===sq1).forEach(g=>{
+    avvSet.add(g['Squadra Casa']===sq1?g['Squadra Ospite']:g['Squadra Casa']);
   });
   [...avvSet].sort().forEach(av=>{const o=document.createElement('option');o.value=av;o.textContent=av;sq2sel.appendChild(o);});
-  [...campSet].sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;campSel.appendChild(o);});
-  sq2sel.disabled=false;campSel.disabled=false;girSel.disabled=false;
+  sq2sel.disabled=false;campSel.disabled=true;girSel.disabled=true;
   document.getElementById('h2h-result').innerHTML=`<p class="il">Seleziona la Squadra 2 per vedere il confronto</p>`;
 }
+
 function resetH2H(){
   ['h2h-sq1','h2h-sq2','h2h-camp','h2h-girone'].forEach(id=>{
     const el=document.getElementById(id);if(el){el.value='';el.disabled=id!=='h2h-sq1';}
@@ -1705,25 +1830,37 @@ function renderH2H(){
   const fcamp=document.getElementById('h2h-camp').value;
   const fgir=document.getElementById('h2h-girone').value;
   if(!sq1||!sq2){document.getElementById('h2h-result').innerHTML='<p class="il">Seleziona entrambe le squadre</p>';return;}
-  const key1=sq1+'|||'+sq2, key2=sq2+'|||'+sq1;
-  const hd=H2H[key1]||H2H[key2];
-  let gare=hd?[...hd.gare]:[];
-  // Includi anche gare che non sono nel H2H precalcolato (es per filtri)
-  if(!gare.length){
-    gare=GARE.filter(g=>(g['Squadra Casa']===sq1&&g['Squadra Ospite']===sq2)||(g['Squadra Casa']===sq2&&g['Squadra Ospite']===sq1));
-  }
-  if(fcamp)gare=gare.filter(g=>g['Campionato']===fcamp);
-  if(fgir)gare=gare.filter(g=>g['Girone']===fgir);
-  // Aggiorna girone dropdown
+
+  // Tutte le gare tra sq1 e sq2
+  let allGare=GARE.filter(g=>
+    (g['Squadra Casa']===sq1&&g['Squadra Ospite']===sq2)||
+    (g['Squadra Casa']===sq2&&g['Squadra Ospite']===sq1)
+  );
+
+  // Popola dropdown campionati filtrati su scontri reali
+  const campSel=document.getElementById('h2h-camp');
   const girSel=document.getElementById('h2h-girone');
-  const curGir=girSel.value;
-  const allGironi=new Set(hd?.gare.filter(g=>!fcamp||g['Campionato']===fcamp).map(g=>g['Girone']).filter(Boolean)||[]);
+  const curCamp=campSel.value, curGir=girSel.value;
+  const campsIncontri=new Set(allGare.map(g=>g['Campionato']).filter(Boolean));
+  campSel.innerHTML='<option value="">Tutti</option>';
+  [...campsIncontri].sort().forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;if(c===curCamp)o.selected=true;campSel.appendChild(o);});
+  campSel.disabled=false;
+
+  // Applica filtro campionato
+  if(fcamp)allGare=allGare.filter(g=>g['Campionato']===fcamp);
+
+  // Popola gironi filtrati sulle gare del campionato scelto
+  const gironiIncontri=new Set(allGare.map(g=>g['Girone']).filter(Boolean));
   girSel.innerHTML='<option value="">Tutti</option>';
-  [...allGironi].sort().forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;if(g===curGir)o.selected=true;girSel.appendChild(o);});
-  // Calcola stats sul sottoinsieme filtrato
+  [...gironiIncontri].sort().forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;if(g===curGir)o.selected=true;girSel.appendChild(o);});
+  girSel.disabled=false;
+
+  if(fgir)allGare=allGare.filter(g=>g['Girone']===fgir);
+
+  const gare=allGare;
+
+  // Calcola stats
   let s1v=0,s2v=0,par=0,s1pt=0,s2pt=0;
-  const key=tuple=>[...tuple].sort();
-  const isKey0=sq1<sq2;
   gare.forEach(g=>{
     if(!g['Risultato'])return;
     try{
@@ -1740,6 +1877,7 @@ function renderH2H(){
   const s1med=tot&&s1pt?((s1pt/tot).toFixed(1)):'-';
   const s2med=tot&&s2pt?((s2pt/tot).toFixed(1)):'-';
   const tidH='tbl-h2h-gare';
+
   document.getElementById('h2h-result').innerHTML=`
     <div class="h2h-box">
       <div class="h2h-score">
@@ -1784,31 +1922,33 @@ function renderH2H(){
         <th onclick="sT('${tidH}',1)">Campionato</th>
         <th onclick="sT('${tidH}',2)">Girone</th>
         <th onclick="sT('${tidH}',3)">Fase</th>
-        <th onclick="sT('${tidH}',4)">Casa</th>
-        <th onclick="sT('${tidH}',5)">Ospite</th>
-        <th onclick="sT('${tidH}',6)">Ris. (SQ1)</th>
-        <th onclick="sT('${tidH}',7)">Esito</th>
+        <th colspan="3" style="text-align:center">Risultato</th>
         <th>Arbitri</th><th>Campo</th>
       </tr></thead>
       <tbody>${gare.sort((a,b)=>a['Data'].localeCompare(b['Data'])).map(g=>{
-        const isC=g['Squadra Casa']===sq1;
-        const pt1=parseInt(isC?g['Punti Casa']||0:g['Punti Ospite']||0);
-        const pt2=parseInt(isC?g['Punti Ospite']||0:g['Punti Casa']||0);
-        const ris=g['Risultato']?(isC?g['Risultato']:g['Risultato'].split('-').reverse().join('-')):'';
-        let esito='',cls='';
-        if(g['Risultato']){if(pt1>pt2){esito='V';cls='sw';}else if(pt2>pt1){esito='P';cls='sl_';}else esito='=';}
+        const pc=parseInt(g['Punti Casa']||0), po=parseInt(g['Punti Ospite']||0);
+        const casaW=g['Risultato']&&pc>po, ospW=g['Risultato']&&po>pc;
         const arbs=[g['Arbitro 1'],g['Arbitro 2']].filter(Boolean).map(a=>`<span class="rn rn-Arbitro" onclick="openPersona('${esc(pns(a))}')" style="font-size:.68rem">${escH(pns(a))}</span>`).join(', ');
         return`<tr>
-          <td>${g['Data']}</td>
+          <td style="white-space:nowrap">${g['Data']}</td>
           <td style="font-size:.72rem">${escH(g['Campionato'])}</td>
-          <td style="font-size:.7rem">${escH(g['Girone']||'')}</td>
-          <td style="font-size:.7rem">${escH(g['Fase']||'')}</td>
-          <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa'])}')">${escH(g['Squadra Casa'])}</span></td>
-          <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite'])}')">${escH(g['Squadra Ospite'])}</span></td>
-          <td style="font-weight:700">${ris}</td>
-          <td class="${cls}" style="font-weight:800">${esito}</td>
+          <td style="font-size:.7rem;color:var(--mu)">${escH(g['Girone']||'')}</td>
+          <td style="font-size:.7rem;color:var(--mu)">${escH(g['Fase']||'')}</td>
+          <td style="font-weight:${casaW?800:400};color:${casaW?'var(--green)':ospW?'var(--red)':'inherit'}">
+            <span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa'])}')">${escH(g['Squadra Casa'])}</span>
+          </td>
+          <td style="text-align:center;font-weight:800;padding:0 4px">
+            ${g['Risultato']
+              ?`<span style="color:${casaW?'var(--green)':ospW?'var(--red)':'var(--mu)'}">${g['Punti Casa']||0}</span>
+                <span style="color:var(--mu2);font-size:.7rem"> – </span>
+                <span style="color:${ospW?'var(--green)':casaW?'var(--red)':'var(--mu)'}">${g['Punti Ospite']||0}</span>`
+              :'<span style="color:var(--mu2);font-size:.7rem">Prog.</span>'}
+          </td>
+          <td style="font-weight:${ospW?800:400};color:${ospW?'var(--green)':casaW?'var(--red)':'inherit'}">
+            <span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite'])}')">${escH(g['Squadra Ospite'])}</span>
+          </td>
           <td>${arbs}</td>
-          <td style="font-size:.68rem;white-space:normal;max-width:150px">${escH(g['Campo']||'')}</td>
+          <td style="font-size:.68rem;max-width:140px">${escH(g['Campo']||'')}</td>
         </tr>`;}).join('')}
       </tbody>
     </table></div>`;
@@ -2035,7 +2175,7 @@ function filterMg(){
 }
 
 // MODAL PERSONA
-function openPersona(nome){
+function openPersona(nome,campFilter){
   const p=P[nome];if(!p)return;
   const isDual=(p.categorie||[]).length>1;
   const icon=p.categoria==='Arbitro'?'👨‍⚖️':p.categoria==='UDC'?'📋':'🔭';
@@ -2114,6 +2254,102 @@ function openPersona(nome){
           </div>
         </div>`;
       })()}
+
+      <!-- Nuove stats: km stimati, tasso singolo, mesi attività -->
+      ${(()=>{
+        // Km stimati: per ogni campo nelle gare arbitro, calcola distanza dalla provincia
+        const PCOORDS={CA:[39.22,9.12],SS:[40.73,8.56],NU:[40.32,9.33],OR:[39.90,8.59],SU:[39.37,8.78]};
+        const CAMPO_GPS_LOCAL=typeof CAMPO_GPS!=='undefined'?CAMPO_GPS:{};
+        const pvHome=p.provincia||'';
+        const pvCoord=PCOORDS[pvHome];
+        let kmTot=0,kmCount=0;
+        if(pvCoord){
+          Object.keys(p.campi||{}).forEach(campo=>{
+            const gps=CAMPO_GPS_LOCAL[campo];
+            if(!gps)return;
+            const dlat=(gps.lat-pvCoord[0])*Math.PI/180;
+            const dlng=(gps.lng-pvCoord[1])*Math.PI/180;
+            const a=Math.sin(dlat/2)**2+Math.cos(pvCoord[0]*Math.PI/180)*Math.cos(gps.lat*Math.PI/180)*Math.sin(dlng/2)**2;
+            const km=2*6371*Math.asin(Math.sqrt(a));
+            kmTot+=km*(p.campi[campo]||1)*2; // andata e ritorno
+            kmCount+=(p.campi[campo]||1);
+          });
+        }
+        const nArb=p.n_gare_arbitro||0;
+        const nSing=p.n_singolo||0;
+        const nDopp=nArb-nSing;
+        const pctDopp=nArb?Math.round(nDopp/nArb*100):0;
+
+        // Mesi grafico
+        const mesiData=Object.entries(p.mesi||{}).sort((a,b)=>a[0].localeCompare(b[0]));
+        const maxMese=Math.max(...mesiData.map(m=>m[1]),1);
+        const mesBars=mesiData.map(([m,n])=>{
+          const label=m.slice(5); // MM
+          return`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+            <div style="font-size:.62rem;font-weight:700;color:var(--bl)">${n}</div>
+            <div style="width:100%;background:var(--bl);border-radius:3px 3px 0 0;height:${Math.max(4,Math.round(n/maxMese*60))}px;opacity:.8"></div>
+            <div style="font-size:.6rem;color:var(--mu)">${label}</div>
+          </div>`;
+        }).join('');
+
+        // Squadre arbitrate + rendimento
+        const sqStats=Object.entries(p.squadre_incontrate||{})
+          .map(([sq,st])=>({sq,g:st.gare,v:st.vinte||0,s:st.perse||0,wp:st.gare?Math.round((st.vinte||0)/st.gare*100):0}))
+          .sort((a,b)=>b.g-a.g).slice(0,10);
+
+        return`<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+          ${kmTot>0?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
+            <div class="card-title">🚗 Km stimati stagione</div>
+            <div style="font-size:1.4rem;font-weight:800;color:var(--bl)">${Math.round(kmTot).toLocaleString('it')}</div>
+            <div style="font-size:.68rem;color:var(--mu)">${kmCount} trasferte · media ${kmCount?Math.round(kmTot/kmCount):0} km/gara</div>
+          </div>`:''}
+          ${nArb>0?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
+            <div class="card-title">👥 Copertura arbitrale</div>
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
+              <span style="font-size:1.1rem;font-weight:800;color:var(--green)">${nDopp}</span>
+              <span style="font-size:.7rem;color:var(--mu)">in coppia</span>
+              <span style="font-size:1.1rem;font-weight:800;color:var(--gold)">${nSing}</span>
+              <span style="font-size:.7rem;color:var(--mu)">in singolo</span>
+            </div>
+            <div style="height:8px;border-radius:4px;overflow:hidden;display:flex">
+              <div style="height:100%;background:var(--green);width:${pctDopp}%"></div>
+              <div style="height:100%;background:var(--gold);width:${100-pctDopp}%"></div>
+            </div>
+            <div style="font-size:.65rem;color:var(--mu);margin-top:2px">${pctDopp}% in coppia</div>
+          </div>`:''}
+          ${mesiData.length?`<div class="card" style="flex:2;min-width:200px;margin-bottom:0">
+            <div class="card-title">📅 Attività mensile</div>
+            <div style="display:flex;align-items:flex-end;gap:3px;height:80px;padding-top:16px">${mesBars}</div>
+          </div>`:''}
+        </div>
+        ${sqStats.length?`<div class="card" style="margin-bottom:10px">
+          <div class="card-title">🏀 Squadre arbitrate — rendimento</div>
+          <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.72rem">
+            <thead><tr style="background:var(--tbl-hdr);color:#fff">
+              <th style="padding:4px 8px;text-align:left">Squadra</th>
+              <th style="padding:4px 8px;text-align:center">Gare</th>
+              <th style="padding:4px 8px;text-align:center;color:#a5d6a7">V</th>
+              <th style="padding:4px 8px;text-align:center;color:#ef9a9a">P</th>
+              <th style="padding:4px 8px;text-align:center">Win%</th>
+              <th style="padding:4px 8px">Barra</th>
+            </tr></thead>
+            <tbody>${sqStats.map(({sq,g,v,s,wp},i)=>`<tr style="background:${i%2?'#f8f9ff':'#fff'}">
+              <td style="padding:3px 8px"><span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></td>
+              <td style="padding:3px 8px;text-align:center;font-weight:700">${g}</td>
+              <td style="padding:3px 8px;text-align:center;color:var(--green);font-weight:700">${v}</td>
+              <td style="padding:3px 8px;text-align:center;color:var(--red)">${s}</td>
+              <td style="padding:3px 8px;text-align:center;font-weight:700;color:${wp>=50?'var(--green)':'var(--red)'}">${wp}%</td>
+              <td style="padding:3px 8px;min-width:80px">
+                <div style="height:6px;border-radius:3px;overflow:hidden;display:flex">
+                  <div style="height:100%;background:var(--green);width:${wp}%"></div>
+                  <div style="height:100%;background:var(--red);width:${100-wp}%"></div>
+                </div>
+              </td>
+            </tr>`).join('')}</tbody>
+          </table></div>
+        </div>`:''}`;
+      })()}
+
       <div class="st" style="font-size:.8rem">📅 Calendario presenze</div>
       ${bCal(p.giorni,nome)}
       <div class="st" style="font-size:.8rem;margin-top:10px">📊 Per campionato</div>
@@ -2186,7 +2422,7 @@ function openPersona(nome){
           }).join('');
           return`<tr style="${rowBg}">
             <td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td>
-            <td><span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></td>
+            <td><span class="rn rn-sq" style="font-weight:700" onclick="openSquadra('${esc(sq)}','${esc(camp)}')">${escH(sq)}</span></td>
             <td>${sqd?.prov?pvB(sqd.prov):''}</td>
             <td data-val="${cnt}" style="cursor:pointer;color:#003087;font-weight:700;text-decoration:underline" onclick="openSharedSquadGames('${esc(nome)}','${esc(sq)}')">${cnt}</td>
             <td data-val="${totV}" style="color:#00704a;font-weight:700">${totV}</td>
@@ -2205,6 +2441,7 @@ function openPersona(nome){
       })()}   </div>
     ${extraPanels}`;
   fgpP(nome);openMo('mo-persona');
+  if(campFilter){const campSelP=document.querySelector('#mp-body select[id*="camp"]');if(campSelP){campSelP.value=campFilter;mkGarePersonaTbl(nome);}}
 }
 function mkGarePersonaTbl(gare,nome,tid){
   const rows=gare.sort((a,b)=>a['Data'].localeCompare(b['Data'])).map(g=>{
@@ -2533,6 +2770,49 @@ function openSquadra(nome){
           <div class="dow-chart">${dowBars}</div>
         </div>
       </div>
+
+      <!-- Arbitro di fiducia -->
+      ${(()=>{
+        if(!arb_stats.length)return'';
+        // Arbitro con più gare e miglior win%
+        const topFidu=arb_stats.slice(0,10).map(([ar,st])=>({ar,g:st.gare,v:st.v||0,s:st.s||0,wp:st.gare?Math.round((st.v||0)/st.gare*100):0}))
+          .sort((a,b)=>b.g-a.g||b.wp-a.wp)[0];
+        if(!topFidu)return'';
+        const pvClr=PC[P[topFidu.ar]?.provincia]||'var(--arb-tx)';
+        return`<div class="card" style="background:linear-gradient(135deg,${pvClr}12,#fff);border-left:4px solid ${pvClr};margin-bottom:10px">
+          <div class="card-title">⭐ Arbitro più presente</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.8rem">👨‍⚖️</span>
+            <div>
+              <div style="font-weight:800;color:${pvClr};cursor:pointer;font-size:.9rem" onclick="openPersona('${esc(topFidu.ar)}')">${escH(topFidu.ar)}</div>
+              <div style="display:flex;gap:8px;margin-top:4px;font-size:.72rem">
+                ${P[topFidu.ar]?.provincia?pvB(P[topFidu.ar].provincia):''}
+                <span style="background:var(--bl4);padding:1px 6px;border-radius:4px"><b>${topFidu.g}</b> gare</span>
+                <span style="background:${topFidu.wp>=50?'#e8f5e9':'#ffebee'};padding:1px 6px;border-radius:4px;color:${topFidu.wp>=50?'var(--green)':'var(--red)'}"><b>${topFidu.wp}%</b> win</span>
+                <span style="color:var(--green)">${topFidu.v}V</span>
+                <span style="color:var(--red)">${topFidu.s}P</span>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      })()}
+
+      <!-- Campi visitati nella stagione -->
+      ${(()=>{
+        // Calcola campi visitati come ospite (trasferta)
+        const campiOsp={};
+        (s.gare||[]).filter(g=>g['Squadra Ospite']===nome&&g['Campo']).forEach(g=>{
+          campiOsp[g['Campo']]=(campiOsp[g['Campo']]||0)+1;
+        });
+        const campList=Object.entries(campiOsp).sort((a,b)=>b[1]-a[1]);
+        if(!campList.length)return'';
+        return`<div class="card" style="margin-bottom:10px">
+          <div class="card-title">✈️ Campi visitati in trasferta (${campList.length})</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">
+            ${campList.map(([c,n])=>`<span style="background:var(--bl4);border-radius:4px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="openCampoModal('${esc(c)}')" title="${escH(c)}">${escH(c.split(',')[0])} <b>${n}</b></span>`).join('')}
+          </div>
+        </div>`;
+      })()}
     </div>
     <div class="mtc hidden" id="mst-1" data-trend="${esc(nome)}">
       <div id="trend-container-${esc(nome)}" style="height:220px;position:relative"></div>
@@ -2582,11 +2862,14 @@ function openSquadra(nome){
       }).join(''),['#','Avversario','Prov.','Inc.','✅V','❌P','Win%','Pt.F','Pt.S','Diff','H2H'],'tbl-mavv')}
     </div>
     <div class="mtc hidden" id="mst-4">
+      <!-- Arbitri totali -->
+      <div class="st" style="font-size:.8rem">👨‍⚖️ Tutti gli arbitri della stagione</div>
       ${mkTbl(arb_stats.map(([ar,st],i)=>{
         const awp=st.gare?Math.round(st.v/st.gare*100):0;
+        const pvClr=PC[P[ar]?.provincia]||'var(--arb-tx)';
         return`<tr>
           <td class="rpos ${i<3?'g'+(i+1):''}" data-val="${i+1}">${i+1}</td>
-          <td><span class="rn rn-Arbitro" onclick="openPersona('${esc(ar)}')">${escH(ar)}</span></td>
+          <td><span class="rn" style="color:${pvClr};font-weight:700" onclick="openPersona('${esc(ar)}')">${escH(ar)}</span></td>
           <td>${P[ar]?.provincia?pvB(P[ar].provincia):''}</td>
           <td data-val="${st.gare}" style="font-weight:700;text-align:center">${st.gare}</td>
           <td data-val="${st.v||0}" style="color:var(--green);font-weight:700;text-align:center">${st.v||0}</td>
@@ -2600,8 +2883,54 @@ function openSquadra(nome){
           <td><button class="btn b-bl" style="padding:2px 7px;font-size:.65rem" onclick="openArbVsSq('${esc(ar)}','${esc(nome)}')">📋</button></td>
         </tr>`;
       }).join(''),['#','Arbitro','Prov.','Gare','✅V','❌P','Par.','Win%',''],'tbl-marb')}
+
+      <!-- Arbitri per campionato -->
+      <div class="st" style="font-size:.8rem;margin-top:14px">🏆 Arbitri per campionato</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        ${camps.map(([c])=>{
+          // Calcola arbitri usati in questo campionato per questa squadra
+          const arbInCamp={};
+          (s.gare||[]).filter(g=>g['Campionato']===c&&g['Risultato']).forEach(g=>{
+            ['Arbitro 1','Arbitro 2'].forEach(f=>{
+              const an=pns(g[f]||'');if(!an)return;
+              if(!arbInCamp[an])arbInCamp[an]={gare:0,v:0,s:0};
+              arbInCamp[an].gare++;
+              const ic=g['Squadra Casa']===nome;
+              const mp=parseInt(ic?g['Punti Casa']||0:g['Punti Ospite']||0);
+              const ap=parseInt(ic?g['Punti Ospite']||0:g['Punti Casa']||0);
+              if(mp>ap)arbInCamp[an].v++;else if(ap>mp)arbInCamp[an].s++;
+            });
+          });
+          const arbList=Object.entries(arbInCamp).sort((a,b)=>b[1].gare-a[1].gare);
+          if(!arbList.length)return'';
+          const clr=campColor(c);
+          return`<div class="card" style="flex:1;min-width:260px;margin-bottom:0;border-top:3px solid ${clr}">
+            <div class="card-title" style="color:${clr}">${escH(c)} <span style="font-size:.65rem;color:var(--mu);font-weight:400">${arbList.length} arbitri</span></div>
+            <table style="width:100%;border-collapse:collapse;font-size:.72rem">
+              <thead><tr style="background:${clr}18">
+                <th style="padding:3px 6px;text-align:left">Arbitro</th>
+                <th style="padding:3px 6px;text-align:center">G</th>
+                <th style="padding:3px 6px;text-align:center;color:var(--green)">V</th>
+                <th style="padding:3px 6px;text-align:center;color:var(--red)">P</th>
+              </tr></thead>
+              <tbody>${arbList.map(([ar,st],i)=>{
+                const pvClr=PC[P[ar]?.provincia]||'var(--arb-tx)';
+                return`<tr style="background:${i%2?'#f8f9ff':'#fff'}">
+                  <td style="padding:3px 6px;display:flex;align-items:center;gap:4px">
+                    <span style="color:${pvClr};font-weight:700;cursor:pointer" onclick="openPersona('${esc(ar)}')">${escH(ar)}</span>
+                    ${P[ar]?.provincia?pvB(P[ar].provincia):''}
+                  </td>
+                  <td style="padding:3px 6px;text-align:center;font-weight:700">${st.gare}</td>
+                  <td style="padding:3px 6px;text-align:center;color:var(--green);font-weight:700">${st.v}</td>
+                  <td style="padding:3px 6px;text-align:center;color:var(--red)">${st.s}</td>
+                </tr>`;
+              }).join('')}</tbody>
+            </table>
+          </div>`;
+        }).join('')}
+      </div>
     </div>
-    <div class="mtc hidden" id="mst-5">
+        <div class="mtc hidden" id="mst-5">
       ${camps.length?mkTbl(camps.map(([c,n],i)=>{
         const cm=s.campionati_meta?.[c]||{};
         const sg=s.gironi_per_camp?.[c]||[];
@@ -2618,6 +2947,7 @@ function openSquadra(nome){
     </div>`;
   openMo('mo-squadra');
   fgSq(nome);
+  if(campFilter){const s2=document.getElementById('msg-camp');if(s2){s2.value=campFilter;fgSq(nome);}}
 }
 
 function openArbVsSq(nomeSq,nomeArb){
@@ -2872,7 +3202,7 @@ function openCampionato(camp){
           <div class="sv">${cs.n_gare}</div><div class="sl">Gare ↗</div></div>
         <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mc-body .mt')[3].click()">
           <div class="sv">${cs.n_squadre}</div><div class="sl">Squadre ↗</div></div>
-        <div class="sc"><div class="sv">${(cs.gironi||[]).length}</div><div class="sl">Gironi</div></div>
+        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mc-body .mt')[2].click()"><div class="sv">${(cs.gironi||[]).length}</div><div class="sl">Gironi ↗</div></div>
         <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mc-body .mt')[4].click()">
           <div class="sv">${topArb.length}</div><div class="sl">Arbitri ↗</div></div>
         <div class="sc gold"><div class="sv">${avgPG}</div><div class="sl">Media pt/sq</div></div>
@@ -2890,15 +3220,99 @@ function openCampionato(camp){
         `<span style="background:var(--bl3);color:var(--bl);border-radius:6px;padding:3px 10px;font-size:.69rem;cursor:pointer;border:1px solid var(--br)" onclick="openCampoModal('${esc(c)}')">${escH(c.split(',')[0])} <b>(${n})</b></span>`
       ).join('')}</div>`:''}
     </div>
+
+      <!-- Nuove stats campionato -->
+      ${(()=>{
+        // Top scorer (squadra con più punti fatti)
+        const sqPF=Object.entries(cs.sq_stats||{}).map(([sq,st])=>({sq,pf:st.pf||0,ps:st.ps||0,diff:(st.pf||0)-(st.ps||0)})).sort((a,b)=>b.pf-a.pf);
+        // Gara più combattuta
+        const gareConRis=allCampGare.filter(g=>g['Risultato']&&g['Punti Casa']&&g['Punti Ospite']);
+        const garaCombattuta=gareConRis.reduce((best,g)=>{
+          const diff=Math.abs(parseInt(g['Punti Casa']||0)-parseInt(g['Punti Ospite']||0));
+          return(!best||diff<best.diff)?{g,diff}:best;
+        },null);
+        // % arbitri stessa provincia
+        const arbProv={};
+        allCampGare.forEach(g=>{['Arbitro 1','Arbitro 2'].forEach(f=>{const n=pns(g[f]||'');if(n&&P[n])arbProv[n]=P[n].provincia;});});
+        const sqProvSet=new Set(allCampGare.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean).map(sq=>SQ[sq]?.prov).filter(Boolean));
+        const arbSameProv=Object.values(arbProv).filter(pv=>sqProvSet.has(pv)).length;
+        const arbTot=Object.keys(arbProv).length;
+        const pctSameProv=arbTot?Math.round(arbSameProv/arbTot*100):0;
+
+        return`<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px">
+          ${sqPF.length?`<div class="card" style="flex:1;min-width:200px;margin-bottom:0">
+            <div class="card-title">🏹 Top 5 attacchi</div>
+            ${sqPF.slice(0,5).map((e,i)=>`<div style="display:flex;align-items:center;gap:6px;margin:3px 0;font-size:.72rem">
+              <span style="color:${i<3?['#ffd700','#c0c0c0','#cd7f32'][i]:'var(--mu2)'};min-width:16px;font-weight:800">${i+1}</span>
+              <span class="rn rn-sq" style="flex:1;font-weight:${i===0?700:400}" onclick="openSquadra('${esc(e.sq)}','${esc(camp)}')">${escH(e.sq.length>20?e.sq.slice(0,20)+'…':e.sq)}</span>
+              <span style="font-weight:700;color:var(--bl)">${e.pf}</span>
+              <span style="font-size:.65rem;color:${e.diff>=0?'var(--green)':'var(--red)'}">(${e.diff>=0?'+':''}${e.diff})</span>
+            </div>`).join('')}
+          </div>`:''}
+          ${garaCombattuta?`<div class="card" style="flex:1;min-width:200px;margin-bottom:0">
+            <div class="card-title">⚔️ Gara più combattuta</div>
+            <div style="font-size:.72rem">
+              <div style="font-weight:700;color:var(--bl);margin-bottom:4px">${escH(garaCombattuta.g['Squadra Casa'])} <b style="font-size:1rem">${garaCombattuta.g['Risultato']}</b> ${escH(garaCombattuta.g['Squadra Ospite'])}</div>
+              <div style="color:var(--mu)">Scarto: <b>${garaCombattuta.diff}</b> pt · ${garaCombattuta.g['Data']}</div>
+              <div style="color:var(--mu);font-size:.65rem;margin-top:2px">${escH(garaCombattuta.g['Girone']||'')} ${escH(garaCombattuta.g['Campo']?.split(',')[0]||'')}</div>
+            </div>
+          </div>`:''}
+          ${arbTot?`<div class="card" style="flex:1;min-width:180px;margin-bottom:0">
+            <div class="card-title">📍 Arbitri per provincia</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
+              ${Object.entries(Object.values(arbProv).reduce((acc,pv)=>{acc[pv]=(acc[pv]||0)+1;return acc;},{})).sort((a,b)=>b[1]-a[1]).map(([pv,n])=>`<span style="background:${PC[pv]||'#999'};color:#fff;border-radius:4px;padding:2px 8px;font-size:.7rem;font-weight:700">${pv}: ${n}</span>`).join('')}
+            </div>
+            <div style="font-size:.68rem;color:var(--mu)">
+              <b style="color:${pctSameProv>=50?'var(--green)':'var(--gold)'}">${pctSameProv}%</b> arbitri dalla stessa provincia delle squadre
+            </div>
+          </div>`:''}
+        </div>`;
+      })()}
+    </div>
     <div class="mtc hidden" id="mct-1" data-camp="${esc(camp)}">
       <div id="camp-cl-${esc(camp)}"></div>
     </div>
     <div class="mtc hidden" id="mct-2">
-      ${(cs.gironi||[]).length===0?'<p class="il">Nessun girone</p>':
-        Object.entries(gironiData).sort((a,b)=>a[0].localeCompare(b[0])).map(([gi,gd])=>`
-          <div class="card"><div class="card-title">${escH(gi)} — ${gd.n_gare} gare · ${gd.n_squadre} squadre</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px">${(gd.squadre||[]).map(sq=>
-            `<span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span>`).join('')}</div></div>`).join('')}
+      ${(()=>{
+        const gironi=cs.gironi||[];
+        if(!gironi.length)return '<p class="il">Nessun girone</p>';
+        // Calcola gironi a runtime dalle gare
+        const garecamp=(D.gare||[]).filter(g=>g['Campionato']===camp);
+        const girMap={};
+        garecamp.forEach(g=>{
+          const gi=g['Girone']||'';if(!gi)return;
+          if(!girMap[gi])girMap[gi]={gare:0,squadre:new Set(),arbitri:new Set(),conRis:0};
+          girMap[gi].gare++;
+          if(g['Squadra Casa'])girMap[gi].squadre.add(g['Squadra Casa']);
+          if(g['Squadra Ospite'])girMap[gi].squadre.add(g['Squadra Ospite']);
+          ['Arbitro 1','Arbitro 2'].forEach(f=>{const n=pns(g[f]||'');if(n)girMap[gi].arbitri.add(n);});
+          if(g['Risultato'])girMap[gi].conRis++;
+        });
+        return gironi.sort().map(gi=>{
+          const gd=girMap[gi]||{gare:0,squadre:new Set(),arbitri:new Set(),conRis:0};
+          const sqs=[...gd.squadre].sort();
+          const arbs=[...gd.arbitri].sort();
+          const pct=gd.gare?Math.round(gd.conRis/gd.gare*100):0;
+          return`<div class="card" style="margin-bottom:12px">
+            <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+              <span style="color:${campColor(camp)};font-size:.9rem">${escH(gi)}</span>
+              <span style="font-size:.7rem;color:var(--mu)">${gd.gare} gare · ${sqs.length} squadre · ${arbs.length} arbitri</span>
+            </div>
+            <div style="margin-bottom:8px">
+              <div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:4px">🏀 Squadre</div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px">
+                ${sqs.map(sq=>`<span class="rn rn-sq" style="font-size:.72rem" onclick="openSquadra('${esc(sq)}','${esc(camp)}')">${escH(sq)}</span>`).join('')}
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+              <div style="flex:1;height:6px;background:var(--bl4);border-radius:3px">
+                <div style="height:6px;background:${campColor(camp)};border-radius:3px;width:${pct}%"></div>
+              </div>
+              <span style="font-size:.68rem;color:var(--mu)">${gd.conRis}/${gd.gare} con risultato (${pct}%)</span>
+            </div>
+          </div>`;
+        }).join('');
+      })()}
     </div>
     <div class="mtc hidden" id="mct-3">
       ${(()=>{
@@ -2925,7 +3339,19 @@ function openCampionato(camp){
       })()}
     </div>
     <div class="mtc hidden" id="mct-4">
-      <div class="pgw">${topArb.map(([n,v])=>`<div class="pgr"><div class="pgl"><span class="rn rn-Arbitro" onclick="openPersona('${esc(n)}')">${escH(n)}</span></div><div class="pgo"><div class="pgi" style="width:${v/maxA*100}%;background:var(--arb-tx)"></div></div><div class="pgv">${v}</div></div>`).join('')}</div>
+      <div class="pgw">${topArb.map(([n,v],i)=>{const pp=P[n]?.provincia||'';const pvClr=PC[pp]||'var(--arb-tx)';return`<div class="pgr">
+        <span style="color:var(--mu2);font-size:.68rem;min-width:18px">${i+1}.</span>
+        <div class="pgl" style="display:flex;align-items:center;gap:5px">
+          <span class="rn" style="color:${pvClr};font-weight:700" onclick="openPersona('${esc(n)}')">${escH(n)}</span>
+          ${pp?pvB(pp):''}
+        </div>
+        <div class="pgo"><div class="pgi" style="width:${v/maxA*100}%;background:${pvClr}"></div></div>
+        <div class="pgv" style="color:${pvClr}">${v}</div>
+      </div>`}).join('')}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+        ${Object.entries(topArb.reduce((acc,[n])=>{const pp=P[n]?.provincia||'?';acc[pp]=(acc[pp]||0)+1;return acc;},{})).sort((a,b)=>b[1]-a[1]).map(([pv,n])=>`<span style="background:${PC[pv]||'#999'};color:#fff;border-radius:4px;padding:2px 8px;font-size:.7rem;font-weight:700">${pv}: ${n}</span>`).join('')}
+      </div>
     </div>
     <div class="mtc hidden" id="mct-5">
       <div style="margin-bottom:8px;display:flex;gap:14px;font-size:.72rem;flex-wrap:wrap">
@@ -3401,39 +3827,59 @@ function initClassificaPage(){
 }
 
 function renderClassifica(){
+  initClassificaPage();
   const camp=document.getElementById('cl-camp')?.value||'';
-  const girone=document.getElementById('cl-girone')?.value||'';
   const show=document.getElementById('cl-show')?.value||'pts';
   const body=document.getElementById('cl-body');
   const info=document.getElementById('cl-info');
   if(!body)return;
-  if(!camp){renderAllClassifiche(show);if(info)info.textContent='Tutte le classifiche — clicca un campionato per i dettagli';return;}
-  const cs=CS[camp];
-  if(!cs){body.innerHTML='<p class="il">Dati non disponibili</p>';return;}
+
+  // Aggiorna gironi quando cambia campionato
   const girSel=document.getElementById('cl-girone');
   if(girSel){
     const curGir=girSel.value;
     girSel.innerHTML='<option value="">Tutti i gironi</option>';
-    (cs.gironi||[]).forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;if(g===curGir)o.selected=true;girSel.appendChild(o);});
+    if(camp){
+      const cs=CS[camp];
+      (cs?.gironi||[]).forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;if(g===curGir)o.selected=true;girSel.appendChild(o);});
+    }
   }
-  const meta=CAMP_META[camp]||{};const clr=campColor(camp);
-  if(info){
-    const gBadge=meta.genere==='F'?'<span style="background:#fce4f0;color:#e84393;border-radius:4px;padding:1px 6px;font-size:.7rem;margin-left:5px">👩 F</span>':
-                 meta.genere==='X'?'<span style="background:#f3eaff;color:#8e44ad;border-radius:4px;padding:1px 6px;font-size:.7rem;margin-left:5px">🔄 Mini</span>':'';
-    info.innerHTML=`<span style="background:${clr};color:#fff;border-radius:5px;padding:2px 10px;font-weight:700">${escH(camp)}</span>${gBadge} — ${cs.n_squadre||0} squadre, ${cs.n_gare||0} gare`;
+  const girone=document.getElementById('cl-girone')?.value||'';
+
+  if(!camp){
+    renderAllClassifiche(show);
+    if(info)info.textContent='Tutte le classifiche — clicca su un campionato per i dettagli';
+    return;
   }
+
+  const cs=CS[camp];
+  if(!cs||!cs.sq_stats||!Object.keys(cs.sq_stats).length){
+    body.innerHTML='<p class="il">Dati non disponibili per questo campionato</p>';
+    return;
+  }
+
+  // Filtra sq_stats per girone se selezionato
+  let sqStats=cs.sq_stats;
   if(girone){
-    const gd=(cs.girone_data||{})[girone]||{};
-    body.innerHTML=renderSingleClassifica(camp,girone,gd.sq_stats||cs.sq_stats||{},clr,show);
-  } else if((cs.gironi||[]).length>1){
-    body.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:16px">'+
-      (cs.gironi||[]).map(gi=>{
-        const gd=(cs.girone_data||{})[gi]||{};
-        return`<div style="flex:1;min-width:300px">${renderSingleClassifica(camp,gi,gd.sq_stats||{},clr,show)}</div>`;
-      }).join('')+'</div>';
-  } else {
-    body.innerHTML=renderSingleClassifica(camp,'',cs.sq_stats||{},clr,show);
+    sqStats={};
+    (D.gare||[]).filter(g=>g['Campionato']===camp&&g['Girone']===girone&&g['Risultato']).forEach(g=>{
+      ['Squadra Casa','Squadra Ospite'].forEach(role=>{
+        const sq=g[role];if(!sq)return;
+        if(!sqStats[sq])sqStats[sq]={gare:0,v:0,s:0,p:0,pf:0,ps:0};
+        const isCasa=role==='Squadra Casa';
+        const pc=parseInt(g['Punti Casa']||0),po=parseInt(g['Punti Ospite']||0);
+        const miei=isCasa?pc:po, avv=isCasa?po:pc;
+        sqStats[sq].gare++;sqStats[sq].pf+=miei;sqStats[sq].ps+=avv;
+        if(miei>avv)sqStats[sq].v++;
+        else if(miei<avv)sqStats[sq].s++;
+        else sqStats[sq].p++;
+      });
+    });
   }
+
+  if(info)info.textContent=`${camp}${girone?' — '+girone:''} · ${Object.keys(sqStats).length} squadre`;
+  const clr=campColor(camp);
+  body.innerHTML=renderSingleClassifica(camp,girone,sqStats,clr,show);
 }
 
 function renderSingleClassifica(camp,girone,sqStats,clr,show){
@@ -3513,29 +3959,70 @@ function renderAllClassifiche(show){
     const kb=(CAMP_META[b[1][0]]?.sort_key||[99])[0];
     return ka-kb;
   });
+
+  // Funzione calcola stats per campionato/girone
+  function calcStats(campFilter,girFilter){
+    const stats={};
+    (D.gare||[]).filter(g=>g['Campionato']===campFilter&&g['Risultato']&&(!girFilter||g['Girone']===girFilter)).forEach(g=>{
+      ['Squadra Casa','Squadra Ospite'].forEach(role=>{
+        const sq=g[role];if(!sq)return;
+        if(!stats[sq])stats[sq]={gare:0,v:0,s:0,p:0,pf:0,ps:0};
+        const isCasa=role==='Squadra Casa';
+        const pc=parseInt(g['Punti Casa']||0),po=parseInt(g['Punti Ospite']||0);
+        const miei=isCasa?pc:po, avv=isCasa?po:pc;
+        stats[sq].gare++;stats[sq].pf+=miei;stats[sq].ps+=avv;
+        if(miei>avv)stats[sq].v++;else if(miei<avv)stats[sq].s++;else stats[sq].p++;
+      });
+    });
+    return stats;
+  }
+
   body.innerHTML=sortedGroups.map(([grp,camps])=>`
-    <div style="margin-bottom:20px">
-      <div class="st" style="font-size:.82rem;margin-bottom:8px">${escH(grp)}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:10px">
+    <div style="margin-bottom:24px">
+      <div class="st" style="font-size:.84rem;border-bottom:2px solid var(--bl4);padding-bottom:6px">${escH(grp)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
         ${camps.map(c=>{
-          const cs2=CS[c];if(!cs2||!cs2.sq_stats||!Object.keys(cs2.sq_stats).length)return'';
-          const clr2=campColor(c);
-          const entries=Object.entries(cs2.sq_stats)
-            .map(([sq,st])=>({sq,pts:(st.v||0)*2+(st.p||0),v:st.v||0,s:st.s||0,gare:st.gare||0,diff:(st.pf||0)-(st.ps||0)}))
-            .sort((a,b)=>b.pts-a.pts||b.v-a.v||b.diff-a.diff).slice(0,5);
-          if(!entries.length)return'';
-          return`<div class="card" style="flex:1;min-width:210px;max-width:320px;cursor:pointer" onclick="document.getElementById('cl-camp').value='${esc(c)}';renderClassifica()">
-            <div style="font-weight:700;font-size:.73rem;margin-bottom:6px;display:flex;align-items:center;gap:5px">
-              <span style="background:${clr2};color:#fff;border-radius:4px;padding:1px 7px;font-size:.67rem">${escH(c)}</span>
-              <span style="color:var(--mu);font-size:.67rem;margin-left:auto">↗ dettaglio</span>
+          const cs2=CS[c];
+          if(!cs2)return'';
+          const clr=campColor(c);
+          const gironi=cs2.gironi||[];
+          const hasGironi=gironi.length>1;
+
+          // Mini preview (top 3 o tutti i gironi)
+          let previewHtml='';
+          if(hasGironi){
+            previewHtml=gironi.map(gi=>{
+              const st=calcStats(c,gi);
+              const top3=Object.entries(st).map(([sq,s])=>({sq,pts:(s.v||0)*2+(s.p||0),v:s.v||0,s:s.s||0})).sort((a,b)=>b.pts-a.pts||b.v-a.v).slice(0,3);
+              if(!top3.length)return'';
+              return`<div style="margin-bottom:8px">
+                <div style="font-size:.67rem;font-weight:700;color:${clr};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">${escH(gi)}</div>
+                ${top3.map((e,i)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.71rem;padding:1px 0">
+                  <span style="color:var(--mu2);min-width:14px">${i+1}.</span>
+                  <span style="flex:1;font-weight:${i===0?700:400};color:${i===0?clr:'inherit'}" title="${escH(e.sq)}">${escH(e.sq.length>22?e.sq.slice(0,22)+'…':e.sq)}</span>
+                  <span style="font-weight:700;color:${clr}">${e.pts}</span>
+                  <span style="color:var(--green);font-size:.65rem">${e.v}V</span>
+                </div>`).join('')}
+              </div>`;
+            }).join('');
+          } else {
+            const st=calcStats(c,'');
+            const top5=Object.entries(st).map(([sq,s])=>({sq,pts:(s.v||0)*2+(s.p||0),v:s.v||0,s:s.s||0,gare:s.gare||0})).sort((a,b)=>b.pts-a.pts||b.v-a.v).slice(0,5);
+            previewHtml=top5.map((e,i)=>`<div style="display:flex;align-items:center;gap:5px;font-size:.72rem;padding:1px 0">
+              <span style="color:${i<3?['#ffd700','#c0c0c0','#cd7f32'][i]:'var(--mu2)'};min-width:14px;font-weight:700">${i+1}</span>
+              <span class="rn rn-sq" style="flex:1;font-weight:${i===0?700:400};color:${i===0?clr:'inherit'}" onclick="openSquadra('${esc(e.sq)}')">${escH(e.sq.length>22?e.sq.slice(0,22)+'…':e.sq)}</span>
+              <span style="font-weight:700;color:${clr}">${e.pts}</span>
+              <span style="color:var(--green);font-size:.65rem">${e.v}V</span>
+              <span style="color:var(--red);font-size:.65rem">${e.s}S</span>
+            </div>`).join('');
+          }
+
+          return`<div class="card" style="flex:1;min-width:260px;max-width:380px;cursor:pointer;border-top:3px solid ${clr}" onclick="document.getElementById('cl-camp').value='${esc(c)}';renderClassifica()">
+            <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+              <span style="color:${clr};font-weight:800">${escH(c)}</span>
+              <span style="font-size:.65rem;color:var(--mu);font-weight:400">${hasGironi?gironi.length+' gironi':''} ↗ dettaglio</span>
             </div>
-            ${entries.map((e,i)=>`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;font-size:.71rem;border-bottom:1px solid #f5f5f5">
-              <span style="color:${i===0?'#f39c12':i===1?'#95a5a6':i===2?'#cd6133':'#bbb'};font-weight:700;width:18px;text-align:center">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</span>
-              <span class="rn rn-sq" onclick="event.stopPropagation();openSquadra('${esc(e.sq)}')" style="font-size:.68rem;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(e.sq)}</span>
-              <span style="font-weight:800;color:${clr2};min-width:22px;text-align:right">${e.pts}</span>
-              <span style="color:#00704a;font-size:.67rem;min-width:20px;text-align:right">${e.v}V</span>
-              <span style="color:#c0392b;font-size:.67rem;min-width:20px;text-align:right">${e.s}S</span>
-            </div>`).join('')}
+            ${previewHtml||'<p style="color:var(--mu);font-size:.72rem">Nessun risultato</p>'}
           </div>`;
         }).join('')}
       </div>
@@ -3704,57 +4191,153 @@ function renderTrendChart(nome, container){
 
 
 function renderCampClassifica(camp, container){
-  if(!container) return;
-  var cs2 = CS[camp]; if(!cs2){ container.innerHTML='<p class="il">Nessun dato</p>'; return; }
-  var clrM = campColor(camp);
-  var html = '';
-  if((cs2.gironi||[]).length > 1){
-    html = '<div style="display:flex;flex-wrap:wrap;gap:12px">';
-    (cs2.gironi||[]).forEach(function(gi){
-      var gd = (cs2.girone_data||{})[gi]||{};
-      html += '<div style="flex:1;min-width:270px">' + renderSingleClassifica(camp, gi, gd.sq_stats||{}, clrM, 'pts') + '</div>';
+  if(!container)return;
+  const cs2=CS[camp];
+  if(!cs2){container.innerHTML='<p class="il">Nessun dato</p>';return;}
+  const clrM=campColor(camp);
+  const gironi=cs2.gironi||[];
+
+  // Calcola sq_stats per girone dalle gare raw
+  function calcSqStats(campFilter, gironeFilter){
+    const stats={};
+    (D.gare||[]).filter(g=>g['Campionato']===campFilter&&g['Risultato']&&(!gironeFilter||g['Girone']===gironeFilter)).forEach(g=>{
+      ['Squadra Casa','Squadra Ospite'].forEach(role=>{
+        const sq=g[role];if(!sq)return;
+        if(!stats[sq])stats[sq]={gare:0,v:0,s:0,p:0,pf:0,ps:0};
+        const isCasa=role==='Squadra Casa';
+        const pc=parseInt(g['Punti Casa']||0),po=parseInt(g['Punti Ospite']||0);
+        const miei=isCasa?pc:po, avv=isCasa?po:pc;
+        stats[sq].gare++;stats[sq].pf+=miei;stats[sq].ps+=avv;
+        if(miei>avv)stats[sq].v++;else if(miei<avv)stats[sq].s++;else stats[sq].p++;
+      });
     });
-    html += '</div>';
-  } else {
-    html = renderSingleClassifica(camp, '', cs2.sq_stats||{}, clrM, 'pts');
+    return stats;
   }
-  container.innerHTML = html;
+
+  let html='';
+  if(gironi.length>1){
+    html='<div style="display:flex;flex-wrap:wrap;gap:14px">';
+    gironi.forEach(gi=>{
+      const sqStats=calcSqStats(camp,gi);
+      if(!Object.keys(sqStats).length)return;
+      html+=`<div style="flex:1;min-width:280px"><div style="font-size:.78rem;font-weight:800;color:${clrM};margin-bottom:6px;padding:4px 8px;background:${clrM}18;border-radius:4px">${escH(gi)}</div>`+renderSingleClassifica(camp,gi,sqStats,clrM,'pts')+'</div>';
+    });
+    html+='</div>';
+  } else {
+    const sqStats=calcSqStats(camp,'');
+    html=renderSingleClassifica(camp,'',sqStats,clrM,'pts');
+  }
+  container.innerHTML=html||'<p class="il">Nessun dato disponibile</p>';
 }
 
 
 // ── COPERTURA ──
 function renderCopertura(){
-  const c=COP;
-  const tot=c.totale||1;
+  // Popola dropdown campionati al primo accesso
+  const campSel=document.getElementById('cop-camp');
+  if(campSel&&campSel.options.length<=1){
+    CAMPS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;campSel.appendChild(o);});
+  }
+  const campFilter=campSel?.value||'';
+  const girFilter=document.getElementById('cop-girone')?.value||'';
+
+  // Aggiorna gironi quando cambia campionato
+  const girSel=document.getElementById('cop-girone');
+  if(girSel&&campFilter){
+    const cs2=CS[campFilter];
+    const curGir=girSel.value;
+    girSel.innerHTML='<option value="">Tutti i gironi</option>';
+    (cs2?.gironi||[]).forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;if(g===curGir)o.selected=true;girSel.appendChild(o);});
+  } else if(girSel){
+    girSel.innerHTML='<option value="">Tutti i gironi</option>';
+  }
+
+  // Filtra gare
+  const gare=(D.gare||[]).filter(g=>{
+    if(campFilter&&g['Campionato']!==campFilter)return false;
+    if(girFilter&&g['Girone']!==girFilter)return false;
+    return true;
+  });
+
+  const tot=gare.length||1;
+  const con2=gare.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')).length;
+  const con1=gare.filter(g=>(pns(g['Arbitro 1']||'')||pns(g['Arbitro 2']||''))&&!(pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||''))).length;
+  const senza=gare.filter(g=>!pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||'')).length;
+  const conUdc=gare.filter(g=>['Segnapunti','Cronometrista','24 Secondi','Addetto Referto'].some(f=>pns(g[f]||''))).length;
+  const conOss=gare.filter(g=>pns(g['Osservatore']||'')).length;
+  const completa=gare.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')&&['Segnapunti','Cronometrista'].some(f=>pns(g[f]||''))).length;
+
   function bar(label,val,color){
     const pct=Math.round(val/tot*100);
     return `<div class="cop-row"><div class="cop-lbl">${label}</div><div class="cop-bg"><div class="cop-fill" style="width:${pct}%;background:${color}"></div></div><div class="cop-val">${val} <span style="color:#9aa3b8;font-size:.65rem">(${pct}%)</span></div></div>`;
   }
+
   const arbEl=document.getElementById('cop-arb');
   if(arbEl) arbEl.innerHTML=
-    bar('2 Arbitri',c.con_2_arbitri||0,'#1a7a3c')+
-    bar('1 Arbitro',c.con_1_arbitro||0,'#f39c12')+
-    bar('Senza arbitri',c.senza_arbitri||0,'#c0392b');
+    `<div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:6px">Totale: <b style="color:var(--bl)">${tot}</b> gare</div>`+
+    bar('2 Arbitri',con2,'#1a7a3c')+
+    bar('1 Arbitro',con1,'#f39c12')+
+    bar('Senza arbitri',senza,'#c0392b');
+
   const figEl=document.getElementById('cop-fig');
   if(figEl) figEl.innerHTML=
-    bar('Con UDC',c.con_udc||0,'#003087')+
-    bar('Con Osservatore',c.con_osservatore||0,'#6c5ce7')+
-    bar('Solo arbitri',c.solo_arbitri||0,'#7f8c8d')+
-    bar('Copertura completa',c.gare_con_tutte_figure||c.copertura_completa||0,'#1a7a3c');
+    bar('Con UDC',conUdc,'#003087')+
+    bar('Con Osservatore',conOss,'#6c5ce7')+
+    bar('Solo arbitri',gare.filter(g=>(pns(g['Arbitro 1']||'')||pns(g['Arbitro 2']||''))&&!['Segnapunti','Cronometrista','24 Secondi','Addetto Referto'].some(f=>pns(g[f]||''))&&!pns(g['Osservatore']||'')).length,'#7f8c8d')+
+    bar('Copertura completa',completa,'#1a7a3c');
+
   const tblEl=document.getElementById('cop-tbl');
   if(tblEl) tblEl.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:.78rem">
-    <thead><tr>${['Metrica','Gare','%'].map(h=>`<th style="padding:5px 8px;background:#003087;color:#fff;text-align:left">${h}</th>`).join('')}</tr></thead>
+    <thead><tr>${['Metrica','N','%'].map(h=>`<th style="padding:5px 8px;background:var(--tbl-hdr);color:#fff;text-align:left">${h}</th>`).join('')}</tr></thead>
     <tbody>${[
-      ['Totale gare',tot,'100%'],
-      ['Con 2 arbitri',c.con_2_arbitri||0,Math.round((c.con_2_arbitri||0)/tot*100)+'%'],
-      ['Con 1 arbitro',c.con_1_arbitro||0,Math.round((c.con_1_arbitro||0)/tot*100)+'%'],
-      ['Senza arbitri',c.senza_arbitri||0,Math.round((c.senza_arbitri||0)/tot*100)+'%'],
-      ['Con UDC',c.con_udc||0,Math.round((c.con_udc||0)/tot*100)+'%'],
-      ['Con Osservatore',c.con_osservatore||0,Math.round((c.con_osservatore||0)/tot*100)+'%'],
-      ['Solo arbitri',c.solo_arbitri||0,Math.round((c.solo_arbitri||0)/tot*100)+'%'],
-      ['Copertura completa',c.gare_con_tutte_figure||c.copertura_completa||0,Math.round((c.gare_con_tutte_figure||c.copertura_completa||0)/tot*100)+'%'],
+      ['Totale gare',tot,'100%'],['2 arbitri',con2,Math.round(con2/tot*100)+'%'],
+      ['1 arbitro',con1,Math.round(con1/tot*100)+'%'],['Senza arbitri',senza,Math.round(senza/tot*100)+'%'],
+      ['Con UDC',conUdc,Math.round(conUdc/tot*100)+'%'],['Con Osservatore',conOss,Math.round(conOss/tot*100)+'%'],
+      ['Copertura completa',completa,Math.round(completa/tot*100)+'%'],
     ].map(([m,v,p],i)=>`<tr style="background:${i%2?'#f6f8ff':'#fff'}"><td style="padding:4px 8px">${m}</td><td style="padding:4px 8px;font-weight:700">${v}</td><td style="padding:4px 8px;color:#6b7a99">${p}</td></tr>`).join('')}</tbody>
   </table>`;
+
+  // Tabella per campionato (solo quando non filtrato)
+  const byCampEl=document.getElementById('cop-by-camp');
+  if(byCampEl){
+    const campRows=CAMPS.map(c=>{
+      const cg=(D.gare||[]).filter(g=>g['Campionato']===c);
+      if(!cg.length)return null;
+      const ct=cg.length;
+      const c2=cg.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')).length;
+      const c1=cg.filter(g=>(pns(g['Arbitro 1']||'')||pns(g['Arbitro 2']||''))&&!(pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||''))).length;
+      const c0=cg.filter(g=>!pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||'')).length;
+      // Per girone
+      const gironi=[...new Set(cg.map(g=>g['Girone']).filter(Boolean))].sort();
+      return{c,ct,c2,c1,c0,gironi,cg};
+    }).filter(Boolean);
+
+    byCampEl.innerHTML=`<div style="overflow-x:auto"><table class="rtbl"><thead><tr>
+      <th>Campionato</th><th>Gironi</th><th>Gare</th>
+      <th title="2 arbitri">2 Arb.</th><th title="1 arbitro">1 Arb.</th><th title="Senza">0 Arb.</th>
+      <th title="% copertura doppia">% doppio</th><th>Barra copertura</th>
+    </tr></thead><tbody>${campRows.map((r,i)=>{
+      const pct2=Math.round(r.c2/r.ct*100);
+      const pct1=Math.round(r.c1/r.ct*100);
+      const pct0=Math.round(r.c0/r.ct*100);
+      return`<tr>
+        <td><span style="font-weight:700;cursor:pointer;color:${campColor(r.c)}" onclick="openCampionato('${esc(r.c)}')">${escH(r.c)}</span></td>
+        <td style="font-size:.68rem;color:var(--mu)">${r.gironi.join(', ')||'—'}</td>
+        <td style="text-align:center;font-weight:700">${r.ct}</td>
+        <td style="text-align:center;color:var(--green);font-weight:700">${r.c2}</td>
+        <td style="text-align:center;color:var(--gold);font-weight:700">${r.c1}</td>
+        <td style="text-align:center;color:var(--red)">${r.c0}</td>
+        <td style="text-align:center;font-weight:700;color:${pct2>=80?'var(--green)':pct2>=50?'var(--gold)':'var(--red)'}">${pct2}%</td>
+        <td style="min-width:120px">
+          <div style="height:10px;border-radius:5px;overflow:hidden;display:flex">
+            <div style="height:100%;background:var(--green);width:${pct2}%" title="2 arb: ${pct2}%"></div>
+            <div style="height:100%;background:var(--gold);width:${pct1}%" title="1 arb: ${pct1}%"></div>
+            <div style="height:100%;background:var(--red);width:${pct0}%" title="0 arb: ${pct0}%"></div>
+          </div>
+        </td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
+  }
 }
 
 // ── MAPPA ──
@@ -3791,20 +4374,48 @@ function renderMappa(){
   mapDrawSidePanels();
 }
 
+function mapCampChange(){
+  const camp=document.getElementById('map-camp-filter')?.value||'';
+  const girSel=document.getElementById('map-girone-filter');
+  if(girSel){
+    girSel.innerHTML='<option value="">Tutti i gironi</option>';
+    if(camp){
+      const cs=CS[camp];
+      (cs?.gironi||[]).forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;girSel.appendChild(o);});
+    }
+  }
+  mapApplyFilter();
+}
+
 function mapApplyFilter(){
   if(!_lmap)return;
   const sq=document.getElementById('map-sq-filter')?.value||'';
   const camp=document.getElementById('map-camp-filter')?.value||'';
+  const girone=document.getElementById('map-girone-filter')?.value||'';
+
   const pv=document.getElementById('map-pv-filter')?.value||'';
   _lmarkers.forEach(m=>_lmap.removeLayer(m));_lmarkers=[];
   const PV_COORDS={CA:[39.22,9.12],SS:[40.73,8.56],NU:[40.32,9.33],OR:[39.90,8.59],SU:[39.37,8.78]};
-  const CAMPO_GPS={"Palestra Coni, Via Lazio 08100 NUORO ( NU)": {"lat": 40.321, "lng": 9.329, "city": "NUORO"}, "Palestra Luca Simula, Via Poligono 2 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALAZZETTO DELLO SPORT, VIA ENRICO TOTI 09016 IGLESIAS ( SU)": {"lat": 39.309, "lng": 8.538, "city": "IGLESIAS"}, "Pala Antonianum, Via Mons. Angioni 46 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "PALASERRADIMIGNI, Piazza Segni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra S. Elena, Via Pessina 29 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "PalaManchia, Via Mauro Manca 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "Palestra Comunale, Via Garau, Sn 09026 SAN SPERATE ( SU)": {"lat": 39.354, "lng": 8.981, "city": "SAN SPERATE"}, "PALAZZETTO COMUNALE, Via Giliacquas 09030 ELMAS ( CA)": {"lat": 39.27, "lng": 9.05, "city": "ELMAS"}, "PALESTRA C.E.P., Via Talete 2 09131 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra Esperia, Via Pessagno snc 09126 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALACUS, Via Is Mirrionis 3 - 9 09123 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra ї Cus Sassari ї, Reg. San Giovanni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Hangar Sport Center, Via Gioscari 9 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALAZZETTO COMUNALE, VIA KENNEDY 08020 DORGALI ( NU)": {"lat": 40.292, "lng": 9.587, "city": "DORGALI"}, "Palestra Scolastica, Localitа Sertinu 08015 MACOMER ( NU)": {"lat": 40.265, "lng": 8.779, "city": "MACOMER"}, "Palestra, Via Alessandro Volta 09074 GHILARZA ( OR)": {"lat": 40.121, "lng": 8.841, "city": "GHILARZA"}, "Palestra Scuola Media, Via Nanni 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "Palestra Virtus, Via Pessagno (loc. Montemixi) 09126 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PalAversano, Loc. Sciamain 09011 CALASETTA ( SU)": {"lat": 39.107, "lng": 8.37, "city": "CALASETTA"}, "Pal. Genneruxi, Via Zagabria 09129 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALAZZETTO COMUNALE, Via Lamarmora 07024 LA MADDALENA ( SS)": {"lat": 41.216, "lng": 9.407, "city": "LA MADDALENA"}, "PALAZZETTO DELLO SPORT , VIA MOROSINI 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "Palestra Comunale, Viale Paolo Dettori 92 07021 ARZACHENA ( SS)": {"lat": 41.085, "lng": 9.435, "city": "ARZACHENA"}, "STRUTTURA GEODETICA, Viale Vienna 1 09047 SELARGIUS ( CA)": {"lat": 39.252, "lng": 9.165, "city": "SELARGIUS"}, "Pala Bsk90 - GLM, Via Luna e Sole 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALESTRA SCOLASTICA, Via Ariosto 09047 SELARGIUS ( CA)": {"lat": 39.252, "lng": 9.165, "city": "SELARGIUS"}, "PALASPORT 'R.DA TOME', Via Frosinone 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "CAPANNONE POLIVALENTE, VIA MARIA CARTA 09037 SAN GAVINO MONREALE ( SU)": {"lat": 39.552, "lng": 8.793, "city": "SAN GAVINO MONREALE"}, "Tensostruttura, Via Baronie - Flumini 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "CUPOLA GEODETICA, Via Capo Comino 09042 MONSERRATO ( CA)": {"lat": 39.259, "lng": 9.145, "city": "MONSERRATO"}, "Palestra Comunale, S. S. 126 MARRUBIU 09170 MARRUBIU ( OR)": {"lat": 39.77, "lng": 8.644, "city": "MARRUBIU"}, "Palazzetto dello Sport, Via Sardegna 2 07017 PLOAGHE ( SS)": {"lat": 40.657, "lng": 8.745, "city": "PLOAGHE"}, "Palestra scuole medie , Salita S. Cristina 09014 CARLOFORTE ( SU)": {"lat": 39.143, "lng": 8.314, "city": "CARLOFORTE"}, "PALESTRA, Via EMILIO LUSSU 18 07040 OLMEDO ( SS)": {"lat": 40.649, "lng": 8.378, "city": "OLMEDO"}, "PALESTRA, LOC. LIXIUS 08045 LANUSEI ( NU)": {"lat": 39.876, "lng": 9.543, "city": "LANUSEI"}, "Palestra Vittorio Corbia, Via Pacinotti Snc 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "Palestra Comunale, Via Cagliari, 239 09032 ASSEMINI ( CA)": {"lat": 39.295, "lng": 9.001, "city": "ASSEMINI"}, "Palestra C.G. Salesiano, Loc. Fontana Buddia 08100 NUORO ( NU)": {"lat": 40.321, "lng": 9.329, "city": "NUORO"}, "PALESTRA SCUOLA EL. A.FRANK, Ottaviano Augusto 09028 SESTU ( CA)": {"lat": 39.303, "lng": 9.094, "city": "SESTU"}, "Cupola Geodetica, Via Deffenu 09013 CARBONIA ( SU)": {"lat": 39.168, "lng": 8.521, "city": "CARBONIA"}, "Istituto Tecnico Lorenzo Mossa, Via Enrico Carboni 10 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "Palestra Ist.Industriale, Via Degli Orti 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "PALESTRA COMPARTO 8, VIA RIU MORTU SN 09042 MONSERRATO ( CA)": {"lat": 39.259, "lng": 9.145, "city": "MONSERRATO"}, "Palestra Oratorio Salesiano, Piazza Giovanni X X I I I 09131 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra I.T.I.S. Othoca, Via Zara snc - Z.I. 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "PALESTRA COMUNALE, CORTE PISCEDDA 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "Palestra I.T.I.S. ї Giua ї, Via Montecassino 09134 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALESTRA SCOLASTICA, P.zza Don Milani 07046 PORTO TORRES ( SS)": {"lat": 40.838, "lng": 8.401, "city": "PORTO TORRES"}, "PAL. COMUNALE, Via E. D' Arborea 09033 DECIMOMANNU ( CA)": {"lat": 39.303, "lng": 8.975, "city": "DECIMOMANNU"}, "Palazzetto dello Sport їG. Co, Via Pani 82 09031 ARBUS ( SU)": {"lat": 39.527, "lng": 8.589, "city": "ARBUS"}, "Palestra Comunale G.P.Murratzu, Via San Leonardo 07014 OZIERI ( SS)": {"lat": 40.586, "lng": 9.001, "city": "OZIERI"}, "Palasport, Via Siena 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "Palestra scolastica “G. Cima” , Piazza Giovanni XXIII 09100 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALESTRA COMUNALE, via Verdi 08028 OROSEI ( NU)": {"lat": 40.378, "lng": 9.699, "city": "OROSEI"}, "PALASPORT, Lungomare C. Colombo 09017 SANT'ANTIOCO ( SU)": {"lat": 39.065, "lng": 8.458, "city": "SANT'ANTIOCO"}, "Palazzetto dello Sport, Asse Mediano 09036 GUSPINI ( SU)": {"lat": 39.542, "lng": 8.634, "city": "GUSPINI"}, "CUPOLA GEODETICA COMUNALE, S.P. LUNAMATRONA 09025 SANLURI ( SU)": {"lat": 39.568, "lng": 8.9, "city": "SANLURI"}, "Casa Dinamo, Via Caniga 1 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palazzetto dello Sport, Loc. Sertinu 08015 MACOMER ( NU)": {"lat": 40.265, "lng": 8.779, "city": "MACOMER"}, "PALESTRA SCOLASTICA, Via Matteotti 09041 DOLIANOVA ( SU)": {"lat": 39.374, "lng": 9.178, "city": "DOLIANOVA"}, "PALAZZETTO 'CITTA' UNITE', Via Palladio 07046 PORTO TORRES ( SS)": {"lat": 40.838, "lng": 8.401, "city": "PORTO TORRES"}, "PAL.IMP. SP. UNIVERS., Reg. San Giovanni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra C.O.N.I., Via Coradduzza 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "ORATORIO CHIESA MADRE, VIA AL MARE - FRUTTI D'ORO 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "PALESTRA ISTITUTO GLOBALE JERZ, VIA BUSINCO 31 08044 JERZU ( NU)": {"lat": 39.793, "lng": 9.521, "city": "JERZU"}, "PALAZZETTO BEETHOVEN, Via Beethoven 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "Cupola Geodetica, Via Verdi 09018 SARROCH ( CA)": {"lat": 39.063, "lng": 9.017, "city": "SARROCH"}, "Palazzetto, Via Tharros 09072 CABRAS ( OR)": {"lat": 39.929, "lng": 8.535, "city": "CABRAS"}, "Palestra, Via Nuoro 08100 OLIENA ( NU)": {"lat": 40.268, "lng": 9.396, "city": "OLIENA"}, "- Geopalace c/o Geovi, Circonvallazione Nord direzion 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "Palazzetto Marika Pes, Via Kennedy 09035 GONNOSFANADIGA ( SU)": {"lat": 39.499, "lng": 8.656, "city": "GONNOSFANADIGA"}, "Palestra I.T.I. їG. Asproniї, Via delle Regioni 09010 PORTOSCUSO ( SU)": {"lat": 39.205, "lng": 8.388, "city": "PORTOSCUSO"}, "Palestra 'MOSSA', Viale Diaz 07046 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "PALESTRA, Via Degli Stendardi 09134 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra Sc. Ist. Tecn. A. S., Via Solari 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra, Via Garibaldi 09040 MARACALAGONIS ( CA)": {"lat": 39.328, "lng": 9.206, "city": "MARACALAGONIS"}};
+  const CAMPO_GPS={"Palestra Coni, Via Lazio 08100 NUORO ( NU)": {"lat": 40.321, "lng": 9.329, "city": "NUORO"}, "Palestra Luca Simula, Via Poligono 2 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALAZZETTO DELLO SPORT, VIA ENRICO TOTI 09016 IGLESIAS ( SU)": {"lat": 39.309, "lng": 8.538, "city": "IGLESIAS"}, "Pala Antonianum, Via Mons. Angioni 46 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "PALASERRADIMIGNI, Piazza Segni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra S. Elena, Via Pessina 29 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "PalaManchia, Via Mauro Manca 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "Palestra Comunale, Via Garau, Sn 09026 SAN SPERATE ( SU)": {"lat": 39.354, "lng": 8.981, "city": "SAN SPERATE"}, "PALAZZETTO COMUNALE, Via Giliacquas 09030 ELMAS ( CA)": {"lat": 39.27, "lng": 9.05, "city": "ELMAS"}, "PALESTRA C.E.P., Via Talete 2 09131 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra Esperia, Via Pessagno snc 09126 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALACUS, Via Is Mirrionis 3 - 9 09123 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra ї Cus Sassari ї, Reg. San Giovanni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Hangar Sport Center, Via Gioscari 9 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALAZZETTO COMUNALE, VIA KENNEDY 08020 DORGALI ( NU)": {"lat": 40.292, "lng": 9.587, "city": "DORGALI"}, "Palestra Scolastica, Localitа Sertinu 08015 MACOMER ( NU)": {"lat": 40.265, "lng": 8.779, "city": "MACOMER"}, "Palestra, Via Alessandro Volta 09074 GHILARZA ( OR)": {"lat": 40.121, "lng": 8.841, "city": "GHILARZA"}, "Palestra Scuola Media, Via Nanni 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "Palestra Virtus, Via Pessagno (loc. Montemixi) 09126 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PalAversano, Loc. Sciamain 09011 CALASETTA ( SU)": {"lat": 39.107, "lng": 8.37, "city": "CALASETTA"}, "Pal. Genneruxi, Via Zagabria 09129 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALAZZETTO COMUNALE, Via Lamarmora 07024 LA MADDALENA ( SS)": {"lat": 41.216, "lng": 9.407, "city": "LA MADDALENA"}, "PALAZZETTO DELLO SPORT , VIA MOROSINI 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "Palestra Comunale, Viale Paolo Dettori 92 07021 ARZACHENA ( SS)": {"lat": 41.085, "lng": 9.435, "city": "ARZACHENA"}, "STRUTTURA GEODETICA, Viale Vienna 1 09047 SELARGIUS ( CA)": {"lat": 39.252, "lng": 9.165, "city": "SELARGIUS"}, "Pala Bsk90 - GLM, Via Luna e Sole 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALESTRA SCOLASTICA, Via Ariosto 09047 SELARGIUS ( CA)": {"lat": 39.252, "lng": 9.165, "city": "SELARGIUS"}, "PALASPORT 'R.DA TOME', Via Frosinone 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "CAPANNONE POLIVALENTE, VIA MARIA CARTA 09037 SAN GAVINO MONREALE ( SU)": {"lat": 39.552, "lng": 8.793, "city": "SAN GAVINO MONREALE"}, "Tensostruttura, Via Baronie - Flumini 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "CUPOLA GEODETICA, Via Capo Comino 09042 MONSERRATO ( CA)": {"lat": 39.259, "lng": 9.145, "city": "MONSERRATO"}, "Palestra Comunale, S. S. 126 MARRUBIU 09170 MARRUBIU ( OR)": {"lat": 39.77, "lng": 8.644, "city": "MARRUBIU"}, "Palazzetto dello Sport, Via Sardegna 2 07017 PLOAGHE ( SS)": {"lat": 40.657, "lng": 8.745, "city": "PLOAGHE"}, "Palestra scuole medie , Salita S. Cristina 09014 CARLOFORTE ( SU)": {"lat": 39.143, "lng": 8.314, "city": "CARLOFORTE"}, "PALESTRA, Via EMILIO LUSSU 18 07040 OLMEDO ( SS)": {"lat": 40.649, "lng": 8.378, "city": "OLMEDO"}, "PALESTRA, LOC. LIXIUS 08045 LANUSEI ( NU)": {"lat": 39.876, "lng": 9.543, "city": "LANUSEI"}, "Palestra Vittorio Corbia, Via Pacinotti Snc 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "Palestra Comunale, Via Cagliari, 239 09032 ASSEMINI ( CA)": {"lat": 39.295, "lng": 9.001, "city": "ASSEMINI"}, "Palestra C.G. Salesiano, Loc. Fontana Buddia 08100 NUORO ( NU)": {"lat": 40.321, "lng": 9.329, "city": "NUORO"}, "PALESTRA SCUOLA EL. A.FRANK, Ottaviano Augusto 09028 SESTU ( CA)": {"lat": 39.303, "lng": 9.094, "city": "SESTU"}, "Cupola Geodetica, Via Deffenu 09013 CARBONIA ( SU)": {"lat": 39.168, "lng": 8.521, "city": "CARBONIA"}, "Istituto Tecnico Lorenzo Mossa, Via Enrico Carboni 10 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "Palestra Ist.Industriale, Via Degli Orti 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "PALESTRA COMPARTO 8, VIA RIU MORTU SN 09042 MONSERRATO ( CA)": {"lat": 39.259, "lng": 9.145, "city": "MONSERRATO"}, "Palestra Oratorio Salesiano, Piazza Giovanni X X I I I 09131 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra I.T.I.S. Othoca, Via Zara snc - Z.I. 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "PALESTRA COMUNALE, CORTE PISCEDDA 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "Palestra I.T.I.S. ї Giua ї, Via Montecassino 09134 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALESTRA SCOLASTICA, P.zza Don Milani 07046 PORTO TORRES ( SS)": {"lat": 40.838, "lng": 8.401, "city": "PORTO TORRES"}, "PAL. COMUNALE, Via E. D' Arborea 09033 DECIMOMANNU ( CA)": {"lat": 39.303, "lng": 8.975, "city": "DECIMOMANNU"}, "Palazzetto dello Sport їG. Co, Via Pani 82 09031 ARBUS ( SU)": {"lat": 39.527, "lng": 8.589, "city": "ARBUS"}, "Palestra Comunale G.P.Murratzu, Via San Leonardo 07014 OZIERI ( SS)": {"lat": 40.586, "lng": 9.001, "city": "OZIERI"}, "Palasport, Via Siena 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "Palestra scolastica “G. Cima” , Piazza Giovanni XXIII 09100 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALESTRA COMUNALE, via Verdi 08028 OROSEI ( NU)": {"lat": 40.378, "lng": 9.699, "city": "OROSEI"}, "PALASPORT, Lungomare C. Colombo 09017 SANT'ANTIOCO ( SU)": {"lat": 39.065, "lng": 8.458, "city": "SANT'ANTIOCO"}, "Palazzetto dello Sport, Asse Mediano 09036 GUSPINI ( SU)": {"lat": 39.542, "lng": 8.634, "city": "GUSPINI"}, "CUPOLA GEODETICA COMUNALE, S.P. LUNAMATRONA 09025 SANLURI ( SU)": {"lat": 39.568, "lng": 8.9, "city": "SANLURI"}, "Casa Dinamo, Via Caniga 1 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palazzetto dello Sport, Loc. Sertinu 08015 MACOMER ( NU)": {"lat": 40.265, "lng": 8.779, "city": "MACOMER"}, "PALESTRA SCOLASTICA, Via Matteotti 09041 DOLIANOVA ( SU)": {"lat": 39.374, "lng": 9.178, "city": "DOLIANOVA"}, "PALAZZETTO 'CITTA' UNITE', Via Palladio 07046 PORTO TORRES ( SS)": {"lat": 40.838, "lng": 8.401, "city": "PORTO TORRES"}, "PAL.IMP. SP. UNIVERS., Reg. San Giovanni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra C.O.N.I., Via Coradduzza 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "ORATORIO CHIESA MADRE, VIA AL MARE - FRUTTI D'ORO 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "PALESTRA ISTITUTO GLOBALE JERZ, VIA BUSINCO 31 08044 JERZU ( NU)": {"lat": 39.793, "lng": 9.521, "city": "JERZU"}, "PALAZZETTO BEETHOVEN, Via Beethoven 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "Cupola Geodetica, Via Verdi 09018 SARROCH ( CA)": {"lat": 39.063, "lng": 9.017, "city": "SARROCH"}, "Palazzetto, Via Tharros 09072 CABRAS ( OR)": {"lat": 39.929, "lng": 8.535, "city": "CABRAS"}, "Palestra, Via Nuoro 08100 OLIENA ( NU)": {"lat": 40.268, "lng": 9.396, "city": "OLIENA"}, "- Geopalace c/o Geovi, Circonvallazione Nord direzion 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "Palazzetto Marika Pes, Via Kennedy 09035 GONNOSFANADIGA ( SU)": {"lat": 39.499, "lng": 8.656, "city": "GONNOSFANADIGA"}, "Palestra I.T.I. їG. Asproniї, Via delle Regioni 09010 PORTOSCUSO ( SU)": {"lat": 39.205, "lng": 8.388, "city": "PORTOSCUSO"}, "Palestra 'MOSSA', Viale Diaz 07046 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "PALESTRA, Via Degli Stendardi 09134 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra Sc. Ist. Tecn. A. S., Via Solari 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra, Via Garibaldi 09040 MARACALAGONIS ( CA)": {"lat": 39.328, "lng": 9.206, "city": "MARACALAGONIS"},"PALAZZETTO DELLO SPORT COVRE, PIAZZALE DELLO SPORT SNC 07029 TEMPIO PAUSANIA ( SS)": {"lat": 40.9006, "lng": 9.1364, "city": "TEMPIO PAUSANIA"},"PALAZZETTO COMUNALE, Via Dante Alighieri 07100 TISSI ( SS)": {"lat": 40.7046, "lng": 8.5776, "city": "TISSI"}};
   const pvOff={};
   let shown=0;
   Object.entries(CAMPI||{}).forEach(([cname,c])=>{
     if(pv&&c.prov!==pv)return;
-    if(sq&&!(c.sq_casa||[]).includes(sq)&&!(c.sq_ospiti||[]).includes(sq))return;
+    if(sq){if(!(c.sq_casa||[]).includes(sq)&&!(c.sq_ospiti||[]).includes(sq))return;
+    // Se squadra selezionata, mostra solo il campo casa principale
+    const mainCampo=(D.gare||[]).filter(g=>g['Squadra Casa']===sq&&g['Campo']).reduce((acc,g)=>{acc[g['Campo']]=(acc[g['Campo']]||0)+1;return acc;},{});
+    const topCampo=Object.entries(mainCampo).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+    if(topCampo&&cname!==topCampo)return;
+  }
     if(camp&&!(c.campionati||[]).includes(camp))return;
+    // Filtro girone: mostra solo campi delle squadre in quel girone
+    if(camp&&girone){
+      const giroSqs=new Set((D.gare||[])
+        .filter(g=>g['Campionato']===camp&&g['Girone']===girone)
+        .flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']].filter(Boolean)));
+      const hasSq=(c.sq_casa||[]).some(s=>giroSqs.has(s))||(c.sq_ospiti||[]).some(s=>giroSqs.has(s));
+      if(!hasSq)return;
+    }
     let lat,lng;
     if(CAMPO_GPS[cname]){lat=CAMPO_GPS[cname].lat;lng=CAMPO_GPS[cname].lng;}
     else{
