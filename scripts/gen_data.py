@@ -698,7 +698,7 @@ D={
 with open('cache/data_v5_new.json','w',encoding='utf-8') as f:
     json.dump(D,f,ensure_ascii=False,separators=(',',':'))
 
-import os; size=os.path.getsize('data_v5_new.json')
+import os; size=os.path.getsize('cache/data_v5_new.json')
 print(f"\n✅ data_v5_new.json: {size//1024} KB ({size/1024/1024:.1f} MB)")
 print(f"   Persons:{len(pers_out)} | Squads:{len(sq_out)} | H2H:{len(h2h_out)} | Campi:{len(campi_out)}")
 print(f"   Province:{sorted(all_province)} | Campionati:{len(all_camp_names)}")
