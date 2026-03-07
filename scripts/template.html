@@ -334,6 +334,85 @@ tr.loss-row td{background:#fdecea!important;}
 
 </head>
 <body>
+
+<style id="login-css">
+#login-screen{
+  position:fixed;inset:0;background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
+  display:flex;align-items:center;justify-content:center;z-index:99999;
+  font-family:'Segoe UI',system-ui,Arial,sans-serif;
+}
+#login-box{
+  background:#fff;border-radius:16px;padding:40px 36px;
+  box-shadow:0 24px 80px rgba(0,0,60,.4);
+  width:min(90vw,380px);text-align:center;
+}
+#login-box .logo{font-size:3rem;margin-bottom:8px;}
+#login-box h2{font-size:1.1rem;font-weight:800;color:#1e3a6e;margin-bottom:4px;}
+#login-box p{font-size:.8rem;color:#6b7a99;margin-bottom:24px;}
+#login-input{
+  width:100%;border:2px solid #d8e0ee;border-radius:8px;
+  padding:11px 14px;font-size:1rem;outline:none;
+  text-align:center;letter-spacing:2px;color:#1c2840;
+  transition:border-color .2s;box-sizing:border-box;
+}
+#login-input:focus{border-color:#2456a4;}
+#login-btn{
+  width:100%;margin-top:12px;background:linear-gradient(90deg,#1e3a6e,#2456a4);
+  color:#fff;border:none;border-radius:8px;padding:12px;
+  font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .2s;
+}
+#login-btn:hover{opacity:.88;}
+#login-error{color:#c0392b;font-size:.8rem;margin-top:10px;min-height:18px;}
+#login-ver{font-size:.65rem;color:#aab2c8;margin-top:16px;}
+</style>
+
+<div id="login-screen">
+  <div id="login-box">
+    <div class="logo">🏀</div>
+    <h2>FIP – Comitato Regionale Sardegna</h2>
+    <p>Dashboard Ufficiali 2025/2026</p>
+    <input id="login-input" type="password" placeholder="Password" 
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button id="login-btn" onclick="doLogin()">Accedi →</button>
+    <div id="login-error"></div>
+    <div id="login-ver">Accesso riservato</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const HASH = 'f51924fecd2034c606ce5985b82d188e112e6b3821bfd091055f4fe6f2993d57';
+  const KEY = 'fip_auth';
+  
+  async function sha256(msg){
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  
+  async function checkStored(){
+    const stored = sessionStorage.getItem(KEY);
+    if(stored === HASH){
+      document.getElementById('login-screen').style.display='none';
+    }
+  }
+  
+  window.doLogin = async function(){
+    const pwd = document.getElementById('login-input').value;
+    const h = await sha256(pwd);
+    if(h === HASH){
+      sessionStorage.setItem(KEY, h);
+      document.getElementById('login-screen').style.display='none';
+    } else {
+      document.getElementById('login-error').textContent = '❌ Password errata';
+      document.getElementById('login-input').value = '';
+      document.getElementById('login-input').focus();
+    }
+  };
+  
+  checkStored();
+})();
+</script>
+
 <header>
   <div class="logo">🏀</div>
   <div class="header-txt">
@@ -2902,7 +2981,54 @@ function printMo(id){
   const box=document.getElementById(id);
   const body=box?.querySelector('.mbody')?.innerHTML||'';
   const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><title>FIP Sardegna</title><style>body{font-family:Arial,sans-serif;font-size:11px;}table{width:100%;border-collapse:collapse;margin-bottom:10px;}th{background:#003087;color:#fff;padding:5px;font-size:10px;}td{padding:4px;border-bottom:1px solid #ddd;}.scs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}.sc{border:1px solid #ddd;padding:6px;text-align:center;min-width:75px;}.sv{font-size:1.2rem;font-weight:800;color:#003087;}.sl{font-size:.58rem;text-transform:uppercase;color:#666;}.hidden,.mts,.fb,.il{display:none!important;}.mtc{display:block!important;}.badge{padding:1px 5px;border-radius:8px;font-size:.63rem;font-weight:700;}.rn{font-weight:600;}.sw{color:green;font-weight:700;}.sl_{color:red;font-weight:700;}.pgw{margin-bottom:8px;}.pgr{display:flex;align-items:center;gap:5px;margin-bottom:2px;}.pgl{width:150px;font-size:.73rem;}.pgo{flex:1;height:7px;background:#eee;border-radius:3px;}.pgi{height:100%;background:#003087;border-radius:3px;}.pgv{font-size:.7rem;font-weight:700;color:#003087;width:22px;}</style></head><body>${body}
+  w.document.write(`<!DOCTYPE html><html><head><title>FIP Sardegna</title><style>body{font-family:Arial,sans-serif;font-size:11px;}table{width:100%;border-collapse:collapse;margin-bottom:10px;}th{background:#003087;color:#fff;padding:5px;font-size:10px;}td{padding:4px;border-bottom:1px solid #ddd;}.scs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}.sc{border:1px solid #ddd;padding:6px;text-align:center;min-width:75px;}.sv{font-size:1.2rem;font-weight:800;color:#003087;}.sl{font-size:.58rem;text-transform:uppercase;color:#666;}.hidden,.mts,.fb,.il{display:none!important;}.mtc{display:block!important;}.badge{padding:1px 5px;border-radius:8px;font-size:.63rem;font-weight:700;}.rn{font-weight:600;}.sw{color:green;font-weight:700;}.sl_{color:red;font-weight:700;}.pgw{margin-bottom:8px;}.pgr{display:flex;align-items:center;gap:5px;margin-bottom:2px;}.pgl{width:150px;font-size:.73rem;}.pgo{flex:1;height:7px;background:#eee;border-radius:3px;}.pgi{height:100%;background:#003087;border-radius:3px;}.pgv{font-size:.7rem;font-weight:700;color:#003087;width:22px;}</style></head><body>
+
+<style id="login-css">
+#login-screen{
+  position:fixed;inset:0;background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
+  display:flex;align-items:center;justify-content:center;z-index:99999;
+  font-family:'Segoe UI',system-ui,Arial,sans-serif;
+}
+#login-box{
+  background:#fff;border-radius:16px;padding:40px 36px;
+  box-shadow:0 24px 80px rgba(0,0,60,.4);
+  width:min(90vw,380px);text-align:center;
+}
+#login-box .logo{font-size:3rem;margin-bottom:8px;}
+#login-box h2{font-size:1.1rem;font-weight:800;color:#1e3a6e;margin-bottom:4px;}
+#login-box p{font-size:.8rem;color:#6b7a99;margin-bottom:24px;}
+#login-input{
+  width:100%;border:2px solid #d8e0ee;border-radius:8px;
+  padding:11px 14px;font-size:1rem;outline:none;
+  text-align:center;letter-spacing:2px;color:#1c2840;
+  transition:border-color .2s;box-sizing:border-box;
+}
+#login-input:focus{border-color:#2456a4;}
+#login-btn{
+  width:100%;margin-top:12px;background:linear-gradient(90deg,#1e3a6e,#2456a4);
+  color:#fff;border:none;border-radius:8px;padding:12px;
+  font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .2s;
+}
+#login-btn:hover{opacity:.88;}
+#login-error{color:#c0392b;font-size:.8rem;margin-top:10px;min-height:18px;}
+#login-ver{font-size:.65rem;color:#aab2c8;margin-top:16px;}
+</style>
+
+<div id="login-screen">
+  <div id="login-box">
+    <div class="logo">🏀</div>
+    <h2>FIP – Comitato Regionale Sardegna</h2>
+    <p>Dashboard Ufficiali 2025/2026</p>
+    <input id="login-input" type="password" placeholder="Password" 
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button id="login-btn" onclick="doLogin()">Accedi →</button>
+    <div id="login-error"></div>
+    <div id="login-ver">Accesso riservato</div>
+  </div>
+</div>
+
+
+${body}
 <!-- SPOTLIGHT SEARCH OVERLAY -->
 <div id="spotlight-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,20,40,.65);backdrop-filter:blur(4px);z-index:99999;align-items:flex-start;justify-content:center;padding-top:80px" onclick="if(event.target===this)closeSpotlight()">
   <div style="background:#fff;border-radius:16px;width:min(640px,94vw);box-shadow:0 24px 64px rgba(0,0,40,.35);overflow:hidden">
