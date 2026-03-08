@@ -47,16 +47,16 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 .nav{background:#17305e;display:flex;gap:0;padding:0 10px;
   overflow-x:auto;scrollbar-width:none;border-bottom:2px solid rgba(255,255,255,.06);}
 .nav::-webkit-scrollbar{display:none;}
-.nav-btn{background:none;border:none;color:rgba(255,255,255,.48);
-  padding:9px 12px;cursor:pointer;font-size:.74rem;font-weight:600;
+.nav-btn{background:none;border:none;color:rgba(255,255,255,.55);
+  padding:7px 9px;cursor:pointer;font-size:.70rem;font-weight:600;
   border-bottom:3px solid transparent;white-space:nowrap;
   transition:all .15s;margin-bottom:-2px;}
 .nav-btn:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);}
-.nav-btn.active{color:#fff;border-bottom-color:var(--gold);}
+.nav-btn.active{color:#fff;border-bottom-color:var(--gold);background:rgba(255,255,255,.12);}
 
 /* ══════════ SUMBAR → ora su bianco ══════════ */
 .sumbar{background:#fff;display:flex;flex-wrap:wrap;
-  border-bottom:2px solid var(--br);box-shadow:var(--shadow-sm);}
+  border-bottom:2px solid var(--br);box-shadow:var(--shadow-sm);position:sticky;top:0;z-index:200;}
 .sum-item{padding:8px 14px;cursor:pointer;border-right:1px solid var(--br);
   transition:background .15s;min-width:80px;}
 .sum-item:hover{background:var(--bl4);}
@@ -458,26 +458,26 @@ tr.loss-row td{background:#fdecea!important;}
 </div>
 <div class="nav">
   <button class="nav-btn active" onclick="showPage('home')">🏠 Riepilogo</button>
-  <button class="nav-btn" onclick="showPage('tutti')">👥 Tutti</button>
   <button class="nav-btn" onclick="showPage('arbitri')">👨‍⚖️ Arbitri</button>
   <button class="nav-btn" onclick="showPage('udc')">📋 UDC</button>
   <button class="nav-btn" onclick="showPage('osservatori')">🔭 Osservatori</button>
+  <button class="nav-btn" onclick="showPage('tutti')">👥 Tutti</button>
   <button class="nav-btn" onclick="showPage('squadre')">🏆 Squadre</button>
   <button class="nav-btn" onclick="showPage('classifica')">📊 Classifica</button>
-  <button class="nav-btn" onclick="showPage('h2h')">⚔️ Head-to-Head</button>
-  <button class="nav-btn" onclick="showPage('resoconto')">📋 Resoconto</button>
-  <button class="nav-btn" onclick="openMultiH2H()">👥 Multi H2H</button>
-  <button class="nav-btn" onclick="showPage('gruppi')">🔗 Gruppi</button>
   <button class="nav-btn" onclick="showPage('campionati')">🥇 Campionati</button>
-  <button class="nav-btn" onclick="showPage('province')">📍 Province</button>
   <button class="nav-btn" onclick="showPage('gare')">📅 Gare</button>
-  <button class="nav-btn" onclick="showPage('copertura')">🔎 Copertura</button>
-  <button class="nav-btn" onclick="showPage('provvedimenti')">⚠️ Provvedimenti</button>
-  <button class="nav-btn" onclick="showPage('h2h-arb')">⚖️ H2H Arbitri</button>
+  <button class="nav-btn" onclick="showPage('prossime')">📆 Prossime</button>
+  <button class="nav-btn" onclick="showPage('h2h')">⚔️ H2H</button>
+  <button class="nav-btn" onclick="openMultiH2H()">👥 Multi H2H</button>
+  <button class="nav-btn" onclick="showPage('h2h-arb')">⚖️ H2H Arb.</button>
+  <button class="nav-btn" onclick="showPage('resoconto')">📋 Resoconto</button>
+  <button class="nav-btn" onclick="showPage('province')">📍 Province</button>
   <button class="nav-btn" onclick="showPage('campi')">🏟 Campi</button>
-  <button class="nav-btn" onclick="showPage('prossime')">📆 Prossime Gare</button>
   <button class="nav-btn" onclick="showPage('mappa')">🗺 Mappa</button>
-  <button class="nav-btn" onclick="showPage('aggiornamento')">⚙️ Aggiornamento</button>
+  <button class="nav-btn" onclick="showPage('copertura')">🔎 Copertura</button>
+  <button class="nav-btn" onclick="showPage('gruppi')">🔗 Gruppi</button>
+  <button class="nav-btn" onclick="showPage('provvedimenti')" title="Dati non ancora disponibili">⚠️ Provvedimenti</button>
+  <button class="nav-btn" onclick="showPage('aggiornamento')">⚙️</button>
 </div>
 <div class="sumbar">
   <div class="sum-item" onclick="openGareTotali()"><div class="slabel">Gare</div><div class="svalue" id="s-gare">–</div><div class="ssub">↗ elenco</div></div>
@@ -1223,6 +1223,7 @@ function renderPersonsTable(cid,persons,opts={}){
     <th onclick="sT('${tableId}',${9+co})" title="Campi diversi">🏟</th>
     <th onclick="sT('${tableId}',${10+co})" title="Colleghi">🤝</th>
     <th onclick="sT('${tableId}',${11+co})" title="Campionati">Camp.</th>
+    <th onclick="sT('${tableId}',${12+co})" title="Km stimati stagione">🚗 Km</th>
     <th title="Prossime gare (14gg)">Pros.</th>
     <th title="Forma recente">Forma</th>
     <th>Barra</th>
@@ -1269,6 +1270,20 @@ function renderPersonsTable(cid,persons,opts={}){
         ${(p.forma_recente||[]).slice(-5).map(()=>`<span class="forma-dot fd-V"></span>`).join('')}
         ${(p.streak_cur||0)>=5?`<span class="streak-badge" style="margin-left:2px;font-size:.58rem">${p.streak_cur}🔥</span>`:''}
       </div></td>
+      <td style="text-align:right;font-size:.72rem;color:var(--mu)">${(()=>{
+        let km=0;
+        Object.entries(p.campi||{}).forEach(([campo,cnt])=>{
+          const gps=CAMPO_GPS[campo];
+          const pvCoord={CA:[39.22,9.12],SS:[40.73,8.56],NU:[40.32,9.33],OR:[39.90,8.59],SU:[39.37,8.78]};
+          const home=pvCoord[p.provincia];
+          if(gps&&home){
+            const R=6371,dLat=(gps.lat-home[0])*Math.PI/180,dLon=(gps.lng-home[1])*Math.PI/180;
+            const a=Math.sin(dLat/2)**2+Math.cos(home[0]*Math.PI/180)*Math.cos(gps.lat*Math.PI/180)*Math.sin(dLon/2)**2;
+            km+=Math.round(2*R*Math.asin(Math.sqrt(a)))*2*cnt;
+          }
+        });
+        return km>0?km.toLocaleString('it'):'—';
+      })()}</td>
       <td>${bBar(mv||0,max,pvColor)}</td>
     </tr>`;}).join('')}</tbody></table></div>`;
 }
@@ -2899,13 +2914,42 @@ function openSquadra(nome,campFilter){
       ${mkTbl(arb_stats.map(([ar,st],i)=>{
         const awp=st.gare?Math.round((st.vinte||0)/st.gare*100):0;
         const pvClr=PC[P[ar]?.provincia]||'var(--arb-tx)';
+        // Calcola stats per campionato per questo arbitro
+        const arbCampStats={};
+        (s.gare||[]).filter(g=>g['Risultato']&&[pns(g['Arbitro 1']||''),pns(g['Arbitro 2']||'')].includes(ar)).forEach(g=>{
+          const cn=g['Campionato']||'altro';
+          if(!arbCampStats[cn])arbCampStats[cn]={gare:0,v:0,s:0,p:0};
+          arbCampStats[cn].gare++;
+          const ic=g['Squadra Casa']===nome;
+          const mp=parseInt(ic?g['Punti Casa']||0:g['Punti Ospite']||0);
+          const ap=parseInt(ic?g['Punti Ospite']||0:g['Punti Casa']||0);
+          if(mp>ap)arbCampStats[cn].v++;else if(ap>mp)arbCampStats[cn].s++;else arbCampStats[cn].p++;
+        });
+        const subRows=Object.entries(arbCampStats).sort((a,b)=>b[1].gare-a[1].gare).map(([cn,cs])=>{
+          const cwp=cs.gare?Math.round(cs.v/cs.gare*100):0;
+          const clr=campColor(cn);
+          return`<tr style="background:#f8faff;font-size:.72rem">
+            <td></td>
+            <td style="padding-left:24px;color:${clr};font-size:.68rem" colspan="2">↳ ${escH(cn.length>30?cn.slice(0,30)+'…':cn)}</td>
+            <td data-val="${cs.gare}" style="text-align:center;cursor:pointer;color:#003087;text-decoration:underline" onclick="openSharedArbSqGames('${esc(ar)}','${esc(nome)}','${esc(cn)}')">${cs.gare}</td>
+            <td data-val="${cs.v}" style="color:var(--green);font-weight:700;text-align:center;cursor:pointer;text-decoration:underline" onclick="openSharedArbSqGames('${esc(ar)}','${esc(nome)}','${esc(cn)}','v')">${cs.v}</td>
+            <td data-val="${cs.s}" style="color:var(--red);text-align:center;cursor:pointer;text-decoration:underline" onclick="openSharedArbSqGames('${esc(ar)}','${esc(nome)}','${esc(cn)}','s')">${cs.s}</td>
+            <td data-val="${cs.p}" style="text-align:center">${cs.p}</td>
+            <td data-val="${cwp}" style="text-align:center;font-size:.72rem">${cwp}%
+              <div style="height:3px;background:#eee;border-radius:2px;margin-top:2px">
+                <div style="height:3px;background:${cwp>=50?'var(--green)':'var(--red)'};border-radius:2px;width:${cwp}%"></div>
+              </div>
+            </td>
+            <td></td>
+          </tr>`;
+        }).join('');
         return`<tr>
           <td class="rpos ${i<3?'g'+(i+1):''}" data-val="${i+1}">${i+1}</td>
           <td><span class="rn" style="color:${pvClr};font-weight:700" onclick="openPersona('${esc(ar)}')">${escH(ar)}</span></td>
           <td>${P[ar]?.provincia?pvB(P[ar].provincia):''}</td>
-          <td data-val="${st.gare}" style="font-weight:700;text-align:center">${st.gare}</td>
-          <td data-val="${st.vinte||0}" style="color:var(--green);font-weight:700;text-align:center">${st.vinte||0}</td>
-          <td data-val="${st.perse||0}" style="color:var(--red);text-align:center">${st.perse||0}</td>
+          <td data-val="${st.gare}" style="font-weight:700;text-align:center;cursor:pointer;color:#003087;text-decoration:underline" onclick="openArbVsSq('${esc(ar)}','${esc(nome)}')">${st.gare}</td>
+          <td data-val="${st.vinte||0}" style="color:var(--green);font-weight:700;text-align:center;cursor:pointer;text-decoration:underline" onclick="openSharedArbSqGames('${esc(ar)}','${esc(nome)}','','v')">${st.vinte||0}</td>
+          <td data-val="${st.perse||0}" style="color:var(--red);text-align:center;cursor:pointer;text-decoration:underline" onclick="openSharedArbSqGames('${esc(ar)}','${esc(nome)}','','s')">${st.perse||0}</td>
           <td data-val="${st.pareggi||0}" style="text-align:center">${st.pareggi||0}</td>
           <td data-val="${awp}" style="text-align:center;font-size:.78rem">${awp}%
             <div style="height:4px;background:#eee;border-radius:2px;margin-top:2px">
@@ -2913,7 +2957,7 @@ function openSquadra(nome,campFilter){
             </div>
           </td>
           <td><button class="btn b-bl" style="padding:2px 7px;font-size:.65rem" onclick="openArbVsSq('${esc(ar)}','${esc(nome)}')">📋</button></td>
-        </tr>`;
+        </tr>${subRows}`;
       }).join(''),['#','Arbitro','Prov.','Gare','✅V','❌P','Par.','Win%',''],'tbl-marb')}
 
       <!-- Arbitri per campionato -->
@@ -2980,6 +3024,47 @@ function openSquadra(nome,campFilter){
   openMo('mo-squadra');
   fgSq(nome);
   if(campFilter){const s2=document.getElementById('msg-camp');if(s2){s2.value=campFilter;fgSq(nome);}}
+}
+
+function openSharedArbSqGames(arb,sq,camp,tipo){
+  // Trova gare tra arbitro e squadra, con filtri opzionali
+  const s=SQ[sq];
+  let gare=(s?.gare||[]).filter(g=>{
+    const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
+    if(a1!==arb&&a2!==arb)return false;
+    if(camp&&g['Campionato']!==camp)return false;
+    if(tipo==='v'){const ic=g['Squadra Casa']===sq;const mp=parseInt(ic?g['Punti Casa']||0:g['Punti Ospite']||0),ap=parseInt(ic?g['Punti Ospite']||0:g['Punti Casa']||0);if(mp<=ap)return false;}
+    if(tipo==='s'){const ic=g['Squadra Casa']===sq;const mp=parseInt(ic?g['Punti Casa']||0:g['Punti Ospite']||0),ap=parseInt(ic?g['Punti Ospite']||0:g['Punti Casa']||0);if(mp>=ap)return false;}
+    return g['Risultato'];
+  }).sort((a,b)=>b['Data'].localeCompare(a['Data']));
+  if(!gare.length){alert('Nessuna gara trovata');return;}
+  const pvClr=PC[P[arb]?.provincia]||'var(--arb-tx)';
+  const tipoLabel=tipo==='v'?' (vittorie)':tipo==='s'?' (sconfitte)':'';
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,40,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML=`<div style="background:#fff;border-radius:12px;max-width:800px;width:100%;max-height:85vh;overflow:auto;box-shadow:0 8px 40px rgba(0,0,40,.4)">
+    <div style="padding:14px 18px;background:linear-gradient(135deg,#002060,#1a4db3);color:#fff;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center">
+      <div><b style="color:${pvClr}">${escH(arb)}</b> vs <b>${escH(sq)}</b>${camp?` — ${escH(camp)}`:''}${tipoLabel}</div>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:1rem">✕</button>
+    </div>
+    <div style="padding:14px">
+      <div style="overflow-x:auto">${mkTbl(gare.map(g=>{
+        const ic=g['Squadra Casa']===sq;
+        const mp=parseInt(ic?g['Punti Casa']||0:g['Punti Ospite']||0),ap=parseInt(ic?g['Punti Ospite']||0:g['Punti Casa']||0);
+        const win=mp>ap,loss=ap>mp;
+        return`<tr style="background:${win?'#f0fff4':loss?'#fff5f5':''}">
+          <td style="font-size:.7rem;color:var(--mu)">${escH(g['Data'])}</td>
+          <td style="font-size:.68rem">${escH(g['Campionato']||'')}</td>
+          <td style="font-size:.68rem;color:var(--mu)">${escH(g['Girone']||'')}</td>
+          <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa'])}')" style="${!ic?'font-weight:700;color:var(--bl)':''}">${escH(g['Squadra Casa'])}</span></td>
+          <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite'])}')" style="${ic?'font-weight:700;color:var(--bl)':''}">${escH(g['Squadra Ospite'])}</span></td>
+          <td style="font-weight:700;text-align:center;color:${win?'var(--green)':loss?'var(--red)':'inherit'}">${g['Risultato']||''}</td>
+        </tr>`;
+      }).join(''),['Data','Campionato','Girone','Casa','Ospite','Risultato'],'tbl-asq-g')}</div>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
 }
 
 function openArbVsSq(nomeSq,nomeArb){
@@ -4577,6 +4662,13 @@ function initProvvedimenti(){
   }
 }
 function renderProvvedimenti(){
+  if(!PROVV||PROVV.length===0){
+    const el=document.getElementById('prov-list')||document.querySelector('#page-provvedimenti .prov-content');
+    const info=document.getElementById('prov-count');
+    if(info)info.textContent='0 provvedimenti su 0 totali';
+    if(el)el.innerHTML='<div style="text-align:center;padding:40px;color:var(--mu)"><div style="font-size:2rem;margin-bottom:8px">📭</div><div style="font-size:.9rem">Nessun provvedimento disciplinare registrato<br><small>Il campo Provvedimenti non è popolato nei dati FIP</small></div></div>';
+    return;
+  }
   const q=(document.getElementById('fpv-q')?.value||'').toLowerCase();
   const camp=document.getElementById('fpv-camp')?.value||'';
   const d1=document.getElementById('fpv-d1')?.value||'';
@@ -4755,7 +4847,20 @@ function renderCampi(){
   tbody.innerHTML=html;
 }
 function openCampoModal(campo){
-  const c=CAMPI[campo]; if(!c)return;
+  let c=CAMPI[campo];
+  if(!c){
+    // Cerca per corrispondenza parziale (nome campo senza indirizzo)
+    const nomeCampo=campo.split(',')[0].trim().toLowerCase();
+    c=Object.values(CAMPI).find(cx=>(cx.nome_breve||'').toLowerCase()===nomeCampo||(cx.campo||'').toLowerCase().startsWith(nomeCampo))||null;
+    if(!c){
+      // Fallback minimale: mostra solo le gare di quel campo
+      document.getElementById('mc-title').textContent=campo.split(',')[0]||campo;
+      const gare2=(D.gare||[]).filter(g=>g['Campo']===campo);
+      document.getElementById('mc-body').innerHTML=`<div class="il" style="padding:10px 0">Campo non censito. <b>${gare2.length}</b> gare trovate.</div>
+        <div style="overflow-x:auto">${mkTbl(gare2.slice(0,100).map(g=>'<tr><td>'+escH(g['Data'])+'</td><td style="font-size:.68rem">'+escH(g['Campionato']||'')+'</td><td><span class="rn rn-sq" onclick="openSquadra(\''+esc(g['Squadra Casa']||'')+'\')">'+escH(g['Squadra Casa']||'')+'</span></td><td><span class="rn rn-sq" onclick="openSquadra(\''+esc(g['Squadra Ospite']||'')+'\')">'+escH(g['Squadra Ospite']||'')+'</span></td><td>'+escH(g['Risultato']||'')+'</td></tr>').join(''),['Data','Camp.','Casa','Ospite','Ris.'],'tbl-campo-fb')}</div>`;
+      openMo('mo-campo');return;
+    }
+  }
   document.getElementById('mc-title').textContent=c.nome_breve||campo;
   const sqCasa=c.sq_casa||c.squadre_casa||[];
   const sqOspiti=c.sq_ospiti||[];
