@@ -5302,7 +5302,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   // ── Version badge (v7)
   if(document.getElementById('ver-badge')){
-    document.getElementById('ver-badge').textContent='v7.0  ·  2026-03-06  ·  #BC64';
+    document.getElementById('ver-badge').textContent='v7.0  ·  '+((D.generated||'').slice(0,10)||'2026');
   }
   ['ft-pv','fa-pv','fu-pv','fo-pv','fs-pv','fg2-pv'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
