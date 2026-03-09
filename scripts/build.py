@@ -3,7 +3,7 @@
 Build script FIP Dashboard
 Legge cache/data_v5_new.json + scripts/template.html → docs/index.html
 """
-import json, os, hashlib, datetime
+import json, os, hashlib, datetime, re
 
 DATA_FILE     = 'cache/data_v5_new.json'
 TEMPLATE_FILE = 'scripts/template.html'
@@ -23,11 +23,15 @@ with open(TEMPLATE_FILE, encoding='utf-8') as f:
 hash4 = hashlib.md5(template.encode()).hexdigest()[:4].upper()
 today = datetime.date.today().strftime('%Y-%m-%d')
 
-# Sostituisci version badge
-template = template.replace(
-    "'v7.0  ·  '+((D.generated||'').slice(0,10)||'2026')",
-    f"'v7.0  ·  {today}  ·  #{hash4}'"
-)
+# Sostituisci version badge - gestisce sia stringa dinamica che hardcoded precedente
+ver_str = f"'v7.0  ·  {today}  ·  #{hash4}'"
+template = re.sub(r"'v7\.0  ·  [^']*'", ver_str, template, count=1)
+# Fallback se non trovato
+if f"#{hash4}" not in template:
+    template = template.replace(
+        "'v7.0  ·  '+((D.generated||'').slice(0,10)||'2026')",
+        ver_str
+    )
 
 output = template.replace('__DATA__', data)
 
