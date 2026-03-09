@@ -1130,6 +1130,9 @@ function showPage(id){
 }
 
 // HELPERS
+// CODICI_FIP: mappa nome→codice FIP a 6 cifre (es. "BORTOLATO FILIPPO":"027682")
+// Verrà popolata con i dati da fip.it quando disponibili
+const CODICI_FIP = D.codici_fip || {};
 const esc=s=>(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
 const pvB=pv=>pv?`<span class="badge bp-${pv}" style="background:${PC[pv]||'#888'}">${pv}</span>`:'';
 const catB=cat=>`<span class="badge bc-${cat}">${cat}</span>`;
@@ -1265,7 +1268,8 @@ function renderPersonsTable(cid,persons,opts={}){
     <th onclick="sT('${tableId}',1)">Nome</th>
     <th onclick="sT('${tableId}',2)">Prov.</th>
     <th onclick="sT('${tableId}',3)">Città</th>
-    ${showCat?`<th onclick="sT('${tableId}',4)">Cat.</th>`:''}
+    <th onclick="sT('${tableId}',4)" title="Codice FIP">Cod.</th>
+    ${showCat?`<th onclick="sT('${tableId}',5)">Cat.</th>`:''}
     <th onclick="sT('${tableId}',${4+co})" title="Totale gare">Tot.</th>
     <th onclick="sT('${tableId}',${5+co})" title="Come arbitro">Arb.</th>
     <th onclick="sT('${tableId}',${6+co})" title="Come UDC">UDC</th>
@@ -1306,7 +1310,8 @@ function renderPersonsTable(cid,persons,opts={}){
       </td>
       <td>${pvB(p.provincia)}</td>
       <td style="font-size:.72rem;color:var(--mu)">${escH(p.citta||'')}</td>
-      ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
+      <td style="font-family:monospace;font-size:.7rem;color:#34495e">${CODICI_FIP[p.nome]||''}</td>
+      ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</}">${escH(p.categoria)}</span></td>`:''}
       <td data-val="${p.n_gare}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">${p.n_gare}</td>
       <td data-val="${p.n_gare_arbitro||0}" style="text-align:center">${p.n_gare_arbitro?mkLink(p.n_gare_arbitro,1,pvColor):''}</td>
       <td data-val="${p.n_gare_udc||0}" style="text-align:center">${p.n_gare_udc?mkLink(p.n_gare_udc,1,pvColor):''}</td>
@@ -1687,6 +1692,35 @@ function openGiornoModal(ds){
             <td style="font-size:.66rem">${campo?`<span style="cursor:pointer;color:var(--bl)" onclick="openCampoModal('${esc(campo)}')">${escH(campo.split(',')[0])}</span>`:''}</td>
           </tr>`;
         }).join(''),['Campionato','Girone','Casa','Ospite','Risultato','Arb.','Arbitro 1','Arbitro 2','Campo'],'tbl-giorno')}</div>`;
+
+      // ── PROVVEDIMENTI della giornata ──
+      const provvGiorno = allDayG.filter(g => g['Provvedimenti'] && g['Provvedimenti'].trim && g['Provvedimenti'].trim());
+      if(provvGiorno.length > 0){
+        bodyHtml += '<div style="margin-top:14px"><div style="font-size:.82rem;font-weight:700;color:#c0392b;margin-bottom:6px">⚠️ Provvedimenti della giornata</div>';
+        provvGiorno.forEach(g => {
+          const numG = g['Numero Gara'] || '';
+          const casa = g['Squadra Casa'] || '';
+          const osp = g['Squadra Ospite'] || '';
+          const provvText = g['Provvedimenti'] || '';
+          // Ogni provvedimento può essere separato da newline
+          const righe = provvText.split(/\n|\r\n/).map(r=>r.trim()).filter(Boolean);
+          bodyHtml += '<div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;margin-bottom:6px">';
+          bodyHtml += '<div style="font-size:.7rem;color:var(--mu);margin-bottom:4px">Gara '+ escH(numG) +' · <span style="cursor:pointer;color:var(--bl)" onclick="openSquadra(\''+esc(casa)+'\')">'+escH(casa)+'</span> - <span style="cursor:pointer;color:var(--bl)" onclick="openSquadra(\''+esc(osp)+'\')">'+escH(osp)+'</span></div>';
+          righe.forEach(riga => {
+            // Separa "soc. NOME: testo"
+            const colonPos = riga.indexOf(':');
+            if(colonPos > 0){
+              const sogg = riga.slice(0, colonPos).replace(/^soc\.\s*/i,'').trim();
+              const desc = riga.slice(colonPos+1).trim();
+              bodyHtml += '<div style="font-size:.72rem;margin-bottom:3px"><b style="color:#c0392b">'+ escH(sogg) +'</b>: '+ escH(desc) +'</div>';
+            } else {
+              bodyHtml += '<div style="font-size:.72rem;margin-bottom:3px">'+ escH(riga) +'</div>';
+            }
+          });
+          bodyHtml += '</div>';
+        });
+        bodyHtml += '</div>';
+      }
     }
 
     // Crea e mostra modal dinamico
@@ -2296,7 +2330,7 @@ function openPersona(nome,campFilter){
   const icon=p.categoria==='Arbitro'?'👨‍⚖️':p.categoria==='UDC'?'📋':'🔭';
   document.getElementById('mp-icon').textContent=icon;
   const nFut=(D.gare_future||[]).filter(g=>['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].some(f=>pns(g[f]||'')===nome)).length;
-  document.getElementById('mp-title').innerHTML=`${escH(nome)} &nbsp;${pvB(p.provincia)} ${catB(p.categoria)}${isDual?`<span class="badge" style="background:#ff6b6b;color:#fff;margin-left:6px">⚡ doppio ruolo</span>`:''}${nFut>0?`<span style="background:#e17055;color:#fff;border-radius:10px;padding:1px 8px;font-size:.7rem;margin-left:8px">📅 ${nFut} in programma</span>`:''}`;  const allG=p.gare||[];
+  document.getElementById('mp-title').innerHTML=`${escH(nome)} &nbsp;${pvB(p.provincia)} ${catB(p.categoria)}${isDual?`<span class="badge" style="background:#ff6b6b;color:#fff;margin-left:6px">⚡ doppio ruolo</span>`:''}${(typeof CODICI_FIP!=='undefined'&&CODICI_FIP[nome])?`<span style='background:#34495e;color:#fff;border-radius:4px;padding:1px 7px;font-size:.68rem;margin-left:6px;font-family:monospace' title='Codice FIP'>🪪 ${CODICI_FIP[nome]}</span>`:''}${nFut>0?`<span style="background:#e17055;color:#fff;border-radius:10px;padding:1px 8px;font-size:.7rem;margin-left:8px">📅 ${nFut} in programma</span>`:''}`;  const allG=p.gare||[];
   const nGiorni=Object.keys(p.giorni||{}).length;
   const maxGday=Math.max(...Object.values(p.giorni||{1:1}));
   const topCamp=Object.entries(p.campionati||{}).sort((a,b)=>b[1]-a[1]);
