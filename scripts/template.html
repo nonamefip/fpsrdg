@@ -1630,71 +1630,80 @@ function renderResoconto(){
 
 function openGiornoModal(ds){
   try{
-  // DIAGNOSTICA
-  const _diag_el=document.getElementById('mg-body');
-  if(_diag_el) _diag_el.innerHTML='<p style="color:blue;padding:10px">openGiornoModal avviata per: '+ds+'</p>';
     const perG=(typeof GS!=='undefined'?GS.per_giorno:D.global_stats?.per_giorno)||{};
-  const dayData=perG[ds]||{};
-  const dayGare=(D.gare||[]).filter(g=>g['Data']===ds);
-  const dayFut=(D.gare_future||[]).filter(g=>g['Data']===ds);
-  const allDayG=[...dayGare,...dayFut];
-  const d=new Date(ds);
-  const giorni=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
-  const mesi=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
-  document.getElementById('mg-title').textContent=`${giorni[d.getDay()]} ${d.getDate()} ${mesi[d.getMonth()]} ${d.getFullYear()}`;
+    const dayData=perG[ds]||{};
+    const dayGare=(D.gare||[]).filter(g=>g['Data']===ds);
+    const dayFut=(D.gare_future||[]).filter(g=>g['Data']===ds);
+    const allDayG=[...dayGare,...dayFut];
+    const d=new Date(ds+'T12:00:00');
+    const giorni=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
+    const mesi=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+    const titleStr=`${giorni[d.getDay()]} ${d.getDate()} ${mesi[d.getMonth()]} ${d.getFullYear()}`;
 
-  if(!allDayG.length){
-    document.getElementById('mg-body').innerHTML='<p class="il" style="text-align:center;padding:20px">Nessuna gara in questo giorno</p>';
-    openMo('mo-giorno');return;
-  }
+    // Rimuovi modal precedente se esiste
+    const old=document.getElementById('dyn-mo-giorno');
+    if(old)old.remove();
 
-  // Statistiche giornata
-  const nArbs=new Set();
-  allDayG.forEach(g=>{['Arbitro 1','Arbitro 2'].forEach(f=>{const n=pns(g[f]||'');if(n)nArbs.add(n);});});
-  const camps=[...new Set(allDayG.map(g=>g['Campionato']).filter(Boolean))];
-  const campi=[...new Set(allDayG.map(g=>g['Campo']||'').filter(Boolean))];
+    // Costruisci contenuto
+    let bodyHtml='';
+    if(!allDayG.length){
+      bodyHtml='<p class="il" style="text-align:center;padding:20px">Nessuna gara in questo giorno</p>';
+    } else {
+      const nArbs=new Set();
+      allDayG.forEach(g=>{['Arbitro 1','Arbitro 2'].forEach(f=>{const n=pns(g[f]||'');if(n)nArbs.add(n);});});
+      const camps=[...new Set(allDayG.map(g=>g['Campionato']).filter(Boolean))];
+      const campi=[...new Set(allDayG.map(g=>g['Campo']||'').filter(Boolean))];
+      bodyHtml=`
+        <div class="scs" style="margin-bottom:12px">
+          <div class="sc"><div class="sv">${allDayG.length}</div><div class="sl">Gare</div></div>
+          <div class="sc"><div class="sv">${dayGare.filter(g=>g['Risultato']).length}</div><div class="sl">Con risultato</div></div>
+          <div class="sc"><div class="sv">${nArbs.size}</div><div class="sl">Arbitri</div></div>
+          <div class="sc"><div class="sv">${camps.length}</div><div class="sl">Campionati</div></div>
+          <div class="sc"><div class="sv">${campi.length}</div><div class="sl">Campi</div></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
+          ${camps.map(c=>`<span style="background:${campColor(c)};color:#fff;border-radius:4px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="openCampionato('${esc(c)}')">${escH(c)}</span>`).join('')}
+        </div>
+        <div style="overflow-x:auto">
+        ${mkTbl(allDayG.map(g=>{
+          const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
+          const nArb=(a1?1:0)+(a2?1:0);
+          const arbClr=nArb===2?'var(--green)':nArb===1?'var(--gold)':'var(--red)';
+          const isFut=!g['Risultato']&&dayFut.includes(g);
+          const [pcasa,posp]=(g['Risultato']||'').split('-');
+          const casaW=pcasa&&posp&&parseInt(pcasa)>parseInt(posp);
+          const ospW=pcasa&&posp&&parseInt(posp)>parseInt(pcasa);
+          const campo=g['Campo']||'';
+          return`<tr style="${isFut?'background:#fffbf0':''}">
+            <td style="font-size:.7rem;color:var(--mu)">${escH(g['Campionato']||'')}</td>
+            <td style="font-size:.68rem;color:var(--mu2)">${escH(g['Girone']||'')}</td>
+            <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa'])}')" style="${casaW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Casa'])}</span></td>
+            <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite'])}')" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite'])}</span></td>
+            <td style="font-weight:700;text-align:center">${g['Risultato']||`<span style="color:var(--mu2);font-size:.7rem">In programma</span>`}</td>
+            <td style="text-align:center"><b style="color:${arbClr}">${nArb}</b></td>
+            <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a1)}')">${escH(a1)}</span>${genderDot(a1)}`:''}</td>
+            <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a2)}')">${escH(a2)}</span>${genderDot(a2)}`:''}</td>
+            <td style="font-size:.66rem">${campo?`<span style="cursor:pointer;color:var(--bl)" onclick="openCampoModal('${esc(campo)}')">${escH(campo.split(',')[0])}</span>`:''}</td>
+          </tr>`;
+        }).join(''),['Campionato','Girone','Casa','Ospite','Risultato','Arb.','Arbitro 1','Arbitro 2','Campo'],'tbl-giorno')}</div>`;
+    }
 
-  document.getElementById('mg-body').innerHTML=`
-    <div class="scs" style="margin-bottom:12px">
-      <div class="sc"><div class="sv">${allDayG.length}</div><div class="sl">Gare</div></div>
-      <div class="sc"><div class="sv">${dayGare.filter(g=>g['Risultato']).length}</div><div class="sl">Con risultato</div></div>
-      <div class="sc"><div class="sv">${nArbs.size}</div><div class="sl">Arbitri</div></div>
-      <div class="sc"><div class="sv">${camps.length}</div><div class="sl">Campionati</div></div>
-      <div class="sc"><div class="sv">${campi.length}</div><div class="sl">Campi</div></div>
-    </div>
-    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
-      ${camps.map(c=>`<span style="background:${campColor(c)};color:#fff;border-radius:4px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="openCampionato('${esc(c)}')">${escH(c)}</span>`).join('')}
-    </div>
-    <div style="overflow-x:auto">
-    ${mkTbl(allDayG.map(g=>{
-      const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
-      const nArb=(a1?1:0)+(a2?1:0);
-      const arbClr=nArb===2?'var(--green)':nArb===1?'var(--gold)':'var(--red)';
-      const isFut=!g['Risultato']&&dayFut.includes(g);
-      const [pcasa,posp]=(g['Risultato']||'').split('-');
-      const casaW=pcasa&&posp&&parseInt(pcasa)>parseInt(posp);
-      const ospW=pcasa&&posp&&parseInt(posp)>parseInt(pcasa);
-      const campo=g['Campo']||'';
-      return`<tr style="${isFut?'background:#fffbf0':''}">
-        <td style="font-size:.7rem;color:var(--mu)">${escH(g['Campionato']||'')}</td>
-        <td style="font-size:.68rem;color:var(--mu2)">${escH(g['Girone']||'')}</td>
-        <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa'])}')" style="${casaW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Casa'])}</span></td>
-        <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite'])}')" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite'])}</span></td>
-        <td style="font-weight:700;text-align:center">${g['Risultato']||`<span style="color:var(--mu2);font-size:.7rem">In programma</span>`}</td>
-        <td style="text-align:center"><b style="color:${arbClr}">${nArb}</b></td>
-        <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a1)}')">${escH(a1)}</span>${genderDot(a1)}`:''}</td>
-        <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a2)}')">${escH(a2)}</span>${genderDot(a2)}`:''}</td>
-        <td style="font-size:.66rem">${campo?`<span style="cursor:pointer;color:var(--bl)" onclick="openCampoModal('${esc(campo)}')">${escH(campo.split(',')[0])}</span>`:''}</td>
-      </tr>`;
-    }).join(''),['Campionato','Girone','Casa','Ospite','Risultato','Arb.','Arbitro 1','Arbitro 2','Campo'],'tbl-giorno')}</div>`;
-  openMo('mo-giorno');
+    // Crea e mostra modal dinamico
+    const modal=document.createElement('div');
+    modal.id='dyn-mo-giorno';
+    modal.className='mo open';
+    modal.innerHTML=`
+      <div class="mbox" style="max-width:900px">
+        <div class="mhd"><span>📅</span><h3>${escH(titleStr)}</h3>
+        <button class="mbtn" onclick="document.getElementById('dyn-mo-giorno')?.remove()">✕</button></div>
+        <div class="mbody">${bodyHtml}</div>
+      </div>`;
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+    document.body.appendChild(modal);
+    setTimeout(()=>makeTableSortable(modal),50);
   }catch(err){
-    console.error('openGiornoModal error:', err);
-    const tEl=document.getElementById('mg-title');
-    const bEl=document.getElementById('mg-body');
-    if(tEl) tEl.textContent='Errore: '+err.message;
-    if(bEl) bEl.innerHTML='<div style="padding:16px;color:red;font-size:.8rem"><b>Errore JS:</b><br>'+String(err.message)+'<br><pre style="font-size:.65rem;white-space:pre-wrap">'+String(err.stack||'').split('\n').slice(0,5).join('\n')+'</pre></div>';
-    try{ openMo('mo-giorno'); }catch(e2){}
+    console.error('openGiornoModal error:',err);
+    alert('Errore openGiornoModal: '+err.message);
   }
 }
 
