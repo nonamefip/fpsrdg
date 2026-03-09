@@ -31,7 +31,7 @@ body{font-family:'Segoe UI',system-ui,Arial,sans-serif;
 /* ══════════ HEADER ══════════ */
 header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
   color:#fff;padding:10px 22px;display:flex;align-items:center;gap:14px;
-  border-bottom:3px solid var(--gold);position:relative;}
+  border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:400;}
 .logo{font-size:2rem;flex-shrink:0;}
 .header-txt h1{font-size:1.05rem;font-weight:700;letter-spacing:.2px;}
 .header-txt p{font-size:.7rem;opacity:.6;margin-top:1px;}
@@ -45,7 +45,8 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 
 /* ══════════ NAV ══════════ */
 .nav{background:#17305e;display:flex;gap:0;padding:0 10px;
-  overflow-x:auto;scrollbar-width:none;border-bottom:2px solid rgba(255,255,255,.06);}
+  overflow-x:auto;scrollbar-width:none;border-bottom:2px solid rgba(255,255,255,.06);
+  position:sticky;top:0;z-index:399;}
 .nav::-webkit-scrollbar{display:none;}
 .nav-btn{background:none;border:none;color:rgba(255,255,255,.55);
   padding:7px 9px;cursor:pointer;font-size:.70rem;font-weight:600;
@@ -56,7 +57,7 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 
 /* ══════════ SUMBAR → ora su bianco ══════════ */
 .sumbar{background:#fff;display:flex;flex-wrap:wrap;
-  border-bottom:2px solid var(--br);box-shadow:var(--shadow-sm);position:sticky;top:0;z-index:200;}
+  border-bottom:2px solid var(--br);box-shadow:var(--shadow-sm);position:sticky;top:36px;z-index:290;}
 .sum-item{padding:8px 14px;cursor:pointer;border-right:1px solid var(--br);
   transition:background .15s;min-width:80px;}
 .sum-item:hover{background:var(--bl4);}
@@ -76,7 +77,7 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
   box-shadow:var(--shadow-lg);position:relative;overflow:hidden;}
 .hero-banner::before{content:'🏀';position:absolute;right:20px;top:50%;
   transform:translateY(-50%);font-size:6rem;opacity:.06;pointer-events:none;}
-.hero-kpi{flex:1;min-width:120px;text-align:center;
+.hero-kpi{flex:0 0 auto;min-width:90px;max-width:150px;text-align:center;
   border-right:1px solid rgba(255,255,255,.1);padding:8px 16px;}
 .hero-kpi:last-child{border-right:none;}
 .hero-kpi .hv{font-size:2.4rem;font-weight:900;color:var(--gold);line-height:1;}
@@ -738,35 +739,35 @@ tr.loss-row td{background:#fdecea!important;}
 <!-- MODALS -->
 <div class="mo" id="mo-persona"><div class="mbox" id="mo-persona-box">
   <div class="mhd" id="mo-ph"><span id="mp-icon" style="font-size:1.1rem"></span><h3 id="mp-title">–</h3>
-  <button class="mbtn" onclick="printMo('mo-persona')">🖨</button><button class="mbtn" onclick="closeMo('mo-persona')">✕</button></div>
+  <button class="mbtn" onclick="printMo('mo-persona')">🖨</button><button class="mbtn" onclick="toggleMoFullscreen('mo-persona')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-persona')">✕</button></div>
   <div class="mbody" id="mp-body"></div>
   <div class="mfoot"><button class="btn b-go" onclick="printMo('mo-persona')">🖨 Stampa</button><button class="btn b-gr" onclick="closeMo('mo-persona')">Chiudi</button></div>
 </div></div>
 
 <div class="mo" id="mo-squadra"><div class="mbox" id="mo-squadra-box">
   <div class="mhd" id="mo-sh"><span style="font-size:1.1rem">🏆</span><h3 id="ms-title">–</h3>
-  <button class="mbtn" onclick="printMo('mo-squadra')">🖨</button><button class="mbtn" onclick="closeMo('mo-squadra')">✕</button></div>
+  <button class="mbtn" onclick="printMo('mo-squadra')">🖨</button><button class="mbtn" onclick="toggleMoFullscreen('mo-squadra')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-squadra')">✕</button></div>
   <div class="mbody" id="ms-body"></div>
   <div class="mfoot"><button class="btn b-go" onclick="printMo('mo-squadra')">🖨 Stampa</button><button class="btn b-gr" onclick="closeMo('mo-squadra')">Chiudi</button></div>
 </div></div>
 
 <div class="mo" id="mo-prov"><div class="mbox" id="mo-prov-box">
   <div class="mhd" id="mo-pvh"><span style="font-size:1.1rem">📍</span><h3 id="mpv-title">–</h3>
-  <button class="mbtn" onclick="printMo('mo-prov')">🖨</button><button class="mbtn" onclick="closeMo('mo-prov')">✕</button></div>
+  <button class="mbtn" onclick="printMo('mo-prov')">🖨</button><button class="mbtn" onclick="toggleMoFullscreen('mo-prov')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-prov')">✕</button></div>
   <div class="mbody" id="mpv-body"></div>
   <div class="mfoot"><button class="btn b-go" onclick="printMo('mo-prov')">🖨</button><button class="btn b-gr" onclick="closeMo('mo-prov')">Chiudi</button></div>
 </div></div>
 
 <div class="mo" id="mo-camp"><div class="mbox" id="mo-camp-box">
   <div class="mhd"><span style="font-size:1.1rem">🥇</span><h3 id="mc-title">–</h3>
-  <button class="mbtn" onclick="printMo('mo-camp')">🖨</button><button class="mbtn" onclick="closeMo('mo-camp')">✕</button></div>
+  <button class="mbtn" onclick="printMo('mo-camp')">🖨</button><button class="mbtn" onclick="toggleMoFullscreen('mo-camp')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-camp')">✕</button></div>
   <div class="mbody" id="mc-body"></div>
   <div class="mfoot"><button class="btn b-go" onclick="printMo('mo-camp')">🖨</button><button class="btn b-gr" onclick="closeMo('mo-camp')">Chiudi</button></div>
 </div></div>
 
 <div class="mo" id="mo-gare"><div class="mbox" id="mo-gare-box">
   <div class="mhd"><span style="font-size:1.1rem">📅</span><h3>Tutte le Gare</h3>
-  <button class="mbtn" onclick="closeMo('mo-gare')">✕</button></div>
+  <button class="mbtn" onclick="toggleMoFullscreen('mo-gare')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-gare')">✕</button></div>
   <div class="mbody" id="mg-body"></div>
   <div class="mfoot"><button class="btn b-gr" onclick="closeMo('mo-gare')">Chiudi</button></div>
 </div></div>
@@ -1001,7 +1002,7 @@ Argomenti: /c "cd C:\percorso\cartella && python fip_scraper_v5.py && python gen
 <!-- MODAL GIORNATA -->
 <div class="mo" id="mo-giorno"><div class="mbox" style="max-width:900px">
   <div class="mhd"><span>📅</span><h3 id="mg-title">Giornata</h3>
-  <button class="mbtn" onclick="closeMo('mo-giorno')">✕</button></div>
+  <button class="mbtn" onclick="toggleMoFullscreen('mo-giorno')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-giorno')">✕</button></div>
   <div class="mbody" id="mg-body"></div>
 </div></div>
 
@@ -1293,12 +1294,12 @@ function renderPersonsTable(cid,persons,opts={}){
     const nFut=(D.gare_future||[]).filter(g=>[g['Arbitro 1'],g['Arbitro 2'],g['Segnapunti'],g['Cronometrista'],g['24 Secondi'],g['Addetto Referto'],g['Osservatore']].some(f=>pns(f||'')===p.nome)).length;
     const mv=mainGare!=null?p[mainGareKey]:p.n_gare;
     const mkLink=(val,tabIdx,clr='var(--bl)')=>
-      `<span style="color:${clr};font-weight:700;cursor:pointer" onclick="openPersona('${esc(p.nome)}');setTimeout(()=>{document.querySelectorAll('#mp-body .mt')[${tabIdx}]?.click();},280)">${val}</span>`;
+      `<span style="color:${clr};font-weight:700;cursor:pointer" data-n="${p.nome}" onclick="openP(this);setTimeout(()=>{document.querySelectorAll('#mp-body .mt')[${tabIdx}]?.click();},280)">${val}</span>`;
     return`<tr>
       <td class="rpos ${i<3?'g'+(i+1):''}" data-val="${i+1}">${i+1}</td>
-      <td style="white-space:nowrap">
+      <td style="white-space:nowrap;cursor:pointer" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">
         <div style="display:flex;align-items:center;gap:3px">
-          <span style="${nameStyle}" onclick="openPersona('${esc(p.nome)}')">${escH(p.nome)}</span>
+          <span style="${nameStyle}">${escH(p.nome)}</span>
           ${sexDot}
           ${isDual?`<span style="font-size:.6rem;background:#fff3cd;border:1px solid #ffe082;border-radius:3px;padding:0 4px;color:#8a6200;margin-left:2px">dual</span>`:''}
         </div>
@@ -1306,7 +1307,7 @@ function renderPersonsTable(cid,persons,opts={}){
       <td>${pvB(p.provincia)}</td>
       <td style="font-size:.72rem;color:var(--mu)">${escH(p.citta||'')}</td>
       ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
-      <td data-val="${p.n_gare}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}" onclick="openPersona('${esc(p.nome)}')">${p.n_gare}</td>
+      <td data-val="${p.n_gare}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">${p.n_gare}</td>
       <td data-val="${p.n_gare_arbitro||0}" style="text-align:center">${p.n_gare_arbitro?mkLink(p.n_gare_arbitro,1,pvColor):''}</td>
       <td data-val="${p.n_gare_udc||0}" style="text-align:center">${p.n_gare_udc?mkLink(p.n_gare_udc,1,pvColor):''}</td>
       <td data-val="${p.n_gare_osservatore||0}" style="text-align:center">${p.n_gare_osservatore?mkLink(p.n_gare_osservatore,1,pvColor):''}</td>
@@ -1414,7 +1415,7 @@ function renderHome(){
   if(wArb&&topArbM.length){
     wArb.innerHTML=topArbM.map(([n,v],i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
       <span style="font-size:.8rem;color:var(--mu2);font-weight:700;min-width:16px">${i+1}.</span>
-      <span class="rn rn-Arbitro" onclick="openPersona('${esc(n)}')" style="flex:1;font-size:.78rem">${escH(n)}</span>${genderDot(n)}
+      <span class="rn rn-Arbitro" data-n="${n}" onclick="openPersona(this.dataset.n)" style="flex:1;font-size:.78rem">${escH(n)}</span>${genderDot(n)}
       <span style="font-weight:800;color:var(--bl);font-size:.9rem">${v}</span>
     </div>`).join('')+`<div style="font-size:.65rem;color:var(--mu2);margin-top:4px">mese corrente (${thisMonth})</div>`;
   }
@@ -1446,7 +1447,7 @@ function renderHome(){
       return `<div class="pgr">
         <span style="color:var(--mu2);font-weight:700;font-size:.68rem;min-width:18px;flex-shrink:0">${i+1}.</span>
         <div class="pgl" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-          <span class="rn ${catClass}" onclick="openPersona('${esc(p.nome)}')">${escH(p.nome)}</span>
+          <span class="rn ${catClass}" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">${escH(p.nome)}</span>
           ${pvB(p.provincia)}
           ${streakBadge}
           ${nf>0?`<span style="background:#e17055;color:#fff;border-radius:10px;padding:0 5px;font-size:.6rem">📅${nf}</span>`:''}
@@ -1591,7 +1592,7 @@ function renderResoconto(){
           return Object.entries(ac).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([n,v],i)=>`
             <div style="display:flex;align-items:center;gap:6px;margin:2px 0">
               <span style="color:var(--mu2);font-size:.7rem;min-width:16px">${i+1}.</span>
-              <span class="rn rn-Arbitro" style="flex:1;font-size:.74rem" onclick="openPersona('${esc(n)}')">${escH(n)}</span>${genderDot(n)}
+              <span class="rn rn-Arbitro" style="flex:1;font-size:.74rem" data-n="${n}" onclick="openPersona(this.dataset.n)">${escH(n)}</span>${genderDot(n)}
               <span style="font-weight:700;color:var(--bl)">${v}</span>
             </div>`).join('');
         })()}
@@ -1620,8 +1621,8 @@ function renderResoconto(){
           <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}')" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite']||'')}</span></td>
           <td style="font-weight:700;text-align:center">${g['Risultato']||'<span style="color:var(--mu2);font-size:.7rem">Prog.</span>'}</td>
           <td style="text-align:center"><b style="color:${arbClr}">${nArb}</b></td>
-          <td style="font-size:.7rem">${a1?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a1)}')">${escH(a1)}</span>${genderDot(a1)}`:''}</td>
-          <td style="font-size:.7rem">${a2?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a2)}')">${escH(a2)}</span>${genderDot(a2)}`:''}</td>
+          <td style="font-size:.7rem">${a1?`<span class="rn rn-Arbitro" data-n="${a1}" onclick="openPersona(this.dataset.n)">${escH(a1)}</span>${genderDot(a1)}`:''}</td>
+          <td style="font-size:.7rem">${a2?`<span class="rn rn-Arbitro" data-n="${a2}" onclick="openPersona(this.dataset.n)">${escH(a2)}</span>${genderDot(a2)}`:''}</td>
           <td style="font-size:.66rem">${g['Campo']?`<span style="cursor:pointer;color:var(--bl)" onclick="openCampoModal('${esc(g['Campo'])}')">${escH((g['Campo']||'').split(',')[0])}</span>`:''}</td>
         </tr>`;
       }).join('')}</tbody>
@@ -1681,8 +1682,8 @@ function openGiornoModal(ds){
             <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite'])}')" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite'])}</span></td>
             <td style="font-weight:700;text-align:center">${g['Risultato']||`<span style="color:var(--mu2);font-size:.7rem">In programma</span>`}</td>
             <td style="text-align:center"><b style="color:${arbClr}">${nArb}</b></td>
-            <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a1)}')">${escH(a1)}</span>${genderDot(a1)}`:''}</td>
-            <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a2)}')">${escH(a2)}</span>${genderDot(a2)}`:''}</td>
+            <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" data-n="${a1}" onclick="openPersona(this.dataset.n)">${escH(a1)}</span>${genderDot(a1)}`:''}</td>
+            <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" data-n="${a2}" onclick="openPersona(this.dataset.n)">${escH(a2)}</span>${genderDot(a2)}`:''}</td>
             <td style="font-size:.66rem">${campo?`<span style="cursor:pointer;color:var(--bl)" onclick="openCampoModal('${esc(campo)}')">${escH(campo.split(',')[0])}</span>`:''}</td>
           </tr>`;
         }).join(''),['Campionato','Girone','Casa','Ospite','Risultato','Arb.','Arbitro 1','Arbitro 2','Campo'],'tbl-giorno')}</div>`;
@@ -1725,7 +1726,7 @@ function expandMese(mese){
   const mn=mNames[parseInt(mese.slice(5))]||mese.slice(5);
   det.innerHTML=`<b style="color:#003087">📅 ${mn} ${mese.slice(0,4)} — ${gare.length} gare</b>
     <div style="display:flex;flex-wrap:wrap;gap:4px;margin:5px 0">
-      ${topArbs.map(([n,c])=>`<span style="background:#fff;border:1px solid #c0d0ff;border-radius:10px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="openPersona('${esc(n)}')">${escH(n)} <b>${c}</b></span>`).join('')}
+      ${topArbs.map(([n,c])=>`<span style="background:#fff;border:1px solid #c0d0ff;border-radius:10px;padding:2px 8px;font-size:.68rem;cursor:pointer" data-n="${n}" onclick="openPersona(this.dataset.n)">${escH(n)} <b>${c}</b></span>`).join('')}
     </div>
     <details><summary style="cursor:pointer;color:#003087;font-size:.72rem">📋 Tutte le ${gare.length} gare di ${mn}</summary>
     <div style="overflow-x:auto;margin-top:6px">${mkGarePersonaTbl(gare,'','tbl-mese-exp')}</div></details>`;
@@ -2036,7 +2037,7 @@ function renderH2H(){
       <tbody>${gare.sort((a,b)=>a['Data'].localeCompare(b['Data'])).map(g=>{
         const pc=parseInt(g['Punti Casa']||0), po=parseInt(g['Punti Ospite']||0);
         const casaW=g['Risultato']&&pc>po, ospW=g['Risultato']&&po>pc;
-        const arbs=[g['Arbitro 1'],g['Arbitro 2']].filter(Boolean).map(a=>`<span class="rn rn-Arbitro" onclick="openPersona('${esc(pns(a))}')" style="font-size:.68rem">${escH(pns(a))}</span>`).join(', ');
+        const arbs=[g['Arbitro 1'],g['Arbitro 2']].filter(Boolean).map(a=>`<span class="rn rn-Arbitro" data-n="${pns(a)}" onclick="openP(this)" style="font-size:.68rem">${escH(pns(a))}</span>`).join(', ');
         return`<tr>
           <td style="white-space:nowrap">${g['Data']}</td>
           <td style="font-size:.72rem">${escH(g['Campionato'])}</td>
@@ -2219,9 +2220,9 @@ function renderGare(){
     return true;
   });
   document.getElementById('g-info').textContent=`${_gf.length} gare su ${GARE.length} totali`;
-  function arbLink(f){const n=pns(f||'');return n?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(n)}')" style="font-size:.68rem">${escH(n)}</span>${genderDot(n)}`:'–';}
+  function arbLink(f){const n=pns(f||'');return n?`<span class="rn rn-Arbitro" data-n="${n}" onclick="openPersona(this.dataset.n)" style="font-size:.68rem">${escH(n)}</span>${genderDot(n)}`:'–';}
   function udcLink(f){const n=pns(f||'');return n?`<span style="font-size:.68rem;color:var(--udc-tx)">${escH(n)}</span>`:'–';}
-  function ossLink(f){const n=pns(f||'');return n?`<span class="rn rn-Osservatore" onclick="openPersona('${esc(n)}')" style="font-size:.68rem">${escH(n)}</span>${genderDot(n)}`:'–';}
+  function ossLink(f){const n=pns(f||'');return n?`<span class="rn rn-Osservatore" data-n="${n}" onclick="openPersona(this.dataset.n)" style="font-size:.68rem">${escH(n)}</span>${genderDot(n)}`:'–';}
   document.getElementById('gtbl-main-body').innerHTML=_gf.map((g,_ri)=>`<tr>
     <td style="color:#9aa3b8;font-size:.68rem;text-align:right">${_ri+1}</td><td>${g['Data']}</td><td>${g['Ora']||''}</td><td style="font-size:.7rem;cursor:pointer;color:#003087;text-decoration:underline" onclick="openGara('${esc(g['Numero Gara']||'')}')">${g['Numero Gara']||''}</td>
     <td style="font-size:.72rem">${escH(g['Campionato'])}</td>
@@ -2284,6 +2285,12 @@ function filterMg(){
 
 // MODAL PERSONA
 function openPersona(nome,campFilter){
+  // Decodifica HTML entities se necessario (per nomi con apostrofo da data-nome)
+  if(nome && nome.includes('&')){
+    const tmp=document.createElement('textarea');
+    tmp.innerHTML=nome;
+    nome=tmp.value;
+  }
   const p=P[nome];if(!p)return;
   const isDual=(p.categorie||[]).length>1;
   const icon=p.categoria==='Arbitro'?'👨‍⚖️':p.categoria==='UDC'?'📋':'🔭';
@@ -2496,7 +2503,7 @@ function openPersona(nome,campFilter){
         });
         return`<tr>
           <td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td>
-          <td><span class="rn rn-${cp?.categoria||'Arbitro'}" onclick="openPersona('${esc(cn)}')">${escH(cn)}</span></td>
+          <td><span class="rn rn-${cp?.categoria||'Arbitro'}" data-n="${cn}" onclick="openPersona(this.dataset.n)">${escH(cn)}</span></td>
           <td>${cp?catB(cp.categoria):''}</td>
           <td>${cp?pvB(cp.provincia):''}</td>
           <td data-val="${cnt}">
@@ -2563,7 +2570,7 @@ function mkGarePersonaTbl(gare,nome,tid){
     const coll=[];
     ['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].forEach(f=>{
       const v=g[f]||'';const n=pns(v);
-      if(n&&n!==nome)coll.push(`<span class="rn rn-${P[n]?.categoria||'Arbitro'}" onclick="openPersona('${esc(n)}')" style="font-size:.68rem">${escH(n)}</span>`);
+      if(n&&n!==nome)coll.push(`<span class="rn rn-${P[n]?.categoria||'Arbitro'}" data-n="${n}" onclick="openPersona(this.dataset.n)" style="font-size:.68rem">${escH(n)}</span>`);
     });
     return`<tr><td>${g['Data']}</td><td>${g['Ora']||''}</td><td style="font-size:.68rem">${g['Numero Gara']||''}</td>
       <td style="font-size:.72rem">${escH(g['Campionato'])}</td><td style="font-size:.7rem">${escH(g['Girone']||'')}</td><td style="font-size:.7rem">${escH(g['Fase']||'')}</td>
@@ -2623,7 +2630,7 @@ function openGenderStats(genere){
           const nG=Object.keys(p.giorni||{}).length;
           return`<tr>
             <td class="rpos ${i<3?'g'+(i+1):''}" data-val="${i+1}">${i+1}</td>
-            <td><span class="rn rn-${p.categoria}" onclick="openPersona('${esc(p.nome)}')" style="border-left:3px solid ${clr}">${escH(p.nome)}</span></td>
+            <td><span class="rn rn-${p.categoria}" data-n="${p.nome}" onclick="openPersona(this.dataset.n)" style="border-left:3px solid ${clr}">${escH(p.nome)}</span></td>
             <td>${pvB(p.provincia)}</td>
             <td data-val="${p.n_gare}"><b>${p.n_gare}</b></td>
             <td data-val="${p.n_gare_arbitro||0}">${p.n_gare_arbitro||0}</td>
@@ -2791,7 +2798,7 @@ function fgpP(nome){
     const coll=[];
     ['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].forEach(f=>{
       const v=g[f]||'';const n=pns(v);
-      if(n&&n!==nome)coll.push(`<span class="rn rn-${P[n]?.categoria||'Arbitro'}" onclick="openPersona('${esc(n)}')" style="font-size:.68rem">${escH(n)}</span>`);
+      if(n&&n!==nome)coll.push(`<span class="rn rn-${P[n]?.categoria||'Arbitro'}" data-n="${n}" onclick="openPersona(this.dataset.n)" style="font-size:.68rem">${escH(n)}</span>`);
     });
     return`<tr><td>${g['Data']}</td><td>${g['Ora']||''}</td><td style="font-size:.68rem">${g['Numero Gara']||''}</td>
       <td style="font-size:.72rem">${escH(g['Campionato'])}</td><td style="font-size:.7rem">${escH(g['Girone']||'')}</td><td style="font-size:.7rem">${escH(g['Fase']||'')}</td>
@@ -2899,7 +2906,7 @@ function openSquadra(nome,campFilter){
           <div style="display:flex;align-items:center;gap:10px">
             <span style="font-size:1.8rem">👨‍⚖️</span>
             <div>
-              <div style="font-weight:800;color:${pvClr};cursor:pointer;font-size:.9rem" onclick="openPersona('${esc(topFidu.ar)}')">${escH(topFidu.ar)}</div>
+              <div style="font-weight:800;color:${pvClr};cursor:pointer;font-size:.9rem" data-n="${topFidu.ar}" onclick="openPersona(this.dataset.n)">${escH(topFidu.ar)}</div>
               <div style="display:flex;gap:8px;margin-top:4px;font-size:.72rem">
                 ${P[topFidu.ar]?.provincia?pvB(P[topFidu.ar].provincia):''}
                 <span style="background:var(--bl4);padding:1px 6px;border-radius:4px"><b>${topFidu.g}</b> gare</span>
@@ -3013,7 +3020,7 @@ function openSquadra(nome,campFilter){
         }).join('');
         return`<tr>
           <td class="rpos ${i<3?'g'+(i+1):''}" data-val="${i+1}">${i+1}</td>
-          <td><span class="rn" style="color:${pvClr};font-weight:700" onclick="openPersona('${esc(ar)}')">${escH(ar)}</span></td>
+          <td><span class="rn" style="color:${pvClr};font-weight:700" data-n="${ar}" onclick="openPersona(this.dataset.n)">${escH(ar)}</span></td>
           <td>${P[ar]?.provincia?pvB(P[ar].provincia):''}</td>
           <td data-val="${st.gare}" style="font-weight:700;text-align:center;cursor:pointer;color:#003087;text-decoration:underline" onclick="openArbVsSq('${esc(ar)}','${esc(nome)}')">${st.gare}</td>
           <td data-val="${st.vinte||0}" style="color:var(--green);font-weight:700;text-align:center;cursor:pointer;text-decoration:underline" onclick="openSharedArbSqGames('${esc(ar)}','${esc(nome)}','','v')">${st.vinte||0}</td>
@@ -3061,7 +3068,7 @@ function openSquadra(nome,campFilter){
                 const pvClr=PC[P[ar]?.provincia]||'var(--arb-tx)';
                 return`<tr style="background:${i%2?'#f8f9ff':'#fff'}">
                   <td style="padding:3px 6px;display:flex;align-items:center;gap:4px">
-                    <span style="color:${pvClr};font-weight:700;cursor:pointer" onclick="openPersona('${esc(ar)}')">${escH(ar)}</span>
+                    <span style="color:${pvClr};font-weight:700;cursor:pointer" data-n="${ar}" onclick="openPersona(this.dataset.n)">${escH(ar)}</span>
                     ${P[ar]?.provincia?pvB(P[ar].provincia):''}
                   </td>
                   <td style="padding:3px 6px;text-align:center;font-weight:700">${st.gare}</td>
@@ -3236,7 +3243,7 @@ function fgSqCustom(nome, luogo, esito){
     let e='',cls='';
     if(g['Risultato']){if(mp>ap){e='V';cls='sw';}else if(mp<ap){e='P';cls='sl_';}else e='=';}
     const ris=g['Risultato']?(isCasa?g['Risultato']:g['Risultato'].split('-').reverse().join('-')):'' ;
-    const arbs=[g['Arbitro 1'],g['Arbitro 2']].filter(Boolean).map(a=>`<span class="rn rn-Arbitro" onclick="openPersona('${esc(pns(a))}')" style="font-size:.68rem">${escH(pns(a))}</span>`).join(', ');
+    const arbs=[g['Arbitro 1'],g['Arbitro 2']].filter(Boolean).map(a=>`<span class="rn rn-Arbitro" data-n="${pns(a)}" onclick="openP(this)" style="font-size:.68rem">${escH(pns(a))}</span>`).join(', ');
     const rowBg=e==='V'?'background:#e8f8ee':e==='P'?'background:#fdecea':'';
     return`<tr style="${rowBg}">
       <td>${g['Data']}</td><td style="font-size:.72rem">${escH(g['Campionato'])} – ${escH(g['Fase']||'')}</td>
@@ -3268,7 +3275,7 @@ function fgSq(nome){
     let esito='',cls='';
     if(g['Risultato']){if(mp>ap){esito='V';cls='win-row';}else if(mp<ap){esito='P';cls='loss-row';}else esito='=';}
     const ris=g['Risultato']?(isCasa?g['Risultato']:g['Risultato'].split('-').reverse().join('-')):'';
-    const arbs=[g['Arbitro 1'],g['Arbitro 2']].filter(Boolean).map(a=>`<span class="rn rn-Arbitro" onclick="openPersona('${esc(pns(a))}')" style="font-size:.68rem">${escH(pns(a))}</span>`).join(' ');
+    const arbs=[g['Arbitro 1'],g['Arbitro 2']].filter(Boolean).map(a=>`<span class="rn rn-Arbitro" data-n="${pns(a)}" onclick="openP(this)" style="font-size:.68rem">${escH(pns(a))}</span>`).join(' ');
     const campo=g['Campo']||g['Palestra']||'';
     return`<tr class="${cls}">
       <td style="font-size:.78rem">${g['Data']}</td>
@@ -3321,13 +3328,13 @@ function openProvincia(pv){
       ${bProg(ce.slice(0,14),maxC,pvColor)}
     </div>
     <div class="mtc hidden" id="mpvt-1">
-      ${mkTbl(arbs_r.map((p,i)=>`<tr><td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td><td><span class="rn rn-Arbitro" onclick="openPersona('${esc(p.nome)}')">${escH(p.nome)}</span></td><td style="font-size:.73rem;color:var(--mu)">${escH(p.citta||'–')}</td><td data-val="${p.n_gare}"><b>${p.n_gare}</b></td><td data-val="${Object.keys(p.giorni||{}).length}">${Object.keys(p.giorni||{}).length}</td></tr>`).join(''),['#','Nome','Città','Gare','Giorni'],'tbl-pvarb')}
+      ${mkTbl(arbs_r.map((p,i)=>`<tr><td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td><td><span class="rn rn-Arbitro" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">${escH(p.nome)}</span></td><td style="font-size:.73rem;color:var(--mu)">${escH(p.citta||'–')}</td><td data-val="${p.n_gare}"><b>${p.n_gare}</b></td><td data-val="${Object.keys(p.giorni||{}).length}">${Object.keys(p.giorni||{}).length}</td></tr>`).join(''),['#','Nome','Città','Gare','Giorni'],'tbl-pvarb')}
     </div>
     <div class="mtc hidden" id="mpvt-2">
-      ${mkTbl(udc_r.map((p,i)=>`<tr><td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td><td><span class="rn rn-UDC" onclick="openPersona('${esc(p.nome)}')">${escH(p.nome)}</span></td><td style="font-size:.7rem">${(p.ruoli||[]).join(', ')}</td><td data-val="${p.n_gare}"><b>${p.n_gare}</b></td></tr>`).join(''),['#','Nome','Ruoli','Gare'],'tbl-pvudc')}
+      ${mkTbl(udc_r.map((p,i)=>`<tr><td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td><td><span class="rn rn-UDC" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">${escH(p.nome)}</span></td><td style="font-size:.7rem">${(p.ruoli||[]).join(', ')}</td><td data-val="${p.n_gare}"><b>${p.n_gare}</b></td></tr>`).join(''),['#','Nome','Ruoli','Gare'],'tbl-pvudc')}
     </div>
     <div class="mtc hidden" id="mpvt-3">
-      ${mkTbl(oss_r.map((p,i)=>`<tr><td data-val="${i+1}">${i+1}</td><td><span class="rn rn-Osservatore" onclick="openPersona('${esc(p.nome)}')">${escH(p.nome)}</span></td><td data-val="${p.n_gare}"><b>${p.n_gare}</b></td></tr>`).join(''),['#','Nome','Gare'],'tbl-pvoss')}
+      ${mkTbl(oss_r.map((p,i)=>`<tr><td data-val="${i+1}">${i+1}</td><td><span class="rn rn-Osservatore" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">${escH(p.nome)}</span></td><td data-val="${p.n_gare}"><b>${p.n_gare}</b></td></tr>`).join(''),['#','Nome','Gare'],'tbl-pvoss')}
     </div>
     <div class="mtc hidden" id="mpvt-4">
       ${mkTbl(sq_r.map((s,i)=>`<tr><td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td><td><span class="rn rn-sq" onclick="openSquadra('${esc(s.nome)}')">${escH(s.nome)}</span></td><td data-val="${s.n_gare}"><b>${s.n_gare}</b></td><td data-val="${s.vinte}" class="sw">${s.vinte}</td><td data-val="${s.perse}" class="sl_">${s.perse}</td><td style="font-size:.7rem;white-space:normal;max-width:160px">${Object.keys(s.campionati).slice(0,3).join(' · ')}</td></tr>`).join(''),['#','Squadra','Gare','V','P','Campionati'],'tbl-pvsqr')}
@@ -3426,7 +3433,7 @@ function openCampionato(camp){
         const arbTot=Object.keys(arbProv).length;
         const pctSameProv=arbTot?Math.round(arbSameProv/arbTot*100):0;
 
-        return`<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px">
+        return`<div style="display:flex;flex-wrap:nowrap;gap:10px;overflow-x:auto;padding-bottom:4px;margin-top:10px">
           ${sqPF.length?`<div class="card" style="flex:1;min-width:200px;margin-bottom:0">
             <div class="card-title">🏹 Top 5 attacchi</div>
             ${sqPF.slice(0,5).map((e,i)=>`<div style="display:flex;align-items:center;gap:6px;margin:3px 0;font-size:.72rem">
@@ -3529,7 +3536,7 @@ function openCampionato(camp){
       <div class="pgw">${topArb.map(([n,v],i)=>{const pp=P[n]?.provincia||'';const pvClr=PC[pp]||'var(--arb-tx)';return`<div class="pgr">
         <span style="color:var(--mu2);font-size:.68rem;min-width:18px">${i+1}.</span>
         <div class="pgl" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-          <span class="rn" style="color:${pvClr};font-weight:700" onclick="openPersona('${esc(n)}','${esc(camp)}')">${escH(n)}</span>
+          <span class="rn" style="color:${pvClr};font-weight:700" data-n="${n}" data-camp="${camp}" onclick="openP(this,this.dataset.camp)">${escH(n)}</span>
           ${pp?pvB(pp):''}
           ${Object.entries(arbGironeMap[n]||{}).sort((a,b)=>b[1]-a[1]).map(([gi,cnt])=>`<span style="background:var(--bl4);color:var(--bl2);border-radius:3px;padding:0 5px;font-size:.62rem;white-space:nowrap">${escH(gi.replace('Girone ',''))}: <b>${cnt}</b></span>`).join('')}
         </div>
@@ -3537,7 +3544,7 @@ function openCampionato(camp){
         <div class="pgv" style="color:${pvClr}">${v}</div>
       </div>`}).join('')}
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+      <div style="display:flex;flex-wrap:nowrap;gap:6px;margin-top:8px;overflow-x:auto;padding-bottom:4px">
         ${Object.entries(topArb.reduce((acc,[n])=>{const pp=P[n]?.provincia||'?';acc[pp]=(acc[pp]||0)+1;return acc;},{})).sort((a,b)=>b[1]-a[1]).map(([pv,n])=>`<span style="background:${PC[pv]||'#999'};color:#fff;border-radius:4px;padding:2px 8px;font-size:.7rem;font-weight:700">${pv}: ${n}</span>`).join('')}
       </div>
     </div>
@@ -3563,8 +3570,8 @@ function openCampionato(camp){
           <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite'])}')" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite'])}</span></td>
           <td style="font-weight:700;text-align:center">${g['Risultato']||'<span style="color:#ccc">–</span>'}</td>
           <td style="text-align:center"><b style="color:${arbClr}">${nArb}</b></td>
-          <td>${a1?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a1)}')" style="font-size:.68rem">${escH(a1)}</span>${genderDot(a1)}`:''}</td>
-          <td>${a2?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a2)}')" style="font-size:.68rem">${escH(a2)}</span>${genderDot(a2)}`:''}</td>
+          <td>${a1?`<span class="rn rn-Arbitro" data-n="${a1}" onclick="openPersona(this.dataset.n)" style="font-size:.68rem">${escH(a1)}</span>${genderDot(a1)}`:''}</td>
+          <td>${a2?`<span class="rn rn-Arbitro" data-n="${a2}" onclick="openPersona(this.dataset.n)" style="font-size:.68rem">${escH(a2)}</span>${genderDot(a2)}`:''}</td>
           <td>${campo?`<span style="font-size:.66rem;cursor:pointer;color:var(--bl)" onclick="openCampoModal('${esc(campo)}')">${escH(campo.split(',')[0])}</span>`:''}</td>
         </tr>`;
       }).join(''),['Data','Girone','Casa','Ospite','Ris.','Arb.','Arbitro 1','Arbitro 2','Campo'],'tbl-camp-gare')}</div>
@@ -3597,6 +3604,26 @@ function openMo(id){
   setTimeout(()=>makeTableSortable(el),50);
 }
 function closeMo(id){document.getElementById(id)?.classList.remove('open');}
+function toggleMoFullscreen(moId){
+  const box = document.querySelector('#'+moId+' .mbox');
+  if(!box) return;
+  if(box.dataset.fs === '1'){
+    box.style.width = '';
+    box.style.height = '';
+    box.style.maxWidth = '';
+    box.style.maxHeight = '';
+    box.style.borderRadius = '';
+    box.dataset.fs = '0';
+  } else {
+    box.style.width = '100vw';
+    box.style.height = '100vh';
+    box.style.maxWidth = '100vw';
+    box.style.maxHeight = '100vh';
+    box.style.borderRadius = '0';
+    box.dataset.fs = '1';
+  }
+}
+
 function initDrag(){
   document.querySelectorAll('.mhd').forEach(head=>{
     const box=head.closest('.mbox');
@@ -3732,7 +3759,7 @@ function renderForma(forma){
 function openGara(numGara){
   const g=(D.gare||[]).find(x=>x['Numero Gara']===numGara);
   if(!g){alert('Gara non trovata: '+numGara);return;}
-  function pLink(f,cls){const n=pns(g[f]||'');return n?`<span class="rn ${cls}" onclick="openPersona('${esc(n)}');closeMo('mo-gara')">${escH(n)}</span>`:'—';}
+  function pLink(f,cls){const n=pns(g[f]||'');return n?`<span class="rn ${cls}" data-n="${n}" onclick="openP(this);closeMo('mo-gara')">${escH(n)}</span>`:'—';}
   document.getElementById('mg-title').textContent='Gara N° '+(g['Numero Gara']||'—');
   document.getElementById('mg-gara-body').innerHTML=`
     <div class="scs" style="margin-bottom:12px">
@@ -3832,7 +3859,7 @@ function runSpotlight(q){
           badge: p.categoria,
           badgeClr: RBG[p.categoria]||'#eee',
           badgeTx: RTX[p.categoria]||'#333',
-          action: `openPersona('${esc(p.nome)}');closeSpotlight()`
+          action: `openP({dataset:{n:'${p.nome}'}});closeSpotlight()`
         });
       });
 
@@ -4200,7 +4227,7 @@ function renderAllClassifiche(show){
               const st=calcStats(c,gi);
               const top3=Object.entries(st).map(([sq,s])=>({sq,pts:(s.v||0)*2+(s.p||0),v:s.v||0,s:s.s||0})).sort((a,b)=>b.pts-a.pts||b.v-a.v).slice(0,3);
               if(!top3.length)return'';
-              return`<div style="flex:1;min-width:120px;border:1px solid var(--br);border-radius:6px;padding:6px 8px;background:var(--bg2)">
+              return`<div style="min-width:130px;max-width:180px;border:1px solid var(--br);border-radius:6px;padding:6px 8px;background:var(--bg2);flex-shrink:0">
                 <div style="font-size:.62rem;font-weight:700;color:${clr};margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(gi)}</div>
                 ${top3.map((e,i)=>`<div style="display:flex;align-items:center;gap:4px;font-size:.68rem;padding:1px 0">
                   <span style="color:var(--mu2);min-width:12px">${i+1}.</span>
@@ -4209,7 +4236,131 @@ function renderAllClassifiche(show){
                 </div>`).join('')}
               </div>`;
             }).join('');
-            previewHtml=`<div style="margin-bottom:8px">${unicaHtml}</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${gironiHtml}</div>`;
+            previewHtml=`<div style="margin-bottom:8px">${unicaHtml}</div><div style="display:flex;flex-wrap:nowrap;gap:6px;margin-top:8px;overflow-x:auto;padding-bottom:4px">${gironiHtml}</div>
+          ${(()=>{
+            // GIRONI ACCUMULATI per Divisione Regionale 2
+            if(!c.toLowerCase().includes('divisione') || !c.toLowerCase().includes('2')) return '';
+            const allGare=GARE_V5.filter(g=>g['Campionato']===c && g['Risultato']);
+            const allGareTutte=GARE_V5.filter(g=>g['Campionato']===c); // include future
+            // Squadre per girone
+            const sqByGirone={};
+            allGareTutte.forEach(g=>{
+              const gi=g['Girone']||'';
+              if(!sqByGirone[gi])sqByGirone[gi]=new Set();
+              sqByGirone[gi].add(g['Squadra Casa']);
+              sqByGirone[gi].add(g['Squadra Ospite']);
+            });
+            // Aggiunge anche gare future per completare i gironi
+            (D.gare_future||[]).filter(g=>g['Campionato']===c).forEach(g=>{
+              const gi=g['Girone']||'';
+              if(!sqByGirone[gi])sqByGirone[gi]=new Set();
+              sqByGirone[gi].add(g['Squadra Casa']);
+              sqByGirone[gi].add(g['Squadra Ospite']);
+            });
+            const sqAzzurro=sqByGirone['Girone Azzurro']||new Set();
+            const sqVerde=sqByGirone['Girone Verde']||new Set();
+            const sqNordA=sqByGirone['Girone Nord A']||new Set();
+            const sqNordB=sqByGirone['Girone Nord B']||new Set();
+            if(!sqAzzurro.size && !sqVerde.size) return '';
+
+            // Per ogni squadra X nel girone sorgente,
+            // trova le squadre che X ha già incontrato in NordA o NordB,
+            // poi somma i punti fatti da X nel girone sorgente contro quelle squadre
+            function calcAccumulato(girSrc, sqGirone){
+              const stats={};
+              [...sqGirone].forEach(sq=>stats[sq]={g:0,v:0,p:0,pts:0,pf:0,ps:0,sq});
+              // Per ogni squadra, trova avversari incontrati in Nord A o Nord B
+              const avvNord={};
+              [...sqGirone].forEach(sq=>{
+                avvNord[sq]=new Set();
+                allGare.filter(g=>(g['Girone']==='Girone Nord A'||g['Girone']==='Girone Nord B') &&
+                  (g['Squadra Casa']===sq||g['Squadra Ospite']===sq)).forEach(g=>{
+                    const avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];
+                    avvNord[sq].add(avv);
+                  });
+              });
+              // Calcola punti nel girone sorgente contro avversari già incontrati nel Nord
+              allGare.filter(g=>g['Girone']===girSrc).forEach(g=>{
+                const c2=g['Squadra Casa'], o2=g['Squadra Ospite'];
+                const ris=g['Risultato']||'';
+                if(!ris) return;
+                const [pc,po]=ris.split('-').map(Number);
+                if(isNaN(pc)||isNaN(po)) return;
+                // Squadra casa
+                if(stats[c2] && avvNord[c2]?.has(o2)){
+                  stats[c2].g++; stats[c2].pf+=pc; stats[c2].ps+=po;
+                  if(pc>po){stats[c2].v++;stats[c2].pts+=2;}
+                  else if(pc<po){stats[c2].p++;}
+                  else stats[c2].pts+=1;
+                }
+                // Squadra ospite
+                if(stats[o2] && avvNord[o2]?.has(c2)){
+                  stats[o2].g++; stats[o2].pf+=po; stats[o2].ps+=pc;
+                  if(po>pc){stats[o2].v++;stats[o2].pts+=2;}
+                  else if(po<pc){stats[o2].p++;}
+                  else stats[o2].pts+=1;
+                }
+              });
+              return Object.values(stats).sort((a,b)=>b.pts-a.pts||b.v-a.v||(b.pf-b.ps)-(a.pf-a.ps));
+            }
+
+            function miniGironeAcc(label, rows){
+              if(!rows.length) return '';
+              const rowsHtml=rows.map((e,i)=>{
+                const bb=i<rows.length-1?'1px solid #f0f0e0':'none';
+                const fw=i===0?700:400; const fc=i===0?clr:'#333';
+                const nomeBr=e.sq.split(' ').slice(-2).join(' ');
+                const diff=e.pf-e.ps; const diffStr=diff>0?'+'+diff:String(diff);
+                return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:'+bb+'">'
+                  +'<span style="font-size:.63rem;font-weight:'+fw+';color:'+fc+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:95px">'+(i+1)+'. '+nomeBr+'</span>'
+                  +'<span style="display:flex;gap:4px;align-items:center">'
+                  +'<span style="font-size:.58rem;color:#888">'+e.g+'G</span>'
+                  +'<span style="font-weight:700;color:'+clr+';font-size:.68rem">'+e.pts+'</span>'
+                  +'</span></div>';
+              }).join('');
+              const gTot=rows.reduce((s,r)=>s+r.g,0);
+              const gLabel=gTot>0?`<span style="font-size:.55rem;color:#aaa;font-weight:400"> (${gTot} gare)</span>`:'';
+              return '<div style="min-width:155px;max-width:210px;border:2px solid '+clr+';border-radius:6px;padding:6px 8px;background:#fffef0;flex-shrink:0">'
+                +'<div style="font-size:.6rem;font-weight:800;color:'+clr+';margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">'+label+' ⭐'+gLabel+'</div>'
+                +rowsHtml+'</div>';
+            }
+
+            const accAzzurro=calcAccumulato('Girone Azzurro',sqAzzurro);
+            const accVerde=calcAccumulato('Girone Verde',sqVerde);
+
+            function calcAccOLD(gironi_src, sq_subset){
+              // kept for compatibility - unused
+              return [];
+            }
+            
+            function miniGironeAccOLD(label, rows){
+              if(!rows.length) return '';
+              const rowsHtml=rows.slice(0,4).map((e,i)=>{
+                const bb=i<rows.length-1?'1px solid #f0f0e0':'none';
+                const fw=i===0?700:400; const fc=i===0?clr:'#333';
+                return '<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:'+bb+';font-size:.65rem">'
+                  +'<span style="font-weight:'+fw+';color:'+fc+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px">'+(i+1)+'. '+e.sq.split(' ').slice(-1)[0]+'</span>'
+                  +'<span style="font-weight:700;color:'+clr+'">'+e.pts+'</span></div>';
+              }).join('');
+              return '<div style="min-width:150px;max-width:200px;border:2px solid '+clr+';border-radius:6px;padding:6px 8px;background:#fffef0;flex-shrink:0">'
+                +'<div style="font-size:.6rem;font-weight:800;color:'+clr+';margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">'+label+' ⭐</div>'
+                +rowsHtml+'</div>';
+            }
+            
+            const accAzzNA=calcAccOLD(['Girone Azzurro'],[]);
+            const accAzzNB=calcAccOLD(['Girone Azzurro'],[]);
+            const accVerdNA=calcAccOLD(['Girone Verde'],[]);
+            const accVerdNB=calcAccOLD(['Girone Verde'],[]);
+            
+            const blocks=[
+              miniGironeAcc('Girone Azzurro Acc.', accAzzurro),
+              miniGironeAcc('Girone Verde Acc.', accVerde),
+            ].filter(Boolean).join('');
+            
+            if(!blocks) return '';
+            return '<div style="margin-top:6px;font-size:.62rem;color:var(--mu);font-weight:600;margin-bottom:3px">📊 Punti accumulati verso la fase successiva</div>'
+              +'<div style="display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;padding-bottom:4px">'+blocks+'</div>';
+          })()}`;
           } else {
             const st=calcStats(c,'');
             const top5=Object.entries(st).map(([sq,s])=>({sq,pts:(s.v||0)*2+(s.p||0),v:s.v||0,s:s.s||0,gare:s.gare||0})).sort((a,b)=>b.pts-a.pts||b.v-a.v).slice(0,5);
@@ -4705,69 +4856,59 @@ function mapApplyFilter(){
 let _arbMarkers = [];
 
 function mapUpdateArbiters(){
-  // Rimuovi marker precedenti
-  _arbMarkers.forEach(m=>_map&&_map.removeLayer(m));
+  if(!_lmap){ renderMappa(); setTimeout(mapUpdateArbiters,500); return; }
+  _arbMarkers.forEach(m=>{ try{_lmap.removeLayer(m);}catch(e){} });
   _arbMarkers = [];
-  
+
   const filterPv = document.getElementById('map-arb-filter')?.value || '';
-  const searchQ = (document.getElementById('map-arb-search')?.value || '').trim().toLowerCase();
+  const searchQ = (document.getElementById('map-arb-search')?.value||'').trim().toLowerCase();
   const countEl = document.getElementById('map-arb-count');
-  
-  if(!filterPv && !searchQ){ if(countEl) countEl.textContent=''; return; }
-  if(!_map){ if(countEl) countEl.textContent='Mappa non caricata'; return; }
-  
-  // Coordinate province (centroidi)
+
   const pvCoord = {
-    CA:{lat:39.22,lng:9.12,city:'Cagliari'},
-    SS:{lat:40.73,lng:8.56,city:'Sassari'},
-    NU:{lat:40.32,lng:9.33,city:'Nuoro'},
-    OR:{lat:39.90,lng:8.59,city:'Oristano'},
-    SU:{lat:39.37,lng:8.78,city:'Carbonia'}
+    CA:{lat:39.22,lng:9.12}, SS:{lat:40.73,lng:8.56},
+    NU:{lat:40.32,lng:9.33}, OR:{lat:39.90,lng:8.59}, SU:{lat:39.37,lng:8.78}
   };
-  
-  // Aggiungi jitter per evitare sovrapposizioni nella stessa provincia
+
   const pvCounts = {};
-  
   let count = 0;
+
   Object.values(P).forEach(p => {
-    if(!p || !p.nome) return;
-    // Filtro provincia
-    if(filterPv && filterPv !== 'all' && p.provincia !== filterPv) return;
-    // Filtro ricerca nome
+    if(!p||!p.nome) return;
+    if(!filterPv) return;  // 'Nascondi' selezionato
+    if(filterPv!=='all' && p.provincia!==filterPv) return;
     if(searchQ && !p.nome.toLowerCase().includes(searchQ)) return;
-    
+
     const coord = pvCoord[p.provincia];
     if(!coord) return;
-    
-    // Jitter per differenziare marker nella stessa provincia
+
     const key = p.provincia;
-    pvCounts[key] = (pvCounts[key]||0) + 1;
-    const angle = (pvCounts[key] * 137.5) * Math.PI/180; // golden angle
-    const radius = Math.min(0.08, 0.01 * Math.sqrt(pvCounts[key]));
-    const lat = coord.lat + radius * Math.cos(angle);
-    const lng = coord.lng + radius * Math.sin(angle);
-    
-    const isFem = p.genere === 'F';
+    pvCounts[key] = (pvCounts[key]||0)+1;
+    const angle = (pvCounts[key]*137.5)*Math.PI/180;
+    const radius = Math.min(0.12, 0.015*Math.sqrt(pvCounts[key]));
+    const lat = coord.lat + radius*Math.cos(angle);
+    const lng = coord.lng + radius*Math.sin(angle);
+
+    const isFem = p.genere==='F';
     const color = isFem ? '#e84393' : '#1565c0';
-    const cat = p.categoria || 'Arbitro';
-    
+    const cat = p.categoria||'Arbitro';
+
     const icon = L.divIcon({
       html: `<div style="width:10px;height:10px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)"></div>`,
-      className: '', iconSize:[10,10], iconAnchor:[5,5]
+      className:'', iconSize:[10,10], iconAnchor:[5,5]
     });
-    
-    const marker = L.marker([lat,lng], {icon})
+
+    const marker = L.marker([lat,lng],{icon})
       .bindPopup(`<b style="color:${color}">${escH(p.nome)}</b><br>
         <span style="font-size:.75rem">${cat} · ${p.provincia||''} · ${escH(p.citta||'')}</span><br>
         <span style="font-size:.72rem;color:#666">${p.n_gare||0} gare stagione</span><br>
         <a href="#" onclick="openPersona('${esc(p.nome)}');return false;" style="font-size:.72rem">→ Scheda</a>`)
-      .addTo(_map);
-    
+      .addTo(_lmap);
+
     _arbMarkers.push(marker);
     count++;
   });
-  
-  if(countEl) countEl.textContent = `${count} arbitr${count===1?'o':'i'}`;
+
+  if(countEl) countEl.textContent = count>0 ? `${count} arbitr${count===1?'o':'i'}` : '';
 }
 
 function mapDrawSidePanels(){
@@ -4860,7 +5001,7 @@ function renderProvvedimenti(){
   const topArb=Object.entries(arbC).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const maxA=topArb[0]?.[1]||1;
   const arbEl=document.getElementById('pv-top-arb');
-  if(arbEl) arbEl.innerHTML=topArb.map(([arb,n],i)=>`<div style="margin:4px 0"><div style="display:flex;justify-content:space-between;font-size:.74rem"><span><b>${i+1}.</b> <span class="rn rn-Arbitro" onclick="openPersona('${esc(arb)}')">${escH(arb)}</span>${genderDot(arb)}</span><b>${n}</b></div><div style="height:4px;background:#e8eeff;border-radius:2px"><div style="height:100%;width:${n/maxA*100}%;background:#003087;border-radius:2px"></div></div></div>`).join('');
+  if(arbEl) arbEl.innerHTML=topArb.map(([arb,n],i)=>`<div style="margin:4px 0"><div style="display:flex;justify-content:space-between;font-size:.74rem"><span><b>${i+1}.</b> <span class="rn rn-Arbitro" data-n="${arb}" onclick="openPersona(this.dataset.n)">${escH(arb)}</span>${genderDot(arb)}</span><b>${n}</b></div><div style="height:4px;background:#e8eeff;border-radius:2px"><div style="height:100%;width:${n/maxA*100}%;background:#003087;border-radius:2px"></div></div></div>`).join('');
   // tabella
   const tbody=document.getElementById('tbl-provv-body');
   if(tbody) tbody.innerHTML=f.map((p,i)=>`<tr>
@@ -4868,8 +5009,8 @@ function renderProvvedimenti(){
     <td>${p.data}</td><td style="font-size:.7rem">${escH(p.camp)}</td>
     <td><span class="rn rn-sq" onclick="openSquadra('${esc(p.casa)}')">${escH(p.casa)}</span></td>
     <td><span class="rn rn-sq" onclick="openSquadra('${esc(p.ospite)}')">${escH(p.ospite)}</span></td>
-    <td style="font-size:.7rem">${pns(p.arbitro1||'')?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(pns(p.arbitro1))}')">${escH(pns(p.arbitro1))}</span>`:'—'}</td>
-    <td style="font-size:.7rem">${pns(p.arbitro2||'')?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(pns(p.arbitro2))}')">${escH(pns(p.arbitro2))}</span>`:'—'}</td>
+    <td style="font-size:.7rem">${pns(p.arbitro1||'')?`<span class="rn rn-Arbitro" data-n="${pns(p.arbitro1)}" onclick="openP(this)">${escH(pns(p.arbitro1))}</span>`:'—'}</td>
+    <td style="font-size:.7rem">${pns(p.arbitro2||'')?`<span class="rn rn-Arbitro" data-n="${pns(p.arbitro2)}" onclick="openP(this)">${escH(pns(p.arbitro2))}</span>`:'—'}</td>
     <td style="color:#c0392b;font-size:.74rem;max-width:200px">${escH(p.testo||'')}</td>
   </tr>`).join('');
 }
@@ -5143,7 +5284,7 @@ function renderFutureGames(){
     topArbs.forEach(function(e){
       var n=e[0],c=e[1];
       var p=P[n];
-      summaryHtml+='<span style="background:#fff;border:1px solid #c0d0ff;border-radius:12px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="openPersona(\''+esc(n)+'\')">';
+      summaryHtml+='<span style="background:#fff;border:1px solid #c0d0ff;border-radius:12px;padding:2px 8px;font-size:.68rem;cursor:pointer" data-n="'+n+'" onclick="openP(this)">';
       summaryHtml+='<span class="rn rn-'+(p?p.categoria:'Arbitro')+'" style="font-size:.65rem">'+escH(n)+'</span>';
       summaryHtml+=' <b style="color:#003087">'+c+'</b></span>';
     });
@@ -5172,8 +5313,8 @@ function renderFutureGames(){
     summaryHtml+='<div style="background:#fff;border:1px solid #e0e8ff;border-top:none;border-radius:0 0 4px 4px;overflow-x:auto">';
     summaryHtml+='<table style="width:100%;border-collapse:collapse;font-size:.7rem"><tbody>';
     gs.forEach(function(g){
-      var a1=g['Arbitro 1']?'<span class="rn rn-Arbitro" style="font-size:.63rem" onclick="openPersona(\''+esc(pns(g['Arbitro 1']))+'\')">'+escH(pns(g['Arbitro 1']))+'</span>':'<span style="color:#ccc">—</span>';
-      var a2=g['Arbitro 2']?'<span class="rn rn-Arbitro" style="font-size:.63rem" onclick="openPersona(\''+esc(pns(g['Arbitro 2']))+'\')">'+escH(pns(g['Arbitro 2']))+'</span>':'';
+      var a1=g['Arbitro 1']?'<span class="rn rn-Arbitro" style="font-size:.63rem" data-n="'+pns(g['Arbitro 1'])+'" onclick="openP(this)">'+escH(pns(g['Arbitro 1']))+'</span>':'<span style="color:#ccc">—</span>';
+      var a2=g['Arbitro 2']?'<span class="rn rn-Arbitro" style="font-size:.63rem" data-n="'+pns(g['Arbitro 2'])+'" onclick="openP(this)">'+escH(pns(g['Arbitro 2']))+'</span>':'';
       var campClr=campColor(g['Campionato']||'');
       summaryHtml+='<tr style="border-bottom:1px solid #f0f2f8">';
       summaryHtml+='<td style="padding:3px 6px;color:var(--mu);min-width:40px">'+escH(g['Ora']||'')+'</td>';
@@ -5274,8 +5415,8 @@ function renderProssime(){
     html+='<div style="overflow-x:auto">'+mkTbl(gs.map(function(g,i){
       var a1=g['Arbitro 1']?g['Arbitro 1'].split(' di ')[0]:'—';
       var a2=g['Arbitro 2']?g['Arbitro 2'].split(' di ')[0]:'';
-      var a1click=g['Arbitro 1']?'onclick="openPersona(\''+esc(a1)+'\')"':'';
-      var a2click=g['Arbitro 2']?'onclick="openPersona(\''+esc(a2)+'\')"':'';
+      var a1click=g['Arbitro 1']?'data-n="'+a1+'" onclick="openP(this)"':'';
+      var a2click=g['Arbitro 2']?'data-n="'+a2+'" onclick="openP(this)"':'';
       var udc=[g['Segnapunti'],g['Cronometrista'],g['24 Secondi'],g['Addetto Referto']].filter(Boolean).map(function(s){return s.split(' di ')[0];}).join(', ');
       var cm=CAMP_META[g['Campionato']]||{};
       var campClr={'Serie A':'#003087','Serie B':'#1a4db3','Serie C':'#3d6fd4','Divisione Regionale 1':'#0984e3','Divisione Regionale 2':'#5aacf5'}[cm.gruppo]||'#636e72';
