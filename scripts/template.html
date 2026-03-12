@@ -391,35 +391,15 @@ tr.loss-row td{background:#fdecea!important;}
 
 <script>
 (function(){
-  const HASH = 'f51924fecd2034c606ce5985b82d188e112e6b3821bfd091055f4fe6f2993d57';
-  const KEY = 'fip_auth';
-  
-  async function sha256(msg){
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
-    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-  }
-  
-  async function checkStored(){
-    const stored = sessionStorage.getItem(KEY);
-    if(stored === HASH){
-      document.getElementById('login-screen').style.display='none';
-    }
-  }
-  
-  window.doLogin = async function(){
-    const pwd = document.getElementById('login-input').value;
-    const h = await sha256(pwd);
-    if(h === HASH){
-      sessionStorage.setItem(KEY, h);
-      document.getElementById('login-screen').style.display='none';
-    } else {
-      document.getElementById('login-error').textContent = '❌ Password errata';
-      document.getElementById('login-input').value = '';
-      document.getElementById('login-input').focus();
-    }
+  function sh(s){var h=0x12AB34CD;for(var i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),0x9e3779b9);h^=h>>>17;}return(h>>>0).toString(16).padStart(8,'0');}
+  var TK='109f433b',KY='fip_auth';
+  function ck(){try{if(sessionStorage.getItem(KY)===TK)document.getElementById('login-screen').style.display='none';}catch(e){}}
+  window.doLogin=function(){
+    var p=document.getElementById('login-input').value;
+    if(sh(p)===TK){try{sessionStorage.setItem(KY,TK);}catch(e){}document.getElementById('login-screen').style.display='none';}
+    else{document.getElementById('login-error').textContent='❌ Password errata';document.getElementById('login-input').value='';document.getElementById('login-input').focus();}
   };
-  
-  checkStored();
+  ck();
 })();
 </script>
 
