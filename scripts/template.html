@@ -31,7 +31,7 @@ body{font-family:'Segoe UI',system-ui,Arial,sans-serif;
 /* ══════════ HEADER ══════════ */
 header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
   color:#fff;padding:10px 22px;display:flex;align-items:center;gap:14px;
-  border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:400;}
+  border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:auto;}
 .logo{font-size:2rem;flex-shrink:0;}
 .header-txt h1{font-size:1.05rem;font-weight:700;letter-spacing:.2px;}
 .header-txt p{font-size:.7rem;opacity:.6;margin-top:1px;}
@@ -46,7 +46,7 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 /* ══════════ NAV ══════════ */
 .nav{background:#17305e;display:flex;gap:0;padding:0 10px;
   overflow-x:auto;scrollbar-width:none;border-bottom:2px solid rgba(255,255,255,.06);
-  position:sticky;top:0;z-index:399;}
+  position:sticky;top:0;z-index:auto;}
 .nav::-webkit-scrollbar{display:none;}
 .nav-btn{background:none;border:none;color:rgba(255,255,255,.55);
   padding:7px 9px;cursor:pointer;font-size:.70rem;font-weight:600;
@@ -57,7 +57,7 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 
 /* ══════════ SUMBAR → ora su bianco ══════════ */
 .sumbar{background:#fff;display:flex;flex-wrap:wrap;
-  border-bottom:2px solid var(--br);box-shadow:var(--shadow-sm);position:sticky;top:36px;z-index:290;}
+  border-bottom:2px solid var(--br);box-shadow:var(--shadow-sm);position:sticky;top:36px;z-index:auto;}
 .sum-item{padding:8px 14px;cursor:pointer;border-right:1px solid var(--br);
   transition:background .15s;min-width:80px;}
 .sum-item:hover{background:var(--bl4);}
@@ -266,11 +266,11 @@ tr.loss-row td{background:#fdecea!important;}
 
 /* ══════════ MODAL ══════════ */
 .mo{display:none;position:fixed;inset:0;background:rgba(8,12,40,.6);
-  z-index:1000;padding:8px;align-items:center;justify-content:center;
+  z-index:999999;padding:20px 8px 8px;align-items:flex-start;justify-content:center;
   backdrop-filter:blur(4px);}
 .mo.open{display:flex;}
 .mbox{background:#fff;border-radius:var(--radius-lg);
-  width:min(98vw,1300px);max-height:96vh;
+  width:min(98vw,1300px);max-height:calc(100vh - 28px);
   display:flex;flex-direction:column;
   box-shadow:0 24px 80px rgba(0,0,60,.3);overflow:hidden;position:relative;}
 .mhd{background:linear-gradient(90deg,#0d2048,#2456a4);color:#fff;
@@ -348,7 +348,7 @@ tr.loss-row td{background:#fdecea!important;}
 <style id="login-css">
 #login-screen{
   position:fixed;inset:0;background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
-  display:flex;align-items:center;justify-content:center;z-index:99999;
+  display:flex;align-items:center;justify-content:center;z-index:9999;
   font-family:'Segoe UI',system-ui,Arial,sans-serif;
 }
 #login-box{
@@ -391,35 +391,15 @@ tr.loss-row td{background:#fdecea!important;}
 
 <script>
 (function(){
-  const HASH = 'f51924fecd2034c606ce5985b82d188e112e6b3821bfd091055f4fe6f2993d57';
-  const KEY = 'fip_auth';
-  
-  async function sha256(msg){
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
-    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-  }
-  
-  async function checkStored(){
-    const stored = sessionStorage.getItem(KEY);
-    if(stored === HASH){
-      document.getElementById('login-screen').style.display='none';
-    }
-  }
-  
-  window.doLogin = async function(){
-    const pwd = document.getElementById('login-input').value;
-    const h = await sha256(pwd);
-    if(h === HASH){
-      sessionStorage.setItem(KEY, h);
-      document.getElementById('login-screen').style.display='none';
-    } else {
-      document.getElementById('login-error').textContent = '❌ Password errata';
-      document.getElementById('login-input').value = '';
-      document.getElementById('login-input').focus();
-    }
+  function sh(s){var h=0x12AB34CD;for(var i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),0x9e3779b9);h^=h>>>17;}return(h>>>0).toString(16).padStart(8,'0');}
+  var TK='109f433b',KY='fip_auth';
+  function ck(){try{if(sessionStorage.getItem(KY)===TK)document.getElementById('login-screen').style.display='none';}catch(e){}}
+  window.doLogin=function(){
+    var p=document.getElementById('login-input').value;
+    if(sh(p)===TK){try{sessionStorage.setItem(KY,TK);}catch(e){}document.getElementById('login-screen').style.display='none';}
+    else{document.getElementById('login-error').textContent='❌ Password errata';document.getElementById('login-input').value='';document.getElementById('login-input').focus();}
   };
-  
-  checkStored();
+  ck();
 })();
 </script>
 
@@ -1141,32 +1121,65 @@ function resetF(...ids){ids.forEach(id=>{const el=document.getElementById(id);if
 function cpv(c){const m=(c||'').match(/\(\s*(\w{2,3})\s*\)\s*$/);return m?m[1].toUpperCase():'';}
 function pns(s){if(!s)return'';const i=s.toLowerCase().lastIndexOf(' di ');return i>0?s.substring(0,i).trim():s;}
 function bBar(val,max,color,px=120){return`<div class="bw"><div class="bar" style="width:${Math.max(2,val/max*px)}px;background:${color}"></div><span style="font-size:.7rem;color:var(--mu)">${val}</span></div>`;}
-function bProg(entries,max,color='var(--bl)'){return`<div class="pgw">${entries.map(([l,v])=>`<div class="pgr"><div class="pgl" title="${escH(l)}">${escH(l)}</div><div class="pgo"><div class="pgi" style="width:${v/max*100}%;background:${color}"></div></div><div class="pgv">${v}</div></div>`).join('')}</div>`;}
+function bProg(entries,max,color='var(--bl)'){return`<div class="pgw">${entries.map(([l,v])=>{const col=campColor(l)||color;return`<div class="pgr"><div class="pgl" title="${escH(l)}">${escH(l)}</div><div class="pgo"><div class="pgi" style="width:${v/max*100}%;background:${col}"></div></div><div class="pgv">${v}</div></div>`;}).join('')}</div>`;}
 function bCal(giorni,nome){
   if(!giorni)giorni={};
-  // P10: gare future persona
+  const FESTIVI_IT=['2025-11-01','2025-12-08','2025-12-25','2025-12-26',
+    '2026-01-01','2026-01-06','2026-04-05','2026-04-06','2026-04-25','2026-05-01','2026-06-02'];
   const futDays={};
   if(nome){(D.gare_future||[]).forEach(g=>{
     if(['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].some(f=>pns(g[f]||'')===nome))
       futDays[g['Data']]=(futDays[g['Data']]||0)+1;
   });}
-  const today=new Date().toISOString().split('T')[0];
-  const lastFut=Object.keys(futDays).sort().pop()||today;
-  const end=new Date(lastFut>today?lastFut:today);
-  const start=new Date('2025-09-01');
-  let h='<div class="cal-grid">';
+  // Stagione basket: ottobre 2025 → giugno 2026
+  const start=new Date('2025-10-01');
+  const end=new Date('2026-06-30');
+  const MESI_LABEL=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  let h='<div style="overflow-x:auto;padding:4px 0"><div style="display:flex;gap:0;align-items:flex-start">';
   const c=new Date(start);
+  let prevMonth=-1;
   while(c<=end){
+    const month=c.getMonth();
+    // Blocco mese
+    if(month!==prevMonth){
+      if(prevMonth!==-1) h+='</div></div>';
+      h+=`<div style="display:inline-flex;flex-direction:column;margin-right:6px"><div style="font-size:.6rem;font-weight:700;color:#555;text-align:center;margin-bottom:3px;letter-spacing:.5px">${MESI_LABEL[month]}</div><div style="display:flex;flex-wrap:wrap;gap:2px;max-width:${7*18}px">`;
+      prevMonth=month;
+    }
     const ds=c.toISOString().split('T')[0];
-    const n=giorni[ds]||0;const nf=futDays[ds]||0;
+    const dow=c.getDay(); // 0=dom,6=sab
+    const dayNum=c.getDate();
+    const isFestivo=FESTIVI_IT.includes(ds);
+    const n=giorni[ds]||0;
+    const nf=futDays[ds]||0;
     const isFut=nf>0&&n===0;
-    const cl=isFut?'cd-fut':n===0?'cd0':n===1?'cd1':n===2?'cd2':n===3?'cd3':'cd4';
+    const bg=isFut?'#e17055':n===0?'#edf2ff':n===1?'#a8c4e8':n===2?'#4a90d9':n===3?'#1a5cb8':'#003087';
+    const txtCol=(n>=2||isFut)?'#fff':'#555';
+    let border='2px solid transparent';
+    if(isFestivo) border='2px solid #e65100';
+    else if(dow===0) border='2px solid #c0392b';
+    else if(dow===6) border='2px solid #e91e8c';
     const tip=ds+(isFut?': '+nf+' programm'+(nf>1?'ate':'ata'):n>0?': '+n+(n>1?' gare':' gara'):'');
-    h+=`<div class="cd ${cl}"><div class="ct">${tip}</div></div>`;
+    h+=`<div title="${tip}" style="width:16px;height:16px;border-radius:2px;background:${bg};border:${border};display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">`;
+    h+=`<span style="font-size:.45rem;color:${txtCol};font-weight:700;line-height:1">${dayNum}</span>`;
+    h+=`</div>`;
     c.setDate(c.getDate()+1);
   }
-  return h+`</div><div class="cal-leg"><span style="display:inline-flex;align-items:center;gap:2px"><div class="cl-b" style="background:#e17055;opacity:.7"></div>fut.</span> <div class="cl-b" style="background:#e8eeff"></div>0 <div class="cl-b" style="background:#a8c4e8"></div>1 <div class="cl-b" style="background:#4a90d9"></div>2 <div class="cl-b" style="background:#1a5cb8"></div>3 <div class="cl-b" style="background:#003087"></div>4+</div>`;
+  h+='</div></div></div>';
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;font-size:.62rem;align-items:center">`;
+  h+=`<span style="display:flex;align-items:center;gap:3px"><span style="width:12px;height:12px;background:#edf2ff;border-radius:2px;display:inline-block"></span>0</span>`;
+  h+=`<span style="display:flex;align-items:center;gap:3px"><span style="width:12px;height:12px;background:#a8c4e8;border-radius:2px;display:inline-block"></span>1</span>`;
+  h+=`<span style="display:flex;align-items:center;gap:3px"><span style="width:12px;height:12px;background:#4a90d9;border-radius:2px;display:inline-block"></span>2</span>`;
+  h+=`<span style="display:flex;align-items:center;gap:3px"><span style="width:12px;height:12px;background:#1a5cb8;border-radius:2px;display:inline-block"></span>3</span>`;
+  h+=`<span style="display:flex;align-items:center;gap:3px"><span style="width:12px;height:12px;background:#003087;border-radius:2px;display:inline-block"></span>4+</span>`;
+  h+=`<span style="display:flex;align-items:center;gap:3px"><span style="width:12px;height:12px;background:#e17055;border-radius:2px;display:inline-block"></span>fut.</span>`;
+  h+=`<span style="display:flex;align-items:center;gap:3px"><span style="width:12px;height:12px;border:2px solid #c0392b;border-radius:2px;display:inline-block"></span>Dom</span>`;
+  h+=`<span style="display:flex;align-items:center;gap:3px"><span style="width:12px;height:12px;border:2px solid #e91e8c;border-radius:2px;display:inline-block"></span>Sab</span>`;
+  h+=`<span style="display:flex;align-items:center;gap:3px"><span style="width:12px;height:12px;border:2px solid #e65100;border-radius:2px;display:inline-block"></span>Festivo</span>`;
+  h+='</div>';
+  return h;
 }
+
 function mkTbl(rows,cols,tid){return`<table class="mtbl" id="${tid}"><thead><tr>${cols.map((c,i)=>`<th onclick="sT('${tid}',${i})">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;}
 
 // TABLE SORT
@@ -1175,20 +1188,26 @@ function sT(tid,ci,defaultAsc){
   const tbl=document.getElementById(tid);
   const tbody=tbl?.querySelector('tbody');if(!tbody)return;
   const key=tid+'-'+ci;
-  // Per colonne numeriche (no defaultAsc specificato): primo click = discendente
   const firstClick=!(key in _ss);
   const asc=firstClick?(defaultAsc||false):!_ss[key];
   _ss[key]=asc;
   tbl.querySelectorAll('th').forEach((th,i)=>{th.classList.remove('sa','sd');if(i===ci)th.classList.add(asc?'sa':'sd');});
   const rows=[...tbody.querySelectorAll('tr:not(.hidden)')];
   rows.sort((a,b)=>{
-    const va=a.querySelectorAll('td')[ci]?.getAttribute('data-val')||a.querySelectorAll('td')[ci]?.textContent.trim()||'';
-    const vb=b.querySelectorAll('td')[ci]?.getAttribute('data-val')||b.querySelectorAll('td')[ci]?.textContent.trim()||'';
+    const tda=a.querySelectorAll('td')[ci], tdb=b.querySelectorAll('td')[ci];
+    // Fix #3: usa sempre data-val se presente (garantisce sort numerico su Km e altri)
+    const va=tda?.getAttribute('data-val')??tda?.textContent.trim()??'';
+    const vb=tdb?.getAttribute('data-val')??tdb?.textContent.trim()??'';
     const na=parseFloat(va),nb=parseFloat(vb);
     if(!isNaN(na)&&!isNaN(nb))return asc?na-nb:nb-na;
     return asc?va.localeCompare(vb,'it'):vb.localeCompare(va,'it');
   });
   rows.forEach(r=>tbody.appendChild(r));
+  // Fix #4: rinumera colonna # (indice 0) dopo ogni sort
+  tbody.querySelectorAll('tr:not(.hidden)').forEach((r,i)=>{
+    const td0=r.querySelectorAll('td')[0];
+    if(td0&&td0.hasAttribute('data-val')){td0.textContent=i+1;td0.setAttribute('data-val',i+1);}
+  });
 }
 
 // COLOR CUSTOMIZER
@@ -1278,9 +1297,11 @@ function renderPersonsTable(cid,persons,opts={}){
     <th onclick="sT('${tableId}',${9+co})" title="Campi diversi">🏟</th>
     <th onclick="sT('${tableId}',${10+co})" title="Colleghi">🤝</th>
     <th onclick="sT('${tableId}',${11+co})" title="Campionati">Camp.</th>
-    <th onclick="sT('${tableId}',${12+co})" title="Km stimati stagione">🚗 Km</th>
-    <th title="Forma recente">Forma</th>
-    <th>Barra</th>
+    <th onclick="sT('${tableId}',${12+co})" title="Gare in singolo">Sing.</th>
+    <th onclick="sT('${tableId}',${13+co})" title="Gare in coppia">Dopp.</th>
+    <th onclick="sT('${tableId}',${14+co})" title="Gare future da disputare">Da fare</th>
+    <th onclick="sT('${tableId}',${15+co})" title="Squadre diverse incontrate">Sqd.</th>
+    <th onclick="sT('${tableId}',${16+co},true)" title="Km stimati stagione">🚗 Km</th>
   </tr></thead><tbody>${persons.map((p,i)=>{
     const nCamp=Object.keys(p.campionati||{}).length;
     const nG=Object.keys(p.giorni||{}).length;
@@ -1288,22 +1309,20 @@ function renderPersonsTable(cid,persons,opts={}){
     const nCampi=Object.keys(p.campi||{}).length;
     const isDual=(p.categorie||[]).length>1;
     const pvColor=PC[p.provincia]||'var(--bl)';
-    // Colore nome per provincia
     const nameStyle=`font-weight:700;cursor:pointer;color:${pvColor}`;
-    // Pallino sesso
     const sexDot=p.genere==='F'
       ?`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#e91e8c;margin-left:4px;flex-shrink:0" title="F"></span>`
       :`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#1565c0;margin-left:4px;flex-shrink:0" title="M"></span>`;
-    // Prossime gare (14gg)
     const nFut=(D.gare_future||[]).filter(g=>[g['Arbitro 1'],g['Arbitro 2'],g['Segnapunti'],g['Cronometrista'],g['24 Secondi'],g['Addetto Referto'],g['Osservatore']].some(f=>pns(f||'')===p.nome)).length;
     const mv=mainGare!=null?p[mainGareKey]:p.n_gare;
     const mkLink=(val,tabIdx,clr='var(--bl)')=>
-      `<span style="color:${clr};font-weight:700;cursor:pointer" data-n="${p.nome}" onclick="openP(this);setTimeout(()=>{document.querySelectorAll('#mp-body .mt')[${tabIdx}]?.click();},280)">${val}</span>`;
+      `<span style="color:${clr};font-weight:700;cursor:pointer" data-n="${p.nome}" onclick="openPersona(this.dataset.n);setTimeout(()=>{document.querySelectorAll('#mp-body .mt')[${tabIdx}]?.click();},280)">${val}</span>`;
+    const km=calcKmArb(p);
     return`<tr>
       <td class="rpos ${i<3?'g'+(i+1):''}" data-val="${i+1}">${i+1}</td>
-      <td style="white-space:nowrap;cursor:pointer" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">
+      <td style="white-space:nowrap;cursor:pointer" onclick="openPersona(this.querySelector('[data-n]').dataset.n)">
         <div style="display:flex;align-items:center;gap:3px">
-          <span style="${nameStyle}">${escH(p.nome)}</span>
+          <span style="${nameStyle}" data-n="${p.nome}">${escH(p.nome)}</span>
           ${sexDot}
           ${isDual?`<span style="font-size:.6rem;background:#fff3cd;border:1px solid #ffe082;border-radius:3px;padding:0 4px;color:#8a6200;margin-left:2px">dual</span>`:''}
         </div>
@@ -1311,8 +1330,8 @@ function renderPersonsTable(cid,persons,opts={}){
       <td>${pvB(p.provincia)}</td>
       <td style="font-size:.72rem;color:var(--mu)">${escH(p.citta||'')}</td>
       <td style="font-family:monospace;font-size:.7rem;color:#34495e">${CODICI_FIP[p.nome]||''}</td>
-      ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</}">${escH(p.categoria)}</span></td>`:''}
-      <td data-val="${p.n_gare}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">${p.n_gare}</td>
+      ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
+      <td data-val="${p.n_gare}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">  ${p.n_gare}</td>
       <td data-val="${p.n_gare_arbitro||0}" style="text-align:center">${p.n_gare_arbitro?mkLink(p.n_gare_arbitro,1,pvColor):''}</td>
       <td data-val="${p.n_gare_udc||0}" style="text-align:center">${p.n_gare_udc?mkLink(p.n_gare_udc,1,pvColor):''}</td>
       <td data-val="${p.n_gare_osservatore||0}" style="text-align:center">${p.n_gare_osservatore?mkLink(p.n_gare_osservatore,1,pvColor):''}</td>
@@ -1320,13 +1339,11 @@ function renderPersonsTable(cid,persons,opts={}){
       <td data-val="${nCampi}" style="text-align:center">${nCampi?mkLink(nCampi,3,pvColor):0}</td>
       <td data-val="${nColl}" style="text-align:center">${nColl?mkLink(nColl,2,pvColor):0}</td>
       <td data-val="${nCamp}" style="text-align:center;font-weight:700;color:${pvColor}">${nCamp}</td>
-
-      <td><div style="display:flex;gap:2px;align-items:center">
-        ${(p.forma_recente||[]).slice(-5).map(()=>`<span class="forma-dot fd-V"></span>`).join('')}
-        ${(p.streak_cur||0)>=5?`<span class="streak-badge" style="margin-left:2px;font-size:.58rem">${p.streak_cur}🔥</span>`:''}
-      </div></td>
-      <td data-val="${calcKmArb(p)}" style="text-align:right;font-size:.72rem;color:var(--mu)">${calcKmArb(p)>0?calcKmArb(p).toLocaleString('it'):'—'}</td>
-      <td>${bBar(mv||0,max,pvColor)}</td>
+      <td data-val="${p.n_singolo||0}" style="text-align:center;color:var(--gold)">${p.n_singolo||0}</td>
+      <td data-val="${(p.n_gare_arbitro||0)-(p.n_singolo||0)}" style="text-align:center;color:var(--green)">${(p.n_gare_arbitro||0)-(p.n_singolo||0)}</td>
+      <td data-val="${nFut}" style="text-align:center;${nFut>0?'color:#e17055;font-weight:700':'color:var(--mu)'}">${nFut||'—'}</td>
+      <td data-val="${Object.keys(p.squadre||{}).length}" style="text-align:center">${Object.keys(p.squadre||{}).length}</td>
+      <td data-val="${km}" style="text-align:right;font-size:.8rem;font-weight:600;color:var(--mu)">${km>0?km.toLocaleString('it'):'—'}</td>
     </tr>`;}).join('')}</tbody></table></div>`;
 }
 
@@ -1872,50 +1889,114 @@ function renderOss(){
   o.sort((a,b)=>b.n_gare_osservatore-a.n_gare_osservatore);
   renderPersonsTable('oss-list',o,{tid:'tbl-oss',mainGare:'n_gare_osservatore'});
 }
+function livelloC(cn){
+  var campOrdL=['Serie B Femminile','Serie C','Divisione regionale 1','Divisione Regionale 1',
+    'Divisione regionale 2','Divisione Regionale 2','Under 19 Maschile Gold','Under 19 Femminile',
+    'Under 17 Maschile Eccellenza','Under 17 Maschile Gold','Under 17 Maschile Regionale',
+    'Under 17 Femminile','Under 15 Maschile Eccellenza','Under 15 Maschile Regionale',
+    'Under 15 Femminile','Under 14 Maschile','Under 13 Maschile','Under 13 Femminile',
+    'Trofeo Esordienti','Aquilotti','Esordienti Femminile','Scoiattoli'];
+  for(var i=0;i<campOrdL.length;i++){if(cn.toLowerCase().indexOf(campOrdL[i].toLowerCase().slice(0,8))>=0)return campOrdL.length-i;}
+  return 2;
+}
 function renderSq(){
   const q=document.getElementById('fs-q').value.toLowerCase();
   const pv=document.getElementById('fs-pv').value;
   const camp=document.getElementById('fs-camp').value;
   const sort=document.getElementById('fs-sort').value;
-  let sqs=Object.values(SQ);
   const femm=document.getElementById('fs-femm')?.value||'';
   const raggruppa=document.getElementById('fs-grp')?.checked||false;
+  let sqs=Object.values(SQ);
   if(q)sqs=sqs.filter(s=>s.nome.toLowerCase().includes(q));
   if(pv)sqs=sqs.filter(s=>s.prov===pv);
   if(camp)sqs=sqs.filter(s=>s.campionati[camp]);
   if(femm==='F')sqs=sqs.filter(s=>s.is_femminile);
   if(femm==='M')sqs=sqs.filter(s=>!s.is_femminile);
-  // Se raggruppa: mostra solo le squadre canoniche (che sono la loro stessa canonical)
-  if(raggruppa) sqs=sqs.filter(s=>!s.gruppo||s.gruppo===s.nome||!SQ[s.gruppo]||s.gruppo===s.nome);
+  if(raggruppa)sqs=sqs.filter(s=>!s.gruppo||s.gruppo===s.nome||!SQ[s.gruppo]||s.gruppo===s.nome);
   sqs.sort((a,b)=>sort==='vinte'?b.vinte-a.vinte:sort==='nome'?a.nome.localeCompare(b.nome,'it'):sort==='prov'?(a.prov||'').localeCompare(b.prov||''):b.n_gare-a.n_gare);
-  const max=sqs[0]?.n_gare||1;
-  document.getElementById('sq-list').innerHTML=`<p class="il">${sqs.length} squadre</p>
-  <table class="rtbl" id="tbl-sq"><thead><tr>
-    <th onclick="sT('tbl-sq',0)">#</th><th onclick="sT('tbl-sq',1)">Squadra</th>
-    <th onclick="sT('tbl-sq',2)">Prov.</th><th onclick="sT('tbl-sq',3)">Gruppo</th><th>Var.</th><th>Gen.</th>
-    <th onclick="sT('tbl-sq',4)">Gare</th><th onclick="sT('tbl-sq',5)">Vinte</th>
-    <th onclick="sT('tbl-sq',6)">Perse</th><th onclick="sT('tbl-sq',7)">V-Casa</th>
-    <th onclick="sT('tbl-sq',8)">P-Casa</th><th onclick="sT('tbl-sq',9)">V-Osp</th>
-    <th onclick="sT('tbl-sq',10)">P-Osp</th><th onclick="sT('tbl-sq',11)">Win%</th>
-    <th>Campionati</th>
-  </tr></thead><tbody>${sqs.map((s,i)=>{
-    const con=s.gare.filter(g=>g['Risultato']).length;
-    const wp=con?Math.round(s.vinte/con*100):0;
-    const canonical=s.gruppo||s.nome;
-    const hasGrp=canonical!==s.nome&&(AG[canonical]?.length||0)>1;
-    const gr=hasGrp?`<span class="rn rn-sq" onclick="openSquadra('${esc(canonical)}')" style="font-size:.7rem">${escH(canonical)}</span>`:'–';
-    return`<tr>
-      <td class="rpos ${i===0?'g1':i===1?'g2':i===2?'g3':''}" data-val="${i+1}">${i+1}</td>
-      <td><span class="rn rn-sq" onclick="openSquadra('${esc(s.nome)}')">${escH(s.nome)}</span></td>
-      <td>${pvB(s.prov)}</td><td>${gr}</td>
-      <td data-val="${s.n_gare}"><b>${s.n_gare}</b></td>
-      <td data-val="${s.vinte}" class="sw">${s.vinte}</td>
-      <td data-val="${s.perse}" class="sl_">${s.perse}</td>
-      <td>${s.vinte_casa}</td><td>${s.perse_casa}</td>
-      <td>${s.vinte_osp}</td><td>${s.perse_osp}</td>
-      <td data-val="${wp}">${wp}%</td>
-      <td style="font-size:.7rem;white-space:normal;max-width:160px">${Object.keys(s.campionati).slice(0,3).join(' · ')}</td>
-    </tr>`;}).join('')}</tbody></table>`;
+
+  let h=`<p class="il">${sqs.length} squadre</p><div style="overflow-x:auto"><table class="rtbl" id="tbl-sq"><thead><tr>`;
+  h+=`<th onclick="sT('tbl-sq',0)">#</th>`;
+  h+=`<th onclick="sT('tbl-sq',1)">Squadra / Campionati</th>`;
+  h+=`<th onclick="sT('tbl-sq',2)">Prov.</th>`;
+  h+=`<th onclick="sT('tbl-sq',3)">Gruppo</th>`;
+  h+=`<th onclick="sT('tbl-sq',4)" style="color:#1565c0;font-weight:800" title="Punti classifica totali">Pt</th>`;
+  h+=`<th onclick="sT('tbl-sq',5)">Gare</th>`;
+  h+=`<th onclick="sT('tbl-sq',6)" style="color:var(--green)">Vinte</th>`;
+  h+=`<th onclick="sT('tbl-sq',7)" style="color:var(--red)">Perse</th>`;
+  h+=`<th onclick="sT('tbl-sq',8)">V-Casa</th>`;
+  h+=`<th onclick="sT('tbl-sq',9)">P-Casa</th>`;
+  h+=`<th onclick="sT('tbl-sq',10)">V-Osp</th>`;
+  h+=`<th onclick="sT('tbl-sq',11)">P-Osp</th>`;
+  h+=`<th onclick="sT('tbl-sq',12)">Win%</th>`;
+  h+=`</tr></thead><tbody>`;
+
+  sqs.forEach(function(s,i){
+    // Calcola punti classifica (2=vittoria, 1=pareggio, 0=sconfitta)
+    var ptGlob=(s.vinte||0)*2+(s.pareggi||0);
+    var con=(s.gare||[]).filter(g=>g['Risultato']).length;
+    var wp=con?Math.round(s.vinte/con*100):0;
+    var canonical=s.gruppo||s.nome;
+    var hasGrp=canonical!==s.nome&&(AG[canonical]?.length||0)>1;
+    var gr=hasGrp?`<span class="rn rn-sq" onclick="openSquadra('${esc(canonical)}')" style="font-size:.7rem">${escH(canonical)}</span>`:'–';
+    var rowBg=wp>50?'background:#f0fff4':s.perse>s.vinte?'background:#fff5f5':'background:#fff';
+    var rowBorder=wp>50?'border-left:3px solid var(--green)':s.perse>s.vinte?'border-left:3px solid var(--red)':'border-left:3px solid #eee';
+    h+=`<tr style="${rowBg};${rowBorder}">`;
+    h+=`<td class="rpos ${i===0?'g1':i===1?'g2':i===2?'g3':''}" data-val="${i+1}">${i+1}</td>`;
+    h+=`<td><span class="rn rn-sq" onclick="openSquadra('${esc(s.nome)}')">${escH(s.nome)}</span></td>`;
+    h+=`<td>${pvB(s.prov)}</td>`;
+    h+=`<td>${gr}</td>`;
+    h+=`<td data-val="${ptGlob}" style="text-align:center;font-weight:800;color:#1565c0">${ptGlob}</td>`;
+    h+=`<td data-val="${s.n_gare}"><b>${s.n_gare}</b></td>`;
+    h+=`<td data-val="${s.vinte||0}" style="font-weight:700;color:var(--green)">${s.vinte||0}</td>`;
+    h+=`<td data-val="${s.perse||0}" style="color:var(--red)">${s.perse||0}</td>`;
+    h+=`<td data-val="${s.vinte_casa||0}" style="text-align:center">${s.vinte_casa||0}</td>`;
+    h+=`<td data-val="${s.perse_casa||0}" style="text-align:center">${s.perse_casa||0}</td>`;
+    h+=`<td data-val="${s.vinte_osp||0}" style="text-align:center">${s.vinte_osp||0}</td>`;
+    h+=`<td data-val="${s.perse_osp||0}" style="text-align:center">${s.perse_osp||0}</td>`;
+    h+=`<td data-val="${wp}" style="font-weight:700;color:${wp>50?'var(--green)':wp<50?'var(--red)':'var(--mu)'}">${wp}%</td>`;
+    h+=`</tr>`;
+
+    // Sotto-righe per campionato
+    var camps=Object.keys(s.campionati||{});
+    if(camps.length>1){
+      // Ordina per livello
+      camps.sort(function(a,b){return livelloC(b)-livelloC(a);});
+      camps.forEach(function(cn){
+        var cgare=(s.gare||[]).filter(g=>g['Campionato']===cn&&g['Risultato']);
+        var cv=cgare.filter(g=>(g['Squadra Casa']===s.nome&&parseInt(g['Punti Casa'])>parseInt(g['Punti Ospite']))||(g['Squadra Ospite']===s.nome&&parseInt(g['Punti Ospite'])>parseInt(g['Punti Casa']))).length;
+        var cp=cgare.filter(g=>(g['Squadra Casa']===s.nome&&parseInt(g['Punti Casa'])<parseInt(g['Punti Ospite']))||(g['Squadra Ospite']===s.nome&&parseInt(g['Punti Ospite'])<parseInt(g['Punti Casa']))).length;
+        var cg=cgare.length;
+        var cpt=cv*2;
+        var cwp=cg?Math.round(cv/cg*100):0;
+        var col=campColor(cn);
+        var meta_c=CAMP_META[cn]||{};
+        var isFemmC=(meta_c.genere||'').toLowerCase()==='f'||/femmin/i.test(cn);
+        var subBg=cwp>50?'#e8f5e9':cp>cv?'#ffebee':'#fafafa';
+        var vcasa=cgare.filter(g=>g['Squadra Casa']===s.nome&&parseInt(g['Punti Casa'])>parseInt(g['Punti Ospite'])).length;
+        var pcasa=cgare.filter(g=>g['Squadra Casa']===s.nome&&parseInt(g['Punti Casa'])<parseInt(g['Punti Ospite'])).length;
+        var vosp=cgare.filter(g=>g['Squadra Ospite']===s.nome&&parseInt(g['Punti Ospite'])>parseInt(g['Punti Casa'])).length;
+        var posp=cgare.filter(g=>g['Squadra Ospite']===s.nome&&parseInt(g['Punti Ospite'])<parseInt(g['Punti Casa'])).length;
+        h+=`<tr style="background:${subBg};border-left:3px solid ${col}">`;
+        h+=`<td></td>`;
+        h+=`<td style="padding:2px 8px 2px 24px"><span style="background:${col};color:#fff;border-radius:10px;padding:1px 8px;font-size:.6rem;font-weight:600">${isFemmC?'♀ ':''}${escH(cn)}</span></td>`;
+        h+=`<td></td><td></td>`;
+        h+=`<td style="text-align:center;font-size:.72rem;font-weight:700;color:#1565c0">${cpt}</td>`;
+        h+=`<td style="text-align:center;font-size:.72rem;font-weight:700">${cg}</td>`;
+        h+=`<td style="text-align:center;font-size:.72rem;font-weight:700;color:var(--green)">${cv}</td>`;
+        h+=`<td style="text-align:center;font-size:.72rem;color:var(--red)">${cp}</td>`;
+        h+=`<td style="text-align:center;font-size:.72rem">${vcasa}</td>`;
+        h+=`<td style="text-align:center;font-size:.72rem">${pcasa}</td>`;
+        h+=`<td style="text-align:center;font-size:.72rem">${vosp}</td>`;
+        h+=`<td style="text-align:center;font-size:.72rem">${posp}</td>`;
+        h+=`<td style="text-align:center;font-size:.72rem;font-weight:700;color:${cwp>50?'var(--green)':cwp<50?'var(--red)':'var(--mu)'}">${cwp}%</td>`;
+        h+=`</tr>`;
+      });
+    }
+  });
+
+  h+=`</tbody></table></div>`;
+  document.getElementById('sq-list').innerHTML=h;
 }
 
 // HEAD TO HEAD
@@ -2231,7 +2312,7 @@ function renderCamp(){
       <td><span style="font-size:.72rem;font-weight:700;color:${genColor}">${genLabel}</span></td>
       <td>${lvBadge}</td>
       <td>${cs.n_gare}</td>
-      <td>${bBar(cs.n_gare,max,isFemm?'#e84393':isMini?'#8e44ad':'#003087')}</td>
+      <td>${bBar(cs.n_gare,max,campColor(c))}</td>
       <td>${cs.n_squadre}</td>
     </tr>`;
   }).join('')}</tbody></table>`;
@@ -2318,6 +2399,83 @@ function filterMg(){
 }
 
 // MODAL PERSONA
+
+function mkCamminoArbitro(p){
+  var campsRaw=Object.entries(p.campionati||{});
+  if(!campsRaw.length)return'<p style="color:#999;font-size:.8rem">Nessun campionato</p>';
+
+  // Ordine cronologico: prima data di gara per campionato
+  var campFirstDate={};
+  (p.gare||[]).forEach(function(g){
+    var cn=g['Campionato']||'';
+    var d=g['Data']||'';
+    if(cn&&d&&(!campFirstDate[cn]||d<campFirstDate[cn]))campFirstDate[cn]=d;
+  });
+  var camps=campsRaw.slice().sort(function(a,b){
+    var da=campFirstDate[a[0]]||'9999',db=campFirstDate[b[0]]||'9999';
+    return da.localeCompare(db);
+  });
+
+  var campOrd=['Serie A','Serie B','Serie C','Divisione regionale 1','Divisione Regionale 1',
+    'Divisione regionale 2','Divisione Regionale 2','Under 19 Maschile Gold','Under 19 Femminile',
+    'Under 17 Maschile Eccellenza','Under 17 Maschile Gold','Under 17 Maschile Regionale',
+    'Under 17 Femminile','Under 15 Maschile Eccellenza','Under 15 Maschile Regionale',
+    'Under 15 Femminile','Under 14 Maschile','Under 13 Maschile','Under 13 Femminile',
+    'Trofeo Esordienti','Aquilotti','Esordienti Femminile','Scoiattoli'];
+  function livello(cn){
+    for(var i=0;i<campOrd.length;i++){if(cn.toLowerCase().indexOf(campOrd[i].toLowerCase().slice(0,8))>=0)return campOrd.length-i;}
+    return 2;
+  }
+
+  var maxG=Math.max.apply(null,camps.map(function(e){return e[1];}));
+  var maxLiv=Math.max.apply(null,camps.map(function(e){return livello(e[0]);}));
+  var maxH=120; // px altezza massima barra
+
+  var html='<div style="font-size:.72rem;color:var(--mu);margin-bottom:14px">Campionati arbitrati questa stagione &middot; asse X = ordine cronologico &middot; altezza = numero gare &middot; &#9792; = femminile</div>';
+  html+='<div style="display:flex;gap:8px;align-items:flex-end;padding:8px 4px;overflow-x:auto;border-bottom:2px solid #eee;min-height:'+(maxH+30)+'px">';
+
+  camps.forEach(function(e){
+    var cn=e[0],ng=e[1];
+    var meta=CAMP_META[cn]||{};
+    var isFemm=(meta.genere||'').toLowerCase()==='f'||/femmin/i.test(cn);
+    var col=campColor(cn);
+    var barH=Math.max(18,Math.round(ng/maxG*maxH));
+    var barW=Math.max(44,Math.min(80,Math.round(ng/maxG*100)+32));
+    var label=cn.replace(/\b(Maschile|Femminile)\b/g,function(m){return m.slice(0,3);})
+               .replace(/\bRegionale\b/,'Reg.').replace(/\bEccellenza\b/,'Ecc.');
+    html+='<div style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:default;flex-shrink:0" title="'+escH(cn)+': '+ng+' gare">';
+    html+='<span style="font-size:.58rem;color:'+col+';font-weight:700;text-align:center;width:'+barW+'px;word-break:break-word;line-height:1.2">'+(isFemm?'<span style="color:#e91e63">♀ </span>':'')+escH(label)+'</span>';
+    html+='<div style="width:'+barW+'px;height:'+barH+'px;background:'+col+';border-radius:5px 5px 0 0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.15)">';
+    html+='<span style="color:#fff;font-size:'+(barH>35?'.78':'.58')+'rem;font-weight:800;text-shadow:0 1px 2px rgba(0,0,0,.4)">'+ng+'g</span>';
+    if(isFemm)html+='<span style="position:absolute;font-size:.6rem;color:#fff;opacity:.85">♀</span>';
+    html+='</div>';
+    html+='<div style="width:'+barW+'px;height:3px;background:'+col+';opacity:.25;border-radius:0 0 2px 2px"></div>';
+    html+='</div>';
+  });
+  html+='</div>';
+
+  // Tabella riepilogativa sotto
+  html+='<table style="width:100%;border-collapse:collapse;font-size:.72rem;margin-top:14px"><thead><tr style="background:#f5f7ff"><th style="padding:4px 8px;text-align:left">Campionato</th><th style="padding:4px 8px;text-align:center">Gare</th><th style="padding:4px 8px;text-align:center">Livello</th><th style="padding:4px 8px;text-align:left">Prima gara</th></tr></thead><tbody>';
+  camps.forEach(function(e,i){
+    var cn=e[0],ng=e[1];
+    var col=campColor(cn);
+    var lv=livello(cn);
+    var metaR=CAMP_META[cn]||{};
+    var isFemmR=(metaR.genere||'').toLowerCase()==='f'||/femmin/i.test(cn);
+    var dots='';
+    for(var d=0;d<Math.min(lv,10);d++)dots+='<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:'+col+';margin:0 1px;vertical-align:middle"></span>';
+    var prima=campFirstDate[cn]||'';
+    html+='<tr style="border-bottom:1px solid #f0f0f0;background:'+(i%2?'#fafafa':'#fff')+'">';
+    html+='<td style="padding:3px 8px"><span style="display:inline-block;width:10px;height:10px;background:'+col+';border-radius:2px;margin-right:5px;vertical-align:middle"></span>'+(isFemmR?'<span style="color:#e91e63">&#9792; </span>':'')+escH(cn)+'</td>';
+    html+='<td style="padding:3px 8px;text-align:center;font-weight:700">'+ng+'</td>';
+    html+='<td style="padding:3px 8px;text-align:center">'+dots+'</td>';
+    html+='<td style="padding:3px 8px;color:var(--mu)">'+prima+'</td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  return html;
+}
+
 function openPersona(nome,campFilter){
   // Decodifica HTML entities se necessario (per nomi con apostrofo da data-nome)
   if(nome && nome.includes('&')){
@@ -2348,8 +2506,8 @@ function openPersona(nome,campFilter){
   let extraTabs='';
   let extraPanels='';
   if(isDual){
-    extraTabs+=`<button class="mt" onclick="swTab(this,'mpt-')">⚖️ Come Arbitro (${p.n_gare_arbitro})</button>`;
-    extraTabs+=`<button class="mt" onclick="swTab(this,'mpt-')">🔭 Come Osservatore (${p.n_gare_osservatore})</button>`;
+    extraTabs+=`<button class="mt" onclick="swTabId(this,'mpt-5')">⚖️ Come Arbitro (${p.n_gare_arbitro})</button>`;
+    extraTabs+=`<button class="mt" onclick="swTabId(this,'mpt-6')">🔭 Come Osservatore (${p.n_gare_osservatore})</button>`;
     extraPanels+=`<div class="mtc hidden" id="mpt-5">
       <p class="il">${p.n_gare_arbitro} gare come Arbitro</p>
       <div style="overflow-x:auto">${mkGarePersonaTbl(p.gare_arbitro||[],nome,'tbl-mparb')}</div></div>
@@ -2360,11 +2518,12 @@ function openPersona(nome,campFilter){
 
   document.getElementById('mp-body').innerHTML=`
     <div class="mts">
-      <button class="mt active" onclick="swTab(this,'mpt-')">📊 Statistiche</button>
-      <button class="mt" onclick="swTab(this,'mpt-')">📅 Gare (${allG.length})</button>
-      <button class="mt" onclick="swTab(this,'mpt-')">🤝 Colleghi (${colleghi.length})</button>
-      <button class="mt" onclick="swTab(this,'mpt-')">🏟️ Campi (${campi.length})</button>
-      <button class="mt" onclick="swTab(this,'mpt-')">🏆 Squadre (${squadre.length})</button>
+      <button class="mt active" onclick="swTabId(this,'mpt-0')">📊 Statistiche</button>
+      <button class="mt" onclick="swTabId(this,'mpt-1')">📅 Gare (${allG.length})</button>
+      <button class="mt" onclick="swTabId(this,'mpt-cam')">📈 Cammino</button>
+      <button class="mt" onclick="swTabId(this,'mpt-2')">🤝 Colleghi (${colleghi.length})</button>
+      <button class="mt" onclick="swTabId(this,'mpt-3')">🏟️ Campi (${campi.length})</button>
+      <button class="mt" onclick="swTabId(this,'mpt-4')">🏆 Squadre (${squadre.length})</button>
       ${extraTabs}
     </div>
     <div class="mtc active" id="mpt-0">
@@ -2451,7 +2610,7 @@ function openPersona(nome,campFilter){
         // Squadre arbitrate + rendimento
         const sqStats=Object.entries(p.squadre_incontrate||{})
           .map(([sq,st])=>({sq,g:st.gare,v:st.vinte||0,s:st.perse||0,wp:st.gare?Math.round((st.vinte||0)/st.gare*100):0}))
-          .sort((a,b)=>b.g-a.g).slice(0,10);
+          .sort((a,b)=>b.g-a.g);
 
         return`<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
           ${kmTot>0?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
@@ -2489,7 +2648,7 @@ function openPersona(nome,campFilter){
               <th style="padding:4px 8px;text-align:center">Win%</th>
               <th style="padding:4px 8px">Barra</th>
             </tr></thead>
-            <tbody>${sqStats.map(({sq,g,v,s,wp},i)=>`<tr style="background:${i%2?'#f8f9ff':'#fff'}">
+            <tbody>${sqStats.map(({sq,g,v,s,wp},i)=>`<tr style="background:${wp>50?'#f0fff4':wp<50?'#fff5f5':'#fff'};border-left:3px solid ${wp>50?'var(--green)':wp<50?'var(--red)':'#ccc'}">
               <td style="padding:3px 8px"><span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></td>
               <td style="padding:3px 8px;text-align:center;font-weight:700">${g}</td>
               <td style="padding:3px 8px;text-align:center;color:var(--green);font-weight:700">${v}</td>
@@ -2526,6 +2685,9 @@ function openPersona(nome,campFilter){
         <th onclick="sT('tbl-mpar',6)">Casa</th><th onclick="sT('tbl-mpar',7)">Ospite</th>
         <th>Ris.</th><th>Ruolo</th><th>Prov.</th><th>Colleghi gara</th>
       </tr></thead><tbody id="tbl-mpar-body"></tbody></table></div>
+    </div>
+    <div class="mtc hidden" id="mpt-cam">
+      <div style="padding:8px">${mkCamminoArbitro(p)}</div>
     </div>
     <div class="mtc hidden" id="mpt-2">
       ${mkTbl(colleghi.map(([cn,cnt],i)=>{const cp=P[cn];
@@ -3501,46 +3663,16 @@ function openCampionato(camp){
       <div id="camp-cl-${esc(camp)}"></div>
     </div>
     <div class="mtc hidden" id="mct-2">
-      ${(()=>{
-        const gironi=cs.gironi||[];
-        if(!gironi.length)return '<p class="il">Nessun girone</p>';
-        // Calcola gironi a runtime dalle gare
-        const garecamp=(D.gare||[]).filter(g=>g['Campionato']===camp);
-        const girMap={};
-        garecamp.forEach(g=>{
-          const gi=g['Girone']||'';if(!gi)return;
-          if(!girMap[gi])girMap[gi]={gare:0,squadre:new Set(),arbitri:new Set(),conRis:0};
-          girMap[gi].gare++;
-          if(g['Squadra Casa'])girMap[gi].squadre.add(g['Squadra Casa']);
-          if(g['Squadra Ospite'])girMap[gi].squadre.add(g['Squadra Ospite']);
-          ['Arbitro 1','Arbitro 2'].forEach(f=>{const n=pns(g[f]||'');if(n)girMap[gi].arbitri.add(n);});
-          if(g['Risultato'])girMap[gi].conRis++;
-        });
-        return gironi.sort().map(gi=>{
-          const gd=girMap[gi]||{gare:0,squadre:new Set(),arbitri:new Set(),conRis:0};
-          const sqs=[...gd.squadre].sort();
-          const arbs=[...gd.arbitri].sort();
-          const pct=gd.gare?Math.round(gd.conRis/gd.gare*100):0;
-          return`<div class="card" style="margin-bottom:12px">
-            <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
-              <span style="color:${campColor(camp)};font-size:.9rem">${escH(gi)}</span>
-              <span style="font-size:.7rem;color:var(--mu)">${gd.gare} gare · ${sqs.length} squadre · ${arbs.length} arbitri</span>
-            </div>
-            <div style="margin-bottom:8px">
-              <div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:4px">🏀 Squadre</div>
-              <div style="display:flex;flex-wrap:wrap;gap:4px">
-                ${sqs.map(sq=>`<span class="rn rn-sq" style="font-size:.72rem" onclick="openSquadra('${esc(sq)}','${esc(camp)}')">${escH(sq)}</span>`).join('')}
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
-              <div style="flex:1;height:6px;background:var(--bl4);border-radius:3px">
-                <div style="height:6px;background:${campColor(camp)};border-radius:3px;width:${pct}%"></div>
-              </div>
-              <span style="font-size:.68rem;color:var(--mu)">${gd.conRis}/${gd.gare} con risultato (${pct}%)</span>
-            </div>
-          </div>`;
-        }).join('');
-      })()}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="grt-mts">
+        <button class="btn b-bl" id="grt-btn-0" onclick="swGrt(0)" style="font-size:.75rem">📋 Classifiche</button>
+        <button class="btn" id="grt-btn-1" onclick="swGrt(1)" style="font-size:.75rem">🔲 Griglie</button>
+        <button class="btn" id="grt-btn-2" onclick="swGrt(2)" style="font-size:.75rem">📈 Andamento</button>
+        <button class="btn" id="grt-btn-3" onclick="swGrt(3)" style="font-size:.75rem">ℹ️ Gironi</button>
+      </div>
+      <div id="grt-0"></div>
+      <div id="grt-1" style="display:none"></div>
+      <div id="grt-2" style="display:none"></div>
+      <div id="grt-3" style="display:none"></div>
     </div>
     <div class="mtc hidden" id="mct-3">
       ${(()=>{
@@ -3610,10 +3742,25 @@ function openCampionato(camp){
         </tr>`;
       }).join(''),['Data','Girone','Casa','Ospite','Ris.','Arb.','Arbitro 1','Arbitro 2','Campo'],'tbl-camp-gare')}</div>
     </div>`;
+  _grtCamp=camp; _grtDone=[false,false,false,false];
   openMo('mo-camp');
+  if((cs.gironi||[]).length) setTimeout(function(){initGironi(camp);},50);
 }
 
 // TAB SWITCH
+
+function swTabId(btn,panelId){
+  var mts=btn.closest('.mts');
+  if(!mts)return;
+  var container=mts.parentElement;
+  // Rimuovi active da tutti i bottoni
+  mts.querySelectorAll('.mt').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  // Nascondi tutti i pannelli mtc nel container
+  container.querySelectorAll('.mtc').forEach(function(p){p.classList.remove('active');p.classList.add('hidden');});
+  var panel=document.getElementById(panelId);
+  if(panel){panel.classList.remove('hidden');panel.classList.add('active');}
+}
 function swTab(btn,prefix){
   const container=btn.closest('.mbody');
   container.querySelectorAll('.mt').forEach(b=>b.classList.remove('active'));
@@ -3622,11 +3769,38 @@ function swTab(btn,prefix){
   container.querySelectorAll('.mtc').forEach((el,i)=>{
     el.classList.toggle('active',i===idx);
     el.classList.toggle('hidden',i!==idx);
+    if(i===idx && el.id==='mct-2' && typeof _grtCamp!=='undefined' && _grtCamp) {
+      initGironi(_grtCamp);
+      // Espandi il modal a tutta larghezza automaticamente
+      var moBox=document.querySelector('#mo-camp .mbox');
+      if(moBox){
+        moBox.style.width='100vw';
+        moBox.style.maxWidth='100vw';
+        moBox.style.height='100vh';
+        moBox.style.maxHeight='100vh';
+        moBox.style.borderRadius='0';
+        moBox.style.margin='0';
+        var moEl=document.getElementById('mo-camp');
+        if(moEl)moEl.style.padding='0';
+        moBox.dataset.fs='1';
+      }
+    }
     if(i===idx&&!el.dataset.tabInit){
       el.dataset.tabInit='1';
       if(el.dataset.trend){const c=el.querySelector('[id^="trend-container-"]');if(c)setTimeout(()=>renderTrendChart(el.dataset.trend,c),0);}
       if(el.dataset.camp){const c=el.querySelector('[id^="camp-cl-"]');if(c)setTimeout(()=>renderCampClassifica(el.dataset.camp,c),0);}
     }
+  });
+}
+
+function makeTableSortable(container){
+  // Rende ordinabili le tabelle nel container usando sT esistente
+  if(!container) return;
+  container.querySelectorAll('table[id]').forEach(tbl=>{
+    tbl.querySelectorAll('thead th').forEach((th,i)=>{
+      if(!th.onclick) th.style.cursor='pointer';
+      th.addEventListener('click',function(){sT(tbl.id,i);});
+    });
   });
 }
 
@@ -3639,14 +3813,12 @@ function openMo(id){
 }
 function closeMo(id){document.getElementById(id)?.classList.remove('open');}
 function toggleMoFullscreen(moId){
-  const box = document.querySelector('#'+moId+' .mbox');
+  const mo  = document.getElementById(moId);
+  const box = mo?.querySelector('.mbox');
   if(!box) return;
   if(box.dataset.fs === '1'){
-    box.style.width = '';
-    box.style.height = '';
-    box.style.maxWidth = '';
-    box.style.maxHeight = '';
-    box.style.borderRadius = '';
+    box.style.cssText = '';
+    if(mo) mo.style.padding = '';
     box.dataset.fs = '0';
   } else {
     box.style.width = '100vw';
@@ -3654,6 +3826,8 @@ function toggleMoFullscreen(moId){
     box.style.maxWidth = '100vw';
     box.style.maxHeight = '100vh';
     box.style.borderRadius = '0';
+    box.style.margin = '0';
+    if(mo) mo.style.padding = '0';
     box.dataset.fs = '1';
   }
 }
@@ -3676,7 +3850,7 @@ function printMo(id){
 <style id="login-css">
 #login-screen{
   position:fixed;inset:0;background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
-  display:flex;align-items:center;justify-content:center;z-index:99999;
+  display:flex;align-items:center;justify-content:center;z-index:9999;
   font-family:'Segoe UI',system-ui,Arial,sans-serif;
 }
 #login-box{
@@ -3720,7 +3894,7 @@ function printMo(id){
 
 ${body}
 <!-- SPOTLIGHT SEARCH OVERLAY -->
-<div id="spotlight-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,20,40,.65);backdrop-filter:blur(4px);z-index:99999;align-items:flex-start;justify-content:center;padding-top:80px" onclick="if(event.target===this)closeSpotlight()">
+<div id="spotlight-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,20,40,.65);backdrop-filter:blur(4px);z-index:9999;align-items:flex-start;justify-content:center;padding-top:80px" onclick="if(event.target===this)closeSpotlight()">
   <div style="background:#fff;border-radius:16px;width:min(640px,94vw);box-shadow:0 24px 64px rgba(0,0,40,.35);overflow:hidden">
     <!-- Input -->
     <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #eef0f8">
@@ -3741,536 +3915,6 @@ ${body}
     </div>
   </div>
 </div>
-<script>
-
-var _grtCamp='';
-var _grtDone=[false,false,false,false];
-
-function swGrt(n){
-  _grtDone.forEach(function(_,i){
-    var el=document.getElementById('grt-'+i);
-    var btn=document.getElementById('grt-btn-'+i);
-    if(el) el.style.display=(i===n)?'':'none';
-    if(btn){
-      btn.className='btn '+(i===n?'b-bl':'');
-      btn.style.fontSize='.75rem';
-    }
-  });
-  if(!_grtDone[n]){_grtDone[n]=true;renderGrt(n);}
-}
-
-function initGironi(camp){
-  _grtCamp=camp;
-  _grtDone=[false,false,false,false];
-  // Mostra tab 0 attivo
-  for(var i=0;i<4;i++){
-    var el=document.getElementById('grt-'+i);
-    var btn=document.getElementById('grt-btn-'+i);
-    if(el){el.style.display=(i===0)?'':'none'; el.innerHTML='';}
-    if(btn){btn.className='btn '+(i===0?'b-bl':''); btn.style.fontSize='.75rem';}
-  }
-  _grtDone[0]=true;
-  renderGrt(0);
-}
-
-function renderGrt(n){
-  var el=document.getElementById('grt-'+n);
-  if(!el)return;
-  var camp=_grtCamp;
-  var cs=CS[camp];
-  if(!cs){el.innerHTML='<p class="il">Campionato non trovato</p>';return;}
-  var gironi=(cs.gironi||[]).slice().sort();
-  if(!gironi.length){el.innerHTML='<p class="il">Nessun girone</p>';return;}
-  var garecamp=(D.gare||[]).filter(function(g){return g['Campionato']===camp;});
-  var clr=campColor(camp);
-  if(n===0) el.innerHTML=grtClassifiche(gironi,garecamp,camp,clr);
-  else if(n===1){var h=grtGriglie(gironi,garecamp,camp,clr);el.innerHTML=h||'<p class="il">Nessun risultato</p>';}
-  else if(n===2){var h=grtAndamento(gironi,garecamp,camp,clr);el.innerHTML=h||'<p class="il">Nessun dato</p>';}
-  else if(n===3) el.innerHTML=grtOriginali(gironi,garecamp,camp,clr);
-}
-
-
-function sortRtbl(tid,ci){
-  var tbl=document.getElementById(tid);
-  if(!tbl)return;
-  var tbody=tbl.querySelector('tbody');
-  var rows=[...tbody.querySelectorAll('tr')];
-  var th=tbl.querySelectorAll('thead th')[ci];
-  var asc=th&&th.dataset.asc==='1';
-  if(th){tbl.querySelectorAll('thead th').forEach(function(h){h.textContent=h.textContent.replace(/[▲▼]/,'');});th.dataset.asc=asc?'0':'1';th.textContent+=(asc?' ▲':' ▼');}
-  rows.sort(function(a,b){
-    var va=a.cells[ci]?a.cells[ci].textContent.replace(/[▲▼]/,'').trim():'';
-    var vb=b.cells[ci]?b.cells[ci].textContent.replace(/[▲▼]/,'').trim():'';
-    var na=parseFloat(va),nb=parseFloat(vb);
-    if(!isNaN(na)&&!isNaN(nb))return asc?na-nb:nb-na;
-    return asc?va.localeCompare(vb):vb.localeCompare(va);
-  });
-  rows.forEach(function(r,i){tbody.appendChild(r);r.cells[0].textContent=i+1;});
-}
-function grtClassifiche(gironi,garecamp,camp,clr){
-  var isDR2=(camp.toLowerCase().indexOf('divisione')>=0&&camp.indexOf('2')>=0);
-  if(isDR2){
-    var giSet=new Set(gironi);
-    garecamp.forEach(function(g){if(g['Girone'])giSet.add(g['Girone']);});
-    gironi=[...giSet].sort(function(a,b){
-      var o={'Girone Nord A':0,'Girone Nord B':1,'Girone Sud':2,'Girone Azzurro':3,'Girone Azzurro Accumulato':4,'Girone Verde':5,'Girone Verde Accumulato':6};
-      return (o[a]!==undefined?o[a]:9)-(o[b]!==undefined?o[b]:9);
-    });
-  }
-
-  function calcSt(gList,sqArr){
-    var st={};
-    sqArr.forEach(function(sq){st[sq]={pt:0,g:0,v:0,p:0,pf:0,ps:0};});
-    gList.filter(function(g){return g['Risultato'];}).forEach(function(g){
-      var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
-      var sc=g['Squadra Casa'],so=g['Squadra Ospite'];
-      if(!st[sc]||!st[so])return;
-      st[sc].g++;st[so].g++;st[sc].pf+=pc;st[sc].ps+=po;st[so].pf+=po;st[so].ps+=pc;
-      if(pc>po){st[sc].v++;st[sc].pt+=2;st[so].p++;}
-      else if(po>pc){st[so].v++;st[so].pt+=2;st[sc].p++;}
-      else{st[sc].pt++;st[so].pt++;}
-    });
-    return Object.entries(st).sort(function(a,b){return b[1].pt-a[1].pt||(b[1].pf-b[1].ps)-(a[1].pf-a[1].ps);});
-  }
-
-  function renderTabella(rows,giClr,showAccum){
-    var tid='rt'+Math.random().toString(36).slice(2,6);
-    var cols=['#','Squadra','G','V','P','PF','PS'];
-    if(showAccum)cols.push('Port.');
-    cols.push('Pt');
-    var thS='cursor:pointer;user-select:none;white-space:nowrap;';
-    function thClick(ci){return ' onclick="sortRtbl(\''+tid+'\','+ci+')"';}
-    var h='<table id="'+tid+'" style="width:100%;border-collapse:collapse;font-size:.75rem"><thead><tr style="background:'+giClr+'18">'
-      +'<th style="padding:3px 2px;text-align:center;font-size:.65rem">'+cols[0]+'</th>'
-      +'<th style="padding:3px 6px;text-align:left;font-size:.65rem;min-width:110px">'+cols[1]+'</th>'
-      +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;'+thS+'"'+thClick(2)+'>G</th>'
-      +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;color:var(--green);'+thS+'"'+thClick(3)+'>V</th>'
-      +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;color:var(--red);'+thS+'"'+thClick(4)+'>P</th>'
-      +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;'+thS+'"'+thClick(5)+'>PF</th>'
-      +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;color:#aaa;'+thS+'"'+thClick(6)+'>PS</th>'
-      +(showAccum?'<th style="padding:3px 4px;text-align:center;font-size:.65rem;color:#e65100;'+thS+'"'+thClick(7)+' title="Punti portati dal girone precedente">Port.</th>':'')
-      +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;font-weight:800;color:'+giClr+';'+thS+'"'+thClick(showAccum?8:7)+'>Pt \u25bc</th>'
-      +'</tr></thead><tbody>';
-    rows.forEach(function(e,i){
-      var sq=e[0],s=e[1],ptTot=showAccum?s.pt+(s.pt_port||0):s.pt;
-      h+='<tr style="background:'+(i%2?'#f8faff':'#fff')+';border-bottom:1px solid #f0f0f0">'
-        +'<td style="padding:3px;text-align:center;color:#aaa;font-size:.62rem">'+(i+1)+'</td>'
-        +'<td style="padding:3px 6px;min-width:110px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(\''+esc(sq)+'\',\''+esc(camp)+'\')">'+escH(sq)+'</span></td>'
-        +'<td style="padding:3px;text-align:center;font-size:.72rem">'+s.g+'</td>'
-        +'<td style="padding:3px;text-align:center;color:var(--green);font-weight:700;font-size:.72rem">'+s.v+'</td>'
-        +'<td style="padding:3px;text-align:center;color:var(--red);font-size:.72rem">'+s.p+'</td>'
-        +'<td style="padding:3px;text-align:center;font-size:.72rem">'+s.pf+'</td>'
-        +'<td style="padding:3px;text-align:center;color:#aaa;font-size:.72rem">'+s.ps+'</td>'
-        +(showAccum?'<td style="padding:3px;text-align:center;color:#e65100;font-weight:700;font-size:.72rem">'+(s.pt_port||0)+'</td>':'')
-        +'<td style="padding:3px;text-align:center;font-weight:800;font-size:.72rem;color:'+giClr+'">'+ptTot+'</td>'
-        +'</tr>';
-    });
-    h+='</tbody></table>';
-    return h;
-  }
-
-  function giColor(gi,fallback){
-    if(/azzurr/i.test(gi))return'#1565c0';
-    if(/verde/i.test(gi))return'#2e7d32';
-    if(/nord.*a/i.test(gi))return'#006064';
-    if(/nord.*b/i.test(gi))return'#00838f';
-    if(/sud/i.test(gi))return'#6a1b9a';
-    return fallback;
-  }
-
-  function renderCard(rows,gGi,giClr,showAccum,label){
-    return '<div style="min-width:320px;flex:1;border:2px solid '+giClr+'55;border-radius:8px;overflow:hidden;margin-bottom:8px">'
-      +'<div style="background:'+giClr+';color:#fff;padding:6px 12px;display:flex;justify-content:space-between;align-items:center">'
-      +'<b style="font-size:.82rem">'+escH(label)+'</b>'
-      +'<span style="font-size:.63rem;opacity:.85">'+rows.length+' sq \xb7 '+gGi.length+'g</span></div>'
-      +renderTabella(rows,giClr,showAccum)
-      +'</div>';
-  }
-
-  // Mappa squadra → girone di provenienza (Nord A o Nord B)
-  var sqGironeNord={};
-  garecamp.forEach(function(g){
-    var gi=g['Girone']||'';
-    if(gi==='Girone Nord A'||gi==='Girone Nord B'){
-      if(g['Squadra Casa'])sqGironeNord[g['Squadra Casa']]=gi;
-      if(g['Squadra Ospite'])sqGironeNord[g['Squadra Ospite']]=gi;
-    }
-  });
-
-  // Squadre per girone finale
-  var sqByGi={};
-  garecamp.forEach(function(g){
-    var gi=g['Girone']||'';if(!gi)return;
-    if(!sqByGi[gi])sqByGi[gi]=new Set();
-    if(g['Squadra Casa'])sqByGi[gi].add(g['Squadra Casa']);
-    if(g['Squadra Ospite'])sqByGi[gi].add(g['Squadra Ospite']);
-  });
-
-  var cards='<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start">';
-
-  gironi.forEach(function(gi){
-    if(/accumulato/i.test(gi))return; // skip, li generiamo noi
-    var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
-    var sqSet=sqByGi[gi]||new Set();
-    var allSqs=[...sqSet].sort();
-    if(!allSqs.length)return;
-    var giClr=giColor(gi,clr);
-    cards+=renderCard(calcSt(gGi,allSqs),gGi,giClr,false,gi);
-
-    // Per Azzurro e Verde: genera anche la card accumulata
-    if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
-      var rowsAcc=calcSt(gGi,allSqs);
-
-      rowsAcc.forEach(function(e){
-        var sq=e[0],s=e[1];
-        // Girone Nord di provenienza di questa squadra
-        var gNordSq=sqGironeNord[sq];
-        if(!gNordSq){s.pt_port=0;return;}
-
-        // Avversari della stessa squadra nel Nord che sono ORA nel girone finale
-        var avvDaPortare=new Set();
-        garecamp.filter(function(g){
-          return g['Girone']===gNordSq&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
-        }).forEach(function(g){
-          var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];
-          // L'avversario deve essere nel STESSO girone finale (Azzurro o Verde)
-          if(sqSet.has(avv))avvDaPortare.add(avv);
-        });
-
-        // Calcola punti classifica fatti contro questi avversari nel Nord (deduplicato)
-        var ptPort=0;
-        var seenGare=new Set();
-        garecamp.filter(function(g){
-          return g['Girone']===gNordSq&&g['Risultato']&&
-            (g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
-        }).forEach(function(g){
-          var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];
-          if(!avvDaPortare.has(avv))return;
-          var key=g['Squadra Casa']+'|'+g['Squadra Ospite']+'|'+g['Data']+'|'+g['Punti Casa']+'|'+g['Punti Ospite'];
-          if(seenGare.has(key))return;
-          seenGare.add(key);
-          var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
-          var mp=g['Squadra Casa']===sq?pc:po,ap=g['Squadra Casa']===sq?po:pc;
-          if(mp>ap)ptPort+=2;else if(mp===ap)ptPort+=1;
-        });
-        s.pt_port=ptPort;
-      });
-
-      rowsAcc.sort(function(a,b){
-        var ta=a[1].pt+(a[1].pt_port||0),tb=b[1].pt+(b[1].pt_port||0);
-        return tb-ta||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps));
-      });
-      cards+=renderCard(rowsAcc,gGi,/azzurr/i.test(gi)?'#0d47a1':'#1b5e20',true,gi+' Accumulato');
-    }
-  });
-  cards+='</div>';
-  return cards;
-}
-
-function grtGriglie(gironi,garecamp,camp,clr){
-  var isDR2=(camp.toLowerCase().indexOf('divisione')>=0&&camp.indexOf('2')>=0);
-  if(isDR2){
-    var giSet=new Set(gironi);
-    garecamp.forEach(function(g){if(g['Girone'])giSet.add(g['Girone']);});
-    gironi=[...giSet].sort(function(a,b){
-      var order={'Girone Nord A':0,'Girone Nord B':1,'Girone Sud':2,'Girone Azzurro':3,'Girone Verde':4};
-      return (order[a]!==undefined?order[a]:9)-(order[b]!==undefined?order[b]:9);
-    });
-  }
-  function giColor(gi,fb){
-    if(/azzurr/i.test(gi))return'#1565c0';
-    if(/verde/i.test(gi))return'#2e7d32';
-    if(/nord.*a/i.test(gi))return'#006064';
-    if(/nord.*b/i.test(gi))return'#00838f';
-    if(/sud/i.test(gi))return'#6a1b9a';
-    return fb;
-  }
-  var uid='gg'+Math.random().toString(36).slice(2,7);
-  return '<div style="width:100%">'+gironi.map(function(gi,gi_i){
-    var gGiAll=garecamp.filter(function(g){return g['Girone']===gi;});
-    var sqSet=new Set();
-    gGiAll.forEach(function(g){
-      if(g['Squadra Casa'])sqSet.add(g['Squadra Casa']);
-      if(g['Squadra Ospite'])sqSet.add(g['Squadra Ospite']);
-    });
-    var sqs=[...sqSet].sort();
-    if(!sqs.length)return'';
-    var giClr=giColor(gi,clr);
-    var tid=uid+gi_i;
-
-    // Deduplicazione gare
-    var seen=new Set();
-    var gGi=gGiAll.filter(function(g){
-      if(!g['Risultato'])return false;
-      var k=g['Squadra Casa']+'|'+g['Squadra Ospite']+'|'+g['Data'];
-      if(seen.has(k))return false;seen.add(k);return true;
-    });
-
-    // Punti classifica e giornate casa/fuori
-    var ptC={},ptF={},gjC={},gjF={};
-    sqs.forEach(function(sq){ptC[sq]=0;ptF[sq]=0;gjC[sq]=0;gjF[sq]=0;});
-    gGi.forEach(function(g){
-      var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
-      var sc=g['Squadra Casa'],so=g['Squadra Ospite'];
-      if(ptC[sc]!==undefined){if(pc>po)ptC[sc]+=2;else if(pc===po)ptC[sc]+=1;gjC[sc]++;}
-      if(ptF[so]!==undefined){if(po>pc)ptF[so]+=2;else if(pc===po)ptF[so]+=1;gjF[so]++;}
-    });
-    var gTot={};sqs.forEach(function(sq){gTot[sq]=(gjC[sq]||0)+(gjF[sq]||0);});
-
-    var hdr='<thead>'
-      +'<tr>'
-      +'<th style="background:'+giClr+'22;border:1px solid #ddd;min-width:130px;width:130px;resize:horizontal;overflow:auto;padding:4px 8px;font-size:.68rem;text-align:left">Squadra</th>'
-      +'<th style="background:#e3f2fd;border:1px solid #ddd;padding:3px 6px;font-size:.65rem;text-align:center;color:#1565c0;cursor:pointer;white-space:nowrap" onclick="sortGriglia(\''+tid+'\',this,1)" title="Punti classifica in casa (clicca per ordinare)">Pt \u25bc</th>'
-      +'<th style="background:#fff8e1;border:1px solid #ddd;padding:3px 4px;font-size:.62rem;text-align:center;color:#e65100;cursor:pointer;white-space:nowrap" onclick="sortGriglia(\''+tid+'\',this,2)" title="Giornate giocate (clicca per ordinare)">G \u25bc</th>'
-      +sqs.map(function(sq){
-        return'<th style="background:'+giClr+'18;border:1px solid #ddd;writing-mode:vertical-lr;transform:rotate(180deg);height:95px;min-width:34px;width:34px;resize:horizontal;overflow:auto;font-size:.6rem;padding:4px 3px;text-align:left;vertical-align:bottom">'
-          +escH(sq)+'<br><span style="color:#2e7d32;font-weight:800;font-size:.65rem">'+ptF[sq]+'</span></th>';
-      }).join('')
-      +'</tr>'
-      +'</thead>';
-
-    var body='<tbody>'+sqs.map(function(casa){
-      return'<tr>'
-        +'<td style="padding:4px 8px;font-size:.68rem;font-weight:600;border:1px solid #eee;background:'+giClr+'08;min-width:130px;resize:horizontal;overflow:auto">'
-        +'<span class="rn rn-sq" style="cursor:pointer" onclick="openSquadra(\''+esc(casa)+'\',\''+esc(camp)+'\')">'+escH(casa)+'</span></td>'
-        +'<td style="padding:3px 5px;text-align:center;font-size:.72rem;font-weight:800;color:#1565c0;border:1px solid #ddd;background:#e3f2fd">'+ptC[casa]+'</td>'
-        +'<td style="padding:3px 4px;text-align:center;font-size:.68rem;font-weight:600;color:#e65100;border:1px solid #eee;background:#fff8e1">'+gTot[casa]+'</td>'
-        +sqs.map(function(ospite){
-          if(casa===ospite)return'<td style="background:#e0e0e0;border:1px solid #ccc;text-align:center;font-size:.8rem">—</td>';
-          var g=gGi.find(function(gg){return gg['Squadra Casa']===casa&&gg['Squadra Ospite']===ospite;});
-          if(!g)return'<td style="text-align:center;color:#ccc;border:1px solid #eee;font-size:.8rem">·</td>';
-          var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0,win=pc>po;
-          return'<td style="text-align:center;font-weight:700;font-size:.72rem;border:1px solid #eee;padding:3px 4px;background:'+(win?'#e8f5e9':'#ffebee')+';color:'+(win?'#2e7d32':'#c62828')+'">'+pc+'\u2013'+po+'</td>';
-        }).join('')+'</tr>';
-    }).join('')
-    +'<tr style="background:#e8f5e9;border-top:2px solid '+giClr+'">'
-    +'<td style="padding:3px 8px;font-size:.63rem;font-weight:700;color:#2e7d32;border:1px solid #ddd">Pt fuori \u2192</td>'
-    +'<td style="border:1px solid #ddd;background:#e8f5e9"></td><td style="border:1px solid #ddd;background:#e8f5e9"></td>'
-    +sqs.map(function(sq){return'<td style="text-align:center;font-size:.7rem;font-weight:800;color:#2e7d32;border:1px solid #ddd;background:#e8f5e9">'+ptF[sq]+'</td>';}).join('')
-    +'</tr>'
-    +'<tr style="background:#fff8e1;border-top:1px solid #ddd">'
-    +'<td style="padding:3px 8px;font-size:.63rem;font-weight:700;color:#e65100;border:1px solid #ddd">G fuori \u2192</td>'
-    +'<td style="border:1px solid #ddd;background:#fff8e1"></td><td style="border:1px solid #ddd;background:#fff8e1"></td>'
-    +sqs.map(function(sq){return'<td style="text-align:center;font-size:.7rem;font-weight:600;color:#e65100;border:1px solid #ddd;background:#fff8e1">'+gjF[sq]+'</td>';}).join('')
-    +'</tr>'
-    +'</tbody>';
-
-    return'<div style="margin-bottom:28px">'
-      +'<div style="font-weight:700;color:'+giClr+';font-size:.85rem;margin-bottom:8px;border-left:4px solid '+giClr+';padding-left:8px">'+escH(gi)+'</div>'
-      +'<div style="overflow-x:auto"><table id="'+tid+'" style="border-collapse:collapse">'+hdr+body+'</table></div>'
-      +'<div style="font-size:.6rem;color:#999;margin-top:4px">\uD83D\uDFE6 casa vince \uD83D\uDD34 ospite vince \u2502 Pt = punti classifica in casa \u2502 verde in header = punti in trasferta \u2502 G = giornate totali</div>'
-      +'</div>';
-  }).join('')+'</div>';
-}
-
-function sortGriglia(tid,th,colIdx){
-  var tbl=document.getElementById(tid);
-  if(!tbl)return;
-  var tbody=tbl.querySelector('tbody');
-  var rows=[...tbody.querySelectorAll('tr')].filter(function(r){return r.cells.length>3;});
-  var asc=th.dataset.asc==='1';
-  th.dataset.asc=asc?'0':'1';
-  // Reset altri header
-  tbl.querySelectorAll('thead th').forEach(function(h){h.innerHTML=h.innerHTML.replace(/\s[▲▼]$/,'');});
-  th.innerHTML=th.innerHTML+(asc?' ▲':' ▼');
-  rows.sort(function(a,b){
-    var va=parseInt(a.cells[colIdx]?a.cells[colIdx].textContent:0)||0;
-    var vb=parseInt(b.cells[colIdx]?b.cells[colIdx].textContent:0)||0;
-    return asc?va-vb:vb-va;
-  });
-  rows.forEach(function(r){tbody.appendChild(r);});
-}
-
-
-function grtAndamento(gironi,garecamp,camp,clr){
-  var isDR2=(camp.toLowerCase().indexOf('divisione')>=0&&camp.indexOf('2')>=0);
-  if(isDR2){
-    var giSet=new Set(gironi);
-    garecamp.forEach(function(g){if(g['Girone'])giSet.add(g['Girone']);});
-    gironi=[...giSet].sort(function(a,b){
-      var o={'Girone Nord A':0,'Girone Nord B':1,'Girone Sud':2,'Girone Azzurro':3,'Girone Verde':4};
-      return (o[a]!==undefined?o[a]:9)-(o[b]!==undefined?o[b]:9);
-    });
-  }
-  var COLORS=['#1565c0','#c62828','#2e7d32','#e65100','#6a1b9a','#00695c','#ad1457','#37474f',
-              '#f57f17','#00838f','#4527a0','#558b2f','#bf360c','#0277bd','#558b2f','#4e342e'];
-  function giColor(gi,fb){
-    if(/azzurr/i.test(gi))return'#1565c0';if(/verde/i.test(gi))return'#2e7d32';
-    if(/nord.*a/i.test(gi))return'#006064';if(/nord.*b/i.test(gi))return'#00838f';
-    if(/sud/i.test(gi))return'#6a1b9a';return fb;
-  }
-  function abbr(sq){
-    return sq.replace(/\b(basket|pallacanestro|pall\.?|ssdrl?|asd|ssd|a\.s\.d\.?)\b/gi,'')
-      .trim().split(/\s+/).filter(function(w){return w.length>1;}).slice(0,2).join(' ').slice(0,13)||sq.slice(0,11);
-  }
-
-  return gironi.map(function(gi,giIdx){
-    var gGiAll=garecamp.filter(function(g){return g['Girone']===gi;});
-    var sqSet=new Set();
-    gGiAll.forEach(function(g){if(g['Squadra Casa'])sqSet.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqSet.add(g['Squadra Ospite']);});
-    var allSqs=[...sqSet].sort();
-    var seen=new Set();
-    var gGi=gGiAll.filter(function(g){
-      if(!g['Risultato']||!g['Data'])return false;
-      var k=g['Squadra Casa']+'|'+g['Squadra Ospite']+'|'+g['Data'];
-      if(seen.has(k))return false;seen.add(k);return true;
-    }).sort(function(a,b){return a['Data'].localeCompare(b['Data']);});
-    if(!allSqs.length||!gGi.length)return'';
-
-    var dateSet=new Set();gGi.forEach(function(g){dateSet.add(g['Data']);});
-    var dates=[...dateSet].sort();
-    var pts={};allSqs.forEach(function(sq){pts[sq]=0;});
-    var series={};allSqs.forEach(function(sq){series[sq]=[0];});
-    dates.forEach(function(d){
-      gGi.filter(function(g){return g['Data']===d;}).forEach(function(g){
-        var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
-        var sc=g['Squadra Casa'],so=g['Squadra Ospite'];
-        if(pts[sc]!==undefined){if(pc>po)pts[sc]+=2;else if(pc===po)pts[sc]+=1;}
-        if(pts[so]!==undefined){if(po>pc)pts[so]+=2;else if(pc===po)pts[so]+=1;}
-      });
-      allSqs.forEach(function(sq){series[sq].push(pts[sq]);});
-    });
-
-    // Ordina squadre per punti finali (più alta in cima = meno overlap label)
-    var sqSorted=allSqs.slice().sort(function(a,b){return series[b][series[b].length-1]-series[a][series[a].length-1];});
-    var maxPt=Math.max.apply(null,sqSorted.reduce(function(a,sq){return a.concat(series[sq]);},[2]));
-    var giClr=giColor(gi,clr);
-
-    // Dimensioni: più larghezza per label a destra
-    var LBL=100, W=600+LBL, H=Math.max(200,allSqs.length*22+40), PL=30, PR=LBL+8, PT=14, PB=26;
-    function xS(i){return PL+i*((W-PL-PR)/(dates.length>0?dates.length:1));}
-    function yS(p){return PT+(H-PT-PB)*(1-p/maxPt);}
-
-    var svg='';
-    // Griglia Y
-    var step=Math.max(2,Math.ceil(maxPt/6));
-    for(var v=0;v<=maxPt;v+=step){
-      var yy=yS(v).toFixed(1);
-      svg+='<line x1="'+PL+'" y1="'+yy+'" x2="'+(W-PR)+'" y2="'+yy+'" stroke="#f0f0f0" stroke-width="1"/>';
-      svg+='<text x="'+(PL-3)+'" y="'+(parseFloat(yy)+4)+'" font-size="8" fill="#bbb" text-anchor="end">'+v+'</text>';
-    }
-    // Date asse X
-    dates.forEach(function(d,i){
-      if(i%Math.max(1,Math.ceil(dates.length/6))!==0)return;
-      svg+='<text x="'+xS(i+1).toFixed(1)+'" y="'+(H-8)+'" font-size="7" fill="#bbb" text-anchor="middle">'+d.slice(5)+'</text>';
-    });
-    // Assi
-    svg+='<line x1="'+PL+'" y1="'+PT+'" x2="'+PL+'" y2="'+(H-PB)+'" stroke="#ddd" stroke-width="1"/>';
-    svg+='<line x1="'+PL+'" y1="'+(H-PB)+'" x2="'+(W-PR)+'" y2="'+(H-PB)+'" stroke="#ddd" stroke-width="1"/>';
-
-    // Linee + label a fine linea con offset per evitare sovrapposizioni
-    var labelY={};
-    sqSorted.forEach(function(sq,i){
-      var col=COLORS[sqSorted.indexOf(sq)%COLORS.length];
-      var pts2=series[sq];
-      var lp=pts2[pts2.length-1];
-      var lx=xS(pts2.length-1), ly=yS(lp);
-      // Calcola offset per label
-      var baseY=ly;
-      // Se troppo vicino a un'altra label, sposta
-      var usedY=Object.values(labelY);
-      var tryY=baseY;
-      var attempts=0;
-      while(attempts<20){
-        var tooClose=usedY.some(function(uy){return Math.abs(uy-tryY)<11;});
-        if(!tooClose)break;
-        tryY+=11;attempts++;
-      }
-      labelY[sq]=tryY;
-
-      var d=pts2.map(function(p,j){return(j===0?'M':'L')+xS(j).toFixed(1)+','+yS(p).toFixed(1);}).join(' ');
-      svg+='<path d="'+d+'" stroke="'+col+'" stroke-width="1.8" fill="none" stroke-linejoin="round" opacity="0.9"/>';
-      // Punti ogni 2 step
-      pts2.forEach(function(p,j){
-        if(j===0||j%2!==0&&j!==pts2.length-1)return;
-        svg+='<circle cx="'+xS(j).toFixed(1)+'" cy="'+yS(p).toFixed(1)+'" r="2.5" fill="'+col+'" opacity="0.7"/>';
-      });
-      // Punto finale + valore
-      svg+='<circle cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="4" fill="'+col+'" stroke="#fff" stroke-width="1.5"/>';
-      svg+='<text x="'+lx.toFixed(1)+'" y="'+(ly-6)+'" font-size="8" fill="'+col+'" text-anchor="middle" font-weight="bold">'+lp+'</text>';
-      // Linea connettrice label
-      if(Math.abs(tryY-ly)>5){
-        svg+='<line x1="'+(lx+4)+'" y1="'+ly.toFixed(1)+'" x2="'+(lx+8)+'" y2="'+tryY.toFixed(1)+'" stroke="'+col+'" stroke-width="0.8" opacity="0.5"/>';
-      }
-      // Label nome
-      svg+='<text x="'+(lx+10)+'" y="'+(tryY+4)+'" font-size="9.5" fill="'+col+'" font-weight="600">'+escH(abbr(sq))+'</text>';
-    });
-
-    return'<div style="margin-bottom:28px">'
-      +'<div style="font-weight:700;color:'+giClr+';font-size:.85rem;margin-bottom:8px;border-left:4px solid '+giClr+';padding-left:8px">'+escH(gi)+'</div>'
-      +'<div style="overflow-x:auto"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:'+H+'px;display:block">'+svg+'</svg></div>'
-      +'</div>';
-  }).join('');
-}
-
-
-function sortGriglia(th){
-  var tbl=th.closest('table');
-  var tbody=tbl.querySelector('tbody');
-  var rows=[...tbody.querySelectorAll('tr')];
-  var asc=th.dataset.asc==='1';
-  rows.sort(function(a,b){
-    var pa=parseInt(a.querySelector('td:nth-child(2)')?.textContent)||0;
-    var pb=parseInt(b.querySelector('td:nth-child(2)')?.textContent)||0;
-    return asc?pa-pb:pb-pa;
-  });
-  th.dataset.asc=asc?'0':'1';
-  th.textContent='Pt⌂ '+(asc?'▼':'▲');
-  rows.forEach(function(r){tbody.appendChild(r);});
-}
-
-function sortClCard(th,colIdx){
-  var tbl=th.closest('table');
-  var tbody=tbl.querySelector('tbody');
-  if(!tbody)return;
-  var rows=[...tbody.querySelectorAll('tr')];
-  var asc=th.dataset.asc==='1';
-  th.dataset.asc=asc?'0':'1';
-  // Reset altri th
-  tbl.querySelectorAll('th').forEach(function(h){if(h!==th)h.style.textDecoration='';});
-  th.style.textDecoration='underline';
-  rows.sort(function(a,b){
-    var va=parseFloat(a.cells[colIdx]?a.cells[colIdx].textContent:0)||0;
-    var vb=parseFloat(b.cells[colIdx]?b.cells[colIdx].textContent:0)||0;
-    return asc?va-vb:vb-va;
-  });
-  rows.forEach(function(r,i){
-    r.cells[0].textContent=i+1;
-    tbody.appendChild(r);
-  });
-}
-
-function grtOriginali(gironi,garecamp,camp,clr){
-  var girMap={};
-  garecamp.forEach(function(g){
-    var gi=g['Girone']||'';if(!gi)return;
-    if(!girMap[gi])girMap[gi]={gare:0,squadre:new Set(),arbitri:new Set(),conRis:0};
-    girMap[gi].gare++;
-    if(g['Squadra Casa'])girMap[gi].squadre.add(g['Squadra Casa']);
-    if(g['Squadra Ospite'])girMap[gi].squadre.add(g['Squadra Ospite']);
-    ['Arbitro 1','Arbitro 2'].forEach(function(f){var n=pns(g[f]||'');if(n)girMap[gi].arbitri.add(n);});
-    if(g['Risultato'])girMap[gi].conRis++;
-  });
-  return gironi.map(function(gi){
-    var gd=girMap[gi]||{gare:0,squadre:new Set(),conRis:0};
-    var sqs=[...gd.squadre].sort();
-    var pct=gd.gare?Math.round(gd.conRis/gd.gare*100):0;
-    return'<div class="card" style="margin-bottom:12px">'
-      +'<div class="card-title" style="display:flex;justify-content:space-between;align-items:center">'
-      +'<span style="color:'+clr+';font-size:.9rem">'+escH(gi)+'</span>'
-      +'<span style="font-size:.7rem;color:var(--mu)">'+gd.gare+' gare · '+sqs.length+' squadre</span></div>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">'
-      +sqs.map(function(sq){return'<span class="rn rn-sq" style="font-size:.72rem" onclick="openSquadra(\''+esc(sq)+'\',\''+esc(camp)+'\')">'+escH(sq)+'</span>';}).join('')
-      +'</div>'
-      +'<div style="display:flex;align-items:center;gap:8px">'
-      +'<div style="flex:1;height:6px;background:var(--bl4);border-radius:3px">'
-      +'<div style="height:6px;background:'+clr+';border-radius:3px;width:'+pct+'%"></div></div>'
-      +'<span style="font-size:.68rem;color:var(--mu)">'+pct+'%</span></div>'
-      +'</div>';
-  }).join('');
-}
-
-</script>
 </body></html>`);
   w.document.close();w.focus();setTimeout(()=>w.print(),600);
 }
@@ -6033,7 +5677,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   // ── Version badge (v7)
   if(document.getElementById('ver-badge')){
-    document.getElementById('ver-badge').textContent='v7.0  ·  '+((D.generated||'').slice(0,10)||'2026');
+    document.getElementById('ver-badge').textContent='v7.0  ·  '+((D.meta&&D.meta.generated||'').slice(0,10)||'2026')+((D.generated||'').slice(0,10)||'2026');
   }
   ['ft-pv','fa-pv','fu-pv','fo-pv','fs-pv','fg2-pv'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
@@ -6089,9 +5733,13 @@ document.addEventListener('DOMContentLoaded',()=>{
   _sortObs.observe(document.body,{childList:true,subtree:true});
   
 
+
+
+// ═══════════════════════════════════════════════════════
+// GIRONI: classifiche, griglie, andamento
+// ═══════════════════════════════════════════════════════
 });</script>
 <script>
-
 var _grtCamp='';
 var _grtDone=[false,false,false,false];
 
@@ -6618,6 +6266,5 @@ function grtOriginali(gironi,garecamp,camp,clr){
       +'</div>';
   }).join('');
 }
-
 </script>
 </body></html>
