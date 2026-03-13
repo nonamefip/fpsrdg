@@ -2743,7 +2743,9 @@ function openPersona(nome,campFilter){
       <div style="overflow-x:auto">${mkGarePersonaTbl(p.gare_osservatore||[],nome,'tbl-mposs')}</div></div>`;
   }
 
-  document.getElementById('mp-body').innerHTML=`
+  // Build mp-body safely with separate panel population
+  const mpBody = document.getElementById('mp-body');
+  mpBody.innerHTML = `
     <div class="mts">
       <button class="mt active" onclick="swTabId(this,'mpt-0')">📊 Statistiche</button>
       <button class="mt" onclick="swTabId(this,'mpt-1')">📅 Gare (${allG.length})</button>
@@ -2753,152 +2755,7 @@ function openPersona(nome,campFilter){
       <button class="mt" onclick="swTabId(this,'mpt-4')">🏆 Squadre (${squadre.length})</button>
       ${extraTabs}
     </div>
-    <div class="mtc active" id="mpt-0">
-      ${isDual?`<div class="dual-role-notice">⚡ Questa persona ha ruolo doppio: ${(p.categorie||[]).join(' + ')}. Usa le tab dedicate per filtrare per ruolo.</div>`:''}
-      <div class="scs">
-        <div class="sc"><div class="sv">${allG.length}</div><div class="sl">Gare totali</div></div>
-        ${p.n_gare_arbitro?`<div class="sc"><div class="sv">${p.n_gare_arbitro}</div><div class="sl">Come Arbitro</div></div>`:''}
-        ${(p.n_gare_arbitro&&(p.n_singolo||0)>=0)?`<div class="sc"><div class="sv" style="color:#e17055">${p.n_singolo||0}</div><div class="sl">In singolo</div></div>`:''}
-        ${p.n_gare_udc?`<div class="sc"><div class="sv">${p.n_gare_udc}</div><div class="sl">Come UDC</div></div>`:''}
-        ${p.n_gare_osservatore?`<div class="sc"><div class="sv">${p.n_gare_osservatore}</div><div class="sl">Come Osservatore</div></div>`:''}
-        <div class="sc"><div class="sv">${nGiorni}</div><div class="sl">Giorni</div></div>
-        <div class="sc gold"><div class="sv">${(allG.length/Math.max(nGiorni,1)).toFixed(1)}</div><div class="sl">Media/g</div></div>
-        <div class="sc"><div class="sv">${maxGday}</div><div class="sl">Max/g</div></div>
-        <div class="sc"><div class="sv">${topCamp.length}</div><div class="sl">Campionati</div></div>
-        <div class="sc"><div class="sv">${colleghi.length}</div><div class="sl">Colleghi unici</div></div>
-        <div class="sc"><div class="sv">${campi.length}</div><div class="sl">Campi</div></div>
-      </div>
-      ${(()=>{
-        const streakCur=p.streak_cur||0,streakMax=p.streak_max||0;
-        const forma=(p.forma_recente||[]).slice(-8);
-        const dowLbl=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
-        const dowCount=[0,0,0,0,0,0,0];
-        allG.forEach(g=>{try{const d=new Date(g['Data']);dowCount[d.getDay()]++;}catch{}});
-        const maxDow=Math.max(...dowCount,1);
-        const dowBars=dowLbl.map((d,i)=>`<div class="dow-bar-wrap">
-          <div class="dow-val">${dowCount[i]||''}</div>
-          <div class="dow-bar" style="height:${Math.max(3,Math.round(dowCount[i]/maxDow*40))}px;background:${dowCount[i]===Math.max(...dowCount)?'var(--gold)':'var(--bl3)'}"></div>
-          <div class="dow-lbl">${d}</div></div>`).join('');
-        const formaDots=forma.map(g=>`<span class="forma-dot fd-V" title="${g.c||''} ${g.d||''}"></span>`).join('');
-        return `<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-          ${streakCur>=3||streakMax>=5?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
-            <div class="card-title">🔥 Streak</div>
-            <div><span class="streak-badge">🔥 ${streakCur} di fila</span></div>
-            <div style="font-size:.68rem;color:var(--mu);margin-top:4px">Max stagionale: <b>${streakMax}</b></div>
-          </div>`:''}
-          ${forma.length?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
-            <div class="card-title">📈 Ultime ${forma.length} gare</div>
-            <div style="display:flex;gap:4px;flex-wrap:wrap">${formaDots}</div>
-          </div>`:''}
-          <div class="card" style="flex:2;min-width:180px;margin-bottom:0">
-            <div class="card-title">📅 Attività per giorno settimana</div>
-            <div class="dow-chart">${dowBars}</div>
-          </div>
-        </div>`;
-      })()}
-
-      <!-- Nuove stats: km stimati, tasso singolo, mesi attività -->
-      ${(()=>{
-        // Km stimati: per ogni campo nelle gare arbitro, calcola distanza dalla provincia
-        const PCOORDS={CA:[39.22,9.12],SS:[40.73,8.56],NU:[40.32,9.33],OR:[39.90,8.59],SU:[39.37,8.78]};
-        const CAMPO_GPS_LOCAL=typeof CAMPO_GPS!=='undefined'?CAMPO_GPS:{};
-        const pvHome=p.provincia||'';
-        const pvCoord=PCOORDS[pvHome];
-        let kmTot=0,kmCount=0;
-        if(pvCoord){
-          Object.keys(p.campi||{}).forEach(campo=>{
-            const gps=CAMPO_GPS_LOCAL[campo];
-            if(!gps)return;
-            const dlat=(gps.lat-pvCoord[0])*Math.PI/180;
-            const dlng=(gps.lng-pvCoord[1])*Math.PI/180;
-            const a=Math.sin(dlat/2)**2+Math.cos(pvCoord[0]*Math.PI/180)*Math.cos(gps.lat*Math.PI/180)*Math.sin(dlng/2)**2;
-            const km=2*6371*Math.asin(Math.sqrt(a));
-            kmTot+=km*(p.campi[campo]||1)*2; // andata e ritorno
-            kmCount+=(p.campi[campo]||1);
-          });
-        }
-        const nArb=p.n_gare_arbitro||0;
-        const nSing=p.n_singolo||0;
-        const nDopp=nArb-nSing;
-        const pctDopp=nArb?Math.round(nDopp/nArb*100):0;
-
-        // Mesi grafico
-        const mesiData=Object.entries(p.mesi||{}).sort((a,b)=>a[0].localeCompare(b[0]));
-        const maxMese=Math.max(...mesiData.map(m=>m[1]),1);
-        const mesBars=mesiData.map(([m,n])=>{
-          const label=m.slice(5); // MM
-          return`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-            <div style="font-size:.62rem;font-weight:700;color:var(--bl)">${n}</div>
-            <div style="width:100%;background:var(--bl);border-radius:3px 3px 0 0;height:${Math.max(4,Math.round(n/maxMese*60))}px;opacity:.8"></div>
-            <div style="font-size:.6rem;color:var(--mu)">${label}</div>
-          </div>`;
-        }).join('');
-
-        // Squadre arbitrate + rendimento
-        const sqStats=Object.entries(p.squadre_incontrate||{})
-          .map(([sq,st])=>({sq,g:st.gare,v:st.vinte||0,s:st.perse||0,wp:st.gare?Math.round((st.vinte||0)/st.gare*100):0}))
-          .sort((a,b)=>b.g-a.g);
-
-        return`<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-          ${kmTot>0?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
-            <div class="card-title">🚗 Km stimati stagione</div>
-            <div style="font-size:1.4rem;font-weight:800;color:var(--bl)">${Math.round(kmTot).toLocaleString('it')}</div>
-            <div style="font-size:.68rem;color:var(--mu)">${kmCount} trasferte · media ${kmCount?Math.round(kmTot/kmCount):0} km/gara</div>
-          </div>`:''}
-          ${nArb>0?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
-            <div class="card-title">👥 Copertura arbitrale</div>
-            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
-              <span style="font-size:1.1rem;font-weight:800;color:var(--green)">${nDopp}</span>
-              <span style="font-size:.7rem;color:var(--mu)">in coppia</span>
-              <span style="font-size:1.1rem;font-weight:800;color:var(--gold)">${nSing}</span>
-              <span style="font-size:.7rem;color:var(--mu)">in singolo</span>
-            </div>
-            <div style="height:8px;border-radius:4px;overflow:hidden;display:flex">
-              <div style="height:100%;background:var(--green);width:${pctDopp}%"></div>
-              <div style="height:100%;background:var(--gold);width:${100-pctDopp}%"></div>
-            </div>
-            <div style="font-size:.65rem;color:var(--mu);margin-top:2px">${pctDopp}% in coppia</div>
-          </div>`:''}
-          ${mesiData.length?`<div class="card" style="flex:2;min-width:200px;margin-bottom:0">
-            <div class="card-title">📅 Attività mensile</div>
-            <div style="display:flex;align-items:flex-end;gap:3px;height:80px;padding-top:16px">${mesBars}</div>
-          </div>`:''}
-        </div>
-        ${sqStats.length?`<div class="card" style="margin-bottom:10px">
-          <div class="card-title">🏀 Squadre arbitrate — rendimento</div>
-          <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.72rem">
-            <thead><tr style="background:var(--tbl-hdr);color:#fff">
-              <th style="padding:4px 8px;text-align:left">Squadra</th>
-              <th style="padding:4px 8px;text-align:center">Gare</th>
-              <th style="padding:4px 8px;text-align:center;color:#a5d6a7">V</th>
-              <th style="padding:4px 8px;text-align:center;color:#ef9a9a">P</th>
-              <th style="padding:4px 8px;text-align:center">Win%</th>
-              <th style="padding:4px 8px">Barra</th>
-            </tr></thead>
-            <tbody>${sqStats.map(({sq,g,v,s,wp},i)=>`<tr style="background:${wp>50?'#f0fff4':wp<50?'#fff5f5':'#fff'};border-left:3px solid ${wp>50?'var(--green)':wp<50?'var(--red)':'#ccc'}">
-              <td style="padding:3px 8px"><span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></td>
-              <td style="padding:3px 8px;text-align:center;font-weight:700">${g}</td>
-              <td style="padding:3px 8px;text-align:center;color:var(--green);font-weight:700">${v}</td>
-              <td style="padding:3px 8px;text-align:center;color:var(--red)">${s}</td>
-              <td style="padding:3px 8px;text-align:center;font-weight:700;color:${wp>=50?'var(--green)':'var(--red)'}">${wp}%</td>
-              <td style="padding:3px 8px;min-width:80px">
-                <div style="height:6px;border-radius:3px;overflow:hidden;display:flex">
-                  <div style="height:100%;background:var(--green);width:${wp}%"></div>
-                  <div style="height:100%;background:var(--red);width:${100-wp}%"></div>
-                </div>
-              </td>
-            </tr>`).join('')}</tbody>
-          </table></div>
-        </div>`:''}`;
-      })()}
-
-      <div class="st" style="font-size:.8rem">📅 Calendario presenze</div>
-      ${bCal(p.giorni,nome)}
-      <div class="st" style="font-size:.8rem;margin-top:10px">📊 Per campionato</div>
-      ${bProg(topCamp,allG.length,PC[p.provincia]||'var(--bl)')}
-      <div class="st" style="font-size:.8rem;margin-top:10px">🏅 Ruoli</div>
-      <div>${(p.ruoli||[]).map(r=>`<span class="chip">${escH(r)}</span>`).join(' ')}</div>
-    </div>
+    <div class="mtc active" id="mpt-0"></div>
     <div class="mtc hidden" id="mpt-1">
       <div class="fb" style="padding:6px 8px">
         <div class="fg"><label>Campionato</label><select id="mpar-camp" onchange="fgpP('${esc(nome)}')"><option value="">Tutti</option>${CAMPS.map(c=>`<option>${escH(c)}</option>`).join('')}</select></div>
@@ -2908,84 +2765,133 @@ function openPersona(nome,campFilter){
       <div class="il" id="mpar-info"></div>
       <div style="overflow-x:auto"><table class="mtbl" id="tbl-mpar"><thead><tr>
         <th onclick="sT('tbl-mpar',0)">Data</th><th>Ora</th><th>N°</th>
-        <th onclick="sT('tbl-mpar',3)">Campionato</th><th>Girone</th><th>Fase</th>
+        <th onclick="sT('tbl-mpar',2)">Camp.</th><th>Girone</th><th>Fase</th>
         <th onclick="sT('tbl-mpar',6)">Casa</th><th onclick="sT('tbl-mpar',7)">Ospite</th>
-        <th>Ris.</th><th>Ruolo</th><th>Prov.</th><th>Colleghi gara</th>
+        <th onclick="sT('tbl-mpar',8)">Ris.</th><th>Ruolo</th><th>Prov.</th><th>Colleghi</th>
       </tr></thead><tbody id="tbl-mpar-body"></tbody></table></div>
     </div>
-    <div class="mtc hidden" id="mpt-cam">
-      <div style="padding:8px">${mkCamminoArbitro(p)}</div>
-    </div>
-    <div class="mtc hidden" id="mpt-2">
-      ${mkTbl(colleghi.map(([cn,cnt],i)=>{const cp=P[cn];
-        // Trova le gare condivise tra nome e cn
-        const sharedGares=allG.filter(g=>{
-          const fields=['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'];
-          const names=fields.map(f=>pns(g[f]||'')).filter(Boolean);
-          return names.includes(nome)&&names.includes(cn);
-        });
-        return`<tr>
-          <td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td>
-          <td><span class="rn rn-${cp?.categoria||'Arbitro'}" data-n="${cn}" onclick="openPersona(this.dataset.n)">${escH(cn)}</span></td>
-          <td>${cp?catB(cp.categoria):''}</td>
-          <td>${cp?pvB(cp.provincia):''}</td>
-          <td data-val="${cnt}">
-            <span style="font-weight:700;color:#003087;cursor:pointer;text-decoration:underline" 
-              onclick="openSharedGames('${esc(nome)}','${esc(cn)}')" title="Vedi le ${cnt} gare condivise">${cnt}</span>
-          </td>
-        </tr>`;}).join(''),['#','Collega','Cat.','Prov.','Gare'],'tbl-mcol')}
-    </div>
-    <div class="mtc hidden" id="mpt-3">
-      ${mkTbl(campi.map(([campo,cnt],i)=>{const pvc=cpv(campo);return`<tr><td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td><td style="font-size:.73rem;white-space:normal;max-width:290px">${escH(campo)}</td><td>${pvc?pvB(pvc):''}</td><td data-val="${cnt}"><b>${cnt}</b></td></tr>`;}).join(''),['#','Campo','Prov.','Presenze'],'tbl-mcampi')}
-    </div>
-    <div class="mtc hidden" id="mpt-4">
-      ${(function(){
-        const rows=squadre.map(([sq,cnt],i)=>{
-          const sqd=SQ[sq];
-          const sqGare=allG.filter(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
-          // Stats V/P per campionato
-          const campStats={};
-          sqGare.forEach(g=>{
-            const cn=g['Campionato'];
-            if(!campStats[cn])campStats[cn]={n:0,v:0,p:0};
-            campStats[cn].n++;
-            if(g['Risultato']){
-              const isCasa=g['Squadra Casa']===sq;
-              const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;
-              const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;
-              if(pc>po)campStats[cn].v++; else if(pc<po)campStats[cn].p++;
-            }
-          });
-          const clist=Object.entries(campStats).sort((a,b)=>b[1].n-a[1].n);
-          const totV=clist.reduce((s,[,cs])=>s+cs.v,0);
-          const totP=clist.reduce((s,[,cs])=>s+cs.p,0);
-          const rowBg=cnt>0&&totV>totP?'background:#e8f8ee':cnt>0&&totP>totV?'background:#fdecea':'';
-          const badges=clist.map(([cn,cs])=>{
-            const clr=campColor(cn);
-            const vp=cs.v>0||cs.p>0?` <span style="font-size:.55rem;opacity:.85">${cs.v}V ${cs.p}P</span>`:'';
-            return`<span style="background:${clr};color:#fff;border-radius:3px;padding:1px 4px;font-size:.59rem;margin:1px;display:inline-block;cursor:pointer" onclick="openCampionato('${esc(cn)}')" title="${escH(cn)} — ${cs.n} gare, ${cs.v}V ${cs.p}P">${escH(cn.split(' ').slice(0,3).join(' '))} <b>${cs.n}</b>${vp}</span>`;
-          }).join('');
-          return`<tr style="${rowBg}">
-            <td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td>
-            <td><span class="rn rn-sq" style="font-weight:700" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></td>
-            <td>${sqd?.prov?pvB(sqd.prov):''}</td>
-            <td data-val="${cnt}" style="cursor:pointer;color:#003087;font-weight:700;text-decoration:underline" onclick="openSharedSquadGames('${esc(nome)}','${esc(sq)}')">${cnt}</td>
-            <td data-val="${totV}" style="color:#00704a;font-weight:700">${totV}</td>
-            <td data-val="${totP}" style="color:#c0392b;font-weight:700">${totP}</td>
-            <td style="white-space:normal;max-width:260px">${badges||'—'}</td>
-          </tr>`;
-        }).join('');
-        return`<table class="gtbl" id="tbl-msq"><thead><tr>
-          <th onclick="sT('tbl-msq',0)">#</th>
-          <th onclick="sT('tbl-msq',1)">Squadra</th><th>Prov.</th>
-          <th onclick="sT('tbl-msq',3)">Tot.</th>
-          <th onclick="sT('tbl-msq',4)" style="color:#00704a">✅ V</th>
-          <th onclick="sT('tbl-msq',5)" style="color:#c0392b">❌ P</th>
-          <th>Categorie (n,V,P)</th>
-        </tr></thead><tbody>${rows}</tbody></table>`;
-      })()}   </div>
+    <div class="mtc hidden" id="mpt-cam"><div style="padding:8px" id="mpt-cam-inner"></div></div>
+    <div class="mtc hidden" id="mpt-2" id="mpt-2-inner"></div>
+    <div class="mtc hidden" id="mpt-3" id="mpt-3-inner"></div>
+    <div class="mtc hidden" id="mpt-4" id="mpt-4-inner"></div>
     ${extraPanels}`;
+
+  // Populate panel 0 (Statistiche) safely
+  try {
+    const streakCur=p.streak_cur||0,streakMax=p.streak_max||0;
+    const forma=(p.forma_recente||[]).slice(-8);
+    const dowLbl=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+    const dowCount=[0,0,0,0,0,0,0];
+    allG.forEach(g=>{try{const d=new Date(g['Data']);dowCount[d.getDay()]++;}catch{}});
+    const maxDow=Math.max(...dowCount,1);
+    const dowBars=dowLbl.map((d,i)=>`<div class="dow-bar-wrap">
+      <div class="dow-val">${dowCount[i]||''}</div>
+      <div class="dow-bar" style="height:${Math.max(3,Math.round(dowCount[i]/maxDow*40))}px;background:${dowCount[i]===Math.max(...dowCount)?'var(--gold)':'var(--bl3)'}"></div>
+      <div class="dow-lbl">${d}</div></div>`).join('');
+    const formaDots=forma.map(g=>`<span class="forma-dot fd-V" title="${g.c||''} ${g.d||''}"></span>`).join('');
+    const km=calcKmArb(p);
+    const kmGara=km>0&&(p.n_gare_arbitro||allG.length)>0?Math.round(km/(p.n_gare_arbitro||allG.length)):0;
+    document.getElementById('mpt-0').innerHTML=`
+      ${isDual?`<div class="dual-role-notice">⚡ Ruolo doppio: ${(p.categorie||[]).join(' + ')}. Usa le tab dedicate.</div>`:''}
+      <div class="scs">
+        <div class="sc"><div class="sv">${allG.length}</div><div class="sl">Gare totali</div></div>
+        ${p.n_gare_arbitro?`<div class="sc"><div class="sv">${p.n_gare_arbitro}</div><div class="sl">Come Arbitro</div></div>`:''}
+        ${p.n_gare_arbitro?`<div class="sc"><div class="sv" style="color:#e17055">${p.n_singolo||0}</div><div class="sl">In singolo</div></div>`:''}
+        ${p.n_gare_udc?`<div class="sc"><div class="sv">${p.n_gare_udc}</div><div class="sl">Come UDC</div></div>`:''}
+        ${p.n_gare_osservatore?`<div class="sc"><div class="sv">${p.n_gare_osservatore}</div><div class="sl">Come Osservatore</div></div>`:''}
+        <div class="sc"><div class="sv">${nGiorni}</div><div class="sl">Giorni</div></div>
+        <div class="sc gold"><div class="sv">${(allG.length/Math.max(nGiorni,1)).toFixed(1)}</div><div class="sl">Media/g</div></div>
+        <div class="sc"><div class="sv">${maxGday}</div><div class="sl">Max/g</div></div>
+        <div class="sc"><div class="sv">${topCamp.length}</div><div class="sl">Campionati</div></div>
+        <div class="sc"><div class="sv">${colleghi.length}</div><div class="sl">Colleghi</div></div>
+        <div class="sc"><div class="sv">${campi.length}</div><div class="sl">Campi</div></div>
+        ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div><div class="sl">Km stimati</div></div>`:''}
+        ${kmGara>0?`<div class="sc"><div class="sv">${kmGara}</div><div class="sl">Km/gara</div></div>`:''}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+        ${streakCur>=3||streakMax>=5?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
+          <div class="card-title">🔥 Streak</div>
+          <div><span class="streak-badge">🔥 ${streakCur} di fila</span></div>
+          <div style="font-size:.68rem;color:var(--mu);margin-top:4px">Max: <b>${streakMax}</b></div>
+        </div>`:''}
+        ${forma.length?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
+          <div class="card-title">📈 Ultime ${forma.length} gare</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">${formaDots}</div>
+        </div>`:''}
+        <div class="card" style="flex:2;min-width:180px;margin-bottom:0">
+          <div class="card-title">📅 Per giorno settimana</div>
+          <div class="dow-chart">${dowBars}</div>
+        </div>
+      </div>
+      ${bProg(topCamp,allG.length,PC[p.provincia]||'var(--bl)')}`;
+  } catch(e){ document.getElementById('mpt-0').innerHTML='<p style="color:red;padding:10px">Errore stats: '+e.message+'</p>'; }
+
+  // Populate panel Cammino safely
+  try {
+    document.getElementById('mpt-cam').innerHTML='<div style="padding:8px">'+mkCamminoArbitro(p)+'</div>';
+  } catch(e){ document.getElementById('mpt-cam').innerHTML='<p style="color:red;padding:10px">Errore cammino: '+e.message+'</p>'; }
+
+  // Populate panel Colleghi safely
+  try {
+    document.getElementById('mpt-2').innerHTML=mkTbl(colleghi.map(([cn,cnt],i)=>{const cp=P[cn];
+      const sharedGares=allG.filter(g=>{
+        const fields=['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'];
+        const names=fields.map(f=>pns(g[f]||'')).filter(Boolean);
+        return names.includes(nome)&&names.includes(cn);
+      });
+      return`<tr>
+        <td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td>
+        <td><span class="rn rn-${cp?.categoria||'Arbitro'}" data-n="${cn}" onclick="openPersona(this.dataset.n)">${escH(cn)}</span></td>
+        <td>${cp?catB(cp.categoria):''}</td>
+        <td>${cp?pvB(cp.provincia):''}</td>
+        <td data-val="${cnt}">
+          <span style="font-weight:700;color:#003087;cursor:pointer;text-decoration:underline"
+            onclick="openSharedGames('${esc(nome)}','${esc(cn)}')" title="Vedi le ${cnt} gare condivise">${cnt}</span>
+        </td>
+      </tr>`;}
+    ).join(''),['#','Collega','Cat.','Prov.','Gare'],'tbl-mcol');
+  } catch(e){ document.getElementById('mpt-2').innerHTML='<p style="color:red;padding:10px">Errore colleghi: '+e.message+'</p>'; }
+
+  // Populate panel Campi safely
+  try {
+    document.getElementById('mpt-3').innerHTML=mkTbl(campi.map(([campo,cnt],i)=>{const pvc=cpv(campo);
+      return`<tr><td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td><td style="font-size:.73rem;white-space:normal;max-width:290px">${escH(campo)}</td><td>${pvc?pvB(pvc):''}</td><td data-val="${cnt}"><b>${cnt}</b></td></tr>`;
+    }).join(''),['#','Campo','Prov.','Presenze'],'tbl-mcampi');
+  } catch(e){ document.getElementById('mpt-3').innerHTML='<p style="color:red;padding:10px">Errore campi: '+e.message+'</p>'; }
+
+  // Populate panel Squadre safely
+  try {
+    const sqRows=squadre.map(([sq,cnt],i)=>{
+      const sqd=SQ[sq];
+      const sqGare=allG.filter(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
+      const campStats={};
+      sqGare.forEach(g=>{
+        const cn=g['Campionato'];if(!campStats[cn])campStats[cn]={n:0,v:0,p:0};campStats[cn].n++;
+        if(g['Risultato']){const isCasa=g['Squadra Casa']===sq;const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;if(pc>po)campStats[cn].v++;else if(pc<po)campStats[cn].p++;}
+      });
+      const clist=Object.entries(campStats).sort((a,b)=>b[1].n-a[1].n);
+      const totV=clist.reduce((s,[,cs])=>s+cs.v,0);
+      const totP=clist.reduce((s,[,cs])=>s+cs.p,0);
+      const badges=clist.map(([cn,cs])=>{const clr=campColor(cn);return`<span style="background:${clr};color:#fff;border-radius:3px;padding:1px 4px;font-size:.59rem;margin:1px;display:inline-block;cursor:pointer" onclick="openCampionato('${esc(cn)}')" title="${escH(cn)}">${escH(cn.split(' ').slice(0,3).join(' '))} <b>${cs.n}</b></span>`;}).join('');
+      return`<tr>
+        <td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td>
+        <td><span class="rn rn-sq" style="font-weight:700" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></td>
+        <td>${sqd?.prov?pvB(sqd.prov):''}</td>
+        <td data-val="${cnt}" style="cursor:pointer;color:#003087;font-weight:700;text-decoration:underline" onclick="openSharedSquadGames('${esc(nome)}','${esc(sq)}')">${cnt}</td>
+        <td data-val="${totV}" style="color:#00704a;font-weight:700">${totV}</td>
+        <td data-val="${totP}" style="color:#c0392b;font-weight:700">${totP}</td>
+        <td style="white-space:normal;max-width:260px">${badges||'—'}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('mpt-4').innerHTML=`<table class="gtbl" id="tbl-msq"><thead><tr>
+      <th onclick="sT('tbl-msq',0)">#</th><th onclick="sT('tbl-msq',1)">Squadra</th><th>Prov.</th>
+      <th onclick="sT('tbl-msq',3)">Tot.</th><th onclick="sT('tbl-msq',4)" style="color:#00704a">✅ V</th>
+      <th onclick="sT('tbl-msq',5)" style="color:#c0392b">❌ P</th><th>Categorie</th>
+    </tr></thead><tbody>${sqRows}</tbody></table>`;
+  } catch(e){ document.getElementById('mpt-4').innerHTML='<p style="color:red;padding:10px">Errore squadre: '+e.message+'</p>'; }
+
   fgpP(nome);openMo('mo-persona');
+
   if(campFilter){const campSelP=document.querySelector('#mp-body select[id*="camp"]');if(campSelP){campSelP.value=campFilter;mkGarePersonaTbl(nome);}}
 }
 function mkGarePersonaTbl(gare,nome,tid){
@@ -4156,7 +4062,7 @@ ${body}
 // ═══════════════════════════════════════════════════════════════
 
 const GARE_V5=D.gare||[], COP=D.copertura||{}, GS=D.global_stats||{per_giorno:{},per_mese:{}};
-const CAMPI=D.campi||{}, PROVV=D.provvedimenti||[];
+const CAMPI=D.campi||{}; let PROVV=D.provvedimenti||[];
 let h2hArb1=null, h2hArb2=null;
 
 // ── SORT TABLE ──
@@ -5404,6 +5310,19 @@ function renderGlobalStats(){
 
 // ── PROVVEDIMENTI ──
 function initProvvedimenti(){
+  // Build PROVV from GARE if D.provvedimenti is empty
+  if(!PROVV||PROVV.length===0){
+    PROVV=(D.gare||[]).filter(g=>(g['Provvedimenti']||'').trim()).map(g=>({
+      data:g['Data']||'',
+      camp:g['Campionato']||'',
+      casa:g['Squadra Casa']||'',
+      ospite:g['Squadra Ospite']||'',
+      arbitro1:g['Arbitro 1']||'',
+      arbitro2:g['Arbitro 2']||'',
+      testo:(g['Provvedimenti']||'').trim(),
+      num:g['Numero Gara']||''
+    }));
+  }
   const sel=document.getElementById('fpv-camp');
   if(sel&&sel.options.length<=1){
     const camps=[...new Set(PROVV.map(p=>p.camp))].sort();
