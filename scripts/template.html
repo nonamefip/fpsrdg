@@ -31,7 +31,7 @@ body{font-family:'Segoe UI',system-ui,Arial,sans-serif;
 /* ══════════ HEADER ══════════ */
 header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
   color:#fff;padding:10px 22px;display:flex;align-items:center;gap:14px;
-  border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:auto;}
+  border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:210;}
 .logo{font-size:2rem;flex-shrink:0;}
 .header-txt h1{font-size:1.05rem;font-weight:700;letter-spacing:.2px;}
 .header-txt p{font-size:.7rem;opacity:.6;margin-top:1px;}
@@ -46,24 +46,53 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 /* ══════════ NAV ══════════ */
 .nav{background:#17305e;display:flex;gap:0;padding:0 10px;
   overflow-x:auto;scrollbar-width:none;border-bottom:2px solid rgba(255,255,255,.06);
-  position:sticky;top:0;z-index:auto;}
+  position:sticky;top:0;z-index:200;}
 .nav::-webkit-scrollbar{display:none;}
 .nav-btn{background:none;border:none;color:rgba(255,255,255,.55);
-  padding:7px 9px;cursor:pointer;font-size:.70rem;font-weight:600;
+  padding:10px 14px;cursor:pointer;font-size:.75rem;font-weight:600;
   border-bottom:3px solid transparent;white-space:nowrap;
   transition:all .15s;margin-bottom:-2px;}
 .nav-btn:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);}
 .nav-btn.active{color:#fff;border-bottom-color:var(--gold);background:rgba(255,255,255,.12);}
+/* Dropdown nav */
+.nav-group{position:relative;display:flex;align-items:stretch;}
+.nav-group-btn{background:none;border:none;color:rgba(255,255,255,.55);
+  padding:10px 14px;cursor:pointer;font-size:.75rem;font-weight:600;
+  border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap;
+  display:flex;align-items:center;gap:5px;margin-bottom:-2px;}
+.nav-group-btn:after{content:'▾';font-size:.6rem;opacity:.7;}
+.nav-group-btn:hover,.nav-group:hover .nav-group-btn{color:#fff;background:rgba(255,255,255,.06);}
+.nav-group-btn.active{color:#fff;border-bottom-color:var(--gold);background:rgba(255,255,255,.12);}
+.nav-dropdown{display:none;position:absolute;top:100%;left:0;min-width:170px;
+  background:#1a3060;border:1px solid rgba(255,255,255,.12);border-top:none;
+  border-radius:0 0 8px 8px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:300;}
+.nav-group:hover .nav-dropdown{display:block;}
+.nav-dropdown button{display:block;width:100%;text-align:left;
+  background:none;border:none;color:rgba(255,255,255,.75);
+  padding:9px 16px;cursor:pointer;font-size:.75rem;font-weight:600;
+  transition:background .12s;white-space:nowrap;}
+.nav-dropdown button:hover{background:rgba(255,255,255,.1);color:#fff;}
+.nav-dropdown .dd-divider{height:1px;background:rgba(255,255,255,.08);margin:3px 0;}
+.nav-dropdown button.dd-active{color:var(--gold);}
 
 /* ══════════ SUMBAR → ora su bianco ══════════ */
-.sumbar{background:#fff;display:flex;flex-wrap:wrap;
-  border-bottom:2px solid var(--br);box-shadow:var(--shadow-sm);position:sticky;top:36px;z-index:auto;}
-.sum-item{padding:8px 14px;cursor:pointer;border-right:1px solid var(--br);
-  transition:background .15s;min-width:80px;}
-.sum-item:hover{background:var(--bl4);}
-.slabel{font-size:.58rem;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);font-weight:700;}
-.svalue{font-size:1.28rem;font-weight:800;color:var(--bl);line-height:1.1;}
-.ssub{font-size:.58rem;color:var(--mu2);margin-top:1px;}
+.kpi-strip{background:#fff;display:flex;flex-wrap:wrap;align-items:center;
+  border-bottom:2px solid var(--br);box-shadow:var(--shadow-sm);position:sticky;top:0;z-index:190;
+  padding:0 6px;}
+.kpi-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;cursor:pointer;
+  border-right:1px solid var(--br);transition:background .15s;}
+.kpi-chip:hover{background:var(--bl4);}
+.kc-v{font-size:1.1rem;font-weight:800;color:var(--bl);line-height:1;}
+.kc-l{font-size:.6rem;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);font-weight:700;}
+.spotlight-btn{display:flex;align-items:center;gap:6px;background:var(--bl);border:none;
+  color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.73rem;font-weight:600;}
+.spotlight-btn:hover{background:var(--bl2);}
+.spotlight-btn kbd{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);
+  border-radius:3px;padding:0 4px;font-size:.6rem;}
+/* legacy sumbar classes kept for any JS refs */
+.sumbar{display:none;}
+.sum-item{display:none;}
+.slabel,.svalue,.ssub{}
 
 /* ══════════ DATE BAR ══════════ */
 .datebar{background:#fff;border-bottom:1px solid var(--br);padding:5px 18px;
@@ -438,42 +467,77 @@ tr.loss-row td{background:#fdecea!important;}
   <span id="g-date-info" style="color:var(--mu);font-size:.71rem;font-style:italic"></span>
 </div>
 <div class="nav">
-  <button class="nav-btn active" onclick="showPage('home')">🏠 Riepilogo</button>
-  <button class="nav-btn" onclick="showPage('arbitri')">👨‍⚖️ Arbitri</button>
-  <button class="nav-btn" onclick="showPage('udc')">📋 UDC</button>
-  <button class="nav-btn" onclick="showPage('osservatori')">🔭 Osservatori</button>
-  <button class="nav-btn" onclick="showPage('tutti')">👥 Tutti</button>
+  <button class="nav-btn active" onclick="showPage('home')">🏠 Home</button>
+
+  <div class="nav-group">
+    <button class="nav-group-btn" id="navgrp-persone">👤 Persone</button>
+    <div class="nav-dropdown">
+      <button onclick="showPage('tutti')">👥 Tutti</button>
+      <button onclick="showPage('arbitri')">👨‍⚖️ Arbitri</button>
+      <button onclick="showPage('udc')">📋 UDC</button>
+      <button onclick="showPage('osservatori')">🔭 Osservatori</button>
+      <div class="dd-divider"></div>
+      <button onclick="showPage('gruppi')">🔗 Gruppi</button>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <button class="nav-group-btn" id="navgrp-gare">📅 Gare</button>
+    <div class="nav-dropdown">
+      <button onclick="showPage('gare')">📅 Risultati</button>
+      <button onclick="showPage('prossime')">📆 Prossime</button>
+      <button onclick="showPage('classifica')">📊 Classifiche</button>
+      <button onclick="showPage('campionati')">🥇 Campionati</button>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <button class="nav-group-btn" id="navgrp-h2h">⚔️ H2H</button>
+    <div class="nav-dropdown">
+      <button onclick="showPage('h2h')">⚔️ Squadre</button>
+      <button onclick="openMultiH2H()">👥 Multi H2H</button>
+      <button onclick="showPage('h2h-arb')">⚖️ Arbitri</button>
+    </div>
+  </div>
+
   <button class="nav-btn" onclick="showPage('squadre')">🏆 Squadre</button>
-  <button class="nav-btn" onclick="showPage('classifica')">📊 Classifica</button>
-  <button class="nav-btn" onclick="showPage('campionati')">🥇 Campionati</button>
-  <button class="nav-btn" onclick="showPage('gare')">📅 Gare</button>
-  <button class="nav-btn" onclick="showPage('prossime')">📆 Prossime</button>
-  <button class="nav-btn" onclick="showPage('h2h')">⚔️ H2H</button>
-  <button class="nav-btn" onclick="openMultiH2H()">👥 Multi H2H</button>
-  <button class="nav-btn" onclick="showPage('h2h-arb')">⚖️ H2H Arb.</button>
-  <button class="nav-btn" onclick="showPage('resoconto')">📋 Resoconto</button>
-  <button class="nav-btn" onclick="showPage('province')">📍 Province</button>
-  <button class="nav-btn" onclick="showPage('campi')">🏟 Campi</button>
-  <button class="nav-btn" onclick="showPage('mappa')">🗺 Mappa</button>
-  <button class="nav-btn" onclick="showPage('copertura')">🔎 Copertura</button>
-  <button class="nav-btn" onclick="showPage('gruppi')">🔗 Gruppi</button>
-  <button class="nav-btn" onclick="showPage('provvedimenti')" title="Dati non ancora disponibili">⚠️ Provvedimenti</button>
-  <button class="nav-btn" onclick="showPage('aggiornamento')">⚙️</button>
+
+  <div class="nav-group">
+    <button class="nav-group-btn" id="navgrp-territorio">📍 Territorio</button>
+    <div class="nav-dropdown">
+      <button onclick="showPage('province')">📍 Province</button>
+      <button onclick="showPage('campi')">🏟 Campi</button>
+      <button onclick="showPage('mappa')">🗺 Mappa</button>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <button class="nav-group-btn" id="navgrp-analisi">📈 Analisi</button>
+    <div class="nav-dropdown">
+      <button onclick="showPage('resoconto')">📋 Resoconto</button>
+      <button onclick="showPage('copertura')">🔎 Copertura</button>
+      <button onclick="showPage('provvedimenti')">⚠️ Provvedimenti</button>
+    </div>
+  </div>
+
+  <button class="nav-btn" onclick="showPage('aggiornamento')" title="Impostazioni">⚙️</button>
 </div>
-<div class="sumbar">
-  <div class="sum-item" onclick="openGareTotali()"><div class="slabel">Gare</div><div class="svalue" id="s-gare">–</div><div class="ssub">↗ elenco</div></div>
-  <div class="sum-item" onclick="showPage('tutti')"><div class="slabel">Tutti</div><div class="svalue" id="s-all">–</div><div class="ssub">↗ classifica</div></div>
-  <div class="sum-item" onclick="showPage('arbitri')"><div class="slabel">Arbitri</div><div class="svalue" id="s-arb">–</div><div class="ssub">↗ classifica</div></div>
-  <div class="sum-item" onclick="showPage('udc')"><div class="slabel">UDC</div><div class="svalue" id="s-udc">–</div><div class="ssub">↗ classifica</div></div>
-  <div class="sum-item" onclick="showPage('osservatori')"><div class="slabel">Osservatori</div><div class="svalue" id="s-oss">–</div><div class="ssub">↗ classifica</div></div>
-  <div class="sum-item" style="cursor:pointer" onclick="openGenderStats('M')"><div class="slabel" style="color:#5b9cf6">👨 Uomini</div><div class="svalue" id="s-nm" style="color:#5b9cf6">–</div><div class="ssub">↗ statistiche M</div></div>
-  <div class="sum-item" style="cursor:pointer" onclick="openGenderStats('F')"><div class="slabel" style="color:#e84393">👩 Donne</div><div class="svalue" id="s-nf" style="color:#e84393">–</div><div class="ssub">↗ statistiche F</div></div>
-  <div class="sum-item" onclick="showPage('squadre')"><div class="slabel">Squadre</div><div class="svalue" id="s-sq">–</div><div class="ssub">↗ classifica</div></div>
-  <div class="sum-item" onclick="showPage('h2h')"><div class="slabel">Head-to-Head</div><div class="svalue" id="s-h2h">–</div><div class="ssub">↗ confronto</div></div>
-  <div class="sum-item" onclick="showPage('campionati')"><div class="slabel">Campionati</div><div class="svalue" id="s-camp">–</div><div class="ssub">↗ dettaglio</div></div>
-  <div class="sum-item" onclick="showPage('province')"><div class="slabel">Province</div><div class="svalue" id="s-pv">5</div><div class="ssub">CA·SS·SU·OR·NU</div></div>
-  <div style="margin-left:auto;display:flex;align-items:center;padding:0 12px">
-    <div style="position:relative"><button onclick="openSpotlight()" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.75rem;font-weight:600" title="Cerca (Ctrl+K)">🔍 Cerca <kbd style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:3px;padding:0 4px;font-size:.6rem">Ctrl K</kbd></button></div>
+<div class="kpi-strip">
+  <div class="kpi-chip" onclick="openGareTotali()"><span class="kc-v" id="s-gare">–</span><span class="kc-l">Gare</span></div>
+  <div class="kpi-chip" onclick="showPage('arbitri')"><span class="kc-v" id="s-arb">–</span><span class="kc-l">Arbitri</span></div>
+  <div class="kpi-chip" onclick="showPage('udc')"><span class="kc-v" id="s-udc">–</span><span class="kc-l">UDC</span></div>
+  <div class="kpi-chip" onclick="showPage('osservatori')"><span class="kc-v" id="s-oss">–</span><span class="kc-l">Osservatori</span></div>
+  <div class="kpi-chip" onclick="showPage('squadre')"><span class="kc-v" id="s-sq">–</span><span class="kc-l">Squadre</span></div>
+  <div class="kpi-chip" onclick="showPage('campionati')"><span class="kc-v" id="s-camp">–</span><span class="kc-l">Campionati</span></div>
+  <div class="kpi-chip" onclick="openGenderStats('M')" style="color:#5b9cf6"><span class="kc-v" id="s-nm" style="color:#5b9cf6">–</span><span class="kc-l">👨 M</span></div>
+  <div class="kpi-chip" onclick="openGenderStats('F')" style="color:#e84393"><span class="kc-v" id="s-nf" style="color:#e84393">–</span><span class="kc-l">👩 F</span></div>
+  <!-- mantieni id legacy per compatibilità JS -->
+  <span id="s-all" style="display:none"></span>
+  <span id="s-h2h" style="display:none"></span>
+  <span id="s-pv" style="display:none">5</span>
+  <div style="margin-left:auto;display:flex;align-items:center;padding:0 8px">
+    <button onclick="openSpotlight()" class="spotlight-btn" title="Cerca (Ctrl+K)">🔍 Cerca <kbd>Ctrl K</kbd></button>
+  </div>
 </div>
 <div class="main">
 
@@ -1090,12 +1154,23 @@ const RTX={Arbitro:'#7d5a00',UDC:'#0c5460',Osservatore:'#155724'};
 function showPage(id){
   document.querySelectorAll('.ps').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.nav-group-btn').forEach(b=>b.classList.remove('active'));
   const page=document.getElementById('page-'+id);
   if(page)page.classList.add('active');
-  // Attiva nav button corretto
+  // Attiva nav button diretto
   document.querySelectorAll('.nav-btn').forEach(b=>{
     if(b.getAttribute('onclick')===`showPage('${id}')`)b.classList.add('active');
   });
+  // Attiva nav-group-btn se la pagina appartiene a un gruppo
+  const _grpMap={
+    'tutti':'persone','arbitri':'persone','udc':'persone','osservatori':'persone','gruppi':'persone',
+    'gare':'gare','prossime':'gare','classifica':'gare','campionati':'gare',
+    'h2h':'h2h','h2h-arb':'h2h',
+    'province':'territorio','campi':'territorio','mappa':'territorio',
+    'resoconto':'analisi','copertura':'analisi','provvedimenti':'analisi'
+  };
+  const grp=_grpMap[id];
+  if(grp){const gb=document.getElementById('navgrp-'+grp);if(gb)gb.classList.add('active');}
   // Init lazy per pagine specifiche
   if(id==='classifica'){initClassificaPage();renderClassifica();}
   if(id==='copertura'){renderCopertura();}
