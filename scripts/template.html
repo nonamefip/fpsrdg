@@ -65,8 +65,9 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 .nav-group-btn.active{color:#fff;border-bottom-color:var(--gold);background:rgba(255,255,255,.12);}
 .nav-dropdown{display:none;position:absolute;top:100%;left:0;min-width:170px;
   background:#1a3060;border:1px solid rgba(255,255,255,.12);border-top:none;
-  border-radius:0 0 8px 8px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:300;}
-.nav-group:hover .nav-dropdown{display:block;}
+  border-radius:0 0 8px 8px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:300;
+  pointer-events:none;}
+.nav-group:hover .nav-dropdown{display:block;pointer-events:auto;}
 .nav-dropdown button{display:block;width:100%;text-align:left;
   background:none;border:none;color:rgba(255,255,255,.75);
   padding:9px 16px;cursor:pointer;font-size:.75rem;font-weight:600;
@@ -295,9 +296,9 @@ tr.loss-row td{background:#fdecea!important;}
 
 /* ══════════ MODAL ══════════ */
 .mo{display:none;position:fixed;inset:0;background:rgba(8,12,40,.6);
-  z-index:999999;padding:20px 8px 8px;align-items:flex-start;justify-content:center;
+  z-index:99999;padding:20px 8px 8px;align-items:flex-start;justify-content:center;
   backdrop-filter:blur(4px);}
-.mo.open{display:flex;}
+.mo.open{display:flex;pointer-events:auto;}
 .mbox{background:#fff;border-radius:var(--radius-lg);
   width:min(98vw,1300px);max-height:calc(100vh - 28px);
   display:flex;flex-direction:column;
@@ -470,7 +471,7 @@ tr.loss-row td{background:#fdecea!important;}
   <button class="nav-btn active" onclick="showPage('home')">🏠 Home</button>
 
   <div class="nav-group">
-    <button class="nav-group-btn" id="navgrp-persone">👤 Persone</button>
+    <button class="nav-group-btn" id="navgrp-persone" onclick="showPage('tutti')">👤 Persone</button>
     <div class="nav-dropdown">
       <button onclick="showPage('tutti')">👥 Tutti</button>
       <button onclick="showPage('arbitri')">👨‍⚖️ Arbitri</button>
@@ -482,7 +483,7 @@ tr.loss-row td{background:#fdecea!important;}
   </div>
 
   <div class="nav-group">
-    <button class="nav-group-btn" id="navgrp-gare">📅 Gare</button>
+    <button class="nav-group-btn" id="navgrp-gare" onclick="showPage('gare')">📅 Gare</button>
     <div class="nav-dropdown">
       <button onclick="showPage('gare')">📅 Risultati</button>
       <button onclick="showPage('prossime')">📆 Prossime</button>
@@ -492,7 +493,7 @@ tr.loss-row td{background:#fdecea!important;}
   </div>
 
   <div class="nav-group">
-    <button class="nav-group-btn" id="navgrp-h2h">⚔️ H2H</button>
+    <button class="nav-group-btn" id="navgrp-h2h" onclick="showPage('h2h')">⚔️ H2H</button>
     <div class="nav-dropdown">
       <button onclick="showPage('h2h')">⚔️ Squadre</button>
       <button onclick="openMultiH2H()">👥 Multi H2H</button>
@@ -503,7 +504,7 @@ tr.loss-row td{background:#fdecea!important;}
   <button class="nav-btn" onclick="showPage('squadre')">🏆 Squadre</button>
 
   <div class="nav-group">
-    <button class="nav-group-btn" id="navgrp-territorio">📍 Territorio</button>
+    <button class="nav-group-btn" id="navgrp-territorio" onclick="showPage('province')">📍 Territorio</button>
     <div class="nav-dropdown">
       <button onclick="showPage('province')">📍 Province</button>
       <button onclick="showPage('campi')">🏟 Campi</button>
@@ -512,7 +513,7 @@ tr.loss-row td{background:#fdecea!important;}
   </div>
 
   <div class="nav-group">
-    <button class="nav-group-btn" id="navgrp-analisi">📈 Analisi</button>
+    <button class="nav-group-btn" id="navgrp-analisi" onclick="showPage('resoconto')">📈 Analisi</button>
     <div class="nav-dropdown">
       <button onclick="showPage('resoconto')">📋 Resoconto</button>
       <button onclick="showPage('copertura')">🔎 Copertura</button>
@@ -1732,105 +1733,163 @@ function openGiornoModal(ds){
     const dayData=perG[ds]||{};
     const dayGare=(D.gare||[]).filter(g=>g['Data']===ds);
     const dayFut=(D.gare_future||[]).filter(g=>g['Data']===ds);
-    const allDayG=[...dayGare,...dayFut];
+
+    // DEDUPLICAZIONE: rimuovi duplicati per numero gara
+    const seenIds=new Set();
+    const dedupe=arr=>arr.filter(g=>{
+      const k=g['Numero Gara']||(g['Squadra Casa']+g['Squadra Ospite']+g['Campionato']);
+      if(seenIds.has(k))return false;
+      seenIds.add(k);return true;
+    });
+    const allDayG=dedupe([...dayGare,...dayFut]);
+
     const d=new Date(ds+'T12:00:00');
     const giorni=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
     const mesi=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
     const titleStr=`${giorni[d.getDay()]} ${d.getDate()} ${mesi[d.getMonth()]} ${d.getFullYear()}`;
 
-    // Rimuovi modal precedente se esiste
-    const old=document.getElementById('dyn-mo-giorno');
-    if(old)old.remove();
+    // Ordina per importanza campionato poi per ora
+    const _ordG=g=>typeof livelloC==='function'?livelloC(g['Campionato']||''):0;
+    allDayG.sort((a,b)=>{
+      const ld=_ordG(b)-_ordG(a);
+      if(ld!==0)return ld;
+      const oa=a['Ora']||a['ora']||'';
+      const ob=b['Ora']||b['ora']||'';
+      return oa.localeCompare(ob);
+    });
 
-    // Costruisci contenuto
     let bodyHtml='';
     if(!allDayG.length){
       bodyHtml='<p class="il" style="text-align:center;padding:20px">Nessuna gara in questo giorno</p>';
     } else {
       const nArbs=new Set();
       allDayG.forEach(g=>{['Arbitro 1','Arbitro 2'].forEach(f=>{const n=pns(g[f]||'');if(n)nArbs.add(n);});});
-      const camps=[...new Set(allDayG.map(g=>g['Campionato']).filter(Boolean))];
+      const campsSet=[...new Set(allDayG.map(g=>g['Campionato']).filter(Boolean))];
+      // Ordina categorie per importanza
+      campsSet.sort((a,b)=>(typeof livelloC==='function'?livelloC(b)-livelloC(a):0));
       const campi=[...new Set(allDayG.map(g=>g['Campo']||'').filter(Boolean))];
-      bodyHtml=`
-        <div class="scs" style="margin-bottom:12px">
-          <div class="sc"><div class="sv">${allDayG.length}</div><div class="sl">Gare</div></div>
-          <div class="sc"><div class="sv">${dayGare.filter(g=>g['Risultato']).length}</div><div class="sl">Con risultato</div></div>
-          <div class="sc"><div class="sv">${nArbs.size}</div><div class="sl">Arbitri</div></div>
-          <div class="sc"><div class="sv">${camps.length}</div><div class="sl">Campionati</div></div>
-          <div class="sc"><div class="sv">${campi.length}</div><div class="sl">Campi</div></div>
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
-          ${camps.map(c=>`<span style="background:${campColor(c)};color:#fff;border-radius:4px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="openCampionato('${esc(c)}')">${escH(c)}</span>`).join('')}
-        </div>
-        <div style="overflow-x:auto">
-        ${mkTbl(allDayG.map(g=>{
-          const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
-          const nArb=(a1?1:0)+(a2?1:0);
-          const arbClr=nArb===2?'var(--green)':nArb===1?'var(--gold)':'var(--red)';
-          const isFut=!g['Risultato']&&dayFut.includes(g);
-          const [pcasa,posp]=(g['Risultato']||'').split('-');
-          const casaW=pcasa&&posp&&parseInt(pcasa)>parseInt(posp);
-          const ospW=pcasa&&posp&&parseInt(posp)>parseInt(pcasa);
-          const campo=g['Campo']||'';
-          return`<tr style="${isFut?'background:#fffbf0':''}">
-            <td style="font-size:.7rem;color:var(--mu)">${escH(g['Campionato']||'')}</td>
-            <td style="font-size:.68rem;color:var(--mu2)">${escH(g['Girone']||'')}</td>
-            <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa'])}')" style="${casaW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Casa'])}</span></td>
-            <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite'])}')" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite'])}</span></td>
-            <td style="font-weight:700;text-align:center">${g['Risultato']||`<span style="color:var(--mu2);font-size:.7rem">In programma</span>`}</td>
-            <td style="text-align:center"><b style="color:${arbClr}">${nArb}</b></td>
-            <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" data-n="${a1}" onclick="openPersona(this.dataset.n)">${escH(a1)}</span>${genderDot(a1)}`:''}</td>
-            <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" data-n="${a2}" onclick="openPersona(this.dataset.n)">${escH(a2)}</span>${genderDot(a2)}`:''}</td>
-            <td style="font-size:.66rem">${campo?`<span style="cursor:pointer;color:var(--bl)" onclick="openCampoModal('${esc(campo)}')">${escH(campo.split(',')[0])}</span>`:''}</td>
-          </tr>`;
-        }).join(''),['Campionato','Girone','Casa','Ospite','Risultato','Arb.','Arbitro 1','Arbitro 2','Campo'],'tbl-giorno')}</div>`;
+      const conRis=allDayG.filter(g=>g['Risultato']).length;
 
-      // ── PROVVEDIMENTI della giornata ──
-      const provvGiorno = allDayG.filter(g => g['Provvedimenti'] && g['Provvedimenti'].trim && g['Provvedimenti'].trim());
-      if(provvGiorno.length > 0){
-        bodyHtml += '<div style="margin-top:14px"><div style="font-size:.82rem;font-weight:700;color:#c0392b;margin-bottom:6px">⚠️ Provvedimenti della giornata</div>';
-        provvGiorno.forEach(g => {
-          const numG = g['Numero Gara'] || '';
-          const casa = g['Squadra Casa'] || '';
-          const osp = g['Squadra Ospite'] || '';
-          const provvText = g['Provvedimenti'] || '';
-          // Ogni provvedimento può essere separato da newline
-          const righe = provvText.split(/\n|\r\n/).map(r=>r.trim()).filter(Boolean);
-          bodyHtml += '<div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;margin-bottom:6px">';
-          bodyHtml += '<div style="font-size:.7rem;color:var(--mu);margin-bottom:4px">Gara '+ escH(numG) +' · <span style="cursor:pointer;color:var(--bl)" onclick="openSquadra(\''+esc(casa)+'\')">'+escH(casa)+'</span> - <span style="cursor:pointer;color:var(--bl)" onclick="openSquadra(\''+esc(osp)+'\')">'+escH(osp)+'</span></div>';
-          righe.forEach(riga => {
-            // Separa "soc. NOME: testo"
-            const colonPos = riga.indexOf(':');
-            if(colonPos > 0){
-              const sogg = riga.slice(0, colonPos).replace(/^soc\.\s*/i,'').trim();
-              const desc = riga.slice(colonPos+1).trim();
-              bodyHtml += '<div style="font-size:.72rem;margin-bottom:3px"><b style="color:#c0392b">'+ escH(sogg) +'</b>: '+ escH(desc) +'</div>';
-            } else {
-              bodyHtml += '<div style="font-size:.72rem;margin-bottom:3px">'+ escH(riga) +'</div>';
-            }
+      // KPI cliccabili — filtrano la tabella sotto
+      bodyHtml=`
+        <div class="scs" style="margin-bottom:12px" id="gm-kpi">
+          <div class="sc" style="cursor:pointer" onclick="gmFilter('')" title="Tutte le gare"><div class="sv" id="gm-kpi-tot">${allDayG.length}</div><div class="sl">Gare</div></div>
+          <div class="sc" style="cursor:pointer" onclick="gmFilter('risultato')" title="Con risultato"><div class="sv">${conRis}</div><div class="sl">Con risultato</div></div>
+          <div class="sc" style="cursor:pointer" onclick="gmFilter('arbitri')" title="Arbitri presenti"><div class="sv">${nArbs.size}</div><div class="sl">Arbitri</div></div>
+          <div class="sc" style="cursor:pointer" onclick="gmFilter('campi')" title="Campi diversi"><div class="sv">${campi.length}</div><div class="sl">Campi</div></div>
+          <div class="sc"><div class="sv">${campsSet.length}</div><div class="sl">Campionati</div></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px" id="gm-cats">
+          ${campsSet.map(c=>`<span style="background:${campColor(c)};color:#fff;border-radius:4px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="gmFilterCamp('${esc(c)}')" title="Filtra per ${escH(c)}">${escH(c)}</span>`).join('')}
+          <span style="background:#999;color:#fff;border-radius:4px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="gmFilter('')">✕ Tutti</span>
+        </div>
+        <div style="overflow-x:auto" id="gm-tbl-wrap">`;
+
+      // Tabella con ORA e colonne ordinabili
+      const rows=allDayG.map(g=>{
+        const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
+        const nArb=(a1?1:0)+(a2?1:0);
+        const arbClr=nArb===2?'var(--green)':nArb===1?'var(--gold)':'var(--red)';
+        const isFut=!g['Risultato'];
+        const [pcasa,posp]=(g['Risultato']||'').split('-');
+        const casaW=pcasa&&posp&&parseInt(pcasa)>parseInt(posp);
+        const ospW=pcasa&&posp&&parseInt(posp)>parseInt(pcasa);
+        const campo=g['Campo']||'';
+        const ora=g['Ora']||g['ora']||'';
+        const campName=g['Campionato']||'';
+        return`<tr data-camp="${escH(campName)}" data-risultato="${g['Risultato']?'1':''}" data-arb="${nArb>0?'1':''}">
+          <td style="font-size:.7rem;text-align:center;color:var(--mu);white-space:nowrap">${ora||'–'}</td>
+          <td style="font-size:.7rem"><span style="background:${campColor(campName)};color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(campName)}')">${escH(campName)}</span></td>
+          <td style="font-size:.68rem;color:var(--mu2)">${escH(g['Girone']||'')}</td>
+          <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa']||'')}');event.stopPropagation()" style="${casaW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Casa']||'')}</span></td>
+          <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}');event.stopPropagation()" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite']||'')}</span></td>
+          <td style="font-weight:700;text-align:center">${g['Risultato']||`<span style="color:var(--mu2);font-size:.7rem">In programma</span>`}</td>
+          <td style="text-align:center"><b style="color:${arbClr}">${nArb}</b></td>
+          <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" data-n="${a1}" onclick="openPersona(this.dataset.n);event.stopPropagation()">${escH(a1)}</span>${genderDot(a1)}`:''}</td>
+          <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" data-n="${a2}" onclick="openPersona(this.dataset.n);event.stopPropagation()">${escH(a2)}</span>${genderDot(a2)}`:''}</td>
+          <td style="font-size:.66rem">${campo?`<span style="cursor:pointer;color:var(--bl)" onclick="openCampoModal('${esc(campo)}');event.stopPropagation()">${escH(campo.split(',')[0])}</span>`:''}</td>
+        </tr>`;
+      }).join('');
+
+      bodyHtml+=`<table class="gtbl" id="tbl-giorno">
+        <thead><tr>
+          <th onclick="sT('tbl-giorno',0)" style="cursor:pointer">Ora ▾</th>
+          <th onclick="sT('tbl-giorno',1)" style="cursor:pointer">Campionato</th>
+          <th onclick="sT('tbl-giorno',2)" style="cursor:pointer">Girone</th>
+          <th onclick="sT('tbl-giorno',3)" style="cursor:pointer">Casa</th>
+          <th onclick="sT('tbl-giorno',4)" style="cursor:pointer">Ospite</th>
+          <th onclick="sT('tbl-giorno',5)" style="cursor:pointer">Risultato</th>
+          <th onclick="sT('tbl-giorno',6)" style="cursor:pointer">Arb.</th>
+          <th onclick="sT('tbl-giorno',7)" style="cursor:pointer">Arbitro 1</th>
+          <th onclick="sT('tbl-giorno',8)" style="cursor:pointer">Arbitro 2</th>
+          <th onclick="sT('tbl-giorno',9)" style="cursor:pointer">Campo</th>
+        </tr></thead>
+        <tbody id="tbl-giorno-body">${rows}</tbody>
+      </table></div>`;
+
+      // Provvedimenti
+      const provvGiorno=allDayG.filter(g=>g['Provvedimenti']&&g['Provvedimenti'].trim&&g['Provvedimenti'].trim());
+      if(provvGiorno.length>0){
+        bodyHtml+='<div style="margin-top:14px"><div style="font-size:.82rem;font-weight:700;color:#c0392b;margin-bottom:6px">⚠️ Provvedimenti della giornata</div>';
+        provvGiorno.forEach(g=>{
+          const righe=(g['Provvedimenti']||'').split(/\n|\r\n/).map(r=>r.trim()).filter(Boolean);
+          bodyHtml+=`<div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;margin-bottom:6px">`;
+          bodyHtml+=`<div style="font-size:.7rem;color:var(--mu);margin-bottom:4px">Gara ${escH(g['Numero Gara']||'')} · <span style="cursor:pointer;color:var(--bl)" onclick="openSquadra('${esc(g['Squadra Casa']||'')}')">${escH(g['Squadra Casa']||'')}</span> - <span style="cursor:pointer;color:var(--bl)" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}')">${escH(g['Squadra Ospite']||'')}</span></div>`;
+          righe.forEach(riga=>{
+            const cp=riga.indexOf(':');
+            if(cp>0){const sogg=riga.slice(0,cp).replace(/^soc\.\s*/i,'').trim();const desc=riga.slice(cp+1).trim();bodyHtml+=`<div style="font-size:.72rem;margin-bottom:3px"><b style="color:#c0392b">${escH(sogg)}</b>: ${escH(desc)}</div>`;}
+            else bodyHtml+=`<div style="font-size:.72rem;margin-bottom:3px">${escH(riga)}</div>`;
           });
-          bodyHtml += '</div>';
+          bodyHtml+='</div>';
         });
-        bodyHtml += '</div>';
+        bodyHtml+='</div>';
       }
     }
 
-    // Crea e mostra modal dinamico
+    // Rimuovi modal precedente
+    const old=document.getElementById('dyn-mo-giorno');
+    if(old)old.remove();
+
     const modal=document.createElement('div');
     modal.id='dyn-mo-giorno';
     modal.className='mo open';
     modal.innerHTML=`
-      <div class="mbox" style="max-width:900px">
-        <div class="mhd"><span>📅</span><h3>${escH(titleStr)}</h3>
+      <div class="mbox" style="max-width:960px;resize:both;overflow:hidden;min-width:400px;min-height:200px">
+        <div class="mhd" style="cursor:move"><span>📅</span><h3>${escH(titleStr)}</h3>
+        <button class="mbtn" onclick="toggleMoFullscreen('dyn-mo-giorno')" title="Espandi">⛶</button>
         <button class="mbtn" onclick="document.getElementById('dyn-mo-giorno')?.remove()">✕</button></div>
         <div class="mbody">${bodyHtml}</div>
       </div>`;
     modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
     document.body.appendChild(modal);
+
+    // Drag
+    const box=modal.querySelector('.mbox');
+    const head=modal.querySelector('.mhd');
+    let drag=false,ox=0,oy=0;
+    head.addEventListener('mousedown',e=>{if(e.target.tagName==='BUTTON')return;drag=true;const r=box.getBoundingClientRect();box.style.position='fixed';box.style.margin='0';box.style.left=r.left+'px';box.style.top=r.top+'px';ox=e.clientX-r.left;oy=e.clientY-r.top;e.preventDefault();});
+    document.addEventListener('mousemove',e=>{if(!drag)return;box.style.left=(e.clientX-ox)+'px';box.style.top=(e.clientY-oy)+'px';});
+    document.addEventListener('mouseup',()=>drag=false);
+
     setTimeout(()=>makeTableSortable(modal),50);
+
+    // Funzioni filtro giornata
+    window.gmFilter=function(tipo){
+      const rows=modal.querySelectorAll('#tbl-giorno-body tr');
+      rows.forEach(r=>{
+        if(!tipo)r.style.display='';
+        else if(tipo==='risultato')r.style.display=r.dataset.risultato?'':'none';
+        else if(tipo==='arbitri')r.style.display=r.dataset.arb?'':'none';
+        else if(tipo==='campi')r.style.display='';
+      });
+    };
+    window.gmFilterCamp=function(camp){
+      const rows=modal.querySelectorAll('#tbl-giorno-body tr');
+      rows.forEach(r=>r.style.display=(r.dataset.camp===camp||!camp)?'':'none');
+    };
+
   }catch(err){
     console.error('openGiornoModal error:',err);
-    alert('Errore openGiornoModal: '+err.message);
   }
 }
 
@@ -2021,14 +2080,14 @@ function renderSq(){
     h+=`<td><span class="rn rn-sq" onclick="openSquadra('${esc(s.nome)}')">${escH(s.nome)}</span></td>`;
     h+=`<td>${pvB(s.prov)}</td>`;
     h+=`<td>${gr}</td>`;
-    h+=`<td data-val="${ptGlob}" style="text-align:center;font-weight:800;color:#1565c0">${ptGlob}</td>`;
-    h+=`<td data-val="${s.n_gare}"><b>${s.n_gare}</b></td>`;
-    h+=`<td data-val="${s.vinte||0}" style="font-weight:700;color:var(--green)">${s.vinte||0}</td>`;
-    h+=`<td data-val="${s.perse||0}" style="color:var(--red)">${s.perse||0}</td>`;
-    h+=`<td data-val="${s.vinte_casa||0}" style="text-align:center">${s.vinte_casa||0}</td>`;
-    h+=`<td data-val="${s.perse_casa||0}" style="text-align:center">${s.perse_casa||0}</td>`;
-    h+=`<td data-val="${s.vinte_osp||0}" style="text-align:center">${s.vinte_osp||0}</td>`;
-    h+=`<td data-val="${s.perse_osp||0}" style="text-align:center">${s.perse_osp||0}</td>`;
+    h+=`<td data-val="${ptGlob}" style="text-align:center;font-weight:800;color:#1565c0;cursor:pointer" onclick="openSquadra('${esc(s.nome)}')" title="Apri classifica">${ptGlob}</td>`;
+    h+=`<td data-val="${s.n_gare}" style="cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Vedi gare"><b style="color:var(--bl);text-decoration:underline">${s.n_gare}</b></td>`;
+    h+=`<td data-val="${s.vinte||0}" style="font-weight:700;color:var(--green);cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Vedi gare vinte">${s.vinte||0}</td>`;
+    h+=`<td data-val="${s.perse||0}" style="color:var(--red);cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Vedi gare perse">${s.perse||0}</td>`;
+    h+=`<td data-val="${s.vinte_casa||0}" style="text-align:center;cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Gare vinte in casa">${s.vinte_casa||0}</td>`;
+    h+=`<td data-val="${s.perse_casa||0}" style="text-align:center;cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Gare perse in casa">${s.perse_casa||0}</td>`;
+    h+=`<td data-val="${s.vinte_osp||0}" style="text-align:center;cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Gare vinte in trasferta">${s.vinte_osp||0}</td>`;
+    h+=`<td data-val="${s.perse_osp||0}" style="text-align:center;cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Gare perse in trasferta">${s.perse_osp||0}</td>`;
     h+=`<td data-val="${wp}" style="font-weight:700;color:${wp>50?'var(--green)':wp<50?'var(--red)':'var(--mu)'}">${wp}%</td>`;
     h+=`</tr>`;
 
@@ -6036,6 +6095,84 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     }
   });
   cards+='</div>';
+
+  // ── TABELLONE OTTAVI ──────────────────────────────────────────────
+  // Rileva gironi tipo "Ottavo Ottavo", "Primo Ottavo", "Quarto Ottavo" ecc.
+  var ottaviGironi=gironi.filter(function(gi){return /ottavo|ottavi|playoff|finale/i.test(gi);});
+  if(ottaviGironi.length>=2){
+    // Calcola classifica di ogni girone regolare (non ottavo) per trovare la posizione
+    var gironiRegolari=gironi.filter(function(gi){return!/ottavo|ottavi|playoff|finale/i.test(gi);});
+    // Mappa squadra → posizione nel girone regolare
+    var sqPosizioneGirone={};
+    gironiRegolari.forEach(function(gi){
+      var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
+      var sqSet=new Set();
+      gGi.forEach(function(g){if(g['Squadra Casa'])sqSet.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqSet.add(g['Squadra Ospite']);});
+      var st={};
+      [...sqSet].forEach(function(sq){st[sq]={pt:0,v:0,p:0,pf:0,ps:0};});
+      gGi.filter(function(g){return g['Risultato'];}).forEach(function(g){
+        var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+        var sc=g['Squadra Casa'],so=g['Squadra Ospite'];
+        if(!st[sc]||!st[so])return;
+        st[sc].pf+=pc;st[sc].ps+=po;st[so].pf+=po;st[so].ps+=pc;
+        if(pc>po){st[sc].pt+=2;st[sc].v++;st[so].p++;}
+        else if(po>pc){st[so].pt+=2;st[so].v++;st[sc].p++;}
+        else{st[sc].pt++;st[so].pt++;}
+      });
+      var ranked=Object.entries(st).sort(function(a,b){return b[1].pt-a[1].pt||(b[1].pf-b[1].ps)-(a[1].pf-a[1].ps);});
+      ranked.forEach(function(e,idx){sqPosizioneGirone[e[0]]={girone:gi,pos:idx+1};});
+    });
+
+    // Ordina ottavi per nome (Primo, Secondo, Terzo, Quarto, Quinto, Sesto, Settimo, Ottavo)
+    var ordOttavi=['primo','second','terzo','quart','quint','sest','settim','ottavo'];
+    ottaviGironi.sort(function(a,b){
+      var al=a.toLowerCase(),bl=b.toLowerCase();
+      var ai=ordOttavi.findIndex(function(x){return al.includes(x)});
+      var bi=ordOttavi.findIndex(function(x){return bl.includes(x)});
+      if(ai<0)ai=99;if(bi<0)bi=99;
+      return ai-bi;
+    });
+
+    var tabHtml='<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;color:var(--bl);margin-bottom:8px;padding:6px 12px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl)">🏆 Tabellone Ottavi di Finale</div>';
+    tabHtml+='<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start">';
+
+    ottaviGironi.forEach(function(gi){
+      var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
+      var sqSet=new Set();
+      gGi.forEach(function(g){if(g['Squadra Casa'])sqSet.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqSet.add(g['Squadra Ospite']);});
+      var sqs=[...sqSet];
+      if(!sqs.length)return;
+
+      var giClr=clr;
+      tabHtml+='<div style="min-width:240px;flex:1;border:2px solid '+giClr+'55;border-radius:8px;overflow:hidden;margin-bottom:4px">';
+      tabHtml+='<div style="background:'+giClr+';color:#fff;padding:5px 10px;font-size:.78rem;font-weight:700">'+escH(gi)+'</div>';
+      tabHtml+='<table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="background:#f0f4ff"><th style="padding:3px 6px;text-align:left">Squadra</th><th style="padding:3px 6px;text-align:center">Girone</th><th style="padding:3px 6px;text-align:center">Pos.</th></tr></thead><tbody>';
+
+      sqs.sort(function(a,b){
+        var pa=sqPosizioneGirone[a],pb=sqPosizioneGirone[b];
+        if(!pa&&!pb)return a.localeCompare(b);
+        if(!pa)return 1;if(!pb)return -1;
+        return pa.pos-pb.pos||(pa.girone||'').localeCompare(pb.girone||'');
+      }).forEach(function(sq,idx){
+        var info=sqPosizioneGirone[sq];
+        var gironeName=info?info.girone.replace(/girone\s*/i,'').trim():'–';
+        var pos=info?info.pos:'–';
+        var posClr=pos===1?'var(--gold)':pos===2?'#aaa':pos===3?'#cd7f32':'var(--mu)';
+        var posLabel=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos+'°';
+        var rowBg=idx%2?'#f8faff':'#fff';
+        tabHtml+='<tr style="background:'+rowBg+';border-bottom:1px solid #f0f0f0">'
+          +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(\''+esc(sq)+'\')">'+escH(sq)+'</span></td>'
+          +'<td style="padding:4px 6px;text-align:center;font-size:.65rem;color:var(--mu)">'+escH(gironeName)+'</td>'
+          +'<td style="padding:4px 6px;text-align:center;font-weight:700;color:'+posClr+'">'+posLabel+'</td>'
+          +'</tr>';
+      });
+      tabHtml+='</tbody></table></div>';
+    });
+
+    tabHtml+='</div></div>';
+    cards+=tabHtml;
+  }
+
   return cards;
 }
 
