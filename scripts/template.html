@@ -296,8 +296,8 @@ tr.loss-row td{background:#fdecea!important;}
 
 /* ══════════ MODAL ══════════ */
 .mo{display:none;position:fixed;inset:0;background:rgba(8,12,40,.6);
-  z-index:99999;padding:20px 8px 8px;align-items:flex-start;justify-content:center;
-  backdrop-filter:blur(4px);}
+  z-index:999999;padding:20px 8px 8px;align-items:flex-start;justify-content:center;
+  backdrop-filter:blur(4px);isolation:isolate;}
 .mo.open{display:flex;pointer-events:auto;}
 .mbox{background:#fff;border-radius:var(--radius-lg);
   width:min(98vw,1300px);max-height:calc(100vh - 28px);
@@ -518,6 +518,10 @@ tr.loss-row td{background:#fdecea!important;}
       <button onclick="showPage('resoconto')">📋 Resoconto</button>
       <button onclick="showPage('copertura')">🔎 Copertura</button>
       <button onclick="showPage('provvedimenti')">⚠️ Provvedimenti</button>
+      <button onclick="showPage('gruppi')">🔗 Raggruppamenti</button>
+      <div class="dd-divider"></div>
+      <button onclick="showPage('campi')">🏟 Campi</button>
+      <button onclick="showPage('mappa')">🗺 Mappa</button>
     </div>
   </div>
 
@@ -1164,11 +1168,11 @@ function showPage(id){
   });
   // Attiva nav-group-btn se la pagina appartiene a un gruppo
   const _grpMap={
-    'tutti':'persone','arbitri':'persone','udc':'persone','osservatori':'persone','gruppi':'persone',
+    'tutti':'persone','arbitri':'persone','udc':'persone','osservatori':'persone','gruppi':'analisi',
     'gare':'gare','prossime':'gare','classifica':'gare','campionati':'gare',
     'h2h':'h2h','h2h-arb':'h2h',
-    'province':'territorio','campi':'territorio','mappa':'territorio',
-    'resoconto':'analisi','copertura':'analisi','provvedimenti':'analisi'
+    'province':'territorio',
+    'resoconto':'analisi','copertura':'analisi','provvedimenti':'analisi','campi':'analisi','mappa':'analisi'
   };
   const grp=_grpMap[id];
   if(grp){const gb=document.getElementById('navgrp-'+grp);if(gb)gb.classList.add('active');}
@@ -1188,7 +1192,7 @@ function showPage(id){
 // HELPERS
 // CODICI_FIP: mappa nome→codice FIP a 6 cifre (es. "BORTOLATO FILIPPO":"027682")
 // Verrà popolata con i dati da fip.it quando disponibili
-const CODICI_FIP = D.codici_fip || {};
+const CODICI_FIP = Object.assign({"CARRUS FABIO":"033850","BELTRAMINI ROBERTO":"028006","MONTISCI SALVATORE":"068972","SUSMEL RICCARDO":"014716","SPISSU ALESSANDRO":"044784","FARCI DANIELE":"077027","SADDI NICOLA":"021917","ATZENI GIANLUCA":"072826","FIORIN GIANMARCO":"076795","DEIDDA EDOARDO":"074562","MULARGIA CHENG":"071343","COCCO MATTIA":"062934","BORTOLATO FILIPPO":"027682","MASIA LEONARDO ANTONIO":"072963","CAPPELLONI RICCARDO":"071724","SOLINAS GIANFRANCO":"029262","MARGARITELLA SIMONE":"067115","FANCELLO LORENZO":"072962","LACONI MARCO":"034072","FRAU DAVIDE":"065250","SEU ALESSANDRA":"062153","CRISTIANI NICOLAS":"070086","MANCA MARIO":"061131","FORTUNATO DIEGO":"037674","ZARA MASSIMO":"052028","COCCO ALESSANDRO":"068974","GAVINI ANTONIO":"061132","FARCI NICOLA":"067114","RAGNEDDA JACOPO MARIO":"072964","VERMIGLIO MICHELE":"022570","MILIA LUCA":"072976","PACINI ALBERTO":"035671","COCCO FRANCESCO":"074559","DE ROSAS STEFANO":"074557","FANCELLU MATTEO":"064581","MARCEDDU DAVIDE":"070676","DAGA BENEDETTA":"044786","MASCIA ANDREA":"071342","MARONGIU CRISTIAN":"068970","MURRU ANDREA SALVATORE":"076794","GRUSSU FABIO":"071498","CHERCHI FEDERICO":"061128","DOPPIU ALBERTO":"074555","MARZATICO FILIPPO":"078459","SEU CLAUDIA":"062154","BETOCCHI MASSIMO":"077072","FRAU MARCO":"074563","PUGGIONI GABRIELE":"071729","SOLINAS RICCARDO":"021925","MASELLI HUNTER":"078449","BRANCA GIORDANO":"079108","MAMELI MARCO":"039478","SANNA DAVIDE":"052311","LUCIANO RICCARDO":"034698","URSO MASSIMILIANO":"074158","CHESSA ALESSANDRA":"075925","PINTUS LUCA":"071349","ERRIU FRAU ALESSANDRO":"067113","CARBONI GABRIELE":"074558","IACOPINI SAMUELE":"071346","PIRAS MATTEO":"076471","PAULIS EDOARDO":"078460","PULIX GIULIA":"071425","VITALI MATTEO":"077075","SPANU LORENZO":"079105","PERDISCI LUCA":"076878","MURA EMMYLOU":"043780","CANEPA TOMMASO":"078446","PUGGIONI SAMUELE":"071730","BASSO RICCARDO":"042495","MULLIRI DAVIDE":"054348","MASTRACCO SAMUELE":"078812","PITTORRA ALESSANDRO":"062939","IACOPINI DIEGO":"076479","CONCU FEDERICO":"077074","MULAS PAOLO GIOVANNI":"078444","COSSU LUCA":"079107","FUCKA MATIJA":"069476","PELLIZZONI LIBERO":"078462","MULAS MATTEO":"078455","IAVARONE NICOLAS":"079312","SPANU MATTEO":"079104","RUDELLAT MARCO":"033490","PORCHEDDU ADRIANO":"079102","GRISSINO MIRIAM":"078463","DETTORI ANDREA":"033606","MARONGIU GIADA MARIA":"078445","DE ROSAS MATTEO":"074560","PINNA GIOVANNI LUCA":"032904","ATZORI SAMUELE":"076793","CAETO DAVIDE":"078811","VINCIS NICOLA":"074159","CARINELLI FEDERICO":"079106","PIREDDA ANDREA":"079626","SANNA VANESSA":"074039","CURRELI MATTIA":"054343","SCHIRRU SABRINA":"030290","BREZGINA CHANTAL":"079625","MASCIARELLI TOMMASO":"078452","IBBA LEONARDO":"079627","SODDU ERMANNO":"078458","MURRU ANTONIO":"078524","CIPRI ALESSANDRO":"079103","PASLARU EMANUEL":"079629","NIOLA DENISE":"078526","TURNU ALESSIO":"074040","MURU MATTIA":"078525","RENGIFO VALDERRAMA MIRIAM":"078527","SANNA STEFANIA":"072965","SPIGA ELENA NICOLE":"076795","COMELLA LUCA":"077032","CORDA ANDREA":"068972","SARAI FEDERICA":"076794"}, D.codici_fip||{});
 const esc=s=>(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
 const pvB=pv=>pv?`<span class="badge bp-${pv}" style="background:${PC[pv]||'#888'}">${pv}</span>`:'';
 const catB=cat=>`<span class="badge bc-${cat}">${cat}</span>`;
@@ -1354,15 +1358,16 @@ function renderPersonsTable(cid,persons,opts={}){
   const mainGareKey=mainGare||'n_gare';
   const max=Math.max(...persons.map(p=>p[mainGareKey]||0),1);
   const co=showCat?1:0;
+  const isArb=(mainGare==='n_gare_arbitro');
+  const ae=isArb?5:0;
   const today=new Date().toISOString().split('T')[0];
-  const futEnd=(new Date(Date.now()+14*86400000)).toISOString().split('T')[0];
 
-  document.getElementById(cid).innerHTML=`<p class="il">${persons.length} persone — i numeri evidenziati aprono il dettaglio</p>
+  document.getElementById(cid).innerHTML=`<p class="il">${persons.length} persone</p>
   <div style="overflow-x:auto"><table class="rtbl" id="${tableId}"><thead><tr>
     <th onclick="sT('${tableId}',0)">#</th>
     <th onclick="sT('${tableId}',1)">Nome</th>
     <th onclick="sT('${tableId}',2)">Prov.</th>
-    <th onclick="sT('${tableId}',3)">Città</th>
+    <th onclick="sT('${tableId}',3)">Citta</th>
     <th onclick="sT('${tableId}',4)" title="Codice FIP">Cod.</th>
     ${showCat?`<th onclick="sT('${tableId}',5)">Cat.</th>`:''}
     <th onclick="sT('${tableId}',${4+co})" title="Totale gare">Tot.</th>
@@ -1370,14 +1375,22 @@ function renderPersonsTable(cid,persons,opts={}){
     <th onclick="sT('${tableId}',${6+co})" title="Come UDC">UDC</th>
     <th onclick="sT('${tableId}',${7+co})" title="Come osservatore">Oss.</th>
     <th onclick="sT('${tableId}',${8+co})" title="Giorni">Gg.</th>
-    <th onclick="sT('${tableId}',${9+co})" title="Campi diversi">🏟</th>
-    <th onclick="sT('${tableId}',${10+co})" title="Colleghi">🤝</th>
-    <th onclick="sT('${tableId}',${11+co})" title="Campionati">Camp.</th>
-    <th onclick="sT('${tableId}',${12+co})" title="Gare in singolo">Sing.</th>
-    <th onclick="sT('${tableId}',${13+co})" title="Gare in coppia">Dopp.</th>
-    <th onclick="sT('${tableId}',${14+co})" title="Gare future da disputare">Da fare</th>
-    <th onclick="sT('${tableId}',${15+co})" title="Squadre diverse incontrate">Sqd.</th>
-    <th onclick="sT('${tableId}',${16+co},true)" title="Km stimati stagione">🚗 Km</th>
+    ${isArb?`
+    <th onclick="sT('${tableId}',${9+co})" title="Giornate con 4+ partite" style="color:#c0392b">4g</th>
+    <th onclick="sT('${tableId}',${10+co})" title="Giornate con 3 partite" style="color:#e67e22">3g</th>
+    <th onclick="sT('${tableId}',${11+co})" title="Giornate con 2 partite" style="color:#f39c12">2g</th>
+    <th onclick="sT('${tableId}',${12+co})" title="Giornate con 1 partita" style="color:#27ae60">1g</th>
+    <th onclick="sT('${tableId}',${13+co})" title="Media partite per giorno di lavoro">Med/g</th>
+    `:''}
+    <th onclick="sT('${tableId}',${9+co+ae})" title="Campi diversi">&#127967;</th>
+    <th onclick="sT('${tableId}',${10+co+ae})" title="Colleghi">&#129309;</th>
+    <th onclick="sT('${tableId}',${11+co+ae})" title="Campionati">Camp.</th>
+    <th onclick="sT('${tableId}',${12+co+ae})" title="Gare in singolo">Sing.</th>
+    <th onclick="sT('${tableId}',${13+co+ae})" title="Gare in coppia">Dopp.</th>
+    <th onclick="sT('${tableId}',${14+co+ae})" title="Gare future">Da fare</th>
+    <th onclick="sT('${tableId}',${15+co+ae})" title="Squadre diverse">Sqd.</th>
+    <th onclick="sT('${tableId}',${16+co+ae},true)" title="Km stimati stagione">&#128664; Km</th>
+    ${isArb?`<th onclick="sT('${tableId}',${17+co+ae},true)" title="Km medi per partita">Km/g</th>`:''}
   </tr></thead><tbody>${persons.map((p,i)=>{
     const nCamp=Object.keys(p.campionati||{}).length;
     const nG=Object.keys(p.giorni||{}).length;
@@ -1385,33 +1398,44 @@ function renderPersonsTable(cid,persons,opts={}){
     const nCampi=Object.keys(p.campi||{}).length;
     const isDual=(p.categorie||[]).length>1;
     const pvColor=PC[p.provincia]||'var(--bl)';
-    const nameStyle=`font-weight:700;cursor:pointer;color:${pvColor}`;
     const sexDot=p.genere==='F'
-      ?`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#e91e8c;margin-left:4px;flex-shrink:0" title="F"></span>`
-      :`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#1565c0;margin-left:4px;flex-shrink:0" title="M"></span>`;
-    const nFut=(D.gare_future||[]).filter(g=>[g['Arbitro 1'],g['Arbitro 2'],g['Segnapunti'],g['Cronometrista'],g['24 Secondi'],g['Addetto Referto'],g['Osservatore']].some(f=>pns(f||'')===p.nome)).length;
-    const mv=mainGare!=null?p[mainGareKey]:p.n_gare;
+      ?`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#e91e8c;margin-left:4px;flex-shrink:0"></span>`
+      :`<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#1565c0;margin-left:4px;flex-shrink:0"></span>`;
+    const nFut=(D.gare_future||[]).filter(g=>['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].some(f=>pns(g[f]||'')===p.nome)).length;
     const mkLink=(val,tabIdx,clr='var(--bl)')=>
       `<span style="color:${clr};font-weight:700;cursor:pointer" data-n="${p.nome}" onclick="openPersona(this.dataset.n);setTimeout(()=>{document.querySelectorAll('#mp-body .mt')[${tabIdx}]?.click();},280)">${val}</span>`;
     const km=calcKmArb(p);
+    let d4=0,d3=0,d2=0,d1=0,mediaG='—';
+    if(isArb){
+      Object.values(p.giorni||{}).forEach(cnt=>{if(cnt>=4)d4++;else if(cnt===3)d3++;else if(cnt===2)d2++;else if(cnt===1)d1++;});
+      if(nG>0) mediaG=((p.n_gare_arbitro||p.n_gare||0)/nG).toFixed(1);
+    }
+    const kmGara=isArb&&km>0&&(p.n_gare_arbitro||p.n_gare||0)>0?Math.round(km/(p.n_gare_arbitro||p.n_gare||1)):0;
     return`<tr>
       <td class="rpos ${i<3?'g'+(i+1):''}" data-val="${i+1}">${i+1}</td>
       <td style="white-space:nowrap;cursor:pointer" onclick="openPersona(this.querySelector('[data-n]').dataset.n)">
         <div style="display:flex;align-items:center;gap:3px">
-          <span style="${nameStyle}" data-n="${p.nome}">${escH(p.nome)}</span>
+          <span style="font-weight:700;cursor:pointer;color:${pvColor}" data-n="${p.nome}">${escH(p.nome)}</span>
           ${sexDot}
-          ${isDual?`<span style="font-size:.6rem;background:#fff3cd;border:1px solid #ffe082;border-radius:3px;padding:0 4px;color:#8a6200;margin-left:2px">dual</span>`:''}
+          ${isDual?`<span style="font-size:.6rem;background:#fff3cd;border:1px solid #ffe082;border-radius:3px;padding:0 4px;color:#8a6200;margin-left:2px;pointer-events:none">dual</span>`:''}
         </div>
       </td>
       <td>${pvB(p.provincia)}</td>
       <td style="font-size:.72rem;color:var(--mu)">${escH(p.citta||'')}</td>
       <td style="font-family:monospace;font-size:.7rem;color:#34495e">${CODICI_FIP[p.nome]||''}</td>
       ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
-      <td data-val="${p.n_gare}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">  ${p.n_gare}</td>
+      <td data-val="${p.n_gare}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">${p.n_gare}</td>
       <td data-val="${p.n_gare_arbitro||0}" style="text-align:center">${p.n_gare_arbitro?mkLink(p.n_gare_arbitro,1,pvColor):''}</td>
       <td data-val="${p.n_gare_udc||0}" style="text-align:center">${p.n_gare_udc?mkLink(p.n_gare_udc,1,pvColor):''}</td>
       <td data-val="${p.n_gare_osservatore||0}" style="text-align:center">${p.n_gare_osservatore?mkLink(p.n_gare_osservatore,1,pvColor):''}</td>
       <td data-val="${nG}" style="text-align:center;color:var(--mu)">${nG}</td>
+      ${isArb?`
+      <td data-val="${d4}" style="text-align:center;font-weight:${d4>0?700:400};color:${d4>0?'#c0392b':'var(--mu2)'}">${d4||'—'}</td>
+      <td data-val="${d3}" style="text-align:center;font-weight:${d3>0?700:400};color:${d3>0?'#e67e22':'var(--mu2)'}">${d3||'—'}</td>
+      <td data-val="${d2}" style="text-align:center;font-weight:${d2>0?700:400};color:${d2>0?'#f39c12':'var(--mu2)'}">${d2||'—'}</td>
+      <td data-val="${d1}" style="text-align:center;color:var(--mu)">${d1||'—'}</td>
+      <td data-val="${parseFloat(mediaG)||0}" style="text-align:center;font-weight:700;color:var(--bl)">${mediaG}</td>
+      `:''}
       <td data-val="${nCampi}" style="text-align:center">${nCampi?mkLink(nCampi,3,pvColor):0}</td>
       <td data-val="${nColl}" style="text-align:center">${nColl?mkLink(nColl,2,pvColor):0}</td>
       <td data-val="${nCamp}" style="text-align:center;font-weight:700;color:${pvColor}">${nCamp}</td>
@@ -1420,9 +1444,10 @@ function renderPersonsTable(cid,persons,opts={}){
       <td data-val="${nFut}" style="text-align:center;${nFut>0?'color:#e17055;font-weight:700':'color:var(--mu)'}">${nFut||'—'}</td>
       <td data-val="${Object.keys(p.squadre||{}).length}" style="text-align:center">${Object.keys(p.squadre||{}).length}</td>
       <td data-val="${km}" style="text-align:right;font-size:.8rem;font-weight:600;color:var(--mu)">${km>0?km.toLocaleString('it'):'—'}</td>
-    </tr>`;}).join('')}</tbody></table></div>`;
+      ${isArb?`<td data-val="${kmGara}" style="text-align:right;font-size:.78rem;color:var(--mu)">${kmGara>0?kmGara:'—'}</td>`:''}
+    </tr>`;}
+  ).join('')}</tbody></table></div>`;
 }
-
 function toggleSection(wrId,togId){
   const wr=document.getElementById(wrId),tog=document.getElementById(togId);
   if(!wr)return;
@@ -1531,57 +1556,82 @@ function renderHome(){
       <div style="display:flex;flex-wrap:wrap;gap:3px">${campNames.map(c=>`<span style="background:${campColor(c)};color:#fff;border-radius:3px;padding:0 6px;font-size:.62rem;cursor:pointer" onclick="openCampionato('${esc(c)}')">${escH(c)}</span>`).join('')}</div>`;
   }
 
-  // ── TOP RANKINGS
-  function mkRanking(persons, maxShow, catClass){
+  // ── TOP RANKINGS — card layout
+  function mkRankCards(persons, maxShow, catClass, colorFn){
     const sorted=persons.sort((a,b)=>b.n_gare-a.n_gare).slice(0,maxShow);
-    const max=sorted[0]?.n_gare||1;
-    return `<div class="pgw">${sorted.map((p,i)=>{
+    if(!sorted.length) return '<p style="color:var(--mu);font-size:.75rem;padding:8px">Nessun dato</p>';
+    return `<div style="display:flex;flex-direction:column;gap:4px">${sorted.map((p,i)=>{
       const nf=(D.gare_future||[]).filter(g=>['Arbitro 1','Arbitro 2'].some(f=>pns(g[f]||'')===p.nome)).length;
-      const streakBadge=p.streak_cur&&p.streak_cur>=5?`<span class="streak-badge">${p.streak_cur}🔥</span>`:'';
-      const formaDots=(p.forma_recente||[]).slice(-5).map(g=>{
-        const a1=pns(g.arb1||''),a2=pns(g.arb2||'');
-        return `<span class="forma-dot ${a1===p.nome||a2===p.nome?'fd-V':'fd-'}"></span>`;
-      }).join('');
-      return `<div class="pgr">
-        <span style="color:var(--mu2);font-weight:700;font-size:.68rem;min-width:18px;flex-shrink:0">${i+1}.</span>
-        <div class="pgl" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-          <span class="rn ${catClass}" data-n="${p.nome}" onclick="openPersona(this.dataset.n)">${escH(p.nome)}</span>
-          ${pvB(p.provincia)}
-          ${streakBadge}
-          ${nf>0?`<span style="background:#e17055;color:#fff;border-radius:10px;padding:0 5px;font-size:.6rem">📅${nf}</span>`:''}
+      const fip=CODICI_FIP[p.nome]||'';
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+      const clr=PC[p.provincia]||'var(--bl)';
+      const barPct=Math.round(p.n_gare/sorted[0].n_gare*100);
+      return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:${i%2?'#f8faff':'#fff'};border:1px solid #eef1fa;cursor:pointer" onclick="openPersona('${esc(p.nome)}')">
+        <span style="min-width:20px;font-size:.75rem;color:var(--mu2);font-weight:700">${medal||((i+1)+'.')}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+            <span class="rn ${catClass}" style="font-size:.75rem;font-weight:700" data-n="${p.nome}">${escH(p.nome)}</span>
+            ${pvB(p.provincia)}
+            ${genderDot(p.nome)}
+            ${fip?`<span style="font-family:monospace;font-size:.58rem;color:#aaa">${fip}</span>`:''}
+            ${nf>0?`<span style="background:#e17055;color:#fff;border-radius:10px;padding:0 5px;font-size:.58rem">📅${nf}</span>`:''}
+          </div>
+          <div style="height:4px;background:#eef1fa;border-radius:2px;margin-top:3px">
+            <div style="height:4px;background:${clr};border-radius:2px;width:${barPct}%;transition:width .3s"></div>
+          </div>
         </div>
-        <div class="pgo"><div class="pgi" style="width:${p.n_gare/max*100}%;background:${PC[p.provincia]||'var(--bl)'}"></div></div>
-        <div class="pgv">${p.n_gare}</div>
-      </div>`;}).join('')}</div>`;
+        <span style="font-size:1rem;font-weight:800;color:${clr};min-width:28px;text-align:right">${p.n_gare}</span>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function mkSqCards(sqs){
+    if(!sqs.length) return '';
+    return `<div style="display:flex;flex-direction:column;gap:4px">${sqs.map((s,i)=>{
+      const wp=s.n_gare?Math.round(s.vinte/s.n_gare*100):0;
+      const clr=PC[s.prov]||'var(--bl)';
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+      const barPct=Math.round(s.n_gare/sqs[0].n_gare*100);
+      return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:${i%2?'#f8faff':'#fff'};border:1px solid #eef1fa;cursor:pointer" onclick="openSquadra('${esc(s.nome)}')">
+        <span style="min-width:20px;font-size:.75rem;color:var(--mu2);font-weight:700">${medal||((i+1)+'.')}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:4px">
+            <span class="rn rn-sq" style="font-size:.74rem;font-weight:700">${escH(s.nome)}</span>
+            ${pvB(s.prov)}
+            <span style="font-size:.62rem;color:${wp>50?'var(--green)':wp<40?'var(--red)':'var(--mu)'};font-weight:600">${wp}%</span>
+          </div>
+          <div style="height:4px;background:#eef1fa;border-radius:2px;margin-top:3px">
+            <div style="height:4px;background:${clr};border-radius:2px;width:${barPct}%"></div>
+          </div>
+        </div>
+        <span style="font-size:1rem;font-weight:800;color:${clr};min-width:28px;text-align:right">${s.n_gare}</span>
+      </div>`;
+    }).join('')}</div>`;
   }
 
   const arbs=Object.values(P).filter(p=>p.categoria==='Arbitro');
   const udcs=Object.values(P).filter(p=>p.categoria==='UDC');
   const sqs=Object.values(SQ).sort((a,b)=>b.n_gare-a.n_gare).slice(0,10);
-  const maxSq=sqs[0]?.n_gare||1;
-  document.getElementById('h-arb').innerHTML=mkRanking(arbs,12,'rn-Arbitro');
-  document.getElementById('h-udc').innerHTML=mkRanking(udcs,10,'rn-UDC');
-  document.getElementById('h-sq').innerHTML=`<div class="pgw">${sqs.map((s,i)=>{
-    const wp=s.n_gare?Math.round(s.vinte/s.n_gare*100):0;
-    const forma=(s.forma_recente||[]).slice(-5).map(f=>`<span class="forma-dot fd-${f.res||''}"></span>`).join('');
-    return`<div class="pgr">
-      <span style="color:var(--mu2);font-weight:700;font-size:.68rem;min-width:18px;flex-shrink:0">${i+1}.</span>
-      <div class="pgl" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-        <span class="rn rn-sq" onclick="openSquadra('${esc(s.nome)}')">${escH(s.nome)}</span>
-        ${pvB(s.prov)}
-        <div class="forma">${forma}</div>
-      </div>
-      <div class="pgo"><div class="pgi" style="width:${s.n_gare/maxSq*100}%;background:${PC[s.prov]||'var(--bl)'}"></div></div>
-      <div class="pgv">${s.n_gare}</div>
-    </div>`;}).join('')}</div>`;
+
+  document.getElementById('h-arb').innerHTML=mkRankCards(arbs,12,'rn-Arbitro');
+  document.getElementById('h-udc').innerHTML=mkRankCards(udcs,10,'rn-UDC');
+  document.getElementById('h-sq').innerHTML=mkSqCards(sqs);
 
   const pvs=Object.entries(PV).filter(([,v])=>v.n_gare>0).sort((a,b)=>b[1].n_gare-a[1].n_gare);
-  const maxPv=pvs[0]?.[1].n_gare||1;
-  document.getElementById('h-pv').innerHTML=`<div class="pgw">${pvs.map(([pv,v])=>`<div class="pgr">
-    <div class="pgl"><span class="badge bp-${pv}" style="cursor:pointer;background:${PC[pv]||'#ccc'}" onclick="openProvincia('${esc(pv)}')">${pv}</span></div>
-    <div class="pgo"><div class="pgi" style="width:${v.n_gare/maxPv*100}%;background:${PC[pv]||'#aaa'}"></div></div>
-    <div class="pgv">${v.n_gare}</div>
-  </div>`).join('')}</div>`;
+  document.getElementById('h-pv').innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">${pvs.map(([pv,v])=>{
+    const clr=PC[pv]||'#888';
+    const barPct=Math.round(v.n_gare/(pvs[0]?.[1].n_gare||1)*100);
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:#fff;border:2px solid ${clr}22;cursor:pointer" onclick="openProvincia('${esc(pv)}')">
+      <span class="badge bp-${pv}" style="background:${clr};font-size:.8rem;font-weight:800;padding:3px 10px">${pv}</span>
+      <div style="flex:1">
+        <div style="height:6px;background:#eef1fa;border-radius:3px">
+          <div style="height:6px;background:${clr};border-radius:3px;width:${barPct}%"></div>
+        </div>
+        <div style="font-size:.62rem;color:var(--mu);margin-top:2px">${v.n_arb||0} arb · ${v.n_sq||0} sq</div>
+      </div>
+      <span style="font-size:1.1rem;font-weight:800;color:${clr}">${v.n_gare}</span>
+    </div>`;
+  }).join('')}</div>`;
 
   const actEl=document.getElementById('h-act');
   if(actEl)renderActivityChart();
@@ -1799,6 +1849,7 @@ function openGiornoModal(ds){
         const campName=g['Campionato']||'';
         return`<tr data-camp="${escH(campName)}" data-risultato="${g['Risultato']?'1':''}" data-arb="${nArb>0?'1':''}">
           <td style="font-size:.7rem;text-align:center;color:var(--mu);white-space:nowrap">${ora||'–'}</td>
+          <td style="font-size:.65rem;text-align:center;color:var(--mu2);font-family:monospace">${escH(g['Numero Gara']||'')}</td>
           <td style="font-size:.7rem"><span style="background:${campColor(campName)};color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(campName)}')">${escH(campName)}</span></td>
           <td style="font-size:.68rem;color:var(--mu2)">${escH(g['Girone']||'')}</td>
           <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa']||'')}');event.stopPropagation()" style="${casaW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Casa']||'')}</span></td>
@@ -1814,15 +1865,16 @@ function openGiornoModal(ds){
       bodyHtml+=`<table class="gtbl" id="tbl-giorno">
         <thead><tr>
           <th onclick="sT('tbl-giorno',0)" style="cursor:pointer">Ora ▾</th>
-          <th onclick="sT('tbl-giorno',1)" style="cursor:pointer">Campionato</th>
-          <th onclick="sT('tbl-giorno',2)" style="cursor:pointer">Girone</th>
-          <th onclick="sT('tbl-giorno',3)" style="cursor:pointer">Casa</th>
-          <th onclick="sT('tbl-giorno',4)" style="cursor:pointer">Ospite</th>
-          <th onclick="sT('tbl-giorno',5)" style="cursor:pointer">Risultato</th>
-          <th onclick="sT('tbl-giorno',6)" style="cursor:pointer">Arb.</th>
-          <th onclick="sT('tbl-giorno',7)" style="cursor:pointer">Arbitro 1</th>
-          <th onclick="sT('tbl-giorno',8)" style="cursor:pointer">Arbitro 2</th>
-          <th onclick="sT('tbl-giorno',9)" style="cursor:pointer">Campo</th>
+          <th onclick="sT('tbl-giorno',1)" style="cursor:pointer">N°</th>
+          <th onclick="sT('tbl-giorno',2)" style="cursor:pointer">Campionato</th>
+          <th onclick="sT('tbl-giorno',3)" style="cursor:pointer">Girone</th>
+          <th onclick="sT('tbl-giorno',4)" style="cursor:pointer">Casa</th>
+          <th onclick="sT('tbl-giorno',5)" style="cursor:pointer">Ospite</th>
+          <th onclick="sT('tbl-giorno',6)" style="cursor:pointer">Risultato</th>
+          <th onclick="sT('tbl-giorno',7)" style="cursor:pointer">Arb.</th>
+          <th onclick="sT('tbl-giorno',8)" style="cursor:pointer">Arbitro 1</th>
+          <th onclick="sT('tbl-giorno',9)" style="cursor:pointer">Arbitro 2</th>
+          <th onclick="sT('tbl-giorno',10)" style="cursor:pointer">Campo</th>
         </tr></thead>
         <tbody id="tbl-giorno-body">${rows}</tbody>
       </table></div>`;
@@ -1854,7 +1906,7 @@ function openGiornoModal(ds){
     modal.id='dyn-mo-giorno';
     modal.className='mo open';
     modal.innerHTML=`
-      <div class="mbox" style="max-width:960px;resize:both;overflow:hidden;min-width:400px;min-height:200px">
+      <div class="mbox" style="width:min(98vw,1400px);height:min(92vh,900px);resize:both;overflow:hidden;min-width:600px;min-height:300px;display:flex;flex-direction:column">
         <div class="mhd" style="cursor:move"><span>📅</span><h3>${escH(titleStr)}</h3>
         <button class="mbtn" onclick="toggleMoFullscreen('dyn-mo-giorno')" title="Espandi">⛶</button>
         <button class="mbtn" onclick="document.getElementById('dyn-mo-giorno')?.remove()">✕</button></div>
@@ -2049,7 +2101,7 @@ function renderSq(){
   if(raggruppa)sqs=sqs.filter(s=>!s.gruppo||s.gruppo===s.nome||!SQ[s.gruppo]||s.gruppo===s.nome);
   sqs.sort((a,b)=>sort==='vinte'?b.vinte-a.vinte:sort==='nome'?a.nome.localeCompare(b.nome,'it'):sort==='prov'?(a.prov||'').localeCompare(b.prov||''):b.n_gare-a.n_gare);
 
-  let h=`<p class="il">${sqs.length} squadre</p><div style="overflow-x:auto"><table class="rtbl" id="tbl-sq"><thead><tr>`;
+  let h=`<p class="il">${sqs.length} squadre &nbsp;<button class="btn" style="font-size:.65rem;padding:2px 8px" onclick="sqToggleAll(true)">▼ Espandi tutto</button> <button class="btn" style="font-size:.65rem;padding:2px 8px" onclick="sqToggleAll(false)">▲ Contrai tutto</button></p><div style="overflow-x:auto"><table class="rtbl" id="tbl-sq"><thead><tr>`;
   h+=`<th onclick="sT('tbl-sq',0)">#</th>`;
   h+=`<th onclick="sT('tbl-sq',1)">Squadra / Campionati</th>`;
   h+=`<th onclick="sT('tbl-sq',2)">Prov.</th>`;
@@ -2077,7 +2129,7 @@ function renderSq(){
     var rowBorder=wp>50?'border-left:3px solid var(--green)':s.perse>s.vinte?'border-left:3px solid var(--red)':'border-left:3px solid #eee';
     h+=`<tr style="${rowBg};${rowBorder}">`;
     h+=`<td class="rpos ${i===0?'g1':i===1?'g2':i===2?'g3':''}" data-val="${i+1}">${i+1}</td>`;
-    h+=`<td><span class="rn rn-sq" onclick="openSquadra('${esc(s.nome)}')">${escH(s.nome)}</span></td>`;
+    h+=`<td><span class="rn rn-sq" onclick="openSquadra('${esc(s.nome)}')">${escH(s.nome)}</span> <button onclick="sqToggle('sqg-${i}')" style="background:none;border:1px solid #ccc;border-radius:3px;padding:0 4px;font-size:.6rem;cursor:pointer;color:var(--mu)" title="Espandi/Contrai campionati">▼</button></td>`;
     h+=`<td>${pvB(s.prov)}</td>`;
     h+=`<td>${gr}</td>`;
     h+=`<td data-val="${ptGlob}" style="text-align:center;font-weight:800;color:#1565c0;cursor:pointer" onclick="openSquadra('${esc(s.nome)}')" title="Apri classifica">${ptGlob}</td>`;
@@ -2111,7 +2163,7 @@ function renderSq(){
         var pcasa=cgare.filter(g=>g['Squadra Casa']===s.nome&&parseInt(g['Punti Casa'])<parseInt(g['Punti Ospite'])).length;
         var vosp=cgare.filter(g=>g['Squadra Ospite']===s.nome&&parseInt(g['Punti Ospite'])>parseInt(g['Punti Casa'])).length;
         var posp=cgare.filter(g=>g['Squadra Ospite']===s.nome&&parseInt(g['Punti Ospite'])<parseInt(g['Punti Casa'])).length;
-        h+=`<tr style="background:${subBg};border-left:3px solid ${col}">`;
+        h+=`<tr class="sq-sub" data-sqgroup="sqg-${i}" style="display:none;background:${subBg};border-left:3px solid ${col}">`;
         h+=`<td></td>`;
         h+=`<td style="padding:2px 8px 2px 24px"><span style="background:${col};color:#fff;border-radius:10px;padding:1px 8px;font-size:.6rem;font-weight:600">${isFemmC?'♀ ':''}${escH(cn)}</span></td>`;
         h+=`<td></td><td></td>`;
@@ -2131,6 +2183,14 @@ function renderSq(){
 
   h+=`</tbody></table></div>`;
   document.getElementById('sq-list').innerHTML=h;
+}
+function sqToggle(grpId){
+  const rows=document.querySelectorAll(`tr[data-sqgroup="${grpId}"]`);
+  const hidden=rows.length>0&&rows[0].style.display==='none';
+  rows.forEach(r=>r.style.display=hidden?'':'none');
+}
+function sqToggleAll(expand){
+  document.querySelectorAll('tr.sq-sub').forEach(r=>r.style.display=expand?'':'none');
 }
 
 // HEAD TO HEAD
@@ -2508,7 +2568,7 @@ function renderProvCards(){
 function openGareTotali(){
   document.getElementById('mg-body').innerHTML=`<div class="fb" style="padding:7px 9px"><div class="fg"><label>Squadra</label><input type="text" id="mg-q" placeholder="..." oninput="filterMg()"></div><div class="fg"><label>Dal</label><input type="date" id="mg-d1" onchange="filterMg()"></div><div class="fg"><label>Al</label><input type="date" id="mg-d2" onchange="filterMg()"></div><div class="fg"><label>Camp.</label><select id="mg-camp" onchange="filterMg()"><option value="">Tutti</option>${CAMPS.map(c=>`<option>${escH(c)}</option>`).join('')}</select></div><button class="btn b-gr" onclick="resetF('mg-q','mg-d1','mg-d2','mg-camp');filterMg()">↺</button></div>
   <div class="il" id="mg-info"></div>
-  <div style="overflow-x:auto"><table class="gtbl" id="tbl-mg"><thead><tr><th onclick="sT('tbl-mg',0)">Data</th><th>N°</th><th onclick="sT('tbl-mg',2)">Campionato</th><th onclick="sT('tbl-mg',3)">Casa</th><th onclick="sT('tbl-mg',4)">Ospite</th><th>PtC</th><th>PtO</th></tr></thead><tbody id="tbl-mg-body"></tbody></table></div>`;
+  <div style="overflow-x:auto"><table class="gtbl" id="tbl-mg"><thead><tr><th onclick="sT('tbl-mg',0)" style="cursor:pointer">Data ▾</th><th onclick="sT('tbl-mg',1)" style="cursor:pointer">N°</th><th onclick="sT('tbl-mg',2)" style="cursor:pointer">Campionato</th><th onclick="sT('tbl-mg',3)" style="cursor:pointer">Casa</th><th onclick="sT('tbl-mg',4)" style="cursor:pointer">Ospite</th><th onclick="sT('tbl-mg',5)" style="cursor:pointer">PtC</th><th onclick="sT('tbl-mg',6)" style="cursor:pointer">PtO</th></tr></thead><tbody id="tbl-mg-body"></tbody></table></div>`;
   filterMg();openMo('mo-gare');
 }
 function filterMg(){
@@ -2530,6 +2590,7 @@ function filterMg(){
     <td style="text-align:center;font-weight:700">${g['Punti Casa']||''}</td>
     <td style="text-align:center;font-weight:700">${g['Punti Ospite']||''}</td>
   </tr>`).join('');
+  setTimeout(()=>makeTableSortable(document.getElementById('mo-gare')),30);
 }
 
 // MODAL PERSONA
@@ -3631,7 +3692,7 @@ function openProvincia(pv){
   const oss_r=ps.oss_residenti.map(n=>P[n]).filter(Boolean).sort((a,b)=>b.n_gare-a.n_gare);
   const sq_r=ps.sq_residenti.map(n=>SQ[n]).filter(Boolean).sort((a,b)=>b.n_gare-a.n_gare);
   const sq_o=ps.sq_ospiti.map(n=>SQ[n]).filter(Boolean).sort((a,b)=>b.n_gare-a.n_gare);
-  const ce=Object.entries(ps.campionati||{}).sort((a,b)=>b[1]-a[1]);
+  const ce=Object.entries(ps.campionati||{}).sort((a,b)=>livelloC(b[0])-livelloC(a[0]));
   const maxC=ce[0]?.[1]||1;
   document.getElementById('mpv-body').innerHTML=`
     <div class="mts">
@@ -5608,7 +5669,7 @@ function renderFutureGames(){
       if(g[f]){var n=pns(g[f]);if(n){arbCount[n]=(arbCount[n]||0)+1;}}
     });
   });
-  var topArbs=Object.entries(arbCount).sort(function(a,b){return b[1]-a[1];}).slice(0,12);
+  var topArbs=Object.entries(arbCount).sort(function(a,b){return b[1]-a[1];}); // ALL arbitri, no slice
 
   // Header con sintesi collassabile
   var summaryHtml='<div style="margin-bottom:10px">';
@@ -5626,8 +5687,10 @@ function renderFutureGames(){
     topArbs.forEach(function(e){
       var n=e[0],c=e[1];
       var p=P[n];
-      summaryHtml+='<span style="background:#fff;border:1px solid #c0d0ff;border-radius:12px;padding:2px 8px;font-size:.68rem;cursor:pointer" data-n="'+n+'" onclick="openP(this)">';
+      var fipCode=CODICI_FIP[n.toUpperCase()]||'';
+      summaryHtml+='<span style="background:#fff;border:1px solid #c0d0ff;border-radius:12px;padding:3px 10px;font-size:.68rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px" onclick="openPersona(\''+esc(n)+'\')">';
       summaryHtml+='<span class="rn rn-'+(p?p.categoria:'Arbitro')+'" style="font-size:.65rem">'+escH(n)+'</span>';
+      if(fipCode) summaryHtml+='<span style="font-family:monospace;font-size:.58rem;color:#888">'+fipCode+'</span>';
       summaryHtml+=' <b style="color:#003087">'+c+'</b></span>';
     });
     summaryHtml+='</div></div>';
@@ -5730,52 +5793,57 @@ function renderProssime(){
   var fut=(D.gare_future||D.gare||[]).filter(function(g){
     if(g['Data']<today||g['Data']>end) return false;
     if(camp&&g['Campionato']!==camp) return false;
-    if(q){
-      var txt=(g['Squadra Casa']+g['Squadra Ospite']+(g['Arbitro 1']||'')+(g['Arbitro 2']||'')).toLowerCase();
-      if(!txt.includes(q)) return false;
-    }
+    if(q){var txt=(g['Squadra Casa']+g['Squadra Ospite']+(g['Arbitro 1']||'')+(g['Arbitro 2']||'')).toLowerCase();if(!txt.includes(q))return false;}
     return true;
-  }).sort(function(a,b){ return a['Data'].localeCompare(b['Data'])||a['Ora'].localeCompare(b['Ora']); });
+  }).sort(function(a,b){return a['Data'].localeCompare(b['Data'])||(a['Ora']||'').localeCompare(b['Ora']||'');});
   var info=document.getElementById('fp-info');
   if(info) info.textContent=fut.length+' gare ('+today+' → '+end+')';
   var el=document.getElementById('fp-list');
   if(!el)return;
-  if(!fut.length){
-    el.innerHTML='<div class="card" style="color:var(--mu);padding:20px;text-align:center">Nessuna gara trovata.<br><small>Aggiorna lo scraper con <code>python3 fip_scraper_v5.py</code> per caricare le gare future.</small></div>';
-    return;
-  }
-  // Raggruppa per data
+  if(!fut.length){el.innerHTML='<div class="card" style="color:var(--mu);padding:20px;text-align:center">Nessuna gara trovata.</div>';return;}
+
   var byDate={};
-  fut.forEach(function(g){ var d=g['Data']; if(!byDate[d])byDate[d]=[]; byDate[d].push(g); });
+  fut.forEach(function(g){var d=g['Data'];if(!byDate[d])byDate[d]=[];byDate[d].push(g);});
   var html='';
+  var dayIdx=0;
   Object.keys(byDate).sort().forEach(function(d){
     var gs=byDate[d];
     var wd=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'][new Date(d).getDay()];
     var isWE=new Date(d).getDay()===0||new Date(d).getDay()===6;
-    html+='<div style="font-size:.76rem;font-weight:700;color:'+(isWE?'#e17055':'#003087')+';margin:12px 0 4px;padding:4px 8px;background:'+(isWE?'#fff5f2':'#e8eeff')+';border-radius:6px">'+
-      wd+' '+d.substring(8)+'/'+d.substring(5,7)+'/'+d.substring(0,4)+' — <span style="font-weight:400">'+gs.length+' gare</span></div>';
-    html+='<div style="overflow-x:auto">'+mkTbl(gs.map(function(g,i){
-      var a1=g['Arbitro 1']?g['Arbitro 1'].split(' di ')[0]:'—';
-      var a2=g['Arbitro 2']?g['Arbitro 2'].split(' di ')[0]:'';
-      var a1click=g['Arbitro 1']?'data-n="'+a1+'" onclick="openP(this)"':'';
-      var a2click=g['Arbitro 2']?'data-n="'+a2+'" onclick="openP(this)"':'';
-      var udc=[g['Segnapunti'],g['Cronometrista'],g['24 Secondi'],g['Addetto Referto']].filter(Boolean).map(function(s){return s.split(' di ')[0];}).join(', ');
-      var cm=CAMP_META[g['Campionato']]||{};
-      var campClr={'Serie A':'#003087','Serie B':'#1a4db3','Serie C':'#3d6fd4','Divisione Regionale 1':'#0984e3','Divisione Regionale 2':'#5aacf5'}[cm.gruppo]||'#636e72';
-      const campClrNew=campColor(g['Campionato']);
-      return '<tr>'+
-        '<td style="font-size:.7rem;color:var(--mu)">'+escH(g['Ora']||'')+'</td>'+
-        '<td><span style="font-size:.65rem;background:'+campClrNew+';color:#fff;border-radius:3px;padding:1px 5px;cursor:pointer" onclick="openCampionato(\''+esc(g['Campionato']||'')+'\')" >'+escH(g['Campionato']||'')+'</span></td>'+
+    var tid='tbl-pr-'+dayIdx++;
+    html+='<div style="font-size:.76rem;font-weight:700;color:'+(isWE?'#e17055':'#003087')+';margin:12px 0 0;padding:5px 10px;background:'+(isWE?'#fff5f2':'#e8eeff')+';border-radius:6px 6px 0 0;display:flex;align-items:center;gap:8px">'+
+      '<span>'+wd+' '+d.substring(8)+'/'+d.substring(5,7)+'/'+d.substring(0,4)+'</span>'+
+      '<span style="font-weight:400;font-size:.68rem;color:var(--mu)">'+gs.length+' gare</span></div>';
+    html+='<div style="overflow-x:auto;margin-bottom:8px"><table class="gtbl" id="'+tid+'"><thead><tr>'+
+      '<th onclick="sT(\''+tid+'\',0)" style="cursor:pointer">Ora</th>'+
+      '<th onclick="sT(\''+tid+'\',1)" style="cursor:pointer">Campionato</th>'+
+      '<th onclick="sT(\''+tid+'\',2)" style="cursor:pointer">Casa</th>'+
+      '<th onclick="sT(\''+tid+'\',3)" style="cursor:pointer">Ospite</th>'+
+      '<th onclick="sT(\''+tid+'\',4)" style="cursor:pointer">Arbitro 1</th>'+
+      '<th onclick="sT(\''+tid+'\',5)" style="cursor:pointer">Arbitro 2</th>'+
+      '<th onclick="sT(\''+tid+'\',6)" style="cursor:pointer">UdC</th>'+
+      '<th onclick="sT(\''+tid+'\',7)" style="cursor:pointer">Campo</th>'+
+      '</tr></thead><tbody>';
+    gs.forEach(function(g){
+      var a1n=pns(g['Arbitro 1']||''),a2n=pns(g['Arbitro 2']||'');
+      var udc=[g['Segnapunti'],g['Cronometrista'],g['24 Secondi'],g['Addetto Referto']].filter(Boolean).map(function(s){return pns(s);}).filter(Boolean).join(', ');
+      var campClr=campColor(g['Campionato']||'');
+      html+='<tr>'+
+        '<td style="font-size:.7rem;color:var(--mu);white-space:nowrap">'+escH(g['Ora']||'')+'</td>'+
+        '<td><span style="font-size:.62rem;background:'+campClr+';color:#fff;border-radius:3px;padding:1px 5px;cursor:pointer;white-space:nowrap" onclick="openCampionato(\''+esc(g['Campionato']||'')+'\')">'+escH(g['Campionato']||'')+'</span></td>'+
         '<td><span class="rn rn-sq" onclick="openSquadra(\''+esc(g['Squadra Casa']||'')+'\')">'+escH(g['Squadra Casa']||'')+'</span></td>'+
         '<td><span class="rn rn-sq" onclick="openSquadra(\''+esc(g['Squadra Ospite']||'')+'\')">'+escH(g['Squadra Ospite']||'')+'</span></td>'+
-        '<td style="font-size:.68rem">'+(g['Arbitro 1']?'<span class="rn rn-Arbitro" '+a1click+' style="font-size:.65rem">'+escH(a1)+'</span>':'<span style="color:#ccc">—</span>')+'</td>'+
-        '<td style="font-size:.68rem">'+(g['Arbitro 2']?'<span class="rn rn-Arbitro" '+a2click+' style="font-size:.65rem">'+escH(a2)+'</span>':'<span style="color:#ccc">—</span>')+'</td>'+
+        '<td style="font-size:.68rem">'+(a1n?'<span class="rn rn-Arbitro" data-n="'+a1n+'" onclick="openPersona(this.dataset.n)">'+escH(a1n)+'</span>':'<span style="color:#ccc">—</span>')+'</td>'+
+        '<td style="font-size:.68rem">'+(a2n?'<span class="rn rn-Arbitro" data-n="'+a2n+'" onclick="openPersona(this.dataset.n)">'+escH(a2n)+'</span>':'')+'</td>'+
         '<td style="font-size:.65rem;color:#636e72">'+escH(udc)+'</td>'+
         '<td style="font-size:.65rem;color:var(--mu);max-width:120px;white-space:normal">'+escH((g['Campo']||'').split(',')[0])+'</td>'+
         '</tr>';
-    }).join(''),['Ora','Camp.','Casa','Ospite','Arb.1','Arb.2','UDC','Campo'],'tbl-prossime')+'</div>';
+    });
+    html+='</tbody></table></div>';
   });
   el.innerHTML=html;
+  // Make all tables sortable
+  Object.keys(byDate).forEach(function(_,i){makeTableSortable(document.getElementById('tbl-pr-'+i));});
 }
 
 
@@ -6134,7 +6202,7 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     });
 
     var tabHtml='<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;color:var(--bl);margin-bottom:8px;padding:6px 12px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl)">🏆 Tabellone Ottavi di Finale</div>';
-    tabHtml+='<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start">';
+    tabHtml+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:flex-start">';
 
     ottaviGironi.forEach(function(gi){
       var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
