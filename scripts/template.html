@@ -93,6 +93,16 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 /* legacy sumbar classes kept for any JS refs */
 .sumbar{display:none;}
 .sum-item{display:none;}
+/* ── QUICK NAV BAR ── */
+.quicknav{background:#f0f4ff;border-bottom:1px solid var(--br);
+  display:flex;align-items:center;flex-wrap:wrap;gap:2px;padding:3px 10px;
+  overflow-x:auto;scrollbar-width:none;}
+.quicknav::-webkit-scrollbar{display:none;}
+.qn-btn{background:none;border:1px solid transparent;color:var(--bl2);
+  padding:3px 10px;border-radius:12px;cursor:pointer;font-size:.7rem;font-weight:600;
+  white-space:nowrap;transition:all .15s;}
+.qn-btn:hover{background:#fff;border-color:var(--bl3);color:var(--bl);}
+.qn-sep{width:1px;height:16px;background:var(--br);margin:0 4px;flex-shrink:0;}
 .slabel,.svalue,.ssub{}
 
 /* ══════════ DATE BAR ══════════ */
@@ -543,6 +553,19 @@ tr.loss-row td{background:#fdecea!important;}
   <div style="margin-left:auto;display:flex;align-items:center;padding:0 8px">
     <button onclick="openSpotlight()" class="spotlight-btn" title="Cerca (Ctrl+K)">🔍 Cerca <kbd>Ctrl K</kbd></button>
   </div>
+</div>
+<div class="quicknav">
+  <button class="qn-btn" onclick="showPage('h2h')">⚔️ H2H Sq.</button>
+  <button class="qn-btn" onclick="openMultiH2H()">👥 Multi H2H</button>
+  <button class="qn-btn" onclick="showPage('h2h-arb')">⚖️ H2H Arb.</button>
+  <div class="qn-sep"></div>
+  <button class="qn-btn" onclick="showPage('resoconto')">📋 Resoconto</button>
+  <button class="qn-btn" onclick="showPage('province')">📍 Province</button>
+  <button class="qn-btn" onclick="showPage('campi')">🏟 Campi</button>
+  <button class="qn-btn" onclick="showPage('mappa')">🗺 Mappa</button>
+  <button class="qn-btn" onclick="showPage('copertura')">🔎 Copertura</button>
+  <button class="qn-btn" onclick="showPage('gruppi')">🔗 Gruppi</button>
+  <button class="qn-btn" onclick="showPage('provvedimenti')">⚠️ Provvedimenti</button>
 </div>
 <div class="main">
 
@@ -1166,7 +1189,16 @@ function showPage(id){
   document.querySelectorAll('.nav-btn').forEach(b=>{
     if(b.getAttribute('onclick')===`showPage('${id}')`)b.classList.add('active');
   });
-  // Attiva nav-group-btn se la pagina appartiene a un gruppo
+  // Evidenzia quicknav button
+  document.querySelectorAll('.qn-btn').forEach(b=>{
+    b.style.background='';b.style.borderColor='';b.style.color='';
+  });
+  document.querySelectorAll('.qn-btn').forEach(b=>{
+    const oc=b.getAttribute('onclick')||'';
+    if(oc.includes(`'${id}'`)){
+      b.style.background='var(--bl)';b.style.color='#fff';b.style.borderColor='var(--bl)';
+    }
+  });
   const _grpMap={
     'tutti':'persone','arbitri':'persone','udc':'persone','osservatori':'persone','gruppi':'analisi',
     'gare':'gare','prossime':'gare','classifica':'gare','campionati':'gare',
@@ -1413,9 +1445,9 @@ function renderPersonsTable(cid,persons,opts={}){
     const kmGara=isArb&&km>0&&(p.n_gare_arbitro||p.n_gare||0)>0?Math.round(km/(p.n_gare_arbitro||p.n_gare||1)):0;
     return`<tr>
       <td class="rpos ${i<3?'g'+(i+1):''}" data-val="${i+1}">${i+1}</td>
-      <td style="white-space:nowrap;cursor:pointer" onclick="openPersona(this.querySelector('[data-n]').dataset.n)">
+      <td style="white-space:nowrap;cursor:pointer" onclick="openPersona('${esc(p.nome)}')">
         <div style="display:flex;align-items:center;gap:3px">
-          <span style="font-weight:700;cursor:pointer;color:${pvColor}" data-n="${p.nome}">${escH(p.nome)}</span>
+          <span style="font-weight:700;cursor:pointer;color:${pvColor}">${escH(p.nome)}</span>
           ${sexDot}
           ${isDual?`<span style="font-size:.6rem;background:#fff3cd;border:1px solid #ffe082;border-radius:3px;padding:0 4px;color:#8a6200;margin-left:2px;pointer-events:none">dual</span>`:''}
         </div>
@@ -3948,13 +3980,19 @@ function swTabId(btn,panelId){
   var mts=btn.closest('.mts');
   if(!mts)return;
   var container=mts.parentElement;
-  // Rimuovi active da tutti i bottoni
   mts.querySelectorAll('.mt').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
-  // Nascondi tutti i pannelli mtc nel container
-  container.querySelectorAll('.mtc').forEach(function(p){p.classList.remove('active');p.classList.add('hidden');});
+  // Use inline style to avoid !important conflicts with .hidden class
+  container.querySelectorAll('.mtc').forEach(function(p){
+    p.style.display='none';
+    p.classList.remove('active');
+  });
   var panel=document.getElementById(panelId);
-  if(panel){panel.classList.remove('hidden');panel.classList.add('active');}
+  if(panel){
+    panel.style.display='block';
+    panel.classList.add('active');
+    panel.classList.remove('hidden');
+  }
 }
 function swTab(btn,prefix){
   const container=btn.closest('.mbody');
@@ -3962,19 +4000,16 @@ function swTab(btn,prefix){
   btn.classList.add('active');
   const idx=[...btn.parentElement.querySelectorAll('.mt')].indexOf(btn);
   container.querySelectorAll('.mtc').forEach((el,i)=>{
+    el.style.display=(i===idx)?'block':'none';
     el.classList.toggle('active',i===idx);
-    el.classList.toggle('hidden',i!==idx);
+    if(i===idx) el.classList.remove('hidden');
     if(i===idx && el.id==='mct-2' && typeof _grtCamp!=='undefined' && _grtCamp) {
       initGironi(_grtCamp);
-      // Espandi il modal a tutta larghezza automaticamente
       var moBox=document.querySelector('#mo-camp .mbox');
       if(moBox){
-        moBox.style.width='100vw';
-        moBox.style.maxWidth='100vw';
-        moBox.style.height='100vh';
-        moBox.style.maxHeight='100vh';
-        moBox.style.borderRadius='0';
-        moBox.style.margin='0';
+        moBox.style.width='100vw';moBox.style.maxWidth='100vw';
+        moBox.style.height='100vh';moBox.style.maxHeight='100vh';
+        moBox.style.borderRadius='0';moBox.style.margin='0';
         var moEl=document.getElementById('mo-camp');
         if(moEl)moEl.style.padding='0';
         moBox.dataset.fs='1';
