@@ -343,6 +343,21 @@ tr.loss-row td{background:#fdecea!important;}
 .sug-item{padding:7px 11px;cursor:pointer;font-size:.76rem;border-bottom:1px solid var(--tbl-bd)}
 .sug-item:hover{background:var(--bl4)}.sug-item:last-child{border-bottom:none}
 
+/* ══════════ DASHBOARD HOME ══════════ */
+.db-kpi{background:#fff;border-radius:10px;padding:14px 16px;cursor:pointer;
+  border:1px solid var(--br);box-shadow:var(--shadow-sm);transition:all .15s;
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;}
+.db-kpi:hover{box-shadow:var(--shadow);transform:translateY(-1px);border-color:var(--bl3);}
+.db-kpi-icon{font-size:1.3rem;margin-bottom:2px;}
+.db-kpi-val{font-size:1.8rem;font-weight:900;color:var(--bl);line-height:1;}
+.db-kpi-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);font-weight:700;}
+.db-kpi-sub{font-size:.62rem;color:var(--mu2);margin-top:2px;}
+.db-card{background:#fff;border-radius:10px;border:1px solid var(--br);
+  box-shadow:var(--shadow-sm);padding:12px 14px;margin-bottom:0;}
+.db-card-hd{font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;}
+.db-hd-link{margin-left:auto;font-size:.65rem;color:var(--bl2);cursor:pointer;font-weight:400;}
+.db-hd-link:hover{text-decoration:underline;}
 /* ══════════ CARDS ══════════ */
 .card{background:#fff;border:1px solid var(--br);border-radius:var(--radius);
   padding:12px;margin-bottom:10px;box-shadow:var(--shadow-sm);}
@@ -572,60 +587,118 @@ tr.loss-row td{background:#fdecea!important;}
 
 <!-- HOME -->
 <div class="ps active" id="page-home">
-  <!-- HERO BANNER -->
-  <div class="hero-banner" id="hero-banner">
-    <div class="hero-kpi"><div class="hv" id="hb-gare">–</div><div class="hl">Gare disputate</div><div class="ht" id="hb-gare-sub"></div></div>
-    <div class="hero-kpi"><div class="hv" id="hb-arb">–</div><div class="hl">Arbitri attivi</div><div class="ht" id="hb-arb-sub"></div></div>
-    <div class="hero-kpi"><div class="hv" id="hb-sq">–</div><div class="hl">Squadre</div><div class="ht" id="hb-sq-sub"></div></div>
-    <div class="hero-kpi"><div class="hv" id="hb-comp">–%</div><div class="hl">Stagione completata</div><div class="ht" id="hb-comp-sub"></div></div>
-    <div class="hero-kpi"><div class="hv" id="hb-doppio">–%</div><div class="hl">Copertura doppia</div><div class="ht" id="hb-doppio-sub">gare con 2 arbitri</div></div>
-  </div>
-  <!-- TIMELINE 7 GIORNI -->
-  <div class="st">📆 Prossimi 7 giorni</div>
-  <div class="timeline-7" id="h-timeline7"></div>
-  <!-- WIDGET ROW: gara combattuta + arbitro settimana + completamento -->
-  <div class="widget-row" style="margin-top:10px">
-    <div class="widget">
-      <div class="widget-title">⚔️ Gara più combattuta (7gg)</div>
-      <div id="w-gara-comb"></div>
+
+  <!-- ROW 1: KPI cards -->
+  <div class="db-row" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px">
+    <div class="db-kpi" onclick="openGareTotali()" title="Clicca per vedere tutte le gare">
+      <div class="db-kpi-icon">📅</div>
+      <div class="db-kpi-val" id="hb-gare">–</div>
+      <div class="db-kpi-lbl">Gare disputate</div>
+      <div class="db-kpi-sub" id="hb-gare-sub"></div>
     </div>
-    <div class="widget">
-      <div class="widget-title">🔥 Arbitro più attivo (mese)</div>
-      <div id="w-arb-top"></div>
+    <div class="db-kpi" onclick="showPage('arbitri')">
+      <div class="db-kpi-icon">👨‍⚖️</div>
+      <div class="db-kpi-val" id="hb-arb">–</div>
+      <div class="db-kpi-lbl">Arbitri attivi</div>
+      <div class="db-kpi-sub" id="hb-arb-sub"></div>
     </div>
-    <div class="widget">
-      <div class="widget-title">🎯 Prossima giornata intensa</div>
-      <div id="w-next-big"></div>
+    <div class="db-kpi" onclick="showPage('squadre')">
+      <div class="db-kpi-icon">🏆</div>
+      <div class="db-kpi-val" id="hb-sq">–</div>
+      <div class="db-kpi-lbl">Squadre</div>
+      <div class="db-kpi-sub" id="hb-sq-sub"></div>
+    </div>
+    <div class="db-kpi" style="cursor:default">
+      <div class="db-kpi-icon">📊</div>
+      <div class="db-kpi-val" id="hb-comp">–%</div>
+      <div class="db-kpi-lbl">Stagione completata</div>
+      <div class="db-kpi-sub" id="hb-comp-sub"></div>
+    </div>
+    <div class="db-kpi" style="cursor:default">
+      <div class="db-kpi-icon">🔵</div>
+      <div class="db-kpi-val" id="hb-doppio">–%</div>
+      <div class="db-kpi-lbl">Copertura doppia</div>
+      <div class="db-kpi-sub">gare con 2 arbitri</div>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-    <div><div class="st">👨‍⚖️ Top Arbitri</div><div id="h-arb"></div></div>
-    <div><div class="st">📋 Top UDC</div><div id="h-udc"></div></div>
-    <div><div class="st">🏆 Top Squadre</div><div id="h-sq"></div></div>
-    <div><div class="st">📍 Province</div><div id="h-pv"></div></div>
+
+  <!-- ROW 2: Prossimi 7 giorni -->
+  <div class="db-card" style="margin-bottom:12px">
+    <div class="db-card-hd">📆 Prossimi 7 giorni</div>
+    <div class="timeline-7" id="h-timeline7"></div>
   </div>
-  <!-- NUOVI WIDGET STATISTICHE -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-    <div class="card" style="margin-bottom:0">
-      <div class="card-title">🤝 Coppie arbitri più frequenti</div>
+
+  <!-- ROW 3: 3 widget -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+    <div class="db-card">
+      <div class="db-card-hd">⚔️ Gara più combattuta (7gg)</div>
+      <div id="w-gara-comb" style="min-height:60px"></div>
+    </div>
+    <div class="db-card">
+      <div class="db-card-hd">🔥 Arbitro più attivo (mese)</div>
+      <div id="w-arb-top" style="min-height:60px"></div>
+    </div>
+    <div class="db-card">
+      <div class="db-card-hd">🎯 Prossima giornata intensa</div>
+      <div id="w-next-big" style="min-height:60px"></div>
+    </div>
+  </div>
+
+  <!-- ROW 4: Top rankings 4 colonne -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+    <div class="db-card">
+      <div class="db-card-hd">👨‍⚖️ Top Arbitri <span class="db-hd-link" onclick="showPage('arbitri')">→ tutti</span></div>
+      <div id="h-arb"></div>
+    </div>
+    <div class="db-card">
+      <div class="db-card-hd">📋 Top UDC <span class="db-hd-link" onclick="showPage('udc')">→ tutti</span></div>
+      <div id="h-udc"></div>
+    </div>
+    <div class="db-card">
+      <div class="db-card-hd">🏆 Top Squadre <span class="db-hd-link" onclick="showPage('squadre')">→ tutte</span></div>
+      <div id="h-sq"></div>
+    </div>
+    <div class="db-card">
+      <div class="db-card-hd">📍 Province <span class="db-hd-link" onclick="showPage('province')">→ dettaglio</span></div>
+      <div id="h-pv"></div>
+    </div>
+  </div>
+
+  <!-- ROW 5: Coppie + Trend -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+    <div class="db-card">
+      <div class="db-card-hd">🤝 Coppie arbitri più frequenti</div>
       <div id="h-coppie"></div>
     </div>
-    <div class="card" style="margin-bottom:0">
-      <div class="card-title">📈 Trend arbitri (ultimi 30gg vs 30gg prec.)</div>
+    <div class="db-card">
+      <div class="db-card-hd">📈 Trend arbitri (30gg vs 30gg prec.)</div>
       <div id="h-trend"></div>
     </div>
   </div>
-  <div class="st" style="margin-top:14px">📅 Attività giornaliera — clicca un giorno per il dettaglio</div>
-  <div class="card" style="padding:8px 12px"><div id="h-act"></div></div>
-  <div class="st" style="margin-top:14px;cursor:pointer;user-select:none" onclick="toggleSection('h-fut-wrap','h-fut-tog')">
-    📅 Prossime gare (14 giorni) <span id="h-fut-count" style="font-size:.75rem;color:var(--mu)"></span>
-    <span id="h-fut-tog" style="float:right;font-size:.8rem;color:var(--mu)">▼</span>
+
+  <!-- ROW 6: Attività giornaliera -->
+  <div class="db-card" style="margin-bottom:12px">
+    <div class="db-card-hd">📊 Attività giornaliera — clicca un giorno per il dettaglio</div>
+    <div id="h-act"></div>
   </div>
-  <div id="h-fut-wrap" class="card" style="padding:8px 12px"><div id="h-fut"></div></div>
-  <div class="st" style="margin-top:10px;cursor:pointer;user-select:none" onclick="toggleSection('h-mesi-wrap','h-mesi-tog')">
-    📊 Attività mensile <span id="h-mesi-tog" style="float:right;font-size:.8rem;color:var(--mu)">▼</span>
+
+  <!-- ROW 7: Prossime gare collassabile -->
+  <div class="db-card" style="margin-bottom:12px">
+    <div class="db-card-hd" style="cursor:pointer" onclick="toggleSection('h-fut-wrap','h-fut-tog')">
+      📅 Prossime gare (14 giorni) <span id="h-fut-count" style="font-size:.75rem;color:var(--mu)"></span>
+      <span id="h-fut-tog" style="float:right;font-size:.8rem;color:var(--mu)">▼</span>
+    </div>
+    <div id="h-fut-wrap"><div id="h-fut"></div></div>
   </div>
-  <div id="h-mesi-wrap" class="card"><div id="gs-mesi"></div></div>
+
+  <!-- ROW 8: Attività mensile collassabile -->
+  <div class="db-card">
+    <div class="db-card-hd" style="cursor:pointer" onclick="toggleSection('h-mesi-wrap','h-mesi-tog')">
+      📊 Attività mensile <span id="h-mesi-tog" style="float:right;font-size:.8rem;color:var(--mu)">▼</span>
+    </div>
+    <div id="h-mesi-wrap"><div id="gs-mesi"></div></div>
+  </div>
+
 </div>
 
 <!-- CLASSIFICA -->
@@ -1480,7 +1553,7 @@ function renderPersonsTable(cid,persons,opts={}){
     const kmGara=isArb&&km>0&&(p.n_gare_arbitro||p.n_gare||0)>0?Math.round(km/(p.n_gare_arbitro||p.n_gare||1)):0;
     return`<tr>
       <td class="rpos ${i<3?'g'+(i+1):''}" data-val="${i+1}">${i+1}</td>
-      <td style="white-space:nowrap;cursor:pointer" data-pnome="${p.nome.replace(/'/g,"&#39;")}" onclick="openPersona(this.dataset.pnome)">
+      <td style="white-space:nowrap;cursor:pointer" onclick="openPN(encP(p.nome))">
         <div style="display:flex;align-items:center;gap:3px">
           <span style="font-weight:700;cursor:pointer;color:${pvColor}">${escH(p.nome)}</span>
           ${sexDot}
@@ -2609,22 +2682,41 @@ function renderGruppi(){
     const aliases=isMulti?members.filter(m=>m!==main):[];
     const aliasH=aliases.map(m=>{
       const ms=SQ[m];
-      return`<span style="font-size:.64rem;cursor:pointer;color:var(--mu);background:var(--bl3);border-radius:3px;padding:1px 6px;margin:1px;display:inline-block" onclick="openSquadra('${esc(m)}')">${escH(m)} <span style="color:var(--mu2)">${ms?.n_gare||0}g</span></span>`;
+      const mCamps=Object.entries(ms?.campionati||{}).sort((a,b)=>{
+        const la=((CAMP_META[a[0]]||{}).sort_key||[99])[0],lb=((CAMP_META[b[0]]||{}).sort_key||[99])[0];
+        return la-lb;
+      });
+      const mCampBadges=mCamps.map(([cn,cv])=>{
+        const cc=campColor(cn);
+        return`<span style="background:${cc};color:#fff;border-radius:3px;padding:0 4px;font-size:.58rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(cn)}')" title="${escH(cn)}">${escH(cn.split(' ').slice(0,3).join(' '))} (${cv})</span>`;
+      }).join(' ');
+      const mv=ms?.vinte||0,mp=ms?.perse||0,mg=ms?.n_gare||0;
+      const mwp=mg?Math.round(mv/mg*100):0;
+      return`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid #f0f4ff;flex-wrap:wrap">
+        <span style="font-size:.68rem;cursor:pointer;color:var(--bl);font-weight:600;min-width:150px" onclick="openSquadra('${esc(m)}')">${escH(m)}</span>
+        <span style="font-size:.62rem;color:var(--mu)">${mg}g</span>
+        <span style="font-size:.62rem;color:var(--green)">${mv}V</span>
+        <span style="font-size:.62rem;color:var(--red)">${mp}P</span>
+        <span style="font-size:.62rem;font-weight:700;color:${mwp>=50?'var(--green)':'var(--red)'}">${mwp}%</span>
+        <div style="flex:1;display:flex;flex-wrap:wrap;gap:2px">${mCampBadges}</div>
+      </div>`;
     }).join('');
     return`<tr style="${isMulti?'border-left:3px solid var(--bl2);background:#f6f9ff':'border-left:3px solid transparent'}">
       <td class="rpos">${num}</td>
-      <td style="font-weight:700"><span class="rn rn-sq" onclick="openSquadra('${esc(main)}')">${escH(main)}</span>
+      <td style="font-weight:700;min-width:160px">
+        <span class="rn rn-sq" onclick="openSquadra('${esc(main)}')">${escH(main)}</span>
         ${isMulti?`<span class="badge" style="background:var(--bl2);color:#fff;margin-left:4px;font-size:.6rem">${members.length}</span>`:''}
+        ${isMulti&&aliasH?`<div style="margin-top:4px;padding:4px 8px;background:#eef3ff;border-radius:6px;font-size:.65rem;color:var(--mu);font-weight:600">Varianti:</div><div style="padding:2px 8px 4px">${aliasH}</div>`:''}
       </td>
       <td>${s?.prov?pvB(s.prov):''}</td>
-      <td style="text-align:center;font-weight:800">${totG}</td>
+      <td style="text-align:center;font-weight:800;cursor:pointer" onclick="openSquadra('${esc(main)}')" title="Vedi gare">${totG}</td>
       <td style="text-align:center;color:var(--green);font-weight:700">${totV}</td>
       <td style="text-align:center;color:var(--red);font-weight:700">${totP}</td>
       <td style="text-align:center;font-weight:700;color:${wp>=50?'var(--green)':'var(--red)'}">${wp}%</td>
       <td>${bar}</td>
       <td style="min-width:110px">${campiH}</td>
       <td style="min-width:150px">${campH}</td>
-      <td style="min-width:130px">${aliasH||'<span style="color:var(--mu2)">—</span>'}</td>
+      <td style="min-width:60px;text-align:center;color:var(--mu2);font-size:.7rem">${isMulti?members.length-1:'—'}</td>
     </tr>`;
   }).join('')+`</tbody></table></div>`;
 }
@@ -2929,22 +3021,39 @@ function mkCamminoArbitro(p){
     var activeDates=new Set(gareOrd.map(function(g){return g['Data']||'';}));
 
     html+='<div style="margin-top:16px">';
-    html+='<div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:4px">📅 Timeline cronologica — altezza = importanza categoria</div>';
+    html+='<div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:4px">📅 Timeline cronologica — altezza = importanza categoria · ogni barra = una partita</div>';
 
-    // ROW 1: bars with varying height by importance
-    html+='<div style="display:flex;align-items:flex-end;gap:2px;padding:6px 8px 0;background:#f8faff;border-radius:8px 8px 0 0;border:1px solid #e8eeff;border-bottom:none;overflow-x:auto;min-height:50px">';
-    gareOrd.forEach(function(g){
-      var cn=g['Campionato']||'';
-      var col=campColorCache[cn]||'#888';
-      var imp=getImportance(cn);
-      var barH=4+Math.round(imp/10*36); // 4px to 40px
-      var data=g['Data']||'',ora=g['Ora']||'';
-      var casa=g['Squadra Casa']||'',osp=g['Squadra Ospite']||'';
-      var ris=g['Risultato']||'';
-      var title=escH(cn)+' — '+escH(data)+(ora?' '+escH(ora):'')+'\n'+escH(casa)+' vs '+escH(osp)+(ris?' ('+ris+')':'');
-      html+='<div title="'+title+'" style="width:10px;min-width:10px;height:'+barH+'px;background:'+col+';border-radius:2px 2px 0 0;cursor:pointer;flex-shrink:0;opacity:.9" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.9"></div>';
+    // ROW 1: bars with varying height by importance - FULL WIDTH
+    // Group by date to add month separators
+    var byDateOrd={};
+    gareOrd.forEach(function(g){var d=g['Data']||'';if(!byDateOrd[d])byDateOrd[d]=[];byDateOrd[d].push(g);});
+    var datesOrd=Object.keys(byDateOrd).sort();
+
+    html+='<div style="width:100%;overflow-x:auto;background:#f8faff;border-radius:8px 8px 0 0;border:1px solid #e8eeff;border-bottom:none;padding:6px 8px 0">';
+    html+='<div style="display:flex;align-items:flex-end;gap:3px;min-height:55px;width:max-content">';
+    var lastMonth='';
+    datesOrd.forEach(function(d){
+      var m=d.slice(0,7);
+      if(m!==lastMonth){
+        // Month separator
+        var mesiL=['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+        var mLabel=mesiL[parseInt(m.slice(5))]||m.slice(5);
+        if(lastMonth) html+='<div style="width:1px;height:44px;background:#c0d0f0;margin:0 4px;flex-shrink:0"></div>';
+        html+='<div style="display:flex;flex-direction:column;justify-content:flex-end;align-items:center;flex-shrink:0;margin-right:2px">';
+        html+='<span style="font-size:.55rem;color:var(--bl2);font-weight:700;white-space:nowrap;writing-mode:horizontal-tb;margin-bottom:2px">'+escH(mLabel)+'</span>';
+        html+='</div>';
+        lastMonth=m;
+      }
+      byDateOrd[d].forEach(function(g){
+        var cn=g['Campionato']||'';
+        var col=campColorCache[cn]||'#888';
+        var imp=getImportance(cn);
+        var barH=5+Math.round(imp/10*40); // 5px to 45px
+        var title=escH(cn)+' — '+escH(d)+(g['Ora']?' '+escH(g['Ora']):'')+'\\n'+escH(g['Squadra Casa']||'')+' vs '+escH(g['Squadra Ospite']||'')+(g['Risultato']?' ('+escH(g['Risultato'])+')':'');
+        html+='<div title="'+title+'" style="width:8px;min-width:8px;height:'+barH+'px;background:'+col+';border-radius:2px 2px 0 0;cursor:pointer;flex-shrink:0;transition:opacity .1s" onmouseover="this.style.opacity=.7" onmouseout="this.style.opacity=1"></div>';
+      });
     });
-    html+='</div>';
+    html+='</div></div>';
 
     // ROW 2: same bars but with gap days as empty space
     html+='<div style="display:flex;align-items:flex-end;gap:0;padding:0 8px 6px;background:#f0f4ff;border-radius:0 0 8px 8px;border:1px solid #e8eeff;border-top:2px solid #ccd6f0;overflow-x:auto;min-height:18px" title="Giorni non arbitrati = spazi grigi">';
@@ -3094,17 +3203,17 @@ function openPersona(nome,campFilter){
     document.getElementById('mpt-0').innerHTML=`
       ${isDual?`<div class="dual-role-notice">⚡ Ruolo doppio: ${(p.categorie||[]).join(' + ')}. Usa le tab dedicate.</div>`:''}
       <div class="scs">
-        <div class="sc"><div class="sv">${allG.length}</div><div class="sl">Gare totali</div></div>
-        ${p.n_gare_arbitro?`<div class="sc"><div class="sv">${p.n_gare_arbitro}</div><div class="sl">Come Arbitro</div></div>`:''}
+        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()" title="Vedi tutte le gare"><div class="sv">${allG.length}</div><div class="sl">Gare totali ↗</div></div>
+        ${p.n_gare_arbitro?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()" title="Vedi gare come arbitro"><div class="sv">${p.n_gare_arbitro}</div><div class="sl">Come Arbitro ↗</div></div>`:''}
         ${p.n_gare_arbitro?`<div class="sc"><div class="sv" style="color:#e17055">${p.n_singolo||0}</div><div class="sl">In singolo</div></div>`:''}
-        ${p.n_gare_udc?`<div class="sc"><div class="sv">${p.n_gare_udc}</div><div class="sl">Come UDC</div></div>`:''}
-        ${p.n_gare_osservatore?`<div class="sc"><div class="sv">${p.n_gare_osservatore}</div><div class="sl">Come Osservatore</div></div>`:''}
+        ${p.n_gare_udc?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()"><div class="sv">${p.n_gare_udc}</div><div class="sl">Come UDC ↗</div></div>`:''}
+        ${p.n_gare_osservatore?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()"><div class="sv">${p.n_gare_osservatore}</div><div class="sl">Come Oss. ↗</div></div>`:''}
         <div class="sc"><div class="sv">${nGiorni}</div><div class="sl">Giorni</div></div>
         <div class="sc gold"><div class="sv">${(allG.length/Math.max(nGiorni,1)).toFixed(1)}</div><div class="sl">Media/g</div></div>
         <div class="sc"><div class="sv">${maxGday}</div><div class="sl">Max/g</div></div>
-        <div class="sc"><div class="sv">${topCamp.length}</div><div class="sl">Campionati</div></div>
-        <div class="sc"><div class="sv">${colleghi.length}</div><div class="sl">Colleghi</div></div>
-        <div class="sc"><div class="sv">${campi.length}</div><div class="sl">Campi</div></div>
+        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[2]?.click()" title="Vedi cammino"><div class="sv">${topCamp.length}</div><div class="sl">Campionati ↗</div></div>
+        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[3]?.click()" title="Vedi colleghi"><div class="sv">${colleghi.length}</div><div class="sl">Colleghi ↗</div></div>
+        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[4]?.click()" title="Vedi campi"><div class="sv">${campi.length}</div><div class="sl">Campi ↗</div></div>
         ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div><div class="sl">Km stimati</div></div>`:''}
         ${kmGara>0?`<div class="sc"><div class="sv">${kmGara}</div><div class="sl">Km/gara</div></div>`:''}
       </div>
@@ -6101,7 +6210,7 @@ showPage=function(id){
   _showPageBase(id);
   if(id==='copertura') renderCopertura();
   if(id==='mappa') renderMappa();
-  if(id==='provvedimenti'){initProvvedimenti();renderProvvedimenti();}
+  if(id==='provvedimenti'){initProvvedimenti();setTimeout(renderProvvedimenti,50);}
   if(id==='h2h-arb') initH2HArb();
   if(id==='campi') initCampiPage();
   if(id==='prossime') initProssimePage();
