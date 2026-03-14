@@ -1553,9 +1553,9 @@ function renderPersonsTable(cid,persons,opts={}){
     const kmGara=isArb&&km>0&&(p.n_gare_arbitro||p.n_gare||0)>0?Math.round(km/(p.n_gare_arbitro||p.n_gare||1)):0;
     return`<tr>
       <td class="rpos ${i<3?'g'+(i+1):''}" data-val="${i+1}">${i+1}</td>
-      <td style="white-space:nowrap;cursor:pointer" onclick="openPN(encP(p.nome))">
+      <td style="white-space:nowrap;cursor:pointer" data-n="${p.nome}">
         <div style="display:flex;align-items:center;gap:3px">
-          <span style="font-weight:700;cursor:pointer;color:${pvColor}">${escH(p.nome)}</span>
+          <span style="font-weight:700;cursor:pointer;color:${pvColor}" data-n="${p.nome}">${escH(p.nome)}</span>
           ${sexDot}
           ${isDual?`<span style="font-size:.6rem;background:#fff3cd;border:1px solid #ffe082;border-radius:3px;padding:0 4px;color:#8a6200;margin-left:2px;pointer-events:none">dual</span>`:''}
         </div>
@@ -1718,51 +1718,42 @@ function renderHome(){
   function mkRankCards(persons, maxShow, catClass, colorFn){
     const sorted=persons.sort((a,b)=>b.n_gare-a.n_gare).slice(0,maxShow);
     if(!sorted.length) return '<p style="color:var(--mu);font-size:.75rem;padding:8px">Nessun dato</p>';
-    return `<div style="display:flex;flex-direction:column;gap:4px">${sorted.map((p,i)=>{
+    return `<div style="display:flex;flex-direction:column;gap:2px">${sorted.map((p,i)=>{
       const nf=(D.gare_future||[]).filter(g=>['Arbitro 1','Arbitro 2'].some(f=>pns(g[f]||'')===p.nome)).length;
       const fip=CODICI_FIP[p.nome]||'';
-      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="color:var(--mu2);font-size:.7rem;font-weight:700">${i+1}.</span>`;
       const clr=PC[p.provincia]||'var(--bl)';
-      const barPct=Math.round(p.n_gare/sorted[0].n_gare*100);
-      return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:${i%2?'#f8faff':'#fff'};border:1px solid #eef1fa;cursor:pointer" onclick="openPN('${encP(p.nome)}')">
-        <span style="min-width:20px;font-size:.75rem;color:var(--mu2);font-weight:700">${medal||((i+1)+'.')}</span>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-            <span class="rn ${catClass}" style="font-size:.75rem;font-weight:700" data-n="${p.nome}">${escH(p.nome)}</span>
-            ${pvB(p.provincia)}
-            ${genderDot(p.nome)}
-            ${fip?`<span style="font-family:monospace;font-size:.58rem;color:#aaa">${fip}</span>`:''}
-            ${nf>0?`<span style="background:#e17055;color:#fff;border-radius:10px;padding:0 5px;font-size:.58rem">📅${nf}</span>`:''}
-          </div>
-          <div style="height:4px;background:#eef1fa;border-radius:2px;margin-top:3px">
-            <div style="height:4px;background:${clr};border-radius:2px;width:${barPct}%;transition:width .3s"></div>
-          </div>
+      const bg=i===0?'background:linear-gradient(90deg,#fff9e6,#fff)':i===1?'background:linear-gradient(90deg,#f5f5f5,#fff)':i===2?'background:linear-gradient(90deg,#fdf3e7,#fff)':'background:#fff';
+      return `<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;${bg};border:1px solid ${i<3?'#f0e8d0':'#f0f2f8'};cursor:pointer;transition:background .12s" data-n="${p.nome}">
+        <span style="min-width:22px;text-align:center">${medal}</span>
+        <div style="flex:1;min-width:0;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <span class="rn ${catClass}" style="font-size:.76rem;font-weight:700;color:${clr}" data-n="${p.nome}">${escH(p.nome)}</span>
+          ${pvB(p.provincia)}
+          ${genderDot(p.nome)}
+          ${fip?`<span style="font-family:monospace;font-size:.58rem;color:#bbb">${fip}</span>`:''}
+          ${nf>0?`<span style="background:#e17055;color:#fff;border-radius:8px;padding:1px 6px;font-size:.58rem">📅 ${nf}</span>`:''}
         </div>
-        <span style="font-size:1rem;font-weight:800;color:${clr};min-width:28px;text-align:right">${p.n_gare}</span>
+        <span style="font-size:1.05rem;font-weight:900;color:${clr}">${p.n_gare}</span>
       </div>`;
     }).join('')}</div>`;
   }
 
   function mkSqCards(sqs){
     if(!sqs.length) return '';
-    return `<div style="display:flex;flex-direction:column;gap:4px">${sqs.map((s,i)=>{
+    return `<div style="display:flex;flex-direction:column;gap:2px">${sqs.map((s,i)=>{
       const wp=s.n_gare?Math.round(s.vinte/s.n_gare*100):0;
       const clr=PC[s.prov]||'var(--bl)';
-      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-      const barPct=Math.round(s.n_gare/sqs[0].n_gare*100);
-      return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:${i%2?'#f8faff':'#fff'};border:1px solid #eef1fa;cursor:pointer" onclick="openSquadra('${esc(s.nome)}')">
-        <span style="min-width:20px;font-size:.75rem;color:var(--mu2);font-weight:700">${medal||((i+1)+'.')}</span>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:4px">
-            <span class="rn rn-sq" style="font-size:.74rem;font-weight:700">${escH(s.nome)}</span>
-            ${pvB(s.prov)}
-            <span style="font-size:.62rem;color:${wp>50?'var(--green)':wp<40?'var(--red)':'var(--mu)'};font-weight:600">${wp}%</span>
-          </div>
-          <div style="height:4px;background:#eef1fa;border-radius:2px;margin-top:3px">
-            <div style="height:4px;background:${clr};border-radius:2px;width:${barPct}%"></div>
-          </div>
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="color:var(--mu2);font-size:.7rem;font-weight:700">${i+1}.</span>`;
+      const bg=i===0?'background:linear-gradient(90deg,#fff9e6,#fff)':i===1?'background:linear-gradient(90deg,#f5f5f5,#fff)':i===2?'background:linear-gradient(90deg,#fdf3e7,#fff)':'background:#fff';
+      return `<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;${bg};border:1px solid ${i<3?'#f0e8d0':'#f0f2f8'};cursor:pointer" onclick="openSquadra('${esc(s.nome)}')">
+        <span style="min-width:22px;text-align:center">${medal}</span>
+        <div style="flex:1;min-width:0;display:flex;align-items:center;gap:4px">
+          <span class="rn rn-sq" style="font-size:.75rem;font-weight:700">${escH(s.nome)}</span>
+          ${pvB(s.prov)}
+          <span style="font-size:.62rem;font-weight:700;color:${wp>50?'var(--green)':wp<40?'var(--red)':'var(--mu)'}">${wp}%</span>
         </div>
-        <span style="font-size:1rem;font-weight:800;color:${clr};min-width:28px;text-align:right">${s.n_gare}</span>
+        <span style="font-size:1.05rem;font-weight:900;color:${clr}">${s.n_gare}</span>
+
       </div>`;
     }).join('')}</div>`;
   }
@@ -3021,69 +3012,59 @@ function mkCamminoArbitro(p){
     var activeDates=new Set(gareOrd.map(function(g){return g['Data']||'';}));
 
     html+='<div style="margin-top:16px">';
-    html+='<div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:4px">📅 Timeline cronologica — altezza = importanza categoria · ogni barra = una partita</div>';
+    html+='<div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:6px">📅 Timeline cronologica — altezza = importanza · colore = categoria · spazi = giorni senza gare</div>';
 
-    // ROW 1: bars with varying height by importance - FULL WIDTH
-    // Group by date to add month separators
+    // Build date groups
     var byDateOrd={};
     gareOrd.forEach(function(g){var d=g['Data']||'';if(!byDateOrd[d])byDateOrd[d]=[];byDateOrd[d].push(g);});
     var datesOrd=Object.keys(byDateOrd).sort();
+    var mesiL=['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
 
-    html+='<div style="width:100%;overflow-x:auto;background:#f8faff;border-radius:8px 8px 0 0;border:1px solid #e8eeff;border-bottom:none;padding:6px 8px 0">';
-    html+='<div style="display:flex;align-items:flex-end;gap:3px;min-height:55px;width:max-content">';
+    // UNIFIED TIMELINE: one row with bars + gaps + month labels below
+    html+='<div style="width:100%;overflow-x:auto;background:#f4f7ff;border-radius:10px;border:1px solid #d8e4ff;padding:10px 12px 6px">';
+    html+='<div style="display:flex;align-items:flex-end;gap:3px;min-height:60px;width:max-content;padding-bottom:4px;border-bottom:2px solid #d0daff">';
+
     var lastMonth='';
-    datesOrd.forEach(function(d){
+    datesOrd.forEach(function(d,di){
       var m=d.slice(0,7);
+
+      // Gap days before this date
+      if(di>0){
+        var prev=datesOrd[di-1];
+        var gapDays=Math.round((new Date(d+'T12:00').getTime()-new Date(prev+'T12:00').getTime())/86400000)-1;
+        if(gapDays>0){
+          var gapW=Math.min(Math.max(gapDays*4,6),80);
+          html+='<div style="min-width:'+gapW+'px;height:6px;background:#c8d4ee;border-radius:3px;align-self:flex-end;opacity:.5;flex-shrink:0" title="'+gapDays+' giorni senza gare"></div>';
+        }
+      }
+
+      // Month separator label
       if(m!==lastMonth){
-        // Month separator
-        var mesiL=['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
         var mLabel=mesiL[parseInt(m.slice(5))]||m.slice(5);
-        if(lastMonth) html+='<div style="width:1px;height:44px;background:#c0d0f0;margin:0 4px;flex-shrink:0"></div>';
-        html+='<div style="display:flex;flex-direction:column;justify-content:flex-end;align-items:center;flex-shrink:0;margin-right:2px">';
-        html+='<span style="font-size:.55rem;color:var(--bl2);font-weight:700;white-space:nowrap;writing-mode:horizontal-tb;margin-bottom:2px">'+escH(mLabel)+'</span>';
+        if(lastMonth) html+='<div style="width:2px;min-width:2px;height:50px;background:#b0c4ee;border-radius:1px;margin:0 3px;flex-shrink:0"></div>';
+        html+='<div style="display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;flex-shrink:0;min-width:28px">';
+        html+='<span style="font-size:.65rem;color:var(--bl);font-weight:800;white-space:nowrap;margin-bottom:3px;text-transform:uppercase">'+escH(mLabel)+'</span>';
         html+='</div>';
         lastMonth=m;
       }
+
+      // Bars for this date
       byDateOrd[d].forEach(function(g){
         var cn=g['Campionato']||'';
         var col=campColorCache[cn]||'#888';
         var imp=getImportance(cn);
-        var barH=5+Math.round(imp/10*40); // 5px to 45px
-        var title=escH(cn)+' — '+escH(d)+(g['Ora']?' '+escH(g['Ora']):'')+'\\n'+escH(g['Squadra Casa']||'')+' vs '+escH(g['Squadra Ospite']||'')+(g['Risultato']?' ('+escH(g['Risultato'])+')':'');
-        html+='<div title="'+title+'" style="width:8px;min-width:8px;height:'+barH+'px;background:'+col+';border-radius:2px 2px 0 0;cursor:pointer;flex-shrink:0;transition:opacity .1s" onmouseover="this.style.opacity=.7" onmouseout="this.style.opacity=1"></div>';
+        var barH=8+Math.round(imp/10*44);
+        var title=cn+' — '+d+(g['Ora']?' '+g['Ora']:'')+'\n'+(g['Squadra Casa']||'')+' vs '+(g['Squadra Ospite']||'')+(g['Risultato']?' ('+g['Risultato']+')':'');
+        html+='<div title="'+title+'" style="width:9px;min-width:9px;height:'+barH+'px;background:'+col+';border-radius:3px 3px 0 0;cursor:pointer;flex-shrink:0;box-shadow:0 1px 3px '+col+'55" onmouseover="this.style.filter=\'brightness(1.2)\'" onmouseout="this.style.filter=\'\'"></div>';
       });
     });
-    html+='</div></div>';
 
-    // ROW 2: same bars but with gap days as empty space
-    html+='<div style="display:flex;align-items:flex-end;gap:0;padding:0 8px 6px;background:#f0f4ff;border-radius:0 0 8px 8px;border:1px solid #e8eeff;border-top:2px solid #ccd6f0;overflow-x:auto;min-height:18px" title="Giorni non arbitrati = spazi grigi">';
-    // Build date-grouped view
-    var byDate={};
-    gareOrd.forEach(function(g){var d=g['Data']||'';if(!byDate[d])byDate[d]=[];byDate[d].push(g);});
-    var dates=Object.keys(byDate).sort();
-    for(var di=0;di<dates.length;di++){
-      var d=dates[di];
-      // Gap before this date (if not first)
-      if(di>0){
-        var prev=dates[di-1];
-        var prevMs=new Date(prev+'T12:00:00').getTime();
-        var curMs=new Date(d+'T12:00:00').getTime();
-        var gapDays=Math.round((curMs-prevMs)/86400000)-1;
-        if(gapDays>0){
-          var gapW=Math.min(gapDays*3,60); // 3px per day, max 60px
-          html+='<div style="min-width:'+gapW+'px;height:12px;background:#dde4f0;border-radius:2px;opacity:.5;flex-shrink:0" title="'+gapDays+' giorni senza gare"></div>';
-          html+='<div style="min-width:2px"></div>';
-        }
-      }
-      // Games on this date
-      byDate[d].forEach(function(g){
-        var cn=g['Campionato']||'';
-        var col=campColorCache[cn]||'#888';
-        var imp=getImportance(cn);
-        var barH=3+Math.round(imp/10*12);
-        html+='<div style="min-width:10px;height:'+barH+'px;background:'+col+';border-radius:1px;flex-shrink:0;opacity:.8"></div>';
-      });
-    }
+    html+='</div>';
+
+    // Month labels row below bars
+    html+='<div style="display:flex;gap:3px;width:max-content;padding-top:3px">';
+    // We already rendered labels inline above, so just close the container
+    html+='</div>';
     html+='</div>';
 
     // Legend
@@ -5923,31 +5904,32 @@ function renderGlobalStats(){
 
 // ── PROVVEDIMENTI ──
 function initProvvedimenti(){
-  // Always rebuild PROVV from GARE - most reliable source
-  PROVV=(D.gare||[]).filter(g=>(g['Provvedimenti']||'').trim()).map(g=>({
+  const allGare=[...(D.gare||[]),...(D.gare_future||[])];
+  PROVV=allGare.filter(g=>{
+    const t=g['Provvedimenti']||g['provvedimenti']||'';
+    return typeof t==='string'?t.trim().length>0:false;
+  }).map(g=>({
     data:g['Data']||'',
     camp:g['Campionato']||'',
     casa:g['Squadra Casa']||'',
     ospite:g['Squadra Ospite']||'',
     arbitro1:g['Arbitro 1']||'',
     arbitro2:g['Arbitro 2']||'',
-    testo:(g['Provvedimenti']||'').trim(),
+    testo:(g['Provvedimenti']||g['provvedimenti']||'').trim(),
     num:g['Numero Gara']||''
   }));
-  // Also merge D.provvedimenti if present and different format
-  if(D.provvedimenti&&D.provvedimenti.length){
-    D.provvedimenti.forEach(p=>{
-      if(!PROVV.find(x=>x.num===p.num||(x.casa===p.casa&&x.data===p.data)))
-        PROVV.push(p);
-    });
+  if(D.provvedimenti&&Array.isArray(D.provvedimenti)&&D.provvedimenti.length){
+    D.provvedimenti.forEach(p=>{PROVV.push(p);});
   }
-  PROVV.sort((a,b)=>a.data.localeCompare(b.data));
+  PROVV.sort((a,b)=>(a.data||'').localeCompare(b.data||''));
   const sel=document.getElementById('fpv-camp');
   if(sel){
     sel.innerHTML='<option value="">Tutti</option>';
-    const camps=[...new Set(PROVV.map(p=>p.camp))].sort();
-    camps.forEach(c=>sel.innerHTML+=`<option value="${escH(c)}">${escH(c)}</option>`);
+    [...new Set(PROVV.map(p=>p.camp).filter(Boolean))].sort()
+      .forEach(c=>sel.innerHTML+=`<option value="${escH(c)}">${escH(c)}</option>`);
   }
+  const hdr=document.querySelector('#page-provvedimenti .st');
+  if(hdr)hdr.textContent=`⚠️ Provvedimenti Disciplinari (${PROVV.length} trovati)`;
 }
 function renderProvvedimenti(){
   if(!PROVV||PROVV.length===0){
@@ -6477,6 +6459,35 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(typeof renderActivityChart==='function') renderActivityChart();
   if(typeof renderFutureGames==='function') renderFutureGames();
   initDrag();
+
+  // ── GLOBAL PERSONA CLICK DELEGATION ──────────────────────────────────
+  // Intercepts ALL clicks on person-linked elements anywhere in the page.
+  // This works for inline onclick, data-n, data-pnome, rn-Arbitro, rn-UDC, rn-Osservatore.
+  document.addEventListener('click', function(e){
+    // Find closest element with a person name
+    const el = e.target.closest('[data-n],[data-pnome],[data-persona]');
+    if(el){
+      const nome = el.dataset.n || el.dataset.pnome || el.dataset.persona;
+      if(nome && P[nome]){
+        e.stopPropagation();
+        openPersona(nome);
+        return;
+      }
+      // Try decoding if it looks encoded
+      if(nome){
+        try{
+          const dec = decodeURIComponent(nome);
+          if(P[dec]){e.stopPropagation();openPersona(dec);return;}
+        }catch(ex){}
+      }
+    }
+    // Also handle .rn-Arbitro/.rn-UDC/.rn-Osservatore elements with text content
+    const rn = e.target.closest('.rn-Arbitro,.rn-UDC,.rn-Osservatore');
+    if(rn && !rn.closest('[onclick]')){
+      const nome = (rn.dataset.n||rn.dataset.pnome||rn.textContent||'').trim();
+      if(nome && P[nome]){e.stopPropagation();openPersona(nome);}
+    }
+  }, true); // use capture to run before inline onclick
   // v5 init
 
   // Numeri ranking in home
