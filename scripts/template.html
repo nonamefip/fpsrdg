@@ -5706,7 +5706,7 @@ function initProvvedimenti(){
   // Also merge D.provvedimenti if present and different format
   if(D.provvedimenti&&D.provvedimenti.length){
     D.provvedimenti.forEach(p=>{
-      if(!PROVV.find(x=>x.num===p.num|||(x.casa===p.casa&&x.data===p.data)))
+      if(!PROVV.find(x=>x.num===p.num||(x.casa===p.casa&&x.data===p.data)))
         PROVV.push(p);
     });
   }
