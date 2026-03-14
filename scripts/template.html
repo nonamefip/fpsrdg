@@ -1805,9 +1805,9 @@ function renderHome(){
         <span style="min-width:20px;font-size:.7rem;color:var(--mu2)">${medal||((i+1)+'.')}</span>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
-            <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" onclick="openPN('${encP(a1)}')">${escH(a1)}</span>
+            <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" data-n="${a1}">${escH(a1)}</span>
             <span style="color:var(--mu2);font-size:.65rem">+</span>
-            <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" onclick="openPN('${encP(a2)}')">${escH(a2)}</span>
+            <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" data-n="${a2}">${escH(a2)}</span>
           </div>
           <div style="height:4px;background:#eef1fa;border-radius:2px;margin-top:3px">
             <div style="height:4px;background:linear-gradient(90deg,${clr1},${clr2});border-radius:2px;width:${bar}%"></div>
@@ -1852,7 +1852,7 @@ function renderHome(){
           ${top5up.map(t=>{
             const clr=PC[P[t.n]?.provincia]||'var(--green)';
             return`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #f0f4f0">
-              <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" onclick="openPN('${encP(t.n)}')">${escH(t.n)}</span>
+              <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" data-n="${t.n}">${escH(t.n)}</span>
               <span style="font-size:.68rem;color:var(--mu)">${t.c2}→${t.c1}</span>
               <span style="font-size:.72rem;font-weight:700;color:var(--green)">+${t.delta}</span>
             </div>`;
@@ -1861,7 +1861,7 @@ function renderHome(){
         <div>
           <div style="font-size:.68rem;font-weight:700;color:var(--red);margin-bottom:4px">↓ In calo</div>
           ${top5dn.map(t=>`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #fff0f0">
-              <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" onclick="openPN('${encP(t.n)}')">${escH(t.n)}</span>
+              <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" data-n="${t.n}">${escH(t.n)}</span>
               <span style="font-size:.68rem;color:var(--mu)">${t.c2}→${t.c1}</span>
               <span style="font-size:.72rem;font-weight:700;color:var(--red)">${t.delta}</span>
             </div>`).join('')}
@@ -2896,8 +2896,8 @@ function filterMg(){
       <td style="font-weight:700;text-align:center">${g['Risultato']||'<span style="color:#ccc">–</span>'}</td>
       <td style="text-align:center;font-weight:700;color:${casaW?'var(--green)':'inherit'}">${g['Punti Casa']||''}</td>
       <td style="text-align:center;font-weight:700;color:${ospW?'var(--green)':'inherit'}">${g['Punti Ospite']||''}</td>
-      <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" onclick="openPN(encP('${esc(a1)}'))">${escH(a1)}</span>`:'<span style="color:#ccc">–</span>'}</td>
-      <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" onclick="openPN(encP('${esc(a2)}'))">${escH(a2)}</span>`:''}</td>
+      <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" data-n="${a1}">${escH(a1)}</span>`:'<span style="color:#ccc">–</span>'}</td>
+      <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" data-n="${a2}">${escH(a2)}</span>`:''}</td>
     </tr>`;
   }).join('');
   setTimeout(()=>makeTableSortable(document.getElementById('mo-gare')),30);
@@ -3383,7 +3383,7 @@ function mkTrendPersona(p, nome){
           <div style="display:flex;flex-wrap:wrap;gap:6px">
             ${topCop.map(([n,cnt])=>{
               const clr=PC[P[n]?.provincia]||'var(--bl)';
-              return`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;border:1px solid ${clr}44;background:${clr}11;cursor:pointer" onclick="openPN('${encP(n)}')">
+              return`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;border:1px solid ${clr}44;background:${clr}11;cursor:pointer" data-n="${n}">
                 <span class="rn rn-Arbitro" style="font-size:.73rem">${escH(n)}</span>
                 <span style="background:${clr};color:#fff;border-radius:10px;padding:1px 7px;font-size:.65rem;font-weight:700">${cnt}</span>
               </div>`;
@@ -4382,7 +4382,7 @@ function openCampionato(camp){
             <td data-val="${i+1}" style="text-align:center;color:var(--mu2);font-size:.72rem">${medal||((i+1)+'.')}</td>
             <td>
               <div style="display:flex;align-items:center;gap:4px">
-                <span class="rn rn-Arbitro" style="color:${pvClr};font-weight:700;cursor:pointer" onclick="openPN('${encP(n)}')">${escH(n)}</span>
+                <span class="rn rn-Arbitro" style="color:${pvClr};font-weight:700;cursor:pointer" data-n="${n}">${escH(n)}</span>
                 ${genderDot(n)}
                 ${fip?`<span style="font-family:monospace;font-size:.58rem;color:#aaa">${fip}</span>`:''}
               </div>
@@ -4415,9 +4415,9 @@ function openCampionato(camp){
               const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
               return`<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;background:${i%2?'#f8faff':'#fff'};border:1px solid #eef1fa">
                 <span style="min-width:22px;font-size:.72rem;color:var(--mu2)">${medal||((i+1)+'.')}</span>
-                <span class="rn rn-Arbitro" style="cursor:pointer;font-size:.73rem" onclick="openPN('${encP(a1)}')">${escH(a1)}</span>
+                <span class="rn rn-Arbitro" style="cursor:pointer;font-size:.73rem" data-n="${a1}">${escH(a1)}</span>
                 <span style="color:var(--mu2);font-size:.65rem">+</span>
-                <span class="rn rn-Arbitro" style="cursor:pointer;font-size:.73rem" onclick="openPN('${encP(a2)}')">${escH(a2)}</span>
+                <span class="rn rn-Arbitro" style="cursor:pointer;font-size:.73rem" data-n="${a2}">${escH(a2)}</span>
                 <span style="margin-left:auto;font-size:.9rem;font-weight:800;color:var(--bl)">${n}</span>
               </div>`;
             }).join('')}
@@ -6244,7 +6244,7 @@ function renderFutureGames(){
       var n=e[0],c=e[1];
       var p=P[n];
       var fipCode=CODICI_FIP[n.toUpperCase()]||'';
-      summaryHtml+='<span style="background:#fff;border:1px solid #c0d0ff;border-radius:12px;padding:3px 10px;font-size:.68rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px" onclick="openPersona(\''+esc(n)+'\')">';
+      summaryHtml+='<span style="background:#fff;border:1px solid #c0d0ff;border-radius:12px;padding:3px 10px;font-size:.68rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px" data-n="'+escH(n)+'">';
       summaryHtml+='<span class="rn rn-'+(p?p.categoria:'Arbitro')+'" style="font-size:.65rem">'+escH(n)+'</span>';
       if(fipCode) summaryHtml+='<span style="font-family:monospace;font-size:.58rem;color:#888">'+fipCode+'</span>';
       summaryHtml+=' <b style="color:#003087">'+c+'</b></span>';
@@ -6462,32 +6462,43 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   // ── GLOBAL PERSONA CLICK DELEGATION ──────────────────────────────────
   // Intercepts ALL clicks on person-linked elements anywhere in the page.
-  // This works for inline onclick, data-n, data-pnome, rn-Arbitro, rn-UDC, rn-Osservatore.
   document.addEventListener('click', function(e){
-    // Find closest element with a person name
+    // Skip if already handled by an inline onclick that worked
+    if(e._personaHandled) return;
+
+    // Find closest element with a person name attribute
     const el = e.target.closest('[data-n],[data-pnome],[data-persona]');
     if(el){
       const nome = el.dataset.n || el.dataset.pnome || el.dataset.persona;
-      if(nome && P[nome]){
-        e.stopPropagation();
-        openPersona(nome);
-        return;
-      }
-      // Try decoding if it looks encoded
-      if(nome){
-        try{
-          const dec = decodeURIComponent(nome);
-          if(P[dec]){e.stopPropagation();openPersona(dec);return;}
-        }catch(ex){}
-      }
+      if(!nome) return;
+
+      // Direct lookup
+      if(P[nome]){ openPersona(nome); return; }
+
+      // Try URI decode
+      try{
+        const dec = decodeURIComponent(nome);
+        if(P[dec]){ openPersona(dec); return; }
+      }catch(ex){}
+
+      // Case-insensitive search (last resort)
+      const upper = nome.toUpperCase();
+      const found = Object.keys(P).find(k=>k.toUpperCase()===upper);
+      if(found){ openPersona(found); return; }
     }
-    // Also handle .rn-Arbitro/.rn-UDC/.rn-Osservatore elements with text content
+
+    // Handle .rn-Arbitro/.rn-UDC/.rn-Osservatore by text content
     const rn = e.target.closest('.rn-Arbitro,.rn-UDC,.rn-Osservatore');
-    if(rn && !rn.closest('[onclick]')){
-      const nome = (rn.dataset.n||rn.dataset.pnome||rn.textContent||'').trim();
-      if(nome && P[nome]){e.stopPropagation();openPersona(nome);}
+    if(rn){
+      const nome = (rn.dataset.n||rn.dataset.pnome||'').trim() || rn.textContent.trim();
+      if(nome){
+        if(P[nome]){ openPersona(nome); return; }
+        const upper = nome.toUpperCase();
+        const found = Object.keys(P).find(k=>k.toUpperCase()===upper);
+        if(found){ openPersona(found); return; }
+      }
     }
-  }, true); // use capture to run before inline onclick
+  }); // no capture - let inline onclick run first
   // v5 init
 
   // Numeri ranking in home
