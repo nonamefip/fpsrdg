@@ -1238,6 +1238,9 @@ function showPage(id){
 // Verrà popolata con i dati da fip.it quando disponibili
 const CODICI_FIP = Object.assign({"CARRUS FABIO":"033850","BELTRAMINI ROBERTO":"028006","MONTISCI SALVATORE":"068972","SUSMEL RICCARDO":"014716","SPISSU ALESSANDRO":"044784","FARCI DANIELE":"077027","SADDI NICOLA":"021917","ATZENI GIANLUCA":"072826","FIORIN GIANMARCO":"076795","DEIDDA EDOARDO":"074562","MULARGIA CHENG":"071343","COCCO MATTIA":"062934","BORTOLATO FILIPPO":"027682","MASIA LEONARDO ANTONIO":"072963","CAPPELLONI RICCARDO":"071724","SOLINAS GIANFRANCO":"029262","MARGARITELLA SIMONE":"067115","FANCELLO LORENZO":"072962","LACONI MARCO":"034072","FRAU DAVIDE":"065250","SEU ALESSANDRA":"062153","CRISTIANI NICOLAS":"070086","MANCA MARIO":"061131","FORTUNATO DIEGO":"037674","ZARA MASSIMO":"052028","COCCO ALESSANDRO":"068974","GAVINI ANTONIO":"061132","FARCI NICOLA":"067114","RAGNEDDA JACOPO MARIO":"072964","VERMIGLIO MICHELE":"022570","MILIA LUCA":"072976","PACINI ALBERTO":"035671","COCCO FRANCESCO":"074559","DE ROSAS STEFANO":"074557","FANCELLU MATTEO":"064581","MARCEDDU DAVIDE":"070676","DAGA BENEDETTA":"044786","MASCIA ANDREA":"071342","MARONGIU CRISTIAN":"068970","MURRU ANDREA SALVATORE":"076794","GRUSSU FABIO":"071498","CHERCHI FEDERICO":"061128","DOPPIU ALBERTO":"074555","MARZATICO FILIPPO":"078459","SEU CLAUDIA":"062154","BETOCCHI MASSIMO":"077072","FRAU MARCO":"074563","PUGGIONI GABRIELE":"071729","SOLINAS RICCARDO":"021925","MASELLI HUNTER":"078449","BRANCA GIORDANO":"079108","MAMELI MARCO":"039478","SANNA DAVIDE":"052311","LUCIANO RICCARDO":"034698","URSO MASSIMILIANO":"074158","CHESSA ALESSANDRA":"075925","PINTUS LUCA":"071349","ERRIU FRAU ALESSANDRO":"067113","CARBONI GABRIELE":"074558","IACOPINI SAMUELE":"071346","PIRAS MATTEO":"076471","PAULIS EDOARDO":"078460","PULIX GIULIA":"071425","VITALI MATTEO":"077075","SPANU LORENZO":"079105","PERDISCI LUCA":"076878","MURA EMMYLOU":"043780","CANEPA TOMMASO":"078446","PUGGIONI SAMUELE":"071730","BASSO RICCARDO":"042495","MULLIRI DAVIDE":"054348","MASTRACCO SAMUELE":"078812","PITTORRA ALESSANDRO":"062939","IACOPINI DIEGO":"076479","CONCU FEDERICO":"077074","MULAS PAOLO GIOVANNI":"078444","COSSU LUCA":"079107","FUCKA MATIJA":"069476","PELLIZZONI LIBERO":"078462","MULAS MATTEO":"078455","IAVARONE NICOLAS":"079312","SPANU MATTEO":"079104","RUDELLAT MARCO":"033490","PORCHEDDU ADRIANO":"079102","GRISSINO MIRIAM":"078463","DETTORI ANDREA":"033606","MARONGIU GIADA MARIA":"078445","DE ROSAS MATTEO":"074560","PINNA GIOVANNI LUCA":"032904","ATZORI SAMUELE":"076793","CAETO DAVIDE":"078811","VINCIS NICOLA":"074159","CARINELLI FEDERICO":"079106","PIREDDA ANDREA":"079626","SANNA VANESSA":"074039","CURRELI MATTIA":"054343","SCHIRRU SABRINA":"030290","BREZGINA CHANTAL":"079625","MASCIARELLI TOMMASO":"078452","IBBA LEONARDO":"079627","SODDU ERMANNO":"078458","MURRU ANTONIO":"078524","CIPRI ALESSANDRO":"079103","PASLARU EMANUEL":"079629","NIOLA DENISE":"078526","TURNU ALESSIO":"074040","MURU MATTIA":"078525","RENGIFO VALDERRAMA MIRIAM":"078527","SANNA STEFANIA":"072965","SPIGA ELENA NICOLE":"076795","COMELLA LUCA":"077032","CORDA ANDREA":"068972","SARAI FEDERICA":"076794"}, D.codici_fip||{});
 const esc=s=>(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+// Safe person opener: encodeURIComponent avoids apostrophe/quote issues in onclick
+const encP=s=>encodeURIComponent(s||'');
+function openPN(enc){try{openPersona(decodeURIComponent(enc));}catch(e){openPersona(enc);}}
 const pvB=pv=>pv?`<span class="badge bp-${pv}" style="background:${PC[pv]||'#888'}">${pv}</span>`:'';
 const catB=cat=>`<span class="badge bc-${cat}">${cat}</span>`;
 const escH=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -1648,7 +1651,7 @@ function renderHome(){
       const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
       const clr=PC[p.provincia]||'var(--bl)';
       const barPct=Math.round(p.n_gare/sorted[0].n_gare*100);
-      return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:${i%2?'#f8faff':'#fff'};border:1px solid #eef1fa;cursor:pointer" onclick="openPersona('${esc(p.nome)}')">
+      return `<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:${i%2?'#f8faff':'#fff'};border:1px solid #eef1fa;cursor:pointer" onclick="openPN('${encP(p.nome)}')">
         <span style="min-width:20px;font-size:.75rem;color:var(--mu2);font-weight:700">${medal||((i+1)+'.')}</span>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
@@ -1738,9 +1741,9 @@ function renderHome(){
         <span style="min-width:20px;font-size:.7rem;color:var(--mu2)">${medal||((i+1)+'.')}</span>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
-            <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" onclick="openPersona('${esc(a1)}')">${escH(a1)}</span>
+            <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" onclick="openPN('${encP(a1)}')">${escH(a1)}</span>
             <span style="color:var(--mu2);font-size:.65rem">+</span>
-            <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" onclick="openPersona('${esc(a2)}')">${escH(a2)}</span>
+            <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" onclick="openPN('${encP(a2)}')">${escH(a2)}</span>
           </div>
           <div style="height:4px;background:#eef1fa;border-radius:2px;margin-top:3px">
             <div style="height:4px;background:linear-gradient(90deg,${clr1},${clr2});border-radius:2px;width:${bar}%"></div>
@@ -1785,7 +1788,7 @@ function renderHome(){
           ${top5up.map(t=>{
             const clr=PC[P[t.n]?.provincia]||'var(--green)';
             return`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #f0f4f0">
-              <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" onclick="openPersona('${esc(t.n)}')">${escH(t.n)}</span>
+              <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" onclick="openPN('${encP(t.n)}')">${escH(t.n)}</span>
               <span style="font-size:.68rem;color:var(--mu)">${t.c2}→${t.c1}</span>
               <span style="font-size:.72rem;font-weight:700;color:var(--green)">+${t.delta}</span>
             </div>`;
@@ -1794,7 +1797,7 @@ function renderHome(){
         <div>
           <div style="font-size:.68rem;font-weight:700;color:var(--red);margin-bottom:4px">↓ In calo</div>
           ${top5dn.map(t=>`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #fff0f0">
-              <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" onclick="openPersona('${esc(t.n)}')">${escH(t.n)}</span>
+              <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" onclick="openPN('${encP(t.n)}')">${escH(t.n)}</span>
               <span style="font-size:.68rem;color:var(--mu)">${t.c2}→${t.c1}</span>
               <span style="font-size:.72rem;font-weight:700;color:var(--red)">${t.delta}</span>
             </div>`).join('')}
@@ -2732,30 +2735,88 @@ function renderProvCards(){
 
 // GARE TOTALI MODAL
 function openGareTotali(){
-  document.getElementById('mg-body').innerHTML=`<div class="fb" style="padding:7px 9px"><div class="fg"><label>Squadra</label><input type="text" id="mg-q" placeholder="..." oninput="filterMg()"></div><div class="fg"><label>Dal</label><input type="date" id="mg-d1" onchange="filterMg()"></div><div class="fg"><label>Al</label><input type="date" id="mg-d2" onchange="filterMg()"></div><div class="fg"><label>Camp.</label><select id="mg-camp" onchange="filterMg()"><option value="">Tutti</option>${CAMPS.map(c=>`<option>${escH(c)}</option>`).join('')}</select></div><button class="btn b-gr" onclick="resetF('mg-q','mg-d1','mg-d2','mg-camp');filterMg()">↺</button></div>
-  <div class="il" id="mg-info"></div>
-  <div style="overflow-x:auto"><table class="gtbl" id="tbl-mg"><thead><tr><th onclick="sT('tbl-mg',0)" style="cursor:pointer">Data ▾</th><th onclick="sT('tbl-mg',1)" style="cursor:pointer">N°</th><th onclick="sT('tbl-mg',2)" style="cursor:pointer">Campionato</th><th onclick="sT('tbl-mg',3)" style="cursor:pointer">Casa</th><th onclick="sT('tbl-mg',4)" style="cursor:pointer">Ospite</th><th onclick="sT('tbl-mg',5)" style="cursor:pointer">PtC</th><th onclick="sT('tbl-mg',6)" style="cursor:pointer">PtO</th></tr></thead><tbody id="tbl-mg-body"></tbody></table></div>`;
+  document.getElementById('mg-body').innerHTML=`
+    <div class="fb" style="padding:7px 9px;flex-wrap:wrap;gap:6px">
+      <div class="fg"><label>Squadra</label><input type="text" id="mg-q" placeholder="Nome squadra..." oninput="filterMg()"></div>
+      <div class="fg"><label>N° Gara</label><input type="text" id="mg-num" placeholder="Es. 000123" oninput="filterMg()" style="width:90px"></div>
+      <div class="fg"><label>Arbitro</label><input type="text" id="mg-arb" placeholder="Nome arbitro..." oninput="filterMg()"></div>
+      <div class="fg"><label>Cod. FIP</label><input type="text" id="mg-fip" placeholder="Es. 033850" oninput="filterMg()" style="width:80px"></div>
+      <div class="fg"><label>Dal</label><input type="date" id="mg-d1" onchange="filterMg()"></div>
+      <div class="fg"><label>Al</label><input type="date" id="mg-d2" onchange="filterMg()"></div>
+      <div class="fg"><label>Camp.</label><select id="mg-camp" onchange="filterMg()"><option value="">Tutti</option>${CAMPS.map(c=>`<option>${escH(c)}</option>`).join('')}</select></div>
+      <button class="btn b-gr" onclick="resetF('mg-q','mg-num','mg-arb','mg-fip','mg-d1','mg-d2','mg-camp');filterMg()">↺</button>
+    </div>
+    <div class="il" id="mg-info"></div>
+    <div style="overflow-x:auto"><table class="gtbl" id="tbl-mg">
+      <thead><tr>
+        <th onclick="sT('tbl-mg',0)" style="cursor:pointer">Data ▾</th>
+        <th onclick="sT('tbl-mg',1)" style="cursor:pointer">N°</th>
+        <th onclick="sT('tbl-mg',2)" style="cursor:pointer">Campionato</th>
+        <th onclick="sT('tbl-mg',3)" style="cursor:pointer">Casa</th>
+        <th onclick="sT('tbl-mg',4)" style="cursor:pointer">Ospite</th>
+        <th onclick="sT('tbl-mg',5)" style="cursor:pointer">Ris.</th>
+        <th onclick="sT('tbl-mg',6)" style="cursor:pointer">PtC</th>
+        <th onclick="sT('tbl-mg',7)" style="cursor:pointer">PtO</th>
+        <th onclick="sT('tbl-mg',8)" style="cursor:pointer">Arbitro 1</th>
+        <th onclick="sT('tbl-mg',9)" style="cursor:pointer">Arbitro 2</th>
+      </tr></thead>
+      <tbody id="tbl-mg-body"></tbody>
+    </table></div>`;
   filterMg();openMo('mo-gare');
 }
 function filterMg(){
   const q=(document.getElementById('mg-q')?.value||'').toLowerCase();
+  const num=(document.getElementById('mg-num')?.value||'').toLowerCase();
+  const arb=(document.getElementById('mg-arb')?.value||'').toLowerCase();
+  const fip=(document.getElementById('mg-fip')?.value||'').trim();
   const d1=document.getElementById('mg-d1')?.value||'';
   const d2=document.getElementById('mg-d2')?.value||'';
   const camp=document.getElementById('mg-camp')?.value||'';
+
+  // Build reverse FIP map if searching by code
+  let fipName='';
+  if(fip){
+    const entry=Object.entries(CODICI_FIP).find(([n,c])=>c===fip);
+    if(entry)fipName=entry[0].toLowerCase();
+  }
+
   const rows=GARE.filter(g=>{
     if(q&&!g['Squadra Casa'].toLowerCase().includes(q)&&!g['Squadra Ospite'].toLowerCase().includes(q))return false;
-    if(d1&&g['Data']<d1)return false;if(d2&&g['Data']>d2)return false;
-    if(camp&&g['Campionato']!==camp)return false;return true;
+    if(num&&!(g['Numero Gara']||'').toLowerCase().includes(num))return false;
+    if(arb){
+      const a1=pns(g['Arbitro 1']||'').toLowerCase(),a2=pns(g['Arbitro 2']||'').toLowerCase();
+      if(!a1.includes(arb)&&!a2.includes(arb))return false;
+    }
+    if(fip&&fipName){
+      const a1=pns(g['Arbitro 1']||'').toLowerCase(),a2=pns(g['Arbitro 2']||'').toLowerCase();
+      if(!a1.includes(fipName)&&!a2.includes(fipName))return false;
+    }
+    if(d1&&g['Data']<d1)return false;
+    if(d2&&g['Data']>d2)return false;
+    if(camp&&g['Campionato']!==camp)return false;
+    return true;
   });
+
   document.getElementById('mg-info').textContent=`${rows.length} gare`;
-  document.getElementById('tbl-mg-body').innerHTML=rows.map(g=>`<tr>
-    <td>${g['Data']}</td><td style="font-size:.7rem">${g['Numero Gara']||''}</td>
-    <td style="font-size:.72rem">${escH(g['Campionato'])}</td>
-    <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa'])}')">${escH(g['Squadra Casa'])}</span></td>
-    <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite'])}')">${escH(g['Squadra Ospite'])}</span></td>
-    <td style="text-align:center;font-weight:700">${g['Punti Casa']||''}</td>
-    <td style="text-align:center;font-weight:700">${g['Punti Ospite']||''}</td>
-  </tr>`).join('');
+  document.getElementById('tbl-mg-body').innerHTML=rows.map(g=>{
+    const clr=campColor(g['Campionato']||'');
+    const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
+    const [pc,po]=(g['Risultato']||'').split('-');
+    const casaW=pc&&po&&parseInt(pc)>parseInt(po);
+    const ospW=pc&&po&&parseInt(po)>parseInt(pc);
+    return`<tr style="border-left:3px solid ${clr}">
+      <td style="white-space:nowrap">${g['Data']}</td>
+      <td style="font-size:.68rem;font-family:monospace">${g['Numero Gara']||''}</td>
+      <td><span style="background:${clr};color:#fff;border-radius:3px;padding:1px 5px;font-size:.62rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(g['Campionato'])}')">${escH(g['Campionato'])}</span></td>
+      <td><span class="rn rn-sq" style="${casaW?'font-weight:800;color:var(--green)':''}" onclick="openSquadra('${esc(g['Squadra Casa'])}')">${escH(g['Squadra Casa'])}</span></td>
+      <td><span class="rn rn-sq" style="${ospW?'font-weight:800;color:var(--green)':''}" onclick="openSquadra('${esc(g['Squadra Ospite'])}')">${escH(g['Squadra Ospite'])}</span></td>
+      <td style="font-weight:700;text-align:center">${g['Risultato']||'<span style="color:#ccc">–</span>'}</td>
+      <td style="text-align:center;font-weight:700;color:${casaW?'var(--green)':'inherit'}">${g['Punti Casa']||''}</td>
+      <td style="text-align:center;font-weight:700;color:${ospW?'var(--green)':'inherit'}">${g['Punti Ospite']||''}</td>
+      <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" onclick="openPN(encP('${esc(a1)}'))">${escH(a1)}</span>`:'<span style="color:#ccc">–</span>'}</td>
+      <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" onclick="openPN(encP('${esc(a2)}'))">${escH(a2)}</span>`:''}</td>
+    </tr>`;
+  }).join('');
   setTimeout(()=>makeTableSortable(document.getElementById('mo-gare')),30);
 }
 
@@ -2838,32 +2899,93 @@ function mkCamminoArbitro(p){
     return (a['Data']||'').localeCompare(b['Data']||'');
   });
   if(gareOrd.length>0){
-    html+='<div style="margin-top:16px">';
-    html+='<div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:6px">📅 Timeline cronologica — ogni partita in ordine</div>';
-    html+='<div style="display:flex;flex-wrap:wrap;gap:2px;padding:8px;background:#f8faff;border-radius:8px;border:1px solid #e8eeff">';
-
+    // Importance levels for bar height (1-10)
+    var _IMPORTANCE={
+      'Serie A':10,'Serie B':9,'Serie C':8,
+      'Divisione Regionale 1':7,'Divisione regionale 1':7,
+      'Divisione Regionale 2':6,'Divisione regionale 2':6,
+      'Under 19 Maschile Gold':6,'Under 19 Femminile Regionale':5,
+      'Under 17 Maschile Eccellenza':5,'Under 17 Maschile Gold':5,
+      'Under 17 Maschile Regionale':4,'Under 17 Femminile Regionale':4,
+      'Under 15 Maschile Eccellenza':4,'Under 15 Maschile Regionale':3,
+      'Under 15 Femminile Regionale':3,
+      'Under 14 Maschile Regionale':3,'Under 14 Femminile Regionale':3,
+      'Under 13 Maschile Regionale':2,'Under 13 Femminile Regionale':2,
+      'Trofeo Esordienti':2,'Aquilotti Big':1,'Aquilotti Small':1,
+      'Esordienti Femminile':2,'Scoiattoli Big':1,'Scoiattoli Small':1,
+      'Gazzelle':1,'Libellule':1
+    };
+    function getImportance(cn){
+      if(_IMPORTANCE[cn])return _IMPORTANCE[cn];
+      for(var k in _IMPORTANCE){if(cn.toLowerCase().includes(k.toLowerCase().slice(0,8)))return _IMPORTANCE[k];}
+      return 3;
+    }
     var campColorCache={};
+    gareOrd.forEach(function(g){var cn=g['Campionato']||'';if(!campColorCache[cn])campColorCache[cn]=getCampColor(cn);});
+
+    // Find date range for gap calculation
+    var firstDate=gareOrd[0]['Data']||'';
+    var lastDate=gareOrd[gareOrd.length-1]['Data']||'';
+    var activeDates=new Set(gareOrd.map(function(g){return g['Data']||'';}));
+
+    html+='<div style="margin-top:16px">';
+    html+='<div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:4px">📅 Timeline cronologica — altezza = importanza categoria</div>';
+
+    // ROW 1: bars with varying height by importance
+    html+='<div style="display:flex;align-items:flex-end;gap:2px;padding:6px 8px 0;background:#f8faff;border-radius:8px 8px 0 0;border:1px solid #e8eeff;border-bottom:none;overflow-x:auto;min-height:50px">';
     gareOrd.forEach(function(g){
       var cn=g['Campionato']||'';
-      if(!campColorCache[cn])campColorCache[cn]=getCampColor(cn);
-      var col=campColorCache[cn];
-      var data=g['Data']||'';
-      var ora=g['Ora']||'';
-      var casa=g['Squadra Casa']||'';
-      var osp=g['Squadra Ospite']||'';
+      var col=campColorCache[cn]||'#888';
+      var imp=getImportance(cn);
+      var barH=4+Math.round(imp/10*36); // 4px to 40px
+      var data=g['Data']||'',ora=g['Ora']||'';
+      var casa=g['Squadra Casa']||'',osp=g['Squadra Ospite']||'';
       var ris=g['Risultato']||'';
-      var title=escH(cn)+' — '+escH(data)+' '+escH(ora)+'\n'+escH(casa)+' vs '+escH(osp)+(ris?' ('+ris+')':'');
-      html+='<div title="'+title+'" style="width:12px;height:20px;background:'+col+';border-radius:2px;cursor:pointer;opacity:.85;transition:opacity .1s;flex-shrink:0" onmouseover="this.style.opacity=1;this.style.transform=\'scaleY(1.3)\'" onmouseout="this.style.opacity=.85;this.style.transform=\'\'"></div>';
+      var title=escH(cn)+' — '+escH(data)+(ora?' '+escH(ora):'')+'\n'+escH(casa)+' vs '+escH(osp)+(ris?' ('+ris+')':'');
+      html+='<div title="'+title+'" style="width:10px;min-width:10px;height:'+barH+'px;background:'+col+';border-radius:2px 2px 0 0;cursor:pointer;flex-shrink:0;opacity:.9" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.9"></div>';
     });
     html+='</div>';
-    // Legenda campionati con colori
+
+    // ROW 2: same bars but with gap days as empty space
+    html+='<div style="display:flex;align-items:flex-end;gap:0;padding:0 8px 6px;background:#f0f4ff;border-radius:0 0 8px 8px;border:1px solid #e8eeff;border-top:2px solid #ccd6f0;overflow-x:auto;min-height:18px" title="Giorni non arbitrati = spazi grigi">';
+    // Build date-grouped view
+    var byDate={};
+    gareOrd.forEach(function(g){var d=g['Data']||'';if(!byDate[d])byDate[d]=[];byDate[d].push(g);});
+    var dates=Object.keys(byDate).sort();
+    for(var di=0;di<dates.length;di++){
+      var d=dates[di];
+      // Gap before this date (if not first)
+      if(di>0){
+        var prev=dates[di-1];
+        var prevMs=new Date(prev+'T12:00:00').getTime();
+        var curMs=new Date(d+'T12:00:00').getTime();
+        var gapDays=Math.round((curMs-prevMs)/86400000)-1;
+        if(gapDays>0){
+          var gapW=Math.min(gapDays*3,60); // 3px per day, max 60px
+          html+='<div style="min-width:'+gapW+'px;height:12px;background:#dde4f0;border-radius:2px;opacity:.5;flex-shrink:0" title="'+gapDays+' giorni senza gare"></div>';
+          html+='<div style="min-width:2px"></div>';
+        }
+      }
+      // Games on this date
+      byDate[d].forEach(function(g){
+        var cn=g['Campionato']||'';
+        var col=campColorCache[cn]||'#888';
+        var imp=getImportance(cn);
+        var barH=3+Math.round(imp/10*12);
+        html+='<div style="min-width:10px;height:'+barH+'px;background:'+col+';border-radius:1px;flex-shrink:0;opacity:.8"></div>';
+      });
+    }
+    html+='</div>';
+
+    // Legend
     html+='<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">';
     camps.forEach(function(e){
       var cn=e[0],ng=e[1];
       var col=getCampColor(cn);
+      var imp=getImportance(cn);
       var label=cn.replace(/\b(Maschile|Femminile)\b/g,function(m){return m.slice(0,3);}).replace(/\bRegionale\b/,'Reg.').replace(/\bEccellenza\b/,'Ecc.');
       html+='<span style="display:inline-flex;align-items:center;gap:4px;font-size:.62rem;color:#444">';
-      html+='<span style="display:inline-block;width:12px;height:12px;background:'+col+';border-radius:2px;flex-shrink:0"></span>';
+      html+='<span style="display:inline-block;width:10px;height:'+(3+Math.round(imp/10*12))+'px;background:'+col+';border-radius:1px;flex-shrink:0;vertical-align:middle"></span>';
       html+=escH(label)+' <b>'+ng+'</b></span>';
     });
     html+='</div></div>';
@@ -3171,7 +3293,7 @@ function mkTrendPersona(p, nome){
           <div style="display:flex;flex-wrap:wrap;gap:6px">
             ${topCop.map(([n,cnt])=>{
               const clr=PC[P[n]?.provincia]||'var(--bl)';
-              return`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;border:1px solid ${clr}44;background:${clr}11;cursor:pointer" onclick="openPersona('${esc(n)}')">
+              return`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;border:1px solid ${clr}44;background:${clr}11;cursor:pointer" onclick="openPN('${encP(n)}')">
                 <span class="rn rn-Arbitro" style="font-size:.73rem">${escH(n)}</span>
                 <span style="background:${clr};color:#fff;border-radius:10px;padding:1px 7px;font-size:.65rem;font-weight:700">${cnt}</span>
               </div>`;
@@ -4170,7 +4292,7 @@ function openCampionato(camp){
             <td data-val="${i+1}" style="text-align:center;color:var(--mu2);font-size:.72rem">${medal||((i+1)+'.')}</td>
             <td>
               <div style="display:flex;align-items:center;gap:4px">
-                <span class="rn rn-Arbitro" style="color:${pvClr};font-weight:700;cursor:pointer" onclick="openPersona('${esc(n)}')">${escH(n)}</span>
+                <span class="rn rn-Arbitro" style="color:${pvClr};font-weight:700;cursor:pointer" onclick="openPN('${encP(n)}')">${escH(n)}</span>
                 ${genderDot(n)}
                 ${fip?`<span style="font-family:monospace;font-size:.58rem;color:#aaa">${fip}</span>`:''}
               </div>
@@ -4203,9 +4325,9 @@ function openCampionato(camp){
               const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
               return`<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;background:${i%2?'#f8faff':'#fff'};border:1px solid #eef1fa">
                 <span style="min-width:22px;font-size:.72rem;color:var(--mu2)">${medal||((i+1)+'.')}</span>
-                <span class="rn rn-Arbitro" style="cursor:pointer;font-size:.73rem" onclick="openPersona('${esc(a1)}')">${escH(a1)}</span>
+                <span class="rn rn-Arbitro" style="cursor:pointer;font-size:.73rem" onclick="openPN('${encP(a1)}')">${escH(a1)}</span>
                 <span style="color:var(--mu2);font-size:.65rem">+</span>
-                <span class="rn rn-Arbitro" style="cursor:pointer;font-size:.73rem" onclick="openPersona('${esc(a2)}')">${escH(a2)}</span>
+                <span class="rn rn-Arbitro" style="cursor:pointer;font-size:.73rem" onclick="openPN('${encP(a2)}')">${escH(a2)}</span>
                 <span style="margin-left:auto;font-size:.9rem;font-weight:800;color:var(--bl)">${n}</span>
               </div>`;
             }).join('')}
@@ -5627,7 +5749,7 @@ function mapUpdateArbiters(){
       .bindPopup(`<b style="color:${color}">${escH(p.nome)}</b><br>
         <span style="font-size:.75rem">${cat} · ${p.provincia||''} · ${escH(p.citta||'')}</span><br>
         <span style="font-size:.72rem;color:#666">${p.n_gare||0} gare stagione</span><br>
-        <a href="#" onclick="openPersona('${esc(p.nome)}');return false;" style="font-size:.72rem">→ Scheda</a>`)
+        <a href="#" onclick="openPN('${encP(p.nome)}');return false;" style="font-size:.72rem">→ Scheda</a>`)
       .addTo(_lmap);
 
     _arbMarkers.push(marker);
@@ -6240,6 +6362,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
   document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));});
   renderHome();renderTutti();renderArb();renderUDC();renderOss();renderSq();
+  // Pre-init provvedimenti so data is ready when page is opened
+  try{initProvvedimenti();}catch(e){}
   renderGruppi();renderCamp();renderGare();renderProvCards();
   if(typeof renderActivityChart==='function') renderActivityChart();
   if(typeof renderFutureGames==='function') renderFutureGames();
