@@ -603,6 +603,17 @@ tr.loss-row td{background:#fdecea!important;}
     <div><div class="st">🏆 Top Squadre</div><div id="h-sq"></div></div>
     <div><div class="st">📍 Province</div><div id="h-pv"></div></div>
   </div>
+  <!-- NUOVI WIDGET STATISTICHE -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">🤝 Coppie arbitri più frequenti</div>
+      <div id="h-coppie"></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">📈 Trend arbitri (ultimi 30gg vs 30gg prec.)</div>
+      <div id="h-trend"></div>
+    </div>
+  </div>
   <div class="st" style="margin-top:14px">📅 Attività giornaliera — clicca un giorno per il dettaglio</div>
   <div class="card" style="padding:8px 12px"><div id="h-act"></div></div>
   <div class="st" style="margin-top:14px;cursor:pointer;user-select:none" onclick="toggleSection('h-fut-wrap','h-fut-tog')">
@@ -1391,8 +1402,26 @@ function renderPersonsTable(cid,persons,opts={}){
   const max=Math.max(...persons.map(p=>p[mainGareKey]||0),1);
   const co=showCat?1:0;
   const isArb=(mainGare==='n_gare_arbitro');
-  const ae=isArb?5:0;
+  const ae=isArb?7:0; // +2 for trend and top-month columns
   const today=new Date().toISOString().split('T')[0];
+  // Precompute trend for arbitri
+  const _trendMap={};
+  if(isArb){
+    const d30=new Date(); d30.setDate(d30.getDate()-30);
+    const d60=new Date(); d60.setDate(d60.getDate()-60);
+    const t30=d30.toISOString().split('T')[0];
+    const t60=d60.toISOString().split('T')[0];
+    persons.forEach(p=>{
+      let c1=0,c2=0;
+      (p.gare||[]).forEach(g=>{
+        const d=g['Data']||'';
+        if(d>=t30&&d<=today)c1++;
+        else if(d>=t60&&d<t30)c2++;
+      });
+      const delta=c1-c2;
+      _trendMap[p.nome]={c1,c2,delta};
+    });
+  }
 
   document.getElementById(cid).innerHTML=`<p class="il">${persons.length} persone</p>
   <div style="overflow-x:auto"><table class="rtbl" id="${tableId}"><thead><tr>
@@ -1422,7 +1451,9 @@ function renderPersonsTable(cid,persons,opts={}){
     <th onclick="sT('${tableId}',${14+co+ae})" title="Gare future">Da fare</th>
     <th onclick="sT('${tableId}',${15+co+ae})" title="Squadre diverse">Sqd.</th>
     <th onclick="sT('${tableId}',${16+co+ae},true)" title="Km stimati stagione">&#128664; Km</th>
-    ${isArb?`<th onclick="sT('${tableId}',${17+co+ae},true)" title="Km medi per partita">Km/g</th>`:''}
+    ${isArb?`<th onclick="sT('${tableId}',${17+co+ae},true)" title="Km medi per partita">Km/g</th>
+    <th onclick="sT('${tableId}',${18+co+ae})" title="Trend ultimi 30gg vs 30gg precedenti">Trend</th>
+    <th onclick="sT('${tableId}',${19+co+ae})" title="Mese con più gare">Top mese</th>`:''}
   </tr></thead><tbody>${persons.map((p,i)=>{
     const nCamp=Object.keys(p.campionati||{}).length;
     const nG=Object.keys(p.giorni||{}).length;
@@ -1477,6 +1508,24 @@ function renderPersonsTable(cid,persons,opts={}){
       <td data-val="${Object.keys(p.squadre||{}).length}" style="text-align:center">${Object.keys(p.squadre||{}).length}</td>
       <td data-val="${km}" style="text-align:right;font-size:.8rem;font-weight:600;color:var(--mu)">${km>0?km.toLocaleString('it'):'—'}</td>
       ${isArb?`<td data-val="${kmGara}" style="text-align:right;font-size:.78rem;color:var(--mu)">${kmGara>0?kmGara:'—'}</td>`:''}
+      ${isArb?(()=>{
+        const tr=_trendMap[p.nome]||{c1:0,c2:0,delta:0};
+        const arrow=tr.delta>0?'↑':tr.delta<0?'↓':'→';
+        const clr=tr.delta>0?'var(--green)':tr.delta<0?'var(--red)':'var(--mu)';
+        const label=tr.delta>0?'+'+tr.delta:tr.delta===0?'=':tr.delta;
+        return `<td data-val="${tr.delta}" style="text-align:center;font-weight:700;color:${clr};font-size:.8rem" title="${tr.c2}→${tr.c1} gare (30gg)">${arrow}${label}</td>`;
+      })():''}
+      ${isArb?(()=>{
+        // Find top month by gare count
+        const mesiCount={};
+        (p.gare||[]).forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)mesiCount[m]=(mesiCount[m]||0)+1;});
+        const top=Object.entries(mesiCount).sort((a,b)=>b[1]-a[1])[0];
+        if(!top) return '<td style="color:var(--mu2)">—</td>';
+        const [ym,cnt]=top;
+        const mesi=['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+        const label=mesi[parseInt(ym.slice(5))]||ym.slice(5);
+        return `<td data-val="${cnt}" style="text-align:center;font-size:.72rem"><span style="font-weight:700;color:var(--bl)">${label}</span> <span style="color:var(--mu);font-size:.65rem">${cnt}g</span></td>`;
+      })():''}
     </tr>`;}
   ).join('')}</tbody></table></div>`;
 }
@@ -1667,6 +1716,90 @@ function renderHome(){
 
   const actEl=document.getElementById('h-act');
   if(actEl)renderActivityChart();
+
+  // ── WIDGET: Coppie arbitri più frequenti
+  try{
+    const coppie={};
+    (D.gare||[]).forEach(g=>{
+      const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
+      if(a1&&a2){const k=[a1,a2].sort().join('|||');coppie[k]=(coppie[k]||0)+1;}
+    });
+    const topCoppie=Object.entries(coppie).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const maxC=topCoppie[0]?.[1]||1;
+    const copEl=document.getElementById('h-coppie');
+    if(copEl) copEl.innerHTML=topCoppie.length?`<div style="display:flex;flex-direction:column;gap:4px">${topCoppie.map(([k,n],i)=>{
+      const [a1,a2]=k.split('|||');
+      const clr1=PC[P[a1]?.provincia]||'var(--bl)';
+      const clr2=PC[P[a2]?.provincia]||'var(--bl2)';
+      const bar=Math.round(n/maxC*100);
+      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+      return`<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:${i%2?'#f8faff':'#fff'};border:1px solid #eef1fa">
+        <span style="min-width:20px;font-size:.7rem;color:var(--mu2)">${medal||((i+1)+'.')}</span>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
+            <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" onclick="openPersona('${esc(a1)}')">${escH(a1)}</span>
+            <span style="color:var(--mu2);font-size:.65rem">+</span>
+            <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" onclick="openPersona('${esc(a2)}')">${escH(a2)}</span>
+          </div>
+          <div style="height:4px;background:#eef1fa;border-radius:2px;margin-top:3px">
+            <div style="height:4px;background:linear-gradient(90deg,${clr1},${clr2});border-radius:2px;width:${bar}%"></div>
+          </div>
+        </div>
+        <span style="font-size:.95rem;font-weight:800;color:var(--bl);min-width:24px;text-align:right">${n}</span>
+      </div>`;
+    }).join('')}</div>`:'<p style="color:var(--mu);font-size:.75rem;padding:8px">Nessuna coppia trovata</p>';
+  }catch(e){}
+
+  // ── WIDGET: Trend arbitri (ultimi 30gg vs 30gg precedenti)
+  try{
+    const today=new Date();
+    const d30=new Date(today); d30.setDate(d30.getDate()-30);
+    const d60=new Date(today); d60.setDate(d60.getDate()-60);
+    const fmt=d=>d.toISOString().split('T')[0];
+    const t30=fmt(d30), t60=fmt(d60), tToday=fmt(today);
+    const cnt1={}, cnt2={};
+    (D.gare||[]).forEach(g=>{
+      const d=g['Data']||'';
+      ['Arbitro 1','Arbitro 2'].forEach(f=>{
+        const n=pns(g[f]||'');if(!n)return;
+        if(d>=t30&&d<=tToday) cnt1[n]=(cnt1[n]||0)+1;
+        else if(d>=t60&&d<t30) cnt2[n]=(cnt2[n]||0)+1;
+      });
+    });
+    // Calcola variazione %
+    const allArbs=[...new Set([...Object.keys(cnt1),...Object.keys(cnt2)])];
+    const trends=allArbs.map(n=>{
+      const c1=cnt1[n]||0, c2=cnt2[n]||0;
+      const delta=c1-c2;
+      const pct=c2>0?Math.round((c1-c2)/c2*100):c1>0?100:0;
+      return{n,c1,c2,delta,pct};
+    }).filter(t=>t.c1>0||t.c2>0).sort((a,b)=>b.delta-a.delta);
+    const top5up=trends.filter(t=>t.delta>0).slice(0,5);
+    const top5dn=trends.filter(t=>t.delta<0).sort((a,b)=>a.delta-b.delta).slice(0,5);
+    const trendEl=document.getElementById('h-trend');
+    if(trendEl) trendEl.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <div style="font-size:.68rem;font-weight:700;color:var(--green);margin-bottom:4px">↑ In crescita</div>
+          ${top5up.map(t=>{
+            const clr=PC[P[t.n]?.provincia]||'var(--green)';
+            return`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #f0f4f0">
+              <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" onclick="openPersona('${esc(t.n)}')">${escH(t.n)}</span>
+              <span style="font-size:.68rem;color:var(--mu)">${t.c2}→${t.c1}</span>
+              <span style="font-size:.72rem;font-weight:700;color:var(--green)">+${t.delta}</span>
+            </div>`;
+          }).join('')}
+        </div>
+        <div>
+          <div style="font-size:.68rem;font-weight:700;color:var(--red);margin-bottom:4px">↓ In calo</div>
+          ${top5dn.map(t=>`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #fff0f0">
+              <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" onclick="openPersona('${esc(t.n)}')">${escH(t.n)}</span>
+              <span style="font-size:.68rem;color:var(--mu)">${t.c2}→${t.c1}</span>
+              <span style="font-size:.72rem;font-weight:700;color:var(--red)">${t.delta}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }catch(e){}
 }
 
 // ── RESOCONTO A DATA ─────────────────────────────────────────
@@ -2890,10 +3023,149 @@ function openPersona(nome,campFilter){
     </tr></thead><tbody>${sqRows}</tbody></table>`;
   } catch(e){ document.getElementById('mpt-4').innerHTML='<p style="color:red;padding:10px">Errore squadre: '+e.message+'</p>'; }
 
+  // Add trend tab button dynamically
+  try{
+    const mts=document.querySelector('#mp-body .mts');
+    if(mts){
+      const btn=document.createElement('button');
+      btn.className='mt';
+      btn.setAttribute('onclick',"swTabId(this,'mpt-trend')");
+      btn.textContent='📊 Trend';
+      mts.appendChild(btn);
+    }
+    // Add panel
+    const trendPanel=document.createElement('div');
+    trendPanel.className='mtc hidden';
+    trendPanel.id='mpt-trend';
+    trendPanel.innerHTML=mkTrendPersona(p,nome);
+    document.getElementById('mp-body').appendChild(trendPanel);
+  }catch(e){}
+
   fgpP(nome);openMo('mo-persona');
 
   if(campFilter){const campSelP=document.querySelector('#mp-body select[id*="camp"]');if(campSelP){campSelP.value=campFilter;mkGarePersonaTbl(nome);}}
 }
+
+function mkTrendPersona(p, nome){
+  // Build monthly activity chart for this person
+  const allG=p.gare||[];
+  if(!allG.length) return '<p style="color:var(--mu);padding:16px;text-align:center">Nessuna gara registrata</p>';
+
+  // Count gare per month
+  const mesiCount={};
+  allG.forEach(g=>{
+    const m=(g['Data']||'').slice(0,7);
+    if(m) mesiCount[m]=(mesiCount[m]||0)+1;
+  });
+  const mesiSorted=Object.keys(mesiCount).sort();
+  if(!mesiSorted.length) return '<p style="color:var(--mu);padding:16px">Nessun dato mensile</p>';
+
+  const maxM=Math.max(...Object.values(mesiCount),1);
+  const mesiLabels=['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+
+  // Record personali
+  const topMese=mesiSorted.reduce((a,b)=>mesiCount[a]>=mesiCount[b]?a:b);
+  const topMeseCount=mesiCount[topMese];
+  const topMeseLabel=mesiLabels[parseInt(topMese.slice(5))]||topMese.slice(5);
+
+  // Trend: confronto ultimi 3 mesi vs 3 precedenti
+  const recent=mesiSorted.slice(-3).reduce((s,m)=>s+(mesiCount[m]||0),0);
+  const prev=mesiSorted.slice(-6,-3).reduce((s,m)=>s+(mesiCount[m]||0),0);
+  const trendPct=prev>0?Math.round((recent-prev)/prev*100):recent>0?100:0;
+  const trendArrow=trendPct>0?'↑':trendPct<0?'↓':'→';
+  const trendClr=trendPct>0?'var(--green)':trendPct<0?'var(--red)':'var(--mu)';
+
+  // Campionati per mese (per colorare le barre)
+  const campColPerMese={};
+  allG.forEach(g=>{
+    const m=(g['Data']||'').slice(0,7);
+    if(m&&g['Campionato']){
+      if(!campColPerMese[m]) campColPerMese[m]=campColor(g['Campionato']);
+    }
+  });
+
+  let html=`
+    <div style="padding:12px">
+      <!-- KPI record -->
+      <div class="scs" style="margin-bottom:16px">
+        <div class="sc gold"><div class="sv">${topMeseCount}</div><div class="sl">Record mese (${topMeseLabel})</div></div>
+        <div class="sc"><div class="sv">${mesiSorted.length}</div><div class="sl">Mesi attivi</div></div>
+        <div class="sc"><div class="sv" style="color:${trendClr}">${trendArrow}${Math.abs(trendPct)}%</div><div class="sl">Trend (3m vs 3m prec.)</div></div>
+        <div class="sc"><div class="sv">${Math.round(allG.length/Math.max(mesiSorted.length,1)*10)/10}</div><div class="sl">Media gare/mese</div></div>
+      </div>
+      <!-- Grafico a barre mensile -->
+      <div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:8px">Gare per mese — stagione corrente</div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:120px;padding:0 4px;overflow-x:auto">
+        ${mesiSorted.map(m=>{
+          const cnt=mesiCount[m]||0;
+          const barH=Math.max(4,Math.round(cnt/maxM*100));
+          const clr=campColPerMese[m]||'var(--bl)';
+          const isTop=m===topMese;
+          const label=mesiLabels[parseInt(m.slice(5))]||m.slice(5);
+          return`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:36px;flex-shrink:0">
+            <span style="font-size:.62rem;font-weight:${isTop?800:600};color:${isTop?clr:'var(--mu)'}">${cnt}</span>
+            <div style="width:28px;height:${barH}px;background:${clr};border-radius:4px 4px 0 0;${isTop?'box-shadow:0 0 6px '+clr+'88':''}"></div>
+            <span style="font-size:.58rem;color:var(--mu2);transform:rotate(-30deg);transform-origin:top left;white-space:nowrap;margin-top:4px">${label}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <!-- Coppie più frequenti per questo arbitro -->
+      ${(()=>{
+        const coppieCount={};
+        allG.forEach(g=>{
+          const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
+          if(a1&&a2&&(a1===nome||a2===nome)){
+            const partner=a1===nome?a2:a1;
+            coppieCount[partner]=(coppieCount[partner]||0)+1;
+          }
+        });
+        const topCop=Object.entries(coppieCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        if(!topCop.length) return '';
+        return`<div style="margin-top:16px">
+          <div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:6px">🤝 Partner più frequenti</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${topCop.map(([n,cnt])=>{
+              const clr=PC[P[n]?.provincia]||'var(--bl)';
+              return`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;border:1px solid ${clr}44;background:${clr}11;cursor:pointer" onclick="openPersona('${esc(n)}')">
+                <span class="rn rn-Arbitro" style="font-size:.73rem">${escH(n)}</span>
+                <span style="background:${clr};color:#fff;border-radius:10px;padding:1px 7px;font-size:.65rem;font-weight:700">${cnt}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      })()}
+      <!-- Campionati per mese (tabella) -->
+      <div style="margin-top:16px">
+        <div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:6px">📅 Distribuzione per mese</div>
+        <table style="width:100%;border-collapse:collapse;font-size:.72rem">
+          <thead><tr style="background:#f5f7ff">
+            <th style="padding:3px 8px;text-align:left">Mese</th>
+            <th style="padding:3px 8px;text-align:center">Gare</th>
+            <th style="padding:3px 8px;text-align:left;min-width:120px">Barra</th>
+          </tr></thead>
+          <tbody>
+            ${mesiSorted.slice().reverse().map(m=>{
+              const cnt=mesiCount[m]||0;
+              const clr=campColPerMese[m]||'var(--bl)';
+              const label=mesiLabels[parseInt(m.slice(5))]||m.slice(5);
+              const isTop=m===topMese;
+              return`<tr style="border-bottom:1px solid #f0f0f0;${isTop?'background:#fffbf0':''}">
+                <td style="padding:3px 8px;font-weight:${isTop?700:400}">${label} ${m.slice(0,4)}</td>
+                <td style="padding:3px 8px;text-align:center;font-weight:700;color:${clr}">${cnt}${isTop?' 🏆':''}</td>
+                <td style="padding:3px 8px">
+                  <div style="height:6px;background:#f0f0f0;border-radius:3px">
+                    <div style="height:6px;background:${clr};border-radius:3px;width:${Math.round(cnt/maxM*100)}%"></div>
+                  </div>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  return html;
+}
+
 function mkGarePersonaTbl(gare,nome,tid){
   const rows=gare.sort((a,b)=>a['Data'].localeCompare(b['Data'])).map(g=>{
     const coll=[];
@@ -3832,20 +4104,69 @@ function openCampionato(camp){
       })()}
     </div>
     <div class="mtc hidden" id="mct-4">
-      <div class="pgw">${topArb.map(([n,v],i)=>{const pp=P[n]?.provincia||'';const pvClr=PC[pp]||'var(--arb-tx)';return`<div class="pgr">
-        <span style="color:var(--mu2);font-size:.68rem;min-width:18px">${i+1}.</span>
-        <div class="pgl" style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-          <span class="rn" style="color:${pvClr};font-weight:700" data-n="${n}" data-camp="${camp}" onclick="openP(this,this.dataset.camp)">${escH(n)}</span>
-          ${pp?pvB(pp):''}
-          ${Object.entries(arbGironeMap[n]||{}).sort((a,b)=>b[1]-a[1]).map(([gi,cnt])=>`<span style="background:var(--bl4);color:var(--bl2);border-radius:3px;padding:0 5px;font-size:.62rem;white-space:nowrap">${escH(gi.replace('Girone ',''))}: <b>${cnt}</b></span>`).join('')}
-        </div>
-        <div class="pgo"><div class="pgi" style="width:${v/maxA*100}%;background:${pvClr}"></div></div>
-        <div class="pgv" style="color:${pvClr}">${v}</div>
-      </div>`}).join('')}
-      </div>
-      <div style="display:flex;flex-wrap:nowrap;gap:6px;margin-top:8px;overflow-x:auto;padding-bottom:4px">
+      <!-- Arbitri top: tabella con provincia, gironi, totale a sinistra -->
+      <table class="rtbl" id="tbl-camp-arb" style="width:100%">
+        <thead><tr>
+          <th onclick="sT('tbl-camp-arb',0)" style="cursor:pointer">#</th>
+          <th onclick="sT('tbl-camp-arb',1)" style="cursor:pointer">Arbitro</th>
+          <th onclick="sT('tbl-camp-arb',2)" style="cursor:pointer">Prov.</th>
+          <th onclick="sT('tbl-camp-arb',3)" style="cursor:pointer">Tot.</th>
+          <th style="min-width:150px">Gironi</th>
+        </tr></thead>
+        <tbody>
+        ${topArb.map(([n,v],i)=>{
+          const pp=P[n]?.provincia||'';
+          const pvClr=PC[pp]||'var(--bl)';
+          const fip=CODICI_FIP[n]||'';
+          const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+          const gironiStr=Object.entries(arbGironeMap[n]||{}).sort((a,b)=>b[1]-a[1])
+            .map(([gi,cnt])=>`<span style="background:var(--bl4);color:var(--bl2);border-radius:3px;padding:0 5px;font-size:.62rem;white-space:nowrap">${escH(gi.replace('Girone ',''))}: <b>${cnt}</b></span>`).join(' ');
+          return`<tr>
+            <td data-val="${i+1}" style="text-align:center;color:var(--mu2);font-size:.72rem">${medal||((i+1)+'.')}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:4px">
+                <span class="rn rn-Arbitro" style="color:${pvClr};font-weight:700;cursor:pointer" onclick="openPersona('${esc(n)}')">${escH(n)}</span>
+                ${genderDot(n)}
+                ${fip?`<span style="font-family:monospace;font-size:.58rem;color:#aaa">${fip}</span>`:''}
+              </div>
+            </td>
+            <td>${pp?pvB(pp):''}</td>
+            <td data-val="${v}" style="text-align:center;font-weight:800;color:${pvClr};font-size:1rem">${v}</td>
+            <td style="font-size:.65rem">${gironiStr||'—'}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+      <!-- Distribuzione province -->
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--br)">
         ${Object.entries(topArb.reduce((acc,[n])=>{const pp=P[n]?.provincia||'?';acc[pp]=(acc[pp]||0)+1;return acc;},{})).sort((a,b)=>b[1]-a[1]).map(([pv,n])=>`<span style="background:${PC[pv]||'#999'};color:#fff;border-radius:4px;padding:2px 8px;font-size:.7rem;font-weight:700">${pv}: ${n}</span>`).join('')}
       </div>
+      <!-- Coppie più usate in questo campionato -->
+      ${(()=>{
+        const coppie={};
+        allCampGare.forEach(g=>{
+          const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
+          if(a1&&a2){const k=[a1,a2].sort().join('|||');coppie[k]=(coppie[k]||0)+1;}
+        });
+        const topC=Object.entries(coppie).sort((a,b)=>b[1]-a[1]).slice(0,5);
+        if(!topC.length) return '';
+        return`<div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--br)">
+          <div style="font-size:.74rem;font-weight:700;color:var(--bl);margin-bottom:6px">🤝 Coppie più usate in questo campionato</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            ${topC.map(([k,n],i)=>{
+              const [a1,a2]=k.split('|||');
+              const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+              return`<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;background:${i%2?'#f8faff':'#fff'};border:1px solid #eef1fa">
+                <span style="min-width:22px;font-size:.72rem;color:var(--mu2)">${medal||((i+1)+'.')}</span>
+                <span class="rn rn-Arbitro" style="cursor:pointer;font-size:.73rem" onclick="openPersona('${esc(a1)}')">${escH(a1)}</span>
+                <span style="color:var(--mu2);font-size:.65rem">+</span>
+                <span class="rn rn-Arbitro" style="cursor:pointer;font-size:.73rem" onclick="openPersona('${esc(a2)}')">${escH(a2)}</span>
+                <span style="margin-left:auto;font-size:.9rem;font-weight:800;color:var(--bl)">${n}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      })()}
     </div>
     <div class="mtc hidden" id="mct-5">
       <div style="margin-bottom:8px;display:flex;gap:14px;font-size:.72rem;flex-wrap:wrap">
