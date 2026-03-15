@@ -567,8 +567,8 @@ tr.loss-row td{background:#fdecea!important;}
     <button class="nav-group-btn" id="navgrp-h2h" onclick="showPage('h2h')">⚔️ H2H</button>
     <div class="nav-dropdown">
       <button onclick="showPage('h2h')">⚔️ Squadre</button>
-      <button onclick="openMultiH2H()">👥 Multi H2H</button>
-      <button onclick="showPage('h2h-arb')">⚖️ Arbitri</button>
+      <button onclick="showPage('h2h');setTimeout(()=>setConfrTab('multi',document.getElementById('confr-btn-multi')),50)">👥 Multi H2H</button>
+      <button onclick="showPage('h2h');setTimeout(()=>setConfrTab('arb',document.getElementById('confr-btn-arb')),50)">⚖️ Arbitri</button>
     </div>
   </div>
 
@@ -617,8 +617,8 @@ tr.loss-row td{background:#fdecea!important;}
 </div>
 <div class="quicknav">
   <button class="qn-btn" onclick="showPage('h2h')">⚔️ H2H Sq.</button>
-  <button class="qn-btn" onclick="openMultiH2H()">👥 Multi H2H</button>
-  <button class="qn-btn" onclick="showPage('h2h-arb')">⚖️ H2H Arb.</button>
+  <button class="qn-btn" onclick="showPage('h2h');setTimeout(()=>setConfrTab('multi',document.getElementById('confr-btn-multi')),50)">👥 Multi H2H</button>
+  <button class="qn-btn" onclick="showPage('h2h');setTimeout(()=>setConfrTab('arb',document.getElementById('confr-btn-arb')),50)">⚖️ H2H Arb.</button>
   <div class="qn-sep"></div>
   <button class="qn-btn" onclick="showPage('resoconto')">📋 Resoconto</button>
   <button class="qn-btn" onclick="showPage('province')">📍 Province</button>
@@ -879,23 +879,73 @@ tr.loss-row td{background:#fdecea!important;}
 
 <!-- HEAD TO HEAD -->
 <div class="ps" id="page-h2h">
-  <div class="st">⚔️ Confronto Squadre – Head to Head</div>
-  <div class="fb" style="flex-wrap:wrap;gap:8px">
-    <div class="fg" style="min-width:190px">
-      <label>Squadra 1</label>
-      <input type="text" id="h2h-sq1-q" placeholder="Cerca..." oninput="h2hFilter(1)" style="width:100%;margin-bottom:3px">
-      <select id="h2h-sq1" onchange="onH2Hsq1Change()" style="width:100%"><option value="">– Seleziona –</option></select>
+  <div class="st">⚔️ Confronti</div>
+
+  <!-- MODE SELECTOR -->
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+    <div style="display:flex;gap:0;background:var(--bl);border-radius:6px;padding:3px">
+      <button id="confr-btn-h2h" onclick="setConfrTab('h2h',this)"
+        style="padding:5px 14px;border-radius:4px;font-size:.75rem;font-weight:600;border:none;cursor:pointer;background:rgba(255,255,255,.18);color:#fff">⚔️ H2H Squadre</button>
+      <button id="confr-btn-multi" onclick="setConfrTab('multi',this)"
+        style="padding:5px 14px;border-radius:4px;font-size:.75rem;font-weight:600;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,.55)">👥 Multi H2H</button>
+      <button id="confr-btn-arb" onclick="setConfrTab('arb',this)"
+        style="padding:5px 14px;border-radius:4px;font-size:.75rem;font-weight:600;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,.55)">🧑‍⚖️ H2H Arbitri</button>
     </div>
-    <div class="fg" style="min-width:190px">
-      <label>Squadra 2</label>
-      <input type="text" id="h2h-sq2-q" placeholder="Cerca..." oninput="h2hFilter(2)" style="width:100%;margin-bottom:3px">
-      <select id="h2h-sq2" onchange="renderH2H()" disabled style="width:100%"><option value="">– prima SQ1 –</option></select>
-    </div>
-    <div class="fg"><label>Campionato</label><select id="h2h-camp" onchange="renderH2H()" disabled><option value="">Tutti</option></select></div>
-    <div class="fg"><label>Girone</label><select id="h2h-girone" onchange="renderH2H()" disabled><option value="">Tutti</option></select></div>
-    <button class="btn b-gr" onclick="resetH2H()">↺ Reset</button>
   </div>
-  <div id="h2h-result"></div>
+
+  <!-- ── PANNELLO H2H SQUADRE ── -->
+  <div id="confr-h2h">
+    <div class="fb" style="flex-wrap:wrap;gap:8px">
+      <div class="fg" style="min-width:190px">
+        <label>Squadra 1</label>
+        <input type="text" id="h2h-sq1-q" placeholder="Cerca..." oninput="h2hFilter(1)" style="width:100%;margin-bottom:3px">
+        <select id="h2h-sq1" onchange="onH2Hsq1Change()" style="width:100%"><option value="">– Seleziona –</option></select>
+      </div>
+      <div class="fg" style="min-width:190px">
+        <label>Squadra 2</label>
+        <input type="text" id="h2h-sq2-q" placeholder="Cerca..." oninput="h2hFilter(2)" style="width:100%;margin-bottom:3px">
+        <select id="h2h-sq2" onchange="renderH2H()" disabled style="width:100%"><option value="">– prima SQ1 –</option></select>
+      </div>
+      <div class="fg"><label>Campionato</label><select id="h2h-camp" onchange="renderH2H()" disabled><option value="">Tutti</option></select></div>
+      <div class="fg"><label>Girone</label><select id="h2h-girone" onchange="renderH2H()" disabled><option value="">Tutti</option></select></div>
+      <button class="btn b-gr" onclick="resetH2H()">↺ Reset</button>
+    </div>
+    <div id="h2h-result"></div>
+  </div>
+
+  <!-- ── PANNELLO MULTI H2H ── -->
+  <div id="confr-multi" style="display:none">
+    <div class="fb" style="flex-wrap:wrap;gap:8px;margin-bottom:8px">
+      <div class="fg" style="min-width:190px">
+        <label>Squadra</label>
+        <input type="text" id="mh2h-sq-q" placeholder="Cerca squadra..." style="width:100%;margin-bottom:3px" oninput="mh2hSuggest()">
+        <div id="mh2h-sug" style="display:none;position:absolute;background:#fff;border:1px solid var(--br);border-radius:4px;z-index:30;min-width:200px;max-height:180px;overflow-y:auto;box-shadow:var(--shadow)"></div>
+      </div>
+      <div class="fg"><label>Campionato</label><select id="mh2h-camp" onchange="renderMultiH2H()"><option value="">Tutti</option></select></div>
+      <button class="btn b-gr" onclick="resetMultiH2H()">↺ Reset</button>
+    </div>
+    <!-- Chips squadre selezionate -->
+    <div id="mh2h-chips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px"></div>
+    <div id="mh2h-result"></div>
+  </div>
+
+  <!-- ── PANNELLO H2H ARBITRI ── -->
+  <div id="confr-arb" style="display:none">
+    <div class="fb" style="flex-wrap:wrap;gap:8px">
+      <div class="fg" style="position:relative"><label>Arbitro 1</label>
+        <input type="text" id="ha1-q" placeholder="Nome..." oninput="suggestArb('ha1-q','ha1-sug',1)" autocomplete="off">
+        <div id="ha1-sug" class="sug-box" style="display:none;top:100%;left:0;right:0;width:auto"></div>
+      </div>
+      <div class="fg" style="position:relative"><label>Arbitro 2 (opzionale)</label>
+        <input type="text" id="ha2-q" placeholder="Nome..." oninput="suggestArb('ha2-q','ha2-sug',2)" autocomplete="off">
+        <div id="ha2-sug" class="sug-box" style="display:none;top:100%;left:0;right:0;width:auto"></div>
+      </div>
+      <div class="fg"><label>Campionato</label><select id="ha-camp" onchange="renderH2HArb()"><option value="">Tutti</option></select></div>
+      <button class="btn b-go" onclick="renderH2HArb()">Confronta</button>
+      <button class="btn b-gr" onclick="resetH2HArb()">↺</button>
+    </div>
+    <div id="h2h-arb-result"><p style="color:#6b7a99;padding:20px">Seleziona uno o due arbitri per confrontarli.</p></div>
+  </div>
 </div>
 
 <!-- GRUPPI -->
@@ -1040,57 +1090,82 @@ tr.loss-row td{background:#fdecea!important;}
 <!-- MAPPA -->
 <div class="ps" id="page-mappa">
   <div class="st">🗺 Mappa Sardegna — Campi, Province e Campionati</div>
-  <div class="fb" style="flex-wrap:wrap;gap:8px;margin-bottom:10px;position:sticky;top:0;z-index:100;background:#fff;padding:8px 0;border-bottom:1px solid var(--br)">
-    <div class="fg">
-      <label>🏀 Squadra</label>
-      <select id="map-sq-filter" onchange="mapApplyFilter()" style="min-width:175px">
-        <option value="">Tutte le squadre</option>
-      </select>
+  <div style="display:flex;height:580px;gap:0;border:1px solid var(--br);border-radius:var(--radius-lg);overflow:hidden">
+
+    <!-- SIDEBAR SINISTRA -->
+    <div style="width:270px;min-width:270px;background:#fff;border-right:1px solid var(--br);display:flex;flex-direction:column;overflow-y:auto;z-index:2">
+
+      <!-- Filtri -->
+      <div style="padding:8px 10px;border-bottom:1px solid var(--br)">
+        <div style="font-weight:700;font-size:.78rem;color:var(--bl);margin-bottom:8px">🗺 Mappa Sardegna</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <select id="map-sq-filter" onchange="mapApplyFilter()" style="width:100%;font-size:.73rem">
+            <option value="">Tutte le squadre</option>
+          </select>
+          <select id="map-camp-filter" onchange="mapCampChange()" style="width:100%;font-size:.73rem">
+            <option value="">Tutti i campionati</option>
+          </select>
+          <select id="map-girone-filter" onchange="mapApplyFilter()" style="width:100%;font-size:.73rem">
+            <option value="">Tutti i gironi</option>
+          </select>
+          <select id="map-pv-filter" onchange="mapApplyFilter()" style="width:100%;font-size:.73rem">
+            <option value="">Tutte le province</option>
+            <option>CA</option><option>SS</option><option>NU</option><option>OR</option><option>SU</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:4px;margin-top:6px">
+          <button class="btn b-gr" style="flex:1;font-size:.7rem" onclick="mapReset()">↺ Reset</button>
+          <button class="btn b-bl" style="flex:1;font-size:.7rem" onclick="mapCenterSardinia()">🎯 Sardegna</button>
+        </div>
+        <span id="map-info" style="font-size:.68rem;color:var(--mu);display:block;margin-top:4px"></span>
+      </div>
+
+      <!-- Layer toggle — ESCLUSIVI -->
+      <div style="padding:8px 10px;border-bottom:1px solid var(--br)">
+        <div style="font-size:.65rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Layer visibile</div>
+        <div style="display:flex;gap:4px">
+          <button id="map-layer-sq-btn" onclick="setMapLayer('sq')"
+            style="flex:1;padding:4px 6px;border-radius:4px;font-size:.7rem;font-weight:600;border:1px solid var(--br);background:var(--bl);color:#fff;cursor:pointer">🏀 Squadre</button>
+          <button id="map-layer-arb-btn" onclick="setMapLayer('arb')"
+            style="flex:1;padding:4px 6px;border-radius:4px;font-size:.7rem;font-weight:600;border:1px solid var(--br);background:var(--bg);color:var(--bl);cursor:pointer">🧑‍⚖️ Arbitri</button>
+        </div>
+        <!-- Ricerca arbitro (visibile solo quando layer=arb) -->
+        <div id="map-arb-controls" style="display:none;margin-top:6px">
+          <input id="map-arb-search" type="text" placeholder="Cerca arbitro..."
+            style="width:100%;font-size:.73rem;border:1px solid var(--br);border-radius:4px;padding:4px 7px"
+            oninput="mapUpdateArbiters()">
+          <select id="map-arb-filter" onchange="mapUpdateArbiters()" style="width:100%;font-size:.73rem;margin-top:4px">
+            <option value="all">Tutti</option>
+            <option value="CA">Provincia CA</option><option value="SS">Provincia SS</option>
+            <option value="NU">Provincia NU</option><option value="OR">Provincia OR</option><option value="SU">Provincia SU</option>
+          </select>
+          <span id="map-arb-count" style="font-size:.68rem;color:var(--mu);display:block;margin-top:3px"></span>
+        </div>
+      </div>
+
+      <!-- Province cliccabili -->
+      <div style="padding:8px 10px;border-bottom:1px solid var(--br)">
+        <div style="font-size:.65rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Province</div>
+        <div id="map-prov-list"></div>
+      </div>
+
+      <!-- Top Campi cliccabili -->
+      <div style="padding:8px 10px;border-bottom:1px solid var(--br)">
+        <div style="font-size:.65rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Top Campi</div>
+        <div id="map-campi-list"></div>
+      </div>
+
+      <!-- Campo selezionato -->
+      <div style="padding:8px 10px;flex:1">
+        <div style="font-size:.65rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px">Campo selezionato</div>
+        <div id="map-sel-info" style="font-size:.72rem;color:var(--mu)">Clicca un punto sulla mappa</div>
+      </div>
     </div>
-    <div class="fg">
-      <label>🏆 Campionato</label>
-      <select id="map-camp-filter" onchange="mapCampChange()" style="min-width:175px">
-        <option value="">Tutti i campionati</option>
-      </select>
+
+    <!-- MAPPA -->
+    <div style="flex:1;position:relative">
+      <div id="leaflet-map" style="width:100%;height:100%;z-index:1"></div>
     </div>
-    <div class="fg">
-      <label>📐 Girone</label>
-      <select id="map-girone-filter" onchange="mapApplyFilter()" style="min-width:150px">
-        <option value="">Tutti i gironi</option>
-      </select>
-    </div>
-    <div class="fg">
-      <label>📍 Provincia</label>
-      <select id="map-pv-filter" onchange="mapApplyFilter()" style="min-width:100px">
-        <option value="">Tutte</option>
-        <option>CA</option><option>SS</option><option>NU</option><option>OR</option><option>SU</option>
-      </select>
-    </div>
-    <button class="btn b-gr" onclick="mapReset()">↺ Reset</button>
-    <button class="btn b-bl" onclick="mapCenterSardinia()">🎯 Sardegna</button>
-    <span id="map-info" class="il" style="font-size:.75rem"></span>
-  </div>
-  <div class="fb" style="gap:8px;margin-bottom:8px;padding:6px 0;border-bottom:1px solid var(--br)">
-    <label style="font-size:.74rem;font-weight:600;color:#003087">👨‍⚖️ Layer Arbitri:</label>
-    <select id="map-arb-filter" onchange="mapUpdateArbiters()" style="min-width:80px;font-size:.74rem">
-      <option value="">Nascondi</option>
-      <option value="all">Tutti</option>
-      <option value="CA">Provincia CA</option>
-      <option value="SS">Provincia SS</option>
-      <option value="NU">Provincia NU</option>
-      <option value="OR">Provincia OR</option>
-      <option value="SU">Provincia SU</option>
-    </select>
-    <input id="map-arb-search" type="text" placeholder="Cerca arbitro..." 
-      style="border:1px solid var(--br);border-radius:5px;padding:3px 8px;font-size:.73rem;min-width:160px"
-      oninput="mapUpdateArbiters()">
-    <span id="map-arb-count" style="font-size:.72rem;color:var(--mu)"></span>
-  </div>
-  <div id="leaflet-map" style="height:500px;border-radius:10px;border:1px solid #dde3f0;position:relative;z-index:1"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px">
-    <div class="card"><div class="card-title">📍 Province</div><div id="map-prov-list"></div></div>
-    <div class="card"><div class="card-title">🏟 Top Campi</div><div id="map-campi-list"></div></div>
-    <div class="card"><div class="card-title">ℹ️ Campo selezionato</div><div id="map-sel-info" style="font-size:.73rem;color:var(--mu)">Clicca un punto sulla mappa</div></div>
   </div>
 </div>
 
@@ -1131,23 +1206,8 @@ tr.loss-row td{background:#fdecea!important;}
 </div>
 
 <!-- H2H ARBITRI -->
-<div class="ps" id="page-h2h-arb">
-  <div class="st">⚖️ Testa a Testa Arbitri</div>
-  <div class="fb">
-    <div class="fg" style="position:relative"><label>Arbitro 1</label>
-      <input type="text" id="ha1-q" placeholder="Nome..." oninput="suggestArb('ha1-q','ha1-sug',1)" autocomplete="off">
-      <div id="ha1-sug" class="sug-box" style="display:none;top:100%;left:0;right:0;width:auto"></div>
-    </div>
-    <div class="fg" style="position:relative"><label>Arbitro 2</label>
-      <input type="text" id="ha2-q" placeholder="Nome..." oninput="suggestArb('ha2-q','ha2-sug',2)" autocomplete="off">
-      <div id="ha2-sug" class="sug-box" style="display:none;top:100%;left:0;right:0;width:auto"></div>
-    </div>
-    <div class="fg"><label>Campionato</label><select id="ha-camp" onchange="renderH2HArb()"><option value="">Tutti</option></select></div>
-    <button class="btn b-go" onclick="renderH2HArb()">Confronta</button>
-    <button class="btn b-gr" onclick="resetH2HArb()">↺</button>
-  </div>
-  <div id="h2h-arb-result"><p style="color:#6b7a99;padding:20px">Seleziona uno o due arbitri per confrontarli.</p></div>
-</div>
+<div class="ps" id="page-h2h-arb" style="display:none!important">
+  <!-- Contenuto spostato nel pannello Confronti unificato (page-h2h) -->
 
 <!-- CAMPI -->
 <div class="ps" id="page-campi">
@@ -1907,7 +1967,136 @@ document.addEventListener('click',function(e){
   if(!e.target.closest('#arb-spotlight')&&!e.target.closest('#arb-list tr')){}
 });
 
-// ══════════ EXPORT CSV ARBITRI ══════════
+// ══════════ CONFRONTI — TAB SWITCHER ══════════
+function setConfrTab(tab,btn){
+  ['h2h','multi','arb'].forEach(t=>{
+    const panel=document.getElementById('confr-'+t);
+    const b=document.getElementById('confr-btn-'+t);
+    if(panel) panel.style.display=t===tab?'block':'none';
+    if(b){b.style.background=t===tab?'rgba(255,255,255,.18)':'transparent';b.style.color=t===tab?'#fff':'rgba(255,255,255,.55)';}
+  });
+  // Inizializza se necessario
+  if(tab==='arb') initH2HArb();
+  if(tab==='multi') initMultiH2H();
+}
+
+// Redirect: quando si apre h2h-arb, va al pannello unificato
+const _origShowPage=typeof showPage==='function'?showPage:null;
+
+// ══════════ MULTI H2H ══════════
+let _mh2hSels=[];
+
+function initMultiH2H(){
+  const campSel=document.getElementById('mh2h-camp');
+  if(campSel&&campSel.options.length<=1)
+    CAMPS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;campSel.appendChild(o);});
+}
+
+function mh2hSuggest(){
+  const q=(document.getElementById('mh2h-sq-q')?.value||'').toLowerCase();
+  const sug=document.getElementById('mh2h-sug');
+  if(!sug)return;
+  if(!q){sug.style.display='none';return;}
+  const matches=Object.keys(SQ).filter(s=>s.toLowerCase().includes(q)&&!_mh2hSels.includes(s)).slice(0,10);
+  if(!matches.length){sug.style.display='none';return;}
+  sug.innerHTML=matches.map(s=>`<div style="padding:5px 10px;cursor:pointer;font-size:.78rem" onmousedown="addMh2hSq('${esc(s)}')">${escH(s)}</div>`).join('');
+  sug.style.display='block';
+  sug.style.position='absolute';
+  sug.style.background='#fff';
+  sug.style.border='1px solid var(--br)';
+  sug.style.borderRadius='4px';
+  sug.style.zIndex='50';
+  sug.style.minWidth='200px';
+  sug.style.boxShadow='var(--shadow)';
+}
+
+function addMh2hSq(sq){
+  if(_mh2hSels.includes(sq))return;
+  _mh2hSels.push(sq);
+  document.getElementById('mh2h-sq-q').value='';
+  document.getElementById('mh2h-sug').style.display='none';
+  renderMh2hChips();
+  renderMultiH2H();
+}
+
+function removeMh2hSq(sq){
+  _mh2hSels=_mh2hSels.filter(s=>s!==sq);
+  renderMh2hChips();renderMultiH2H();
+}
+
+const MH2H_COLORS=[['#deeaff','#1e3a6e'],['#e6f8ee','#1a7a3c'],['#fdecea','#c0392b'],['#fff3cd','#8a6200'],['#f3e8ff','#6c3dc8'],['#e3f4f9','#0c5460']];
+
+function renderMh2hChips(){
+  const el=document.getElementById('mh2h-chips');
+  if(!el)return;
+  el.innerHTML=_mh2hSels.map((sq,i)=>{
+    const[bg,tx]=MH2H_COLORS[i%MH2H_COLORS.length];
+    return`<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:.73rem;font-weight:600;background:${bg};color:${tx};border:1px solid ${tx}33">
+      ${escH(sq)}
+      <span style="cursor:pointer;font-size:.85rem;opacity:.7" onclick="removeMh2hSq('${esc(sq)}')">✕</span>
+    </span>`;
+  }).join('');
+}
+
+function renderMultiH2H(){
+  const res=document.getElementById('mh2h-result');
+  if(!res)return;
+  const camp=document.getElementById('mh2h-camp')?.value||'';
+  if(_mh2hSels.length<2){res.innerHTML='<p style="color:var(--mu);padding:10px">Aggiungi almeno 2 squadre per vedere la matrice</p>';return;}
+
+  // Matrice incontri diretti
+  const matrix={};
+  _mh2hSels.forEach(a=>{matrix[a]={};_mh2hSels.forEach(b=>{if(a!==b)matrix[a][b]={v:0,p:0,tot:0};});});
+
+  (D.gare||[]).filter(g=>!camp||g['Campionato']===camp).forEach(g=>{
+    const sc=g['Squadra Casa'],so=g['Squadra Ospite'];
+    if(!_mh2hSels.includes(sc)||!_mh2hSels.includes(so))return;
+    if(!g['Risultato'])return;
+    const pc=parseInt(g['Punti Casa']||0),po=parseInt(g['Punti Ospite']||0);
+    matrix[sc][so].tot++;matrix[so][sc].tot++;
+    if(pc>po){matrix[sc][so].v++;matrix[so][sc].p++;}
+    else if(po>pc){matrix[so][sc].v++;matrix[sc][so].p++;}
+  });
+
+  let html=`<div style="overflow-x:auto"><table class="rtbl" style="font-size:.78rem"><thead><tr>
+    <th></th>${_mh2hSels.map((s,i)=>`<th style="background:${MH2H_COLORS[i%MH2H_COLORS.length][0]};color:${MH2H_COLORS[i%MH2H_COLORS.length][1]};font-size:.68rem;max-width:100px;white-space:normal">${escH(s.split(' ').slice(0,3).join(' '))}</th>`).join('')}
+  </tr></thead><tbody>`;
+
+  _mh2hSels.forEach((a,ai)=>{
+    const[bg,tx]=MH2H_COLORS[ai%MH2H_COLORS.length];
+    html+=`<tr><th style="background:${bg};color:${tx};font-size:.68rem;max-width:100px;white-space:normal;text-align:left;padding:5px 8px">${escH(a.split(' ').slice(0,3).join(' '))}</th>`;
+    _mh2hSels.forEach((b,bi)=>{
+      if(a===b){html+=`<td style="background:var(--bg);text-align:center;color:var(--mu2)">—</td>`;return;}
+      const m=matrix[a][b];
+      const pct=m.tot?Math.round(m.v/m.tot*100):null;
+      const bg2=pct===null?'':pct>50?'background:#e6f8ee':pct<50?'background:#fdecea':'';
+      const clr=pct===null?'var(--mu2)':pct>50?'var(--green)':pct<50?'var(--red)':'var(--mu)';
+      html+=`<td style="text-align:center;${bg2}">`;
+      if(m.tot>0) html+=`<span style="font-weight:700;color:${clr}">${m.v}V ${m.p}P</span><br><span style="font-size:.65rem;color:var(--mu2)">${pct}%</span>`;
+      else html+=`<span style="color:var(--mu2);font-size:.72rem">n/d</span>`;
+      html+=`</td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  html+=`<p style="font-size:.65rem;color:var(--mu2);margin-top:6px">Leggi: riga vs colonna — es. "A vs B = 3V 1P" significa 3 vinte da A, 1 da B negli scontri diretti</p>`;
+  res.innerHTML=html;
+}
+
+function resetMultiH2H(){
+  _mh2hSels=[];
+  renderMh2hChips();
+  if(document.getElementById('mh2h-camp')) document.getElementById('mh2h-camp').value='';
+  const res=document.getElementById('mh2h-result');
+  if(res) res.innerHTML='<p style="color:var(--mu);padding:10px">Aggiungi almeno 2 squadre per vedere la matrice</p>';
+}
+
+// Quando si naviga a h2h-arb, reindirizza al pannello unificato
+document.addEventListener('DOMContentLoaded',()=>{
+  // Inizializza Multi H2H campionati
+  const mc=document.getElementById('mh2h-camp');
+  if(mc&&mc.options.length<=1) CAMPS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;mc.appendChild(o);});
+});
 function exportArbCSV(){
   const arbs=Object.values(P).filter(p=>p.categoria==='Arbitro');
   const h=['Nome','Prov','Città','Cod FIP','Tot','Arb','UDC','Da fare','Km'];
@@ -6665,10 +6854,12 @@ let _arbMarkers = [];
 
 function mapUpdateArbiters(){
   if(!_lmap){ renderMappa(); setTimeout(mapUpdateArbiters,500); return; }
+  // Se il layer attivo è 'sq', non mostrare arbitri
+  if(_mapCurrentLayer==='sq') return;
   _arbMarkers.forEach(m=>{ try{_lmap.removeLayer(m);}catch(e){} });
   _arbMarkers = [];
 
-  const filterPv = document.getElementById('map-arb-filter')?.value || '';
+  const filterPv = document.getElementById('map-arb-filter')?.value || 'all';
   const searchQ = (document.getElementById('map-arb-search')?.value||'').trim().toLowerCase();
   const countEl = document.getElementById('map-arb-count');
 
@@ -6682,7 +6873,6 @@ function mapUpdateArbiters(){
 
   Object.values(P).forEach(p => {
     if(!p||!p.nome) return;
-    if(!filterPv) return;  // 'Nascondi' selezionato
     if(filterPv!=='all' && p.provincia!==filterPv) return;
     if(searchQ && !p.nome.toLowerCase().includes(searchQ)) return;
 
@@ -6746,6 +6936,53 @@ function mapReset(){
 }
 function mapCenterSardinia(){if(_lmap)_lmap.setView([40.1,9.0],8);}
 function showMapTip(){}function hideMapTip(){}
+
+// ── LAYER ESCLUSIVI squadre/arbitri ──
+let _mapCurrentLayer='sq';
+function setMapLayer(layer){
+  _mapCurrentLayer=layer;
+  const sqBtn=document.getElementById('map-layer-sq-btn');
+  const arbBtn=document.getElementById('map-layer-arb-btn');
+  const arbCtrl=document.getElementById('map-arb-controls');
+  if(sqBtn){sqBtn.style.background=layer==='sq'?'var(--bl)':'var(--bg)';sqBtn.style.color=layer==='sq'?'#fff':'var(--bl)';}
+  if(arbBtn){arbBtn.style.background=layer==='arb'?'var(--bl)':'var(--bg)';arbBtn.style.color=layer==='arb'?'#fff':'var(--bl)';}
+  if(arbCtrl) arbCtrl.style.display=layer==='arb'?'block':'none';
+  if(layer==='sq'){
+    // Nascondi arbitri, mostra campi
+    _arbMarkers.forEach(m=>{try{_lmap.removeLayer(m);}catch(e){}});
+    mapApplyFilter();
+  } else {
+    // Nascondi campi, mostra arbitri
+    _lmarkers.forEach(m=>{try{_lmap.removeLayer(m);}catch(e){}});
+    _lmarkers=[];
+    mapUpdateArbiters();
+  }
+}
+
+function mapDrawSidePanels(){
+  const PV_BOUNDS={CA:[[38.8,8.8],[39.5,9.4]],SS:[[40.3,8.1],[41.1,9.2]],NU:[[39.9,9.0],[40.8,9.8]],OR:[[39.6,8.3],[40.3,9.0]],SU:[[38.8,8.3],[39.5,9.0]]};
+  const pv5={'CA':'Cagliari','SS':'Sassari','NU':'Nuoro','OR':'Oristano','SU':'Sud Sardegna'};
+  const pvEl=document.getElementById('map-prov-list');
+  if(pvEl) pvEl.innerHTML=Object.entries(pv5).map(([p,nome])=>{
+    const pd=PV[p]||{};const nc=Object.values(CAMPI||{}).filter(c=>c.prov===p).length;
+    return`<div style="display:flex;align-items:center;gap:5px;padding:4px 6px;cursor:pointer;font-size:.72rem;border-radius:5px;transition:background .12s" onmouseover="this.style.background='var(--bl4)'" onmouseout="this.style.background=''"
+      onclick="if(_lmap&&typeof L!=='undefined'&&'${p}' in {'CA':1,'SS':1,'NU':1,'OR':1,'SU':1}){const b=${JSON.stringify({CA:[[38.8,8.8],[39.5,9.4]],SS:[[40.3,8.1],[41.1,9.2]],NU:[[39.9,9.0],[40.8,9.8]],OR:[[39.6,8.3],[40.3,9.0]],SU:[[38.8,8.3],[39.5,9.0]]}})['${p}'];if(b)_lmap.fitBounds(b);}document.getElementById('map-pv-filter').value='${p}';mapApplyFilter()">
+      <div style="width:9px;height:9px;border-radius:50%;background:${PC[p]||'#333'};flex-shrink:0"></div>
+      <b>${p}</b><span style="color:var(--mu)">${nome}</span>
+      <span style="margin-left:auto;color:var(--mu2)"><b>${pd.n_gare||0}</b>g · <b>${nc}</b>c</span>
+    </div>`;
+  }).join('');
+
+  const caEl=document.getElementById('map-campi-list');
+  if(caEl) caEl.innerHTML=Object.values(CAMPI||{}).sort((a,b)=>b.gare-a.gare).slice(0,10).map((c,i)=>`
+    <div style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:.7rem;cursor:pointer;border-radius:4px;transition:background .12s" onmouseover="this.style.background='var(--bl4)'" onmouseout="this.style.background=''"
+      onclick="(function(){const gps=typeof CAMPO_GPS!=='undefined'&&CAMPO_GPS['${esc(c.campo)}'];if(gps&&_lmap){_lmap.setView([gps.lat,gps.lng],14);document.getElementById('map-sel-info').innerHTML='<b style=\\'color:var(--bl)\\'>${escH(c.nome_breve||c.campo.split(',')[0])}</b><br><b>${c.gare}</b> gare · ${pvB(c.prov)}';}else if(_lmap)openCampoModal('${esc(c.campo)}');})()">
+      <span style="color:#9aa3b8;width:14px;font-size:.65rem">${i+1}</span>
+      <div style="width:7px;height:7px;border-radius:50%;background:${PC[c.prov]||'#333'};flex-shrink:0"></div>
+      <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(c.nome_breve||c.campo.split(',')[0])}</span>
+      <b style="color:var(--bl)">${c.gare}</b>
+    </div>`).join('');
+}
 
 
 function showMapTip(e,pv,n){const t=document.getElementById('map-tip');if(!t)return;t.textContent=`${pv}: ${n} gare`;t.style.display='block';t.style.left=(e.clientX+12)+'px';t.style.top=(e.clientY-10)+'px';}
