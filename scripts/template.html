@@ -31,7 +31,8 @@ body{font-family:'Segoe UI',system-ui,Arial,sans-serif;
 /* ══════════ HEADER ══════════ */
 header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
   color:#fff;padding:10px 22px;display:flex;align-items:center;gap:14px;
-  border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:210;}
+  border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:210;
+  --hdr-h:56px;}
 .logo{font-size:2rem;flex-shrink:0;}
 .header-txt h1{font-size:1.05rem;font-weight:700;letter-spacing:.2px;}
 .header-txt p{font-size:.7rem;opacity:.6;margin-top:1px;}
@@ -46,7 +47,7 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 /* ══════════ NAV ══════════ */
 .nav{background:#17305e;display:flex;gap:0;padding:0 10px;
   overflow-x:auto;scrollbar-width:none;border-bottom:2px solid rgba(255,255,255,.06);
-  position:sticky;top:0;z-index:200;}
+  position:sticky;top:var(--hdr-h,56px);z-index:200;}
 .nav::-webkit-scrollbar{display:none;}
 .nav-btn{background:none;border:none;color:rgba(255,255,255,.55);
   padding:10px 14px;cursor:pointer;font-size:.75rem;font-weight:600;
@@ -54,6 +55,8 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
   transition:all .15s;margin-bottom:-2px;}
 .nav-btn:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);}
 .nav-btn.active{color:#fff;border-bottom-color:var(--gold);background:rgba(255,255,255,.12);}
+/* Separatore nav */
+.nav-sep{width:1px;background:rgba(255,255,255,.1);margin:6px 0;flex-shrink:0;}
 /* Dropdown nav */
 .nav-group{position:relative;display:flex;align-items:stretch;}
 .nav-group-btn{background:none;border:none;color:rgba(255,255,255,.55);
@@ -78,7 +81,7 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 
 /* ══════════ SUMBAR → ora su bianco ══════════ */
 .kpi-strip{background:#fff;display:flex;flex-wrap:wrap;align-items:center;
-  border-bottom:2px solid var(--br);box-shadow:var(--shadow-sm);position:sticky;top:0;z-index:190;
+  border-bottom:2px solid var(--br);box-shadow:var(--shadow-sm);position:sticky;top:calc(var(--hdr-h,56px) + 40px);z-index:190;
   padding:0 6px;}
 .kpi-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;cursor:pointer;
   border-right:1px solid var(--br);transition:background .15s;}
@@ -370,7 +373,8 @@ tr.loss-row td{background:#fdecea!important;}
 .mfoot{padding:8px 14px;border-top:1px solid var(--br);display:flex;gap:7px;
   background:#f7f9ff;flex-shrink:0;}
 .mts{display:flex;gap:0;border-bottom:2px solid var(--br);margin-bottom:12px;
-  overflow-x:auto;flex-shrink:0;background:#f7f9ff;scrollbar-width:none;}
+  overflow-x:auto;flex-shrink:0;background:#f7f9ff;scrollbar-width:none;
+  position:sticky;top:0;z-index:10;}
 .mts::-webkit-scrollbar{display:none;}
 .mt{padding:7px 15px;border:none;background:none;cursor:pointer;font-size:.75rem;
   font-weight:600;color:var(--mu);border-bottom:3px solid transparent;
@@ -394,7 +398,7 @@ tr.loss-row td{background:#fdecea!important;}
   display:flex;flex-direction:column;align-items:flex-start;gap:2px;}
 .db-kpi:hover{box-shadow:var(--shadow);transform:translateY(-1px);border-color:var(--bl3);}
 .db-kpi-icon{font-size:1.3rem;margin-bottom:2px;}
-.db-kpi-val{font-size:1.8rem;font-weight:900;color:var(--bl);line-height:1;}
+.db-kpi-val{font-size:1.8rem;font-weight:900;color:var(--bl);line-height:1;transition:color .3s;}
 .db-kpi-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);font-weight:700;}
 .db-kpi-sub{font-size:.62rem;color:var(--mu2);margin-top:2px;}
 .db-card{background:#fff;border-radius:10px;border:1px solid var(--br);
@@ -428,6 +432,88 @@ tr.loss-row td{background:#fdecea!important;}
 .dow-bar{width:100%;border-radius:3px 3px 0 0;min-height:3px;background:var(--bl2);}
 .dow-lbl{font-size:.58rem;color:var(--mu2);}
 .dow-val{font-size:.6rem;color:var(--mu);font-weight:700;}
+
+/* ══════════ MIGLIORAMENTI GRAFICI v8 ══════════ */
+
+/* KPI strip più compatta e moderna */
+.kpi-chip{transition:background .15s,transform .1s;}
+.kpi-chip:active{transform:scale(.97);}
+.kc-v{transition:color .2s;}
+
+/* db-kpi con gradiente sottile */
+.db-kpi{background:linear-gradient(135deg,#fff 60%,#f5f8ff);}
+.db-kpi:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(30,58,110,.13);}
+
+/* Tabelle: header con gradiente */
+.rtbl thead,.mtbl thead,.gtbl thead{background:linear-gradient(90deg,#0d2048,#1e3a6e);}
+
+/* Badge provincia più moderni */
+.badge[class*="bp-"]{letter-spacing:.3px;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+
+/* Scrollbar sottile globale */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:#f0f2f7;}
+::-webkit-scrollbar-thumb{background:#c0cce8;border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:#8899cc;}
+
+/* Card hover più fluido */
+.db-card{transition:box-shadow .18s;}
+.db-card:hover{box-shadow:0 4px 16px rgba(30,58,110,.09);}
+
+/* Navbar active highlight migliorato */
+.nav-btn.active{background:rgba(255,255,255,.14);font-weight:700;}
+.nav-group-btn.active{background:rgba(255,255,255,.14);font-weight:700;}
+
+/* Timeline giorni più curata */
+.tl-day.has-games{background:linear-gradient(135deg,#fff,#f0f5ff);}
+.tl-day.today{background:linear-gradient(135deg,#fff9e6,#fffbf0);border-color:var(--gold);}
+.tl-day .tl-n{transition:color .15s;}
+.tl-day:hover .tl-n{color:var(--gold);}
+
+/* Stat cards con micro-animazione */
+.sc{transition:all .15s;}
+.sc:hover{transform:translateY(-1px);}
+.sc.green:hover{box-shadow:0 4px 12px rgba(26,122,60,.15);}
+.sc.red:hover{box-shadow:0 4px 12px rgba(192,57,43,.15);}
+.sc.gold:hover{box-shadow:0 4px 12px rgba(201,138,0,.15);}
+
+/* Riga tabella highlight più fluido */
+.rtbl tbody tr,.gtbl tbody tr{transition:background .1s;}
+
+/* Modal drag handle */
+.mhd{border-bottom:2px solid rgba(255,255,255,.1);}
+
+/* Spotlight risultati hover */
+.sp-item:hover{background:var(--bl4);transition:background .1s;}
+
+/* Province card border più evidente */
+.pc{transition:all .18s;}
+.pc:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(30,58,110,.12);}
+
+/* Pulsanti bottone feedback */
+.btn{transition:all .14s;letter-spacing:.2px;}
+.b-bl:hover{background:var(--bl2)!important;}
+
+/* Input focus ring */
+.fg input:focus,.fg select:focus{
+  box-shadow:0 0 0 3px rgba(36,86,164,.15);
+  border-color:var(--bl2);
+}
+
+/* Freeze colonne shadow lato destro */
+.freeze-2::after{
+  content:'';position:absolute;right:-6px;top:0;bottom:0;
+  width:6px;background:linear-gradient(90deg,rgba(0,0,60,.06),transparent);
+  pointer-events:none;
+}
+
+/* Spotlight overlay animazione */
+#spotlight-overlay{transition:opacity .15s;}
+
+/* Barra di caricamento in testa alla pagina */
+@keyframes loadbar{0%{width:0%}100%{width:100%}}
+.load-bar{position:fixed;top:0;left:0;height:3px;background:var(--gold);
+  z-index:9999;animation:loadbar .6s ease forwards;}
 </style>
 
 <!-- Google Analytics -->
@@ -509,7 +595,7 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="header-txt">
     <h1>FIP – Comitato Regionale Sardegna &nbsp;|&nbsp; Dashboard Ufficiali 2025/2026</h1>
     <p>Aggiornato al <span id="genDate">–</span> &nbsp;·&nbsp; Dati fino al <span id="yestDate">–</span></p>
-    <p class="ver" id="ver-badge">v7.0</p>
+    <p class="ver" id="ver-badge">v8.0</p>
   </div>
   <div class="header-kpi">
     <div class="hkpi" onclick="showPage('gare')">
@@ -572,6 +658,7 @@ tr.loss-row td{background:#fdecea!important;}
     </div>
   </div>
 
+  <div class="nav-sep"></div>
   <button class="nav-btn" onclick="showPage('squadre')">🏆 Squadre</button>
 
   <div class="nav-group">
@@ -611,6 +698,10 @@ tr.loss-row td{background:#fdecea!important;}
   <span id="s-all" style="display:none"></span>
   <span id="s-h2h" style="display:none"></span>
   <span id="s-pv" style="display:none">5</span>
+  <div class="kpi-chip" id="kc-oggi-wrap" style="display:none" onclick="openGiornoModal(new Date().toISOString().split('T')[0])">
+    <span class="kc-v" id="kc-oggi" style="color:var(--gold)">0</span>
+    <span class="kc-l">📅 Oggi</span>
+  </div>
   <div style="margin-left:auto;display:flex;align-items:center;padding:0 8px">
     <button onclick="openSpotlight()" class="spotlight-btn" title="Cerca (Ctrl+K)">🔍 Cerca <kbd>Ctrl K</kbd></button>
   </div>
@@ -634,7 +725,7 @@ tr.loss-row td{background:#fdecea!important;}
 <div class="ps active" id="page-home">
 
   <!-- ROW 1: KPI cards -->
-  <div class="db-row" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px">
+  <div class="db-row" style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:12px">
     <div class="db-kpi" onclick="openGareTotali()" title="Clicca per vedere tutte le gare">
       <div class="db-kpi-icon">📅</div>
       <div class="db-kpi-val" id="hb-gare">–</div>
@@ -665,6 +756,12 @@ tr.loss-row td{background:#fdecea!important;}
       <div class="db-kpi-lbl">Copertura doppia</div>
       <div class="db-kpi-sub">gare con 2 arbitri</div>
     </div>
+    <div class="db-kpi" onclick="showPage('copertura')" id="hb-scoperte-card" title="Gare future senza arbitri — clicca per dettaglio">
+      <div class="db-kpi-icon">⚠️</div>
+      <div class="db-kpi-val" id="hb-scoperte" style="color:var(--red)">–</div>
+      <div class="db-kpi-lbl">Gare scoperte</div>
+      <div class="db-kpi-sub" id="hb-scoperte-sub">future senza arbitri</div>
+    </div>
   </div>
 
   <!-- ROW 2: Prossimi 7 giorni -->
@@ -673,8 +770,8 @@ tr.loss-row td{background:#fdecea!important;}
     <div class="timeline-7" id="h-timeline7"></div>
   </div>
 
-  <!-- ROW 3: 3 widget -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
+  <!-- ROW 3: 4 widget -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px">
     <div class="db-card">
       <div class="db-card-hd">⚔️ Gara più combattuta (7gg)</div>
       <div id="w-gara-comb" style="min-height:60px"></div>
@@ -686,6 +783,10 @@ tr.loss-row td{background:#fdecea!important;}
     <div class="db-card">
       <div class="db-card-hd">🎯 Prossima giornata intensa</div>
       <div id="w-next-big" style="min-height:60px"></div>
+    </div>
+    <div class="db-card" style="cursor:pointer" onclick="showPage('copertura')">
+      <div class="db-card-hd">🛡 Copertura arbitrale <span class="db-hd-link">→ dettaglio</span></div>
+      <div id="h-cop-mini" style="min-height:60px"></div>
     </div>
   </div>
 
@@ -704,8 +805,8 @@ tr.loss-row td{background:#fdecea!important;}
       <div id="h-sq"></div>
     </div>
     <div class="db-card">
-      <div class="db-card-hd">📍 Province <span class="db-hd-link" onclick="showPage('province')">→ dettaglio</span></div>
-      <div id="h-pv"></div>
+      <div class="db-card-hd">🔭 Top Osservatori <span class="db-hd-link" onclick="showPage('osservatori')">→ tutti</span></div>
+      <div id="h-oss"></div>
     </div>
   </div>
 
@@ -1340,7 +1441,7 @@ Argomenti: /c "cd C:\percorso\cartella && python fip_scraper_v5.py && python gen
 
 
 const D=__DATA__;
-const CAMPO_GPS={"Palestra Coni, Via Lazio 08100 NUORO ( NU)": {"lat": 40.321, "lng": 9.329, "city": "NUORO"}, "Palestra Luca Simula, Via Poligono 2 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALAZZETTO DELLO SPORT, VIA ENRICO TOTI 09016 IGLESIAS ( SU)": {"lat": 39.309, "lng": 8.538, "city": "IGLESIAS"}, "Pala Antonianum, Via Mons. Angioni 46 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "PALASERRADIMIGNI, Piazza Segni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra S. Elena, Via Pessina 29 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "PalaManchia, Via Mauro Manca 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "Palestra Comunale, Via Garau, Sn 09026 SAN SPERATE ( SU)": {"lat": 39.354, "lng": 8.981, "city": "SAN SPERATE"}, "PALAZZETTO COMUNALE, Via Giliacquas 09030 ELMAS ( CA)": {"lat": 39.27, "lng": 9.05, "city": "ELMAS"}, "PALESTRA C.E.P., Via Talete 2 09131 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra Esperia, Via Pessagno snc 09126 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALACUS, Via Is Mirrionis 3 - 9 09123 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra ї Cus Sassari ї, Reg. San Giovanni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Hangar Sport Center, Via Gioscari 9 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALAZZETTO COMUNALE, VIA KENNEDY 08020 DORGALI ( NU)": {"lat": 40.292, "lng": 9.587, "city": "DORGALI"}, "Palestra Scolastica, Localitа Sertinu 08015 MACOMER ( NU)": {"lat": 40.265, "lng": 8.779, "city": "MACOMER"}, "Palestra, Via Alessandro Volta 09074 GHILARZA ( OR)": {"lat": 40.121, "lng": 8.841, "city": "GHILARZA"}, "Palestra Scuola Media, Via Nanni 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "Palestra Virtus, Via Pessagno (loc. Montemixi) 09126 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PalAversano, Loc. Sciamain 09011 CALASETTA ( SU)": {"lat": 39.107, "lng": 8.37, "city": "CALASETTA"}, "Pal. Genneruxi, Via Zagabria 09129 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALAZZETTO COMUNALE, Via Lamarmora 07024 LA MADDALENA ( SS)": {"lat": 41.216, "lng": 9.407, "city": "LA MADDALENA"}, "PALAZZETTO DELLO SPORT , VIA MOROSINI 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "Palestra Comunale, Viale Paolo Dettori 92 07021 ARZACHENA ( SS)": {"lat": 41.085, "lng": 9.435, "city": "ARZACHENA"}, "STRUTTURA GEODETICA, Viale Vienna 1 09047 SELARGIUS ( CA)": {"lat": 39.252, "lng": 9.165, "city": "SELARGIUS"}, "Pala Bsk90 - GLM, Via Luna e Sole 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALESTRA SCOLASTICA, Via Ariosto 09047 SELARGIUS ( CA)": {"lat": 39.252, "lng": 9.165, "city": "SELARGIUS"}, "PALASPORT 'R.DA TOME', Via Frosinone 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "CAPANNONE POLIVALENTE, VIA MARIA CARTA 09037 SAN GAVINO MONREALE ( SU)": {"lat": 39.552, "lng": 8.793, "city": "SAN GAVINO MONREALE"}, "Tensostruttura, Via Baronie - Flumini 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "CUPOLA GEODETICA, Via Capo Comino 09042 MONSERRATO ( CA)": {"lat": 39.259, "lng": 9.145, "city": "MONSERRATO"}, "Palestra Comunale, S. S. 126 MARRUBIU 09170 MARRUBIU ( OR)": {"lat": 39.77, "lng": 8.644, "city": "MARRUBIU"}, "Palazzetto dello Sport, Via Sardegna 2 07017 PLOAGHE ( SS)": {"lat": 40.657, "lng": 8.745, "city": "PLOAGHE"}, "Palestra scuole medie , Salita S. Cristina 09014 CARLOFORTE ( SU)": {"lat": 39.143, "lng": 8.314, "city": "CARLOFORTE"}, "PALESTRA, Via EMILIO LUSSU 18 07040 OLMEDO ( SS)": {"lat": 40.649, "lng": 8.378, "city": "OLMEDO"}, "PALESTRA, LOC. LIXIUS 08045 LANUSEI ( NU)": {"lat": 39.876, "lng": 9.543, "city": "LANUSEI"}, "Palestra Vittorio Corbia, Via Pacinotti Snc 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "Palestra Comunale, Via Cagliari, 239 09032 ASSEMINI ( CA)": {"lat": 39.295, "lng": 9.001, "city": "ASSEMINI"}, "Palestra C.G. Salesiano, Loc. Fontana Buddia 08100 NUORO ( NU)": {"lat": 40.321, "lng": 9.329, "city": "NUORO"}, "PALESTRA SCUOLA EL. A.FRANK, Ottaviano Augusto 09028 SESTU ( CA)": {"lat": 39.303, "lng": 9.094, "city": "SESTU"}, "Cupola Geodetica, Via Deffenu 09013 CARBONIA ( SU)": {"lat": 39.168, "lng": 8.521, "city": "CARBONIA"}, "Istituto Tecnico Lorenzo Mossa, Via Enrico Carboni 10 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "Palestra Ist.Industriale, Via Degli Orti 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "PALESTRA COMPARTO 8, VIA RIU MORTU SN 09042 MONSERRATO ( CA)": {"lat": 39.259, "lng": 9.145, "city": "MONSERRATO"}, "Palestra Oratorio Salesiano, Piazza Giovanni X X I I I 09131 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra I.T.I.S. Othoca, Via Zara snc - Z.I. 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "PALESTRA COMUNALE, CORTE PISCEDDA 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "Palestra I.T.I.S. ї Giua ї, Via Montecassino 09134 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALESTRA SCOLASTICA, P.zza Don Milani 07046 PORTO TORRES ( SS)": {"lat": 40.838, "lng": 8.401, "city": "PORTO TORRES"}, "PAL. COMUNALE, Via E. D' Arborea 09033 DECIMOMANNU ( CA)": {"lat": 39.303, "lng": 8.975, "city": "DECIMOMANNU"}, "Palazzetto dello Sport їG. Co, Via Pani 82 09031 ARBUS ( SU)": {"lat": 39.527, "lng": 8.589, "city": "ARBUS"}, "Palestra Comunale G.P.Murratzu, Via San Leonardo 07014 OZIERI ( SS)": {"lat": 40.586, "lng": 9.001, "city": "OZIERI"}, "Palasport, Via Siena 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "Palestra scolastica “G. Cima” , Piazza Giovanni XXIII 09100 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALESTRA COMUNALE, via Verdi 08028 OROSEI ( NU)": {"lat": 40.378, "lng": 9.699, "city": "OROSEI"}, "PALASPORT, Lungomare C. Colombo 09017 SANT'ANTIOCO ( SU)": {"lat": 39.065, "lng": 8.458, "city": "SANT'ANTIOCO"}, "Palazzetto dello Sport, Asse Mediano 09036 GUSPINI ( SU)": {"lat": 39.542, "lng": 8.634, "city": "GUSPINI"}, "CUPOLA GEODETICA COMUNALE, S.P. LUNAMATRONA 09025 SANLURI ( SU)": {"lat": 39.568, "lng": 8.9, "city": "SANLURI"}, "Casa Dinamo, Via Caniga 1 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palazzetto dello Sport, Loc. Sertinu 08015 MACOMER ( NU)": {"lat": 40.265, "lng": 8.779, "city": "MACOMER"}, "PALESTRA SCOLASTICA, Via Matteotti 09041 DOLIANOVA ( SU)": {"lat": 39.374, "lng": 9.178, "city": "DOLIANOVA"}, "PALAZZETTO 'CITTA' UNITE', Via Palladio 07046 PORTO TORRES ( SS)": {"lat": 40.838, "lng": 8.401, "city": "PORTO TORRES"}, "PAL.IMP. SP. UNIVERS., Reg. San Giovanni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra C.O.N.I., Via Coradduzza 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "ORATORIO CHIESA MADRE, VIA AL MARE - FRUTTI D'ORO 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "PALESTRA ISTITUTO GLOBALE JERZ, VIA BUSINCO 31 08044 JERZU ( NU)": {"lat": 39.793, "lng": 9.521, "city": "JERZU"}, "PALAZZETTO BEETHOVEN, Via Beethoven 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "Cupola Geodetica, Via Verdi 09018 SARROCH ( CA)": {"lat": 39.063, "lng": 9.017, "city": "SARROCH"}, "Palazzetto, Via Tharros 09072 CABRAS ( OR)": {"lat": 39.929, "lng": 8.535, "city": "CABRAS"}, "Palestra, Via Nuoro 08100 OLIENA ( NU)": {"lat": 40.268, "lng": 9.396, "city": "OLIENA"}, "- Geopalace c/o Geovi, Circonvallazione Nord direzion 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "Palazzetto Marika Pes, Via Kennedy 09035 GONNOSFANADIGA ( SU)": {"lat": 39.499, "lng": 8.656, "city": "GONNOSFANADIGA"}, "Palestra I.T.I. їG. Asproniї, Via delle Regioni 09010 PORTOSCUSO ( SU)": {"lat": 39.205, "lng": 8.388, "city": "PORTOSCUSO"}, "Palestra 'MOSSA', Viale Diaz 07046 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "PALESTRA, Via Degli Stendardi 09134 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra Sc. Ist. Tecn. A. S., Via Solari 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra, Via Garibaldi 09040 MARACALAGONIS ( CA)": {"lat": 39.328, "lng": 9.206, "city": "MARACALAGONIS"},"PALAZZETTO DELLO SPORT COVRE, PIAZZALE DELLO SPORT SNC 07029 TEMPIO PAUSANIA ( SS)": {"lat": 40.9006, "lng": 9.1364, "city": "TEMPIO PAUSANIA"},"PALAZZETTO COMUNALE, Via Dante Alighieri 07100 TISSI ( SS)": {"lat": 40.7046, "lng": 8.5776, "city": "TISSI"}};
+const CAMPO_GPS={"Palestra Coni, Via Lazio 08100 NUORO ( NU)": {"lat": 40.321, "lng": 9.329, "city": "NUORO"}, "Palestra Luca Simula, Via Poligono 2 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALAZZETTO DELLO SPORT, VIA ENRICO TOTI 09016 IGLESIAS ( SU)": {"lat": 39.309, "lng": 8.538, "city": "IGLESIAS"}, "Pala Antonianum, Via Mons. Angioni 46 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "PALASERRADIMIGNI, Piazza Segni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra S. Elena, Via Pessina 29 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "PalaManchia, Via Mauro Manca 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "Palestra Comunale, Via Garau, Sn 09026 SAN SPERATE ( SU)": {"lat": 39.354, "lng": 8.981, "city": "SAN SPERATE"}, "PALAZZETTO COMUNALE, Via Giliacquas 09030 ELMAS ( CA)": {"lat": 39.27, "lng": 9.05, "city": "ELMAS"}, "PALESTRA C.E.P., Via Talete 2 09131 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra Esperia, Via Pessagno snc 09126 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALACUS, Via Is Mirrionis 3 - 9 09123 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra ї Cus Sassari ї, Reg. San Giovanni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Hangar Sport Center, Via Gioscari 9 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALAZZETTO COMUNALE, VIA KENNEDY 08020 DORGALI ( NU)": {"lat": 40.292, "lng": 9.587, "city": "DORGALI"}, "Palestra Scolastica, Localitа Sertinu 08015 MACOMER ( NU)": {"lat": 40.265, "lng": 8.779, "city": "MACOMER"}, "Palestra, Via Alessandro Volta 09074 GHILARZA ( OR)": {"lat": 40.121, "lng": 8.841, "city": "GHILARZA"}, "Palestra Scuola Media, Via Nanni 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "Palestra Virtus, Via Pessagno (loc. Montemixi) 09126 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PalAversano, Loc. Sciamain 09011 CALASETTA ( SU)": {"lat": 39.107, "lng": 8.37, "city": "CALASETTA"}, "Pal. Genneruxi, Via Zagabria 09129 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALAZZETTO COMUNALE, Via Lamarmora 07024 LA MADDALENA ( SS)": {"lat": 41.216, "lng": 9.407, "city": "LA MADDALENA"}, "PALAZZETTO DELLO SPORT , VIA MOROSINI 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "Palestra Comunale, Viale Paolo Dettori 92 07021 ARZACHENA ( SS)": {"lat": 41.085, "lng": 9.435, "city": "ARZACHENA"}, "STRUTTURA GEODETICA, Viale Vienna 1 09047 SELARGIUS ( CA)": {"lat": 39.252, "lng": 9.165, "city": "SELARGIUS"}, "Pala Bsk90 - GLM, Via Luna e Sole 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALESTRA SCOLASTICA, Via Ariosto 09047 SELARGIUS ( CA)": {"lat": 39.252, "lng": 9.165, "city": "SELARGIUS"}, "PALASPORT 'R.DA TOME', Via Frosinone 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "CAPANNONE POLIVALENTE, VIA MARIA CARTA 09037 SAN GAVINO MONREALE ( SU)": {"lat": 39.552, "lng": 8.793, "city": "SAN GAVINO MONREALE"}, "Tensostruttura, Via Baronie - Flumini 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "CUPOLA GEODETICA, Via Capo Comino 09042 MONSERRATO ( CA)": {"lat": 39.259, "lng": 9.145, "city": "MONSERRATO"}, "Palestra Comunale, S. S. 126 MARRUBIU 09170 MARRUBIU ( OR)": {"lat": 39.77, "lng": 8.644, "city": "MARRUBIU"}, "Palazzetto dello Sport, Via Sardegna 2 07017 PLOAGHE ( SS)": {"lat": 40.657, "lng": 8.745, "city": "PLOAGHE"}, "Palestra scuole medie , Salita S. Cristina 09014 CARLOFORTE ( SU)": {"lat": 39.143, "lng": 8.314, "city": "CARLOFORTE"}, "PALESTRA, Via EMILIO LUSSU 18 07040 OLMEDO ( SS)": {"lat": 40.649, "lng": 8.378, "city": "OLMEDO"}, "PALESTRA, LOC. LIXIUS 08045 LANUSEI ( NU)": {"lat": 39.876, "lng": 9.543, "city": "LANUSEI"}, "Palestra Vittorio Corbia, Via Pacinotti Snc 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "Palestra Comunale, Via Cagliari, 239 09032 ASSEMINI ( CA)": {"lat": 39.295, "lng": 9.001, "city": "ASSEMINI"}, "Palestra C.G. Salesiano, Loc. Fontana Buddia 08100 NUORO ( NU)": {"lat": 40.321, "lng": 9.329, "city": "NUORO"}, "PALESTRA SCUOLA EL. A.FRANK, Ottaviano Augusto 09028 SESTU ( CA)": {"lat": 39.303, "lng": 9.094, "city": "SESTU"}, "Cupola Geodetica, Via Deffenu 09013 CARBONIA ( SU)": {"lat": 39.168, "lng": 8.521, "city": "CARBONIA"}, "Istituto Tecnico Lorenzo Mossa, Via Enrico Carboni 10 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "Palestra Ist.Industriale, Via Degli Orti 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "PALESTRA COMPARTO 8, VIA RIU MORTU SN 09042 MONSERRATO ( CA)": {"lat": 39.259, "lng": 9.145, "city": "MONSERRATO"}, "Palestra Oratorio Salesiano, Piazza Giovanni X X I I I 09131 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra I.T.I.S. Othoca, Via Zara snc - Z.I. 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "PALESTRA COMUNALE, CORTE PISCEDDA 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "Palestra I.T.I.S. ї Giua ї, Via Montecassino 09134 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALESTRA SCOLASTICA, P.zza Don Milani 07046 PORTO TORRES ( SS)": {"lat": 40.838, "lng": 8.401, "city": "PORTO TORRES"}, "PAL. COMUNALE, Via E. D' Arborea 09033 DECIMOMANNU ( CA)": {"lat": 39.303, "lng": 8.975, "city": "DECIMOMANNU"}, "Palazzetto dello Sport їG. Co, Via Pani 82 09031 ARBUS ( SU)": {"lat": 39.527, "lng": 8.589, "city": "ARBUS"}, "Palestra Comunale G.P.Murratzu, Via San Leonardo 07014 OZIERI ( SS)": {"lat": 40.586, "lng": 9.001, "city": "OZIERI"}, "Palasport, Via Siena 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "Palestra scolastica “G. Cima” , Piazza Giovanni XXIII 09100 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALESTRA COMUNALE, via Verdi 08028 OROSEI ( NU)": {"lat": 40.378, "lng": 9.699, "city": "OROSEI"}, "PALASPORT, Lungomare C. Colombo 09017 SANT'ANTIOCO ( SU)": {"lat": 39.065, "lng": 8.458, "city": "SANT'ANTIOCO"}, "Palazzetto dello Sport, Asse Mediano 09036 GUSPINI ( SU)": {"lat": 39.542, "lng": 8.634, "city": "GUSPINI"}, "CUPOLA GEODETICA COMUNALE, S.P. LUNAMATRONA 09025 SANLURI ( SU)": {"lat": 39.568, "lng": 8.9, "city": "SANLURI"}, "Casa Dinamo, Via Caniga 1 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palazzetto dello Sport, Loc. Sertinu 08015 MACOMER ( NU)": {"lat": 40.265, "lng": 8.779, "city": "MACOMER"}, "PALESTRA SCOLASTICA, Via Matteotti 09041 DOLIANOVA ( SU)": {"lat": 39.374, "lng": 9.178, "city": "DOLIANOVA"}, "PALAZZETTO 'CITTA' UNITE', Via Palladio 07046 PORTO TORRES ( SS)": {"lat": 40.838, "lng": 8.401, "city": "PORTO TORRES"}, "PAL.IMP. SP. UNIVERS., Reg. San Giovanni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra C.O.N.I., Via Coradduzza 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "ORATORIO CHIESA MADRE, VIA AL MARE - FRUTTI D'ORO 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "PALESTRA ISTITUTO GLOBALE JERZ, VIA BUSINCO 31 08044 JERZU ( NU)": {"lat": 39.793, "lng": 9.521, "city": "JERZU"}, "PALAZZETTO BEETHOVEN, Via Beethoven 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "Cupola Geodetica, Via Verdi 09018 SARROCH ( CA)": {"lat": 39.063, "lng": 9.017, "city": "SARROCH"}, "Palazzetto, Via Tharros 09072 CABRAS ( OR)": {"lat": 39.929, "lng": 8.535, "city": "CABRAS"}, "Palestra, Via Nuoro 08100 OLIENA ( NU)": {"lat": 40.268, "lng": 9.396, "city": "OLIENA"}, "- Geopalace c/o Geovi, Circonvallazione Nord direzion 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "Palazzetto Marika Pes, Via Kennedy 09035 GONNOSFANADIGA ( SU)": {"lat": 39.499, "lng": 8.656, "city": "GONNOSFANADIGA"}, "Palestra I.T.I. їG. Asproniї, Via delle Regioni 09010 PORTOSCUSO ( SU)": {"lat": 39.205, "lng": 8.388, "city": "PORTOSCUSO"}, "Palestra 'MOSSA', Viale Diaz 07046 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "PALESTRA, Via Degli Stendardi 09134 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra Sc. Ist. Tecn. A. S., Via Solari 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra, Via Garibaldi 09040 MARACALAGONIS ( CA)": {"lat": 39.328, "lng": 9.206, "city": "MARACALAGONIS"},"PALAZZETTO DELLO SPORT COVRE, PIAZZALE DELLO SPORT SNC 07029 TEMPIO PAUSANIA ( SS)": {"lat": 40.9006, "lng": 9.1364, "city": "TEMPIO PAUSANIA"},"PALAZZETTO COMUNALE, Via Dante Alighieri 07100 TISSI ( SS)": {"lat": 40.7046, "lng": 8.5776, "city": "TISSI"},"PALAZZETTO DELLO SPORT , VIA NURAMINIS 09038 SERRAMANNA ( SU)":{"lat": 39.4248, "lng": 8.9161, "city": "Serramanna"},"PALAZZETTO DELLO SPORT, VIA ASPRONI 21 07039 VALLEDORIA ( SS)":{"lat": 40.9301, "lng": 8.829, "city": "Valledoria"},"PALAZZETTO DELLO SPORT, Via Delle Cernitrici 09013 CARBONIA ( SU)":{"lat": 39.1657, "lng": 8.5223, "city": "Carbonia"},"PALAZZETTO DELLO SPORT, Via Verga 09037 SAN GAVINO MONREALE ( SU)":{"lat": 39.5547, "lng": 8.7971, "city": "San Gavino Monreale"},"PALAZZETTO, ZONA MARTINEDDU ITTIRI ( SS)":{"lat": 40.5993, "lng": 8.5617, "city": "Ittiri"},"PALESTRA COPERTA, Via Addis 07037 SORSO ( SS)":{"lat": 40.8088, "lng": 8.5768, "city": "Sorso"},"Palazzetto dello Sport, Via Palladio 07046 PORTO TORRES ( SS)":{"lat": 40.8378, "lng": 8.4015, "city": "Porto Torres"},"Palazzetto dello Sport, Zona Sportiva 07032 NULVI ( SS)":{"lat": 40.79, "lng": 8.7367, "city": "Nulvi"},"Palestra Comunale, Via De Amicis - Loc. Sa Gora 09098 TERRALBA ( OR)":{"lat": 39.7215, "lng": 8.6417, "city": "Terralba"},"Palestra Comunale, Zona Sportiva 07040 URI ( SS)":{"lat": 40.6501, "lng": 8.4836, "city": "Uri"},"Palestra Montigeddu, Via Massarenti 07036 SENNORI ( SS)":{"lat": 40.8024, "lng": 8.5841, "city": "Sennori"},"Palestra Scuola Elementare, Via Lussu 09040 SETTIMO SAN PIETRO ( CA)":{"lat": 39.2879, "lng": 9.1899, "city": "Settimo San Pietro"},"Palestra Scuole Elementari, Via Perra 09048 SINNAI ( CA)":{"lat": 39.3021, "lng": 9.2083, "city": "Sinnai"},"Palestra, Via Dess\u043c 09170 MOGORO ( OR)":{"lat": 39.6876, "lng": 8.7723, "city": "Mogoro"}};
 
 const GARE=D.gare||[],P=D.persons,SQ=D.squads,PV=D.province||{},CS=D.camp_stats||{},H2H=D.h2h||{};
 const CAMPS=D.campionati||[],AG=D.all_groups||{},SG=D.squad_groups||{};
@@ -1356,21 +1457,7 @@ const _SQUAD_ALIASES={
   'ACCADEMIA OLMEDO':'OLMEDO MAVERICKS',
   'BASKET 90 SUNS':'A.S.DIL. BASKET 90','BASKET 90 CORAL CLIPPERS':'A.S.DIL. BASKET 90',
   'S.ORSOLA TEAM ANGEDRAS':'S.ORSOLA',
-  'TISSITTIRI NUGGETS':'ASD SPORTISSI',
-  "PALAZZETTO DELLO SPORT , VIA NURAMINIS 09038 SERRAMANNA ( SU)": {"lat": 39.4248, "lng": 8.9161, "city": "Serramanna"},
-  "PALAZZETTO DELLO SPORT, VIA ASPRONI 21 07039 VALLEDORIA ( SS)": {"lat": 40.9301, "lng": 8.829, "city": "Valledoria"},
-  "PALAZZETTO DELLO SPORT, Via Delle Cernitrici 09013 CARBONIA ( SU)": {"lat": 39.1657, "lng": 8.5223, "city": "Carbonia"},
-  "PALAZZETTO DELLO SPORT, Via Verga 09037 SAN GAVINO MONREALE ( SU)": {"lat": 39.5547, "lng": 8.7971, "city": "San Gavino Monreale"},
-  "PALAZZETTO, ZONA MARTINEDDU ITTIRI ( SS)": {"lat": 40.5993, "lng": 8.5617, "city": "Ittiri"},
-  "PALESTRA COPERTA, Via Addis 07037 SORSO ( SS)": {"lat": 40.8088, "lng": 8.5768, "city": "Sorso"},
-  "Palazzetto dello Sport, Via Palladio 07046 PORTO TORRES ( SS)": {"lat": 40.8378, "lng": 8.4015, "city": "Porto Torres"},
-  "Palazzetto dello Sport, Zona Sportiva 07032 NULVI ( SS)": {"lat": 40.79, "lng": 8.7367, "city": "Nulvi"},
-  "Palestra Comunale, Via De Amicis - Loc. Sa Gora 09098 TERRALBA ( OR)": {"lat": 39.7215, "lng": 8.6417, "city": "Terralba"},
-  "Palestra Comunale, Zona Sportiva 07040 URI ( SS)": {"lat": 40.6501, "lng": 8.4836, "city": "Uri"},
-  "Palestra Montigeddu, Via Massarenti 07036 SENNORI ( SS)": {"lat": 40.8024, "lng": 8.5841, "city": "Sennori"},
-  "Palestra Scuola Elementare, Via Lussu 09040 SETTIMO SAN PIETRO ( CA)": {"lat": 39.2879, "lng": 9.1899, "city": "Settimo San Pietro"},
-  "Palestra Scuole Elementari, Via Perra 09048 SINNAI ( CA)": {"lat": 39.3021, "lng": 9.2083, "city": "Sinnai"},
-  "Palestra, Via Dess\u043c 09170 MOGORO ( OR)": {"lat": 39.6876, "lng": 8.7723, "city": "Mogoro"}
+  'TISSITTIRI NUGGETS':'ASD SPORTISSI'
 };
 const AG_EXT=(()=>{
   const ext=JSON.parse(JSON.stringify(AG));
@@ -1432,11 +1519,22 @@ const RTX={Arbitro:'#7d5a00',UDC:'#0c5460',Osservatore:'#155724'};
 
 // NAV
 function showPage(id){
-  document.querySelectorAll('.ps').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.ps').forEach(s=>{
+    s.classList.remove('active');
+    s.style.opacity='';
+  });
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.nav-group-btn').forEach(b=>b.classList.remove('active'));
   const page=document.getElementById('page-'+id);
-  if(page)page.classList.add('active');
+  if(page){
+    page.classList.add('active');
+    page.style.opacity='0';
+    requestAnimationFrame(()=>{
+      page.style.transition='opacity .18s ease';
+      page.style.opacity='1';
+      setTimeout(()=>page.style.transition='',200);
+    });
+  }
   // Attiva nav button diretto
   document.querySelectorAll('.nav-btn').forEach(b=>{
     if(b.getAttribute('onclick')===`showPage('${id}')`)b.classList.add('active');
@@ -2151,6 +2249,21 @@ function renderHome(){
   document.getElementById('hb-comp-sub').textContent=`${gareConRis}/${gareTot+gareFuture} disputate`;
   document.getElementById('hb-doppio').textContent=doppioPct+'%';
 
+  // Gare future scoperte (0 arbitri)
+  try{
+    const gf=(D.gare_future||[]);
+    const scoperte=gf.filter(g=>!pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||''));
+    const scEl=document.getElementById('hb-scoperte');
+    const scSub=document.getElementById('hb-scoperte-sub');
+    const scCard=document.getElementById('hb-scoperte-card');
+    if(scEl) scEl.textContent=scoperte.length;
+    if(scSub) scSub.textContent=gf.length?Math.round(scoperte.length/gf.length*100)+'% delle '+gf.length+' future':'';
+    if(scCard){
+      const pctCop=gf.length?Math.round((gf.length-scoperte.length)/gf.length*100):100;
+      scCard.style.borderLeft=`3px solid ${scoperte.length===0?'var(--green)':scoperte.length<10?'var(--gold)':'var(--red)'}`;
+    }
+  }catch(e){}
+
   // ── TIMELINE 7 GIORNI
   const today=new Date();
   const perFut={};
@@ -2165,10 +2278,15 @@ function renderHome(){
     const isTod=ds===today.toISOString().split('T')[0];
     const isFut=ds>today.toISOString().split('T')[0];
     const hasg=nG>0;
-    tl7+=`<div class="tl-day${isTod?' today':''}${hasg?' has-games':''}" onclick="openGiornoModal('${ds}')">
-      <div class="tl-dow">${days[d.getDay()]}</div>
+    const isDom=d.getDay()===0;
+    const isSab=d.getDay()===6;
+    const extraStyle=isDom?'border-bottom:3px solid var(--red);':isSab?'border-bottom:2px solid #e91e8c;':'';
+    tl7+=`<div class="tl-day${isTod?' today':''}${hasg?' has-games':''}" onclick="openGiornoModal('${ds}')" style="${extraStyle}">
+      <div class="tl-dow" style="${isDom?'color:var(--red);font-weight:800':isSab?'color:#c0176e':''}">
+        ${days[d.getDay()]}
+      </div>
       <div class="tl-date">${d.getDate()}/${d.getMonth()+1}</div>
-      <div class="tl-n">${nG||'–'}</div>
+      <div class="tl-n" style="${nG>5?'color:var(--red)':nG>2?'color:var(--gold)':''}">${nG||'–'}</div>
       <div class="tl-sub">${hasg?'gare':''}</div>
     </div>`;
   }
@@ -2203,11 +2321,17 @@ function renderHome(){
   const topArbM=Object.entries(arbMonthCount).sort((a,b)=>b[1]-a[1]).slice(0,3);
   const wArb=document.getElementById('w-arb-top');
   if(wArb&&topArbM.length){
-    wArb.innerHTML=topArbM.map(([n,v],i)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <span style="font-size:.8rem;color:var(--mu2);font-weight:700;min-width:16px">${i+1}.</span>
-      <span class="rn rn-Arbitro" data-n="${n}" onclick="openPersona(this.dataset.n)" style="flex:1;font-size:.78rem">${escH(n)}</span>${genderDot(n)}
-      <span style="font-weight:800;color:var(--bl);font-size:.9rem">${v}</span>
-    </div>`).join('')+`<div style="font-size:.65rem;color:var(--mu2);margin-top:4px">mese corrente (${thisMonth})</div>`;
+    wArb.innerHTML=topArbM.map(([n,v],i)=>{
+      const rec=getArbRecord(P[n]);
+      const streak=rec?.streak>1?`<span style="background:#fff3cd;border:1px solid #ffe082;border-radius:8px;padding:0 5px;font-size:.58rem;color:#8a6200;margin-left:3px">🔥${rec.streak}</span>`:'';
+      const trend=rec&&rec.thisMonthG>rec.avgMonth?'↑':'';
+      return`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:.8rem;color:var(--mu2);font-weight:700;min-width:16px">${i+1}.</span>
+        <span class="rn rn-Arbitro" data-n="${n}" onclick="openPersona(this.dataset.n)" style="flex:1;font-size:.78rem">${escH(n)}</span>${genderDot(n)}${streak}
+        <span style="font-weight:800;color:var(--bl);font-size:.9rem">${v}</span>
+        ${trend?`<span style="color:var(--green);font-size:.7rem;font-weight:700">${trend}</span>`:''}
+      </div>`;
+    }).join('')+`<div style="font-size:.65rem;color:var(--mu2);margin-top:4px">mese corrente (${thisMonth})</div>`;
   }
 
   // ── WIDGET: prossima giornata intensa
@@ -2274,25 +2398,13 @@ function renderHome(){
   document.getElementById('h-arb').innerHTML=mkRankCards(arbs,12,'rn-Arbitro');
   document.getElementById('h-udc').innerHTML=mkRankCards(udcs,10,'rn-UDC');
   document.getElementById('h-sq').innerHTML=mkSqCards(sqs);
-
-  const pvs=Object.entries(PV).filter(([,v])=>v.n_gare>0).sort((a,b)=>b[1].n_gare-a[1].n_gare);
-  document.getElementById('h-pv').innerHTML=`<div style="display:flex;flex-direction:column;gap:6px">${pvs.map(([pv,v])=>{
-    const clr=PC[pv]||'#888';
-    const barPct=Math.round(v.n_gare/(pvs[0]?.[1].n_gare||1)*100);
-    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:#fff;border:2px solid ${clr}22;cursor:pointer" onclick="openProvincia('${esc(pv)}')">
-      <span class="badge bp-${pv}" style="background:${clr};font-size:.8rem;font-weight:800;padding:3px 10px">${pv}</span>
-      <div style="flex:1">
-        <div style="height:6px;background:#eef1fa;border-radius:3px">
-          <div style="height:6px;background:${clr};border-radius:3px;width:${barPct}%"></div>
-        </div>
-        <div style="font-size:.62rem;color:var(--mu);margin-top:2px">${v.n_arb||0} arb · ${v.n_sq||0} sq</div>
-      </div>
-      <span style="font-size:1.1rem;font-weight:800;color:${clr}">${v.n_gare}</span>
-    </div>`;
-  }).join('')}</div>`;
+  // Top Osservatori
+  const ossPersone=Object.values(P).filter(p=>p.categoria==='Osservatore');
+  document.getElementById('h-oss').innerHTML=mkRankCards(ossPersone,10,'rn-Osservatore');
 
   const actEl=document.getElementById('h-act');
   if(actEl)renderActivityChart();
+  try{renderCoperturaMiniWidget();}catch(e){}
 
   // ── WIDGET: Coppie arbitri più frequenti
   try{
@@ -2310,19 +2422,26 @@ function renderHome(){
       const clr2=PC[P[a2]?.provincia]||'var(--bl2)';
       const bar=Math.round(n/maxC*100);
       const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+      const pv1=P[a1]?.provincia,pv2=P[a2]?.provincia;
+      const sameP=pv1&&pv2&&pv1===pv2;
       return`<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:${i%2?'#f8faff':'#fff'};border:1px solid #eef1fa">
         <span style="min-width:20px;font-size:.7rem;color:var(--mu2)">${medal||((i+1)+'.')}</span>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
             <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" data-n="${a1}">${escH(a1)}</span>
+            ${pv1?pvB(pv1):''}
             <span style="color:var(--mu2);font-size:.65rem">+</span>
             <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" data-n="${a2}">${escH(a2)}</span>
+            ${pv2&&!sameP?pvB(pv2):''}
           </div>
           <div style="height:4px;background:#eef1fa;border-radius:2px;margin-top:3px">
             <div style="height:4px;background:linear-gradient(90deg,${clr1},${clr2});border-radius:2px;width:${bar}%"></div>
           </div>
         </div>
-        <span style="font-size:.95rem;font-weight:800;color:var(--bl);min-width:24px;text-align:right">${n}</span>
+        <div style="text-align:right">
+          <span style="font-size:.95rem;font-weight:800;color:var(--bl)">${n}</span>
+          ${sameP?`<div style="font-size:.55rem;color:var(--mu2)">stessa prov.</div>`:`<div style="font-size:.55rem;color:var(--mu2)">inter-prov.</div>`}
+        </div>
       </div>`;
     }).join('')}</div>`:'<p style="color:var(--mu);font-size:.75rem;padding:8px">Nessuna coppia trovata</p>';
   }catch(e){}
@@ -4087,6 +4206,48 @@ function openPersona(nome,campFilter){
       </div>
       ${bProg(topCamp,allG.length,PC[p.provincia]||'var(--bl)')}
 
+      <!-- Record personale arbitro -->
+      ${(()=>{
+        if(p.categoria!=='Arbitro')return'';
+        const rec=getArbRecord(p);
+        if(!rec)return'';
+        const mesiL=['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+        const topMLabel=rec.topM?mesiL[parseInt(rec.topM[0].slice(5))]||rec.topM[0]:'-';
+        const totPers=p.n_gare_arbitro||p.n_gare||0;
+        const inProvPct=totPers?Math.round(rec.inProv/totPers*100):0;
+        const outProvPct=totPers?Math.round(rec.outProv/totPers*100):0;
+        const vsAvg=rec.avgMonth>0?Math.round((rec.thisMonthG-rec.avgMonth)/rec.avgMonth*100):0;
+        const vsClr=vsAvg>0?'var(--green)':vsAvg<0?'var(--red)':'var(--mu)';
+        return`<div style="background:linear-gradient(135deg,#f8faff,#fff);border:1px solid var(--bl3);border-radius:10px;padding:10px 14px;margin-bottom:10px">
+          <div style="font-size:.72rem;font-weight:700;color:var(--bl);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+            🏆 Record personale stagione
+            ${rec.streak>1?`<span style="background:#fff3cd;border:1px solid #ffe082;border-radius:8px;padding:1px 8px;font-size:.62rem;color:#8a6200">🔥 Striscia attiva: ${rec.streak}</span>`:''}
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:.68rem;text-align:center">
+            <div style="background:#fff;border-radius:6px;padding:6px 4px;border:1px solid var(--br)">
+              <div style="font-size:.95rem;font-weight:800;color:var(--gold)">${topMLabel}</div>
+              <div style="color:var(--mu);margin-top:2px">Mese top</div>
+              <div style="font-size:.6rem;color:var(--bl);font-weight:700">${rec.topM?rec.topM[1]+' gare':''}</div>
+            </div>
+            <div style="background:#fff;border-radius:6px;padding:6px 4px;border:1px solid var(--br)">
+              <div style="font-size:.95rem;font-weight:800;color:var(--bl)">${rec.thisMonthG}</div>
+              <div style="color:var(--mu);margin-top:2px">Mese corrente</div>
+              <div style="font-size:.6rem;font-weight:700;color:${vsClr}">${vsAvg>0?'+':''}${vsAvg}% vs media</div>
+            </div>
+            <div style="background:#fff;border-radius:6px;padding:6px 4px;border:1px solid var(--br)">
+              <div style="font-size:.95rem;font-weight:800;color:var(--bl2)">${inProvPct}%</div>
+              <div style="color:var(--mu);margin-top:2px">In provincia</div>
+              <div style="font-size:.6rem;color:var(--mu)">${rec.inProv}/${rec.inProv+rec.outProv} gare</div>
+            </div>
+            <div style="background:#fff;border-radius:6px;padding:6px 4px;border:1px solid var(--br)">
+              <div style="font-size:.95rem;font-weight:800;color:var(--bl2)">${rec.totalDays}</div>
+              <div style="color:var(--mu);margin-top:2px">Giorni attivi</div>
+              <div style="font-size:.6rem;color:var(--mu)">giorni con gara</div>
+            </div>
+          </div>
+        </div>`;
+      })()}
+
       <!-- Km + Copertura + Attività mensile -->
       <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px;margin-top:10px">
         ${km>0?`<div class="card" style="margin-bottom:0">
@@ -5282,16 +5443,35 @@ function openProvincia(pv){
       <button class="mt" onclick="swTab(this,'mpvt-')">📅 Gare (${ps.n_gare})</button>
     </div>
     <div class="mtc active" id="mpvt-0">
-      <div class="scs">
-        <div class="sc" style="border-top:3px solid ${pvColor}"><div class="sv" style="color:${pvColor}">${pv}</div><div class="sl">Provincia</div></div>
-        <div class="sc"><div class="sv">${ps.n_gare}</div><div class="sl">Gare nel campo</div></div>
-        <div class="sc"><div class="sv">${arbs_r.length}</div><div class="sl">Arbitri res.</div></div>
-        <div class="sc"><div class="sv">${udc_r.length}</div><div class="sl">UDC res.</div></div>
-        <div class="sc"><div class="sv">${oss_r.length}</div><div class="sl">Osservatori res.</div></div>
-        <div class="sc"><div class="sv">${sq_r.length}</div><div class="sl">Sq. residenti</div></div>
-        <div class="sc"><div class="sv">${sq_o.length}</div><div class="sl">Sq. ospiti</div></div>
-        <div class="sc"><div class="sv">${ce.length}</div><div class="sl">Campionati</div></div>
-      </div>
+      ${(()=>{
+        const pvSt=getProvStats(pv);
+        const nArb=arbs_r.length;
+        const nF=arbs_r.filter(p=>p.genere==='F').length;
+        const pctF=nArb?Math.round(nF/nArb*100):0;
+        const doppio=(D.gare||[]).filter(g=>{const cf=CAMPI[g['Campo']]||{};return cf.prov===pv&&pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'');}).length;
+        const doppioPct=ps.n_gare?Math.round(doppio/ps.n_gare*100):0;
+        const dopClr=doppioPct>=70?'var(--green)':doppioPct>=40?'var(--gold)':'var(--red)';
+        const totFut=(D.gare_future||[]).filter(g=>{const cf=CAMPI[g['Campo']]||{};return cf.prov===pv;}).length;
+        return`<div class="scs">
+          <div class="sc" style="border-top:3px solid ${pvColor}"><div class="sv" style="color:${pvColor}">${pv}</div><div class="sl">Provincia</div></div>
+          <div class="sc"><div class="sv">${ps.n_gare}</div><div class="sl">Gare nel campo</div></div>
+          <div class="sc"><div class="sv">${nArb}</div><div class="sl">Arbitri res.</div></div>
+          <div class="sc"><div class="sv">${udc_r.length}</div><div class="sl">UDC res.</div></div>
+          <div class="sc"><div class="sv">${oss_r.length}</div><div class="sl">Osservatori res.</div></div>
+          <div class="sc"><div class="sv">${sq_r.length}</div><div class="sl">Sq. residenti</div></div>
+          <div class="sc"><div class="sv">${sq_o.length}</div><div class="sl">Sq. ospiti</div></div>
+          <div class="sc"><div class="sv">${ce.length}</div><div class="sl">Campionati</div></div>
+          <div class="sc" style="border-top:3px solid #e84393"><div class="sv" style="color:#e84393">${pctF}%</div><div class="sl">👩 % Donne</div></div>
+          <div class="sc ${doppioPct>=70?'green':doppioPct>=40?'gold':'red'}" title="Gare con 2 arbitri"><div class="sv">${doppioPct}%</div><div class="sl">Dop. arb.</div></div>
+          <div class="sc"><div class="sv">${pvSt.avgKm}</div><div class="sl">Km medio arb.</div></div>
+          <div class="sc gold"><div class="sv">${totFut}</div><div class="sl">Gare future</div></div>
+        </div>
+        ${pvSt.topCoppia?`<div style="background:#fffae6;border:1px solid #ffe082;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:.76rem">
+          🤝 Coppia top: <span class="rn rn-Arbitro" data-n="${pvSt.topCoppia[0].split('|||')[0]}">${escH(pvSt.topCoppia[0].split('|||')[0])}</span>
+          + <span class="rn rn-Arbitro" data-n="${pvSt.topCoppia[0].split('|||')[1]}">${escH(pvSt.topCoppia[0].split('|||')[1])}</span>
+          <b style="color:var(--gold);margin-left:8px">${pvSt.topCoppia[1]} gare insieme</b>
+        </div>`:''}`;
+      })()}
       <div class="st" style="font-size:.8rem">📊 Campionati nel campo</div>
       ${bProg(ce.slice(0,14),maxC,pvColor)}
     </div>
@@ -5371,6 +5551,12 @@ function openCampionato(camp){
         <div class="sc gold"><div class="sv">${avgPG}</div><div class="sl">Media pt/sq</div></div>
         <div class="sc green"><div class="sv">${g2}</div><div class="sl">2 Arbitri</div></div>
         <div class="sc gold"><div class="sv">${g1}</div><div class="sl">1 Arbitro</div></div>
+        ${g0>0?`<div class="sc red"><div class="sv">${g0}</div><div class="sl">0 Arbitri</div></div>`:''}
+        ${(()=>{
+          const nFArb=topArb.filter(([n])=>P[n]?.genere==='F').length;
+          const pctF=topArb.length?Math.round(nFArb/topArb.length*100):0;
+          return pctF>0?`<div class="sc" style="border-top:3px solid #e84393"><div class="sv" style="color:#e84393">${pctF}%</div><div class="sl">👩 Arb. donne</div></div>`:'';
+        })()}
         ${g0>0?`<div class="sc red"><div class="sv">${g0}</div><div class="sl">0 Arbitri</div></div>`:''}
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:5px;margin:8px 0">
@@ -7792,6 +7978,20 @@ document.addEventListener('DOMContentLoaded',()=>{
   Object.keys(SQ).sort().forEach(sq=>{const o=document.createElement('option');o.value=sq;o.textContent=sq;sq1sel.appendChild(o);});
   document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
   document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));});
+  // Barra di caricamento visiva
+  const _lb=document.createElement('div');_lb.className='load-bar';document.body.appendChild(_lb);
+  setTimeout(()=>{_lb.style.opacity='0';setTimeout(()=>_lb.remove(),400);},700);
+
+  // Chip "gare oggi" nella kpi-strip
+  try{
+    const todayStr=new Date().toISOString().split('T')[0];
+    const garOggi=[...(D.gare||[]),...(D.gare_future||[])].filter(g=>g['Data']===todayStr).length;
+    const kcOggi=document.getElementById('kc-oggi');
+    const kcWrap=document.getElementById('kc-oggi-wrap');
+    if(kcOggi)kcOggi.textContent=garOggi;
+    if(kcWrap)kcWrap.style.display=garOggi>0?'flex':'none';
+  }catch(e){}
+
   renderHome();renderTutti();renderArb();renderUDC();renderOss();renderSq();
   // Pre-init provvedimenti so data is ready when page is opened
   try{initProvvedimenti();}catch(e){}
@@ -7874,6 +8074,109 @@ document.addEventListener('DOMContentLoaded',()=>{
   
 
 
+
+
+// ═══════════════════════════════════════════════════════════════
+// STATISTICHE AGGIUNTIVE v8
+// ═══════════════════════════════════════════════════════════════
+
+// Record personale arbitro: miglior mese, striscia attiva, percentuale casa/trasferta
+function getArbRecord(p){
+  if(!p||!p.gare||!p.gare.length) return null;
+  // Mese top
+  const mc={};
+  (p.gare||[]).forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)mc[m]=(mc[m]||0)+1;});
+  const topM=Object.entries(mc).sort((a,b)=>b[1]-a[1])[0];
+  // Striscia attiva (giorni consecutivi recenti con gara)
+  const dates=[...new Set((p.gare||[]).map(g=>g['Data']||'').filter(Boolean))].sort().reverse();
+  let streak=0;
+  const today=new Date().toISOString().split('T')[0];
+  let prev=null;
+  for(const d of dates){
+    if(!prev){const diff=Math.round((new Date(today)-new Date(d))/86400000);if(diff>14)break;}
+    if(prev){const diff=Math.round((new Date(prev)-new Date(d))/86400000);if(diff>7)break;}
+    streak++;prev=d;
+  }
+  // Gare casa vs trasferta
+  const pvCoord={CA:[39.22,9.12],SS:[40.73,8.56],NU:[40.32,9.33],OR:[39.90,8.59],SU:[39.37,8.78]};
+  const pvCenter=pvCoord[p.provincia]||null;
+  let inProv=0,outProv=0;
+  (p.gare||[]).forEach(g=>{
+    const gps=CAMPO_GPS[g['Campo']||''];
+    if(!gps||!pvCenter)return;
+    const d=Math.sqrt((gps.lat-pvCenter[0])**2+(gps.lng-pvCenter[1])**2);
+    if(d<0.8)inProv++;else outProv++;
+  });
+  // Mese corrente vs media
+  const thisMonth=new Date().toISOString().slice(0,7);
+  const thisMonthG=mc[thisMonth]||0;
+  const avgMonth=Object.values(mc).length?Math.round(Object.values(mc).reduce((a,b)=>a+b,0)/Object.values(mc).length):0;
+  return{topM,streak,inProv,outProv,thisMonthG,avgMonth,totalDays:dates.length};
+}
+
+// Statistiche "gare scoperte" per data - utile per la home
+function calcGareScoperte(){
+  const allG=[...(D.gare||[]),...(D.gare_future||[])];
+  const scoperte=allG.filter(g=>!pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||''));
+  const singolo=allG.filter(g=>pns(g['Arbitro 1']||'')!==''&&!pns(g['Arbitro 2']||''));
+  const future=(D.gare_future||[]).filter(g=>!pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||''));
+  return{scoperte:scoperte.length,singolo:singolo.length,futureScoperte:future.length};
+}
+
+// Widget mini "Stato copertura" per la home
+function renderCoperturaMiniWidget(){
+  const el=document.getElementById('h-cop-mini');if(!el)return;
+  const stats=calcGareScoperte();
+  const allFut=(D.gare_future||[]).length;
+  const pct=allFut?Math.round((allFut-stats.futureScoperte)/allFut*100):100;
+  const clr=pct>=80?'var(--green)':pct>=50?'var(--gold)':'var(--red)';
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="flex:1;min-width:120px">
+        <div style="font-size:.65rem;color:var(--mu);margin-bottom:4px">Prossime gare coperte</div>
+        <div style="height:8px;background:#eef1fa;border-radius:4px;overflow:hidden">
+          <div style="height:100%;background:${clr};border-radius:4px;width:${pct}%;transition:width .5s"></div>
+        </div>
+        <div style="font-size:.68rem;color:var(--mu);margin-top:3px">${allFut-stats.futureScoperte}/${allFut} — <b style="color:${clr}">${pct}%</b></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="text-align:center;cursor:pointer" onclick="showPage('copertura')">
+          <div style="font-size:1.1rem;font-weight:800;color:var(--red)">${stats.futureScoperte}</div>
+          <div style="font-size:.58rem;color:var(--mu);text-transform:uppercase">0 arb.</div>
+        </div>
+        <div style="text-align:center;cursor:pointer" onclick="showPage('copertura')">
+          <div style="font-size:1.1rem;font-weight:800;color:var(--gold)">${stats.singolo}</div>
+          <div style="font-size:.58rem;color:var(--mu);text-transform:uppercase">1 arb.</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// Statistiche per provincia: % donne, età media (se disponibile)
+function getProvStats(pv){
+  const ps=PV[pv]||{};
+  const arbs=(ps.arbitri_residenti||[]).map(n=>P[n]).filter(Boolean);
+  const nF=arbs.filter(p=>p.genere==='F').length;
+  const pctF=arbs.length?Math.round(nF/arbs.length*100):0;
+  // Media km per arbitro della provincia
+  let totKm=0;
+  arbs.forEach(p=>{totKm+=calcKmArb(p)||0;});
+  const avgKm=arbs.length?Math.round(totKm/arbs.length):0;
+  // Top coppia della provincia
+  const coppie={};
+  (D.gare||[]).forEach(g=>{
+    const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
+    if(a1&&a2){
+      const p1=P[a1],p2=P[a2];
+      if(p1?.provincia===pv&&p2?.provincia===pv){
+        const k=[a1,a2].sort().join('|||');
+        coppie[k]=(coppie[k]||0)+1;
+      }
+    }
+  });
+  const topCoppia=Object.entries(coppie).sort((a,b)=>b[1]-a[1])[0];
+  return{nF,pctF,avgKm,topCoppia};
+}
 
 // ═══════════════════════════════════════════════════════
 // GIRONI: classifiche, griglie, andamento
