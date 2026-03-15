@@ -1215,20 +1215,26 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="fb">
     <div class="fg"><label>Cerca</label><input type="text" id="fc-q" placeholder="Nome campo..." oninput="renderCampi()"></div>
     <div class="fg"><label>Provincia</label><select id="fc-pv" onchange="renderCampi()"><option value="">Tutte</option></select></div>
+    <div class="fg"><label>Ordina</label><select id="fc-sort" onchange="renderCampi()">
+      <option value="prov">Provincia</option>
+      <option value="gare">Gare ↓</option>
+      <option value="nome">Nome A→Z</option>
+    </select></div>
     <button class="btn b-gr" onclick="resetF('fc-q','fc-pv');renderCampi()">↺</button>
   </div>
   <div class="il" id="campi-info"></div>
   <div style="overflow-x:auto"><table class="gtbl" id="tbl-campi">
     <thead><tr>
-    <th onclick="sT('tbl-campi',0)" style="cursor:pointer"># ⇅</th>
-    <th onclick="sT('tbl-campi',1)" style="cursor:pointer">Campo ⇅</th>
-    <th>Indirizzo</th>
-    <th onclick="sT('tbl-campi',3)" style="cursor:pointer">Località ⇅</th>
-    <th onclick="sT('tbl-campi',4)" style="cursor:pointer">Prov ⇅</th>
-    <th onclick="sT('tbl-campi',5)" style="cursor:pointer">Gare ⇅</th>
-    <th>🏠 Casa</th><th>✈️ Ospitate</th>
-    <th onclick="sT('tbl-campi',8)" style="cursor:pointer">Camp. ⇅</th>
-  </tr></thead>
+      <th onclick="sT('tbl-campi',0)" style="cursor:pointer">#</th>
+      <th onclick="sT('tbl-campi',1)" style="cursor:pointer">Campo</th>
+      <th>Indirizzo</th>
+      <th onclick="sT('tbl-campi',3)" style="cursor:pointer">Località</th>
+      <th onclick="sT('tbl-campi',4)" style="cursor:pointer">Prov.</th>
+      <th onclick="sT('tbl-campi',5)" style="cursor:pointer">Gare</th>
+      <th>🏠 Squadre casa</th>
+      <th>✈️ Ospitate</th>
+      <th onclick="sT('tbl-campi',8)" style="cursor:pointer">Camp.</th>
+    </tr></thead>
     <tbody id="tbl-campi-body"></tbody>
   </table></div>
 </div>
@@ -7242,41 +7248,80 @@ function parseCampoAddr(campo){
 function renderCampi(){
   const q=(document.getElementById('fc-q')?.value||'').toLowerCase();
   const pv=document.getElementById('fc-pv')?.value||'';
-  let list=Object.values(CAMPI).filter(c=>(!q||c.campo.toLowerCase().includes(q)||c.nome_breve.toLowerCase().includes(q))&&(!pv||c.prov===pv));
-  list.sort((a,b)=>a.prov.localeCompare(b.prov)||b.gare-a.gare);
+  const sort=document.getElementById('fc-sort')?.value||'prov';
+  let list=Object.values(CAMPI).filter(c=>
+    (!q||c.campo.toLowerCase().includes(q)||(c.nome_breve||'').toLowerCase().includes(q))&&
+    (!pv||c.prov===pv)
+  );
+
+  if(sort==='gare') list.sort((a,b)=>b.gare-a.gare);
+  else if(sort==='nome') list.sort((a,b)=>(a.nome_breve||a.campo).localeCompare(b.nome_breve||b.campo,'it'));
+  else list.sort((a,b)=>a.prov.localeCompare(b.prov)||b.gare-a.gare);
+
   const infoEl=document.getElementById('campi-info');
   if(infoEl) infoEl.textContent=list.length+' campi';
   const tbody=document.getElementById('tbl-campi-body');
   if(!tbody) return;
-  const byProv={};
-  list.forEach(function(c){ if(!byProv[c.prov]) byProv[c.prov]=[]; byProv[c.prov].push(c); });
-  let html=''; let globalIdx=0;
-  Object.keys(byProv).sort().forEach(function(prov){
-    const campiProv=byProv[prov];
-    const provClr=PC[prov]||'#333';
-    html+=`<tr style="background:${provClr}22;border-left:4px solid ${provClr}">
-      <td colspan="9" style="font-weight:700;color:${provClr};font-size:.78rem;padding:5px 10px">
-        📍 Provincia ${prov} — ${campiProv.length} campi
-      </td></tr>`;
-    campiProv.forEach(function(c){
-      globalIdx++;
-      const sqCasa=(c.sq_casa&&c.sq_casa.length)?c.sq_casa:[];
-      const sqOsp=(c.sq_ospiti&&c.sq_ospiti.length)?c.sq_ospiti:[];
-      const addr=parseCampoAddr(c.campo);
-      html+=`<tr>
-        <td data-val="${globalIdx}" style="color:#9aa3b8;font-size:.7rem">${globalIdx}</td>
-        <td data-val="${escH(addr.nome||c.nome_breve)}" style="font-size:.76rem;cursor:pointer;color:#003087;font-weight:600;white-space:normal;max-width:160px" onclick="openCampoModal('${esc(c.campo)}')">${escH(addr.nome||c.nome_breve)}</td>
-        <td style="font-size:.68rem;color:#555;white-space:normal;max-width:160px">${escH(addr.via||'—')}</td>
-        <td data-val="${escH(addr.citta||'')}" style="font-size:.72rem;font-weight:600;white-space:normal">${escH(addr.citta||'—')}</td>
-        <td data-val="${c.prov||''}" style="text-align:center;font-weight:700;color:${provClr}">${c.prov||'—'}</td>
-        <td data-val="${c.gare}" style="text-align:center;font-weight:700">${c.gare}</td>
-        <td style="font-size:.67rem;max-width:180px;white-space:normal">${sqCasa.map(sq=>`<span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span>`).join(' ')||'<span style="color:#9aa3b8">—</span>'}</td>
-        <td style="font-size:.67rem;max-width:180px;white-space:normal">${sqOsp.map(sq=>`<span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span>`).join(' ')||'<span style="color:#9aa3b8">—</span>'}</td>
-        <td style="font-size:.68rem;color:#6b7a99">${c.n_campionati||0}</td>
-      </tr>`;
+
+  // Raggruppa per provincia se si ordina per provincia
+  let html='';
+  let globalIdx=0;
+
+  if(sort==='prov'){
+    const byProv={};
+    list.forEach(c=>{if(!byProv[c.prov])byProv[c.prov]=[];byProv[c.prov].push(c);});
+    Object.keys(byProv).sort().forEach(prov=>{
+      const provClr=PC[prov]||'#333';
+      html+=`<tr style="background:${provClr}18;border-left:4px solid ${provClr}">
+        <td colspan="9" style="font-weight:700;color:${provClr};font-size:.78rem;padding:5px 10px">
+          📍 Provincia ${prov} — ${byProv[prov].length} campi
+        </td></tr>`;
+      byProv[prov].forEach(c=>{html+=mkCampoRow(c,++globalIdx);});
     });
-  });
+  } else {
+    list.forEach(c=>{html+=mkCampoRow(c,++globalIdx);});
+  }
   tbody.innerHTML=html;
+}
+
+function mkCampoRow(c,idx){
+  const sqCasa=(c.sq_casa&&c.sq_casa.length)?c.sq_casa:[];
+  const sqOsp=(c.sq_ospiti&&c.sq_ospiti.length)?c.sq_ospiti:[];
+  const addr=parseCampoAddr(c.campo);
+  const provClr=PC[c.prov]||'#333';
+  const ospId='osp_'+idx;
+
+  // Pill provincia
+  const provPill=`<span style="display:inline-block;background:${provClr};color:#fff;border-radius:8px;padding:1px 7px;font-size:.62rem;font-weight:700">${c.prov||'?'}</span>`;
+
+  // Squadre casa — sempre visibili come pill colorate
+  const casaHtml=sqCasa.length
+    ?sqCasa.map(sq=>`<span style="display:inline-block;background:${provClr}22;color:${provClr};border:1px solid ${provClr}55;border-radius:6px;padding:1px 6px;font-size:.62rem;font-weight:600;cursor:pointer;margin:1px" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span>`).join('')
+    :'<span style="color:#9aa3b8;font-size:.68rem">—</span>';
+
+  // Ospitate — collassabili se > 3
+  let ospHtml='';
+  if(sqOsp.length===0){
+    ospHtml='<span style="color:#9aa3b8;font-size:.68rem">—</span>';
+  } else if(sqOsp.length<=3){
+    ospHtml=sqOsp.map(sq=>`<span style="display:inline-block;background:#f5f5f5;color:var(--mu);border:1px solid #ddd;border-radius:6px;padding:1px 6px;font-size:.62rem;cursor:pointer;margin:1px" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span>`).join('');
+  } else {
+    const firstThree=sqOsp.slice(0,3).map(sq=>`<span style="display:inline-block;background:#f5f5f5;color:var(--mu);border:1px solid #ddd;border-radius:6px;padding:1px 6px;font-size:.62rem;cursor:pointer;margin:1px" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span>`).join('');
+    const rest=sqOsp.slice(3).map(sq=>`<span style="display:inline-block;background:#f5f5f5;color:var(--mu);border:1px solid #ddd;border-radius:6px;padding:1px 6px;font-size:.62rem;cursor:pointer;margin:1px" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span>`).join('');
+    ospHtml=`${firstThree}<span id="${ospId}_more" style="display:inline-block"><span style="font-size:.62rem;color:var(--bl);cursor:pointer;margin-left:3px" onclick="document.getElementById('${ospId}_rest').style.display='inline';document.getElementById('${ospId}_more').style.display='none'">+${sqOsp.length-3} ▾</span></span><span id="${ospId}_rest" style="display:none">${rest}<span style="font-size:.62rem;color:var(--mu);cursor:pointer;margin-left:3px" onclick="document.getElementById('${ospId}_rest').style.display='none';document.getElementById('${ospId}_more').style.display='inline'">▴ meno</span></span>`;
+  }
+
+  return`<tr style="border-left:3px solid ${provClr}">
+    <td data-val="${idx}" style="color:#9aa3b8;font-size:.7rem">${idx}</td>
+    <td data-val="${escH(addr.nome||c.nome_breve||'')}" style="font-size:.76rem;cursor:pointer;color:var(--bl);font-weight:600;white-space:normal;max-width:150px" onclick="openCampoModal('${esc(c.campo)}')">${escH(addr.nome||c.nome_breve||c.campo.split(',')[0])}</td>
+    <td style="font-size:.66rem;color:var(--mu);white-space:normal;max-width:130px">${escH(addr.via||'')}</td>
+    <td data-val="${escH(addr.citta||'')}" style="font-size:.72rem;font-weight:600">${escH(addr.citta||'—')}</td>
+    <td style="text-align:center">${provPill}</td>
+    <td data-val="${c.gare}" style="text-align:center;font-weight:700;color:${provClr}">${c.gare}</td>
+    <td style="white-space:normal;max-width:200px">${casaHtml}</td>
+    <td style="white-space:normal;max-width:200px">${ospHtml}</td>
+    <td data-val="${c.n_campionati||0}" style="text-align:center;font-size:.72rem;color:var(--mu)">${c.n_campionati||0}</td>
+  </tr>`;
 }
 function openCampoModal(campo){
   try{
