@@ -914,9 +914,13 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="st">🥇 Campionati</div>
   <div class="fb">
     <div class="fg"><label>Cerca</label><input type="text" id="fcamp-q" placeholder="Nome..." oninput="renderCamp()"></div>
-    <div class="fg"><label>Ordina</label><select id="fcamp-sort" onchange="renderCamp()"><option value="categoria">Per categoria</option><option value="n_gare">Gare ↓</option><option value="nome">Nome A→Z</option><option value="n_squadre">Squadre ↓</option></select></div>
+    <div class="fg"><label>Girone</label><input type="text" id="fcamp-girone" placeholder="Es. Girone A..." oninput="renderCamp()" style="width:130px"></div>
+    <div class="fg"><label>Ordina</label><select id="fcamp-sort" onchange="renderCamp()"><option value="categoria">Per categoria</option><option value="n_gare">Gare ↓</option><option value="nome">Nome A→Z</option><option value="n_squadre">Squadre ↓</option><option value="completamento">% Completamento ↓</option></select></div>
     <div class="fg"><label>Genere</label><select id="fcamp-gen" onchange="renderCamp()"><option value="">Tutti</option><option value="M">👦 Maschile</option><option value="F">👩 Femminile</option><option value="X">🔄 Minibasket</option></select></div>
-    <button class="btn b-gr" onclick="resetF('fcamp-q');renderCamp()">↺</button>
+    <div class="fg"><label>Stato</label><select id="fcamp-stato" onchange="renderCamp()"><option value="">Tutti</option><option value="corso">In corso</option><option value="comp">Completato</option><option value="inizio">Non iniziato</option></select></div>
+    <button class="btn b-gr" onclick="resetF('fcamp-q','fcamp-girone');document.getElementById('fcamp-stato').selectedIndex=0;renderCamp()">↺</button>
+    <button class="btn" style="font-size:.7rem;padding:3px 8px" onclick="campToggleAll(true)">▼ Espandi</button>
+    <button class="btn" style="font-size:.7rem;padding:3px 8px" onclick="campToggleAll(false)">▲ Comprimi</button>
   </div>
   <div id="camp-list"></div>
 </div>
@@ -1010,7 +1014,17 @@ tr.loss-row td{background:#fdecea!important;}
         <option value="">Tutti i gironi</option>
       </select>
     </div>
-    <button class="btn b-gr" onclick="document.getElementById('cop-camp').value='';document.getElementById('cop-girone').value='';renderCopertura()">↺ Reset</button>
+    <div class="fg"><label>Categoria</label>
+      <select id="cop-cat" onchange="renderCopertura()">
+        <option value="">Tutte</option>
+        <option value="senior">Solo Senior</option>
+        <option value="junior">Solo Giovanili</option>
+        <option value="mini">Solo Minibasket</option>
+      </select>
+    </div>
+    <button class="btn b-gr" onclick="document.getElementById('cop-camp').value='';document.getElementById('cop-girone').value='';document.getElementById('cop-cat').value='';renderCopertura()">↺ Reset</button>
+    <button class="btn" style="font-size:.7rem;padding:3px 8px" onclick="copToggleAll(true)">▼ Espandi</button>
+    <button class="btn" style="font-size:.7rem;padding:3px 8px" onclick="copToggleAll(false)">▲ Comprimi</button>
   </div>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
     <div class="card"><div class="card-title">👨‍⚖️ Arbitri presenti</div><div id="cop-arb"></div></div>
@@ -2172,6 +2186,9 @@ function toggleResocontoMode(){
   document.getElementById('res-oggi-btn').style.display=mode==='giorno'?'':'none';
 }
 
+// Filtro attivo resoconto (null = tutte)
+let _resFiltro=null;
+
 function renderResoconto(){
   const mode=document.getElementById('res-mode')?.value||'giorno';
   const el=document.getElementById('res-content');
@@ -2201,19 +2218,22 @@ function renderResoconto(){
     titleStr=`${dal} → ${al}`;
   }
 
-  allG.sort((a,b)=>(a['Data']+a['Ora']).localeCompare(b['Data']+b['Ora']));
-  if(info)info.textContent=`${allG.length} gare — ${titleStr}`;
+  // ── ORDINAMENTO: prima per importanza campionato, poi per data/ora ──
+  allG.sort((a,b)=>{
+    const la=typeof livelloC==='function'?livelloC(a['Campionato']||''):0;
+    const lb=typeof livelloC==='function'?livelloC(b['Campionato']||''):0;
+    if(lb!==la) return lb-la;
+    return (a['Data']+( a['Ora']||'')).localeCompare(b['Data']+(b['Ora']||''));
+  });
 
+  if(info)info.textContent=`${allG.length} gare — ${titleStr}`;
   if(!allG.length){
     el.innerHTML='<div style="color:var(--mu);padding:20px;text-align:center">Nessuna gara trovata</div>';
     return;
   }
 
   // Statistiche aggregate
-  const nArbs=new Set();
-  const nCamps=new Set();
-  const nCampi=new Set();
-  const nSq=new Set();
+  const nArbs=new Set(),nCamps=new Set(),nCampi=new Set(),nSq=new Set();
   allG.forEach(g=>{
     ['Arbitro 1','Arbitro 2'].forEach(f=>{const n=pns(g[f]||'');if(n)nArbs.add(n);});
     if(g['Campionato'])nCamps.add(g['Campionato']);
@@ -2223,23 +2243,40 @@ function renderResoconto(){
   });
   const conRis=allG.filter(g=>g['Risultato']).length;
   const con2=allG.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')).length;
-  const con1=allG.filter(g=>pns(g['Arbitro 1']||'')||pns(g['Arbitro 2']||'')).length-con2;
+  const con1=allG.filter(g=>(pns(g['Arbitro 1']||'')||pns(g['Arbitro 2']||''))&&!(pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||''))).length;
   const senza=allG.length-con2-con1;
 
+  // Applica filtro attivo
+  let gareVis=allG;
+  if(_resFiltro==='conRis') gareVis=allG.filter(g=>g['Risultato']);
+  else if(_resFiltro==='senzaRis') gareVis=allG.filter(g=>!g['Risultato']);
+  else if(_resFiltro==='con2') gareVis=allG.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||''));
+  else if(_resFiltro==='con1') gareVis=allG.filter(g=>(pns(g['Arbitro 1']||'')||pns(g['Arbitro 2']||''))&&!(pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')));
+  else if(_resFiltro==='senza') gareVis=allG.filter(g=>!pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||''));
+
+  // Stile card KPI attiva
+  const scAct='border:2px solid var(--bl2);background:var(--bl4);';
+  const mkSc=(id,filtro,cls,v,l)=>`<div class="sc ${cls}" style="cursor:pointer;${_resFiltro===filtro?scAct:''}" onclick="_resFiltro=_resFiltro==='${filtro}'?null:'${filtro}';renderResoconto()"><div class="sv">${v}</div><div class="sl">${l}</div></div>`;
+
   el.innerHTML=`
-    <div class="scs" style="margin-bottom:14px">
-      <div class="sc"><div class="sv">${allG.length}</div><div class="sl">Gare totali</div></div>
-      <div class="sc green"><div class="sv">${conRis}</div><div class="sl">Con risultato</div></div>
-      <div class="sc"><div class="sv">${nArbs.size}</div><div class="sl">Arbitri</div></div>
-      <div class="sc"><div class="sv">${nSq.size}</div><div class="sl">Squadre</div></div>
-      <div class="sc"><div class="sv">${nCamps.size}</div><div class="sl">Campionati</div></div>
-      <div class="sc"><div class="sv">${nCampi.size}</div><div class="sl">Campi</div></div>
-      <div class="sc green"><div class="sv">${con2}</div><div class="sl">Con 2 arb.</div></div>
-      <div class="sc gold"><div class="sv">${con1}</div><div class="sl">Con 1 arb.</div></div>
-      <div class="sc red"><div class="sv">${senza}</div><div class="sl">Senza arb.</div></div>
+    <div class="scs" style="margin-bottom:10px">
+      ${mkSc('tot',null,'',''+allG.length,'Gare totali')}
+      ${mkSc('conRis','conRis','green',''+conRis,'Con risultato')}
+      ${mkSc('arb',null,'',''+nArbs.size,'Arbitri')}
+      ${mkSc('sq',null,'',''+nSq.size,'Squadre')}
+      ${mkSc('camp',null,'',''+nCamps.size,'Campionati')}
+      ${mkSc('campi',null,'',''+nCampi.size,'Campi')}
+      ${mkSc('con2','con2','green',''+con2,'Con 2 arb.')}
+      ${mkSc('con1','con1','gold',''+con1,'Con 1 arb.')}
+      ${mkSc('senza','senza','red',''+senza,'Senza arb.')}
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">
-      ${[...nCamps].sort().map(c=>`<span style="background:${campColor(c)};color:#fff;border-radius:4px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="openCampionato('${esc(c)}')">${escH(c)}</span>`).join('')}
+    ${_resFiltro?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:5px 10px;background:var(--bl4);border-radius:6px;font-size:.74rem">
+      <span style="color:var(--bl2);font-weight:700">Filtro attivo: ${_resFiltro==='conRis'?'Con risultato':_resFiltro==='senzaRis'?'Senza risultato':_resFiltro==='con2'?'Con 2 arbitri':_resFiltro==='con1'?'Con 1 arbitro':'Senza arbitri'}</span>
+      <span style="color:var(--mu)">→ ${gareVis.length} gare</span>
+      <span style="cursor:pointer;color:var(--red);margin-left:auto" onclick="_resFiltro=null;renderResoconto()">✕ Rimuovi filtro</span>
+    </div>`:''}
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
+      ${[...nCamps].sort((a,b)=>(livelloC?livelloC(b)-livelloC(a):0)).map(c=>`<span style="background:${campColor(c)};color:#fff;border-radius:4px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="openCampionato('${esc(c)}')">${escH(c)}</span>`).join('')}
     </div>
     ${mode==='periodo'?`
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
@@ -2252,9 +2289,7 @@ function renderResoconto(){
           const maxD=Math.max(...days.map(d=>d[1]),1);
           return days.map(([d,n])=>`<div style="display:flex;align-items:center;gap:6px;margin:2px 0;font-size:.73rem">
             <span style="width:80px;color:var(--mu)">${d}</span>
-            <div style="flex:1;height:8px;background:var(--bl4);border-radius:4px">
-              <div style="height:8px;background:var(--bl2);border-radius:4px;width:${n/maxD*100}%"></div>
-            </div>
+            <div style="flex:1;height:8px;background:var(--bl4);border-radius:4px"><div style="height:8px;background:var(--bl2);border-radius:4px;width:${n/maxD*100}%"></div></div>
             <span style="font-weight:700;width:24px;text-align:right">${n}</span>
           </div>`).join('');
         })()}
@@ -2280,7 +2315,7 @@ function renderResoconto(){
         <th>Casa</th><th>Ospite</th><th>Risultato</th>
         <th>Arb.</th><th>Arbitro 1</th><th>Arbitro 2</th><th>Campo</th>
       </tr></thead>
-      <tbody>${allG.map(g=>{
+      <tbody>${gareVis.map(g=>{
         const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
         const nArb=(a1?1:0)+(a2?1:0);
         const arbClr=nArb===2?'var(--green)':nArb===1?'var(--gold)':'var(--red)';
@@ -2290,7 +2325,7 @@ function renderResoconto(){
         const isFut=!g['Risultato'];
         return`<tr style="${isFut?'background:#fffbf0':''}">
           <td style="font-size:.72rem;white-space:nowrap">${g['Data']||''}</td>
-          <td style="font-size:.7rem"><span style="cursor:pointer;color:${campColor(g['Campionato']||'')}" onclick="openCampionato('${esc(g['Campionato']||'')}')">${escH(g['Campionato']||'')}</span></td>
+          <td style="font-size:.7rem;border-left:3px solid ${campColor(g['Campionato']||'')}"><span style="cursor:pointer;color:${campColor(g['Campionato']||'')}" onclick="openCampionato('${esc(g['Campionato']||'')}')">${escH(g['Campionato']||'')}</span></td>
           <td style="font-size:.68rem;color:var(--mu)">${escH(g['Girone']||'')}</td>
           <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa']||'')}')" style="${casaW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Casa']||'')}</span></td>
           <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}')" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite']||'')}</span></td>
@@ -3098,20 +3133,71 @@ function sqToggleMember(membId){
   if(btn)btn.textContent=hidden?'▼':'▶';
 }
 
-// CAMPIONATI
+// CAMPIONATI — v2
+let _campExp={};
+
+function campToggleAll(val){
+  Object.keys(_campExp).forEach(k=>_campExp[k]=val);
+  // apri/chiudi tutte le sub-row già nel DOM
+  document.querySelectorAll('tr.camp-sub').forEach(r=>r.style.display=val?'':'none');
+  document.querySelectorAll('button[onclick^="campToggle("]').forEach(b=>b.textContent=val?'▼':'▶');
+}
+
+function campToggle(cn){
+  _campExp[cn]=!_campExp[cn];
+  const safe=cn.replace(/[^a-zA-Z0-9]/g,'_');
+  document.querySelectorAll(`tr[data-campgroup="${safe}"]`).forEach(r=>r.style.display=_campExp[cn]?'':'none');
+  const btn=document.querySelector(`button[onclick="campToggle('${cn.replace(/'/g,"\\'")}')"]`);
+  if(btn)btn.textContent=_campExp[cn]?'▼':'▶';
+}
+
 function renderCamp(){
   const q=document.getElementById('fcamp-q').value.toLowerCase();
+  const gironeQ=(document.getElementById('fcamp-girone')?.value||'').toLowerCase();
   const sort=document.getElementById('fcamp-sort').value;
   const gen=document.getElementById('fcamp-gen')?.value||'';
   const grp=document.getElementById('fcamp-grp')?.value||'';
+  const stato=document.getElementById('fcamp-stato')?.value||'';
+
   let camps=Object.entries(CS);
-  if(q)camps=camps.filter(([c])=>c.toLowerCase().includes(q));
+  if(q) camps=camps.filter(([c])=>c.toLowerCase().includes(q));
   if(gen) camps=camps.filter(([c])=>(CAMP_META[c]?.genere||'M')===gen);
   if(grp) camps=camps.filter(([c])=>(CAMP_META[c]?.gruppo||c)===grp);
-  // Ordina per sort_key (Senior>Under>Mini, M prima di F)
+
+  // Calcola completamento e copertura per ogni campionato
+  const _compMap={},_covMap={},_futMap={};
+  camps.forEach(([c,cs])=>{
+    const gareCamp=GARE.filter(g=>g['Campionato']===c);
+    const futCamp=(D.gare_future||[]).filter(g=>g['Campionato']===c);
+    const totPrev=gareCamp.length+futCamp.length;
+    _compMap[c]=totPrev>0?Math.round(gareCamp.length/totPrev*100):0;
+    _futMap[c]=futCamp.length;
+    const con2=gareCamp.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')).length;
+    _covMap[c]=gareCamp.length>0?Math.round(con2/gareCamp.length*100):0;
+  });
+
+  // Filtro stato
+  if(stato){
+    camps=camps.filter(([c])=>{
+      const comp=_compMap[c];
+      if(stato==='comp') return comp===100;
+      if(stato==='inizio') return comp===0&&_futMap[c]>0;
+      if(stato==='corso') return comp>0&&comp<100;
+      return true;
+    });
+  }
+
+  // Filtro girone — espandi automaticamente i campionati con il girone cercato
+  if(gironeQ){
+    camps=camps.filter(([c,cs])=>(cs.gironi||[]).some(g=>g.toLowerCase().includes(gironeQ)));
+    camps.forEach(([c])=>{_campExp[c]=true;});
+  }
+
+  // Ordina
   camps.sort((a,b)=>{
     if(sort==='nome') return a[0].localeCompare(b[0],'it');
     if(sort==='n_squadre') return b[1].n_squadre-a[1].n_squadre;
+    if(sort==='completamento') return _compMap[b[0]]-_compMap[a[0]];
     if(sort==='categoria'){
       const ska=CAMP_META[a[0]]?.sort_key||[99,0,''];
       const skb=CAMP_META[b[0]]?.sort_key||[99,0,''];
@@ -3119,35 +3205,107 @@ function renderCamp(){
     }
     return b[1].n_gare-a[1].n_gare;
   });
-  const max=camps[0]?.[1]?.n_gare||1;
-  document.getElementById('camp-list').innerHTML=`<p class="il">${camps.length} campionati</p>
-  <table class="rtbl" id="tbl-camp"><thead><tr>
-    <th onclick="sT('tbl-camp',0)">#</th>
-    <th onclick="sT('tbl-camp',1)">Campionato</th>
-    <th onclick="sT('tbl-camp',2)">Cat.</th>
-    <th onclick="sT('tbl-camp',3)">Genere</th>
-    <th onclick="sT('tbl-camp',4)">Livello</th>
-    <th onclick="sT('tbl-camp',5)">Gare</th>
-    <th>Distribuzione</th>
-    <th onclick="sT('tbl-camp',7)">Squadre</th>
-  </tr></thead><tbody>${camps.map(([c,cs],i)=>{
+
+  const max=Math.max(...camps.map(([,cs])=>cs.n_gare),1);
+  let totGare=0,totSq=0,totGironi=0;
+
+  let rows='';
+  camps.forEach(([c,cs],i)=>{
     const meta=CAMP_META[c]||{};
     const isFemm=meta.genere==='F';
     const isMini=cs.is_minibasket;
     const genLabel=isFemm?'👩 F':isMini?'🔄 X':'👦 M';
     const genColor=isFemm?'#e84393':isMini?'#8e44ad':'#003087';
-    const lvBadge=meta.livello?`<span style="background:#e8f4ff;color:#003087;border-radius:3px;padding:1px 5px;font-size:.65rem">${meta.livello}</span>`:'';
-    return `<tr>
+    const lvBadge=meta.livello?`<span style="background:#e8f4ff;color:var(--bl);border-radius:3px;padding:1px 5px;font-size:.65rem">${meta.livello}</span>`:'';
+    const clr=campColor(c);
+    const comp=_compMap[c];
+    const cov=_covMap[c];
+    const gironi=cs.gironi||[];
+    const isExp=!!_campExp[c];
+    const safe=c.replace(/[^a-zA-Z0-9]/g,'_');
+
+    // Stato badge
+    const statoHtml=comp===100
+      ?`<span style="background:#e6f8ee;color:#1a7a3c;border-radius:9px;padding:1px 7px;font-size:.62rem">Completato</span>`
+      :comp===0&&_futMap[c]>0
+      ?`<span style="background:#fff3cd;color:#8a6200;border-radius:9px;padding:1px 7px;font-size:.62rem">Non iniziato</span>`
+      :`<span style="background:#e8f4ff;color:var(--bl);border-radius:9px;padding:1px 7px;font-size:.62rem">In corso</span>`;
+
+    // Barra completamento
+    const compClr=comp>=80?'var(--green)':comp>=40?'var(--gold)':'var(--red)';
+    const compBar=`<div style="display:flex;align-items:center;gap:4px">
+      <div style="width:50px;height:5px;background:var(--bl4);border-radius:3px;overflow:hidden">
+        <div style="height:5px;width:${comp}%;background:${compClr};border-radius:3px"></div>
+      </div>
+      <span style="font-size:.7rem;font-weight:700;color:${compClr}">${comp}%</span>
+    </div>`;
+
+    // Pallino copertura
+    const covClr=cov>=60?'var(--green)':cov>=30?'var(--gold)':'var(--red)';
+    const covHtml=`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${covClr};margin-right:3px" title="Copertura 2 arb: ${cov}%"></span><span style="font-size:.7rem;font-weight:600;color:${covClr}">${cov}%</span>`;
+
+    totGare+=cs.n_gare; totSq+=cs.n_squadre; totGironi+=gironi.length;
+
+    rows+=`<tr style="border-left:3px solid ${clr}">
       <td style="color:#9aa3b8">${i+1}</td>
-      <td><span class="rn" style="cursor:pointer" onclick="openCampionato('${esc(c)}')">${escH(c)}</span></td>
+      <td>
+        ${gironi.length>0?`<button onclick="campToggle('${esc(c)}')" style="background:none;border:none;cursor:pointer;font-size:.6rem;color:var(--mu);margin-right:2px">${isExp?'▼':'▶'}</button>`:''}
+        <span class="rn" style="cursor:pointer" onclick="openCampionato('${esc(c)}')">${escH(c)}</span>
+      </td>
       <td style="font-size:.72rem;color:var(--mu)">${escH(meta.gruppo||c)}</td>
       <td><span style="font-size:.72rem;font-weight:700;color:${genColor}">${genLabel}</span></td>
       <td>${lvBadge}</td>
-      <td>${cs.n_gare}</td>
-      <td>${bBar(cs.n_gare,max,campColor(c))}</td>
-      <td>${cs.n_squadre}</td>
+      <td>${statoHtml}</td>
+      <td style="text-align:center;font-weight:700">${cs.n_gare}</td>
+      <td>${bBar(cs.n_gare,max,clr)}</td>
+      <td>${compBar}</td>
+      <td>${covHtml}</td>
+      <td style="text-align:center">${cs.n_squadre}</td>
     </tr>`;
-  }).join('')}</tbody></table>`;
+
+    // Sub-rows gironi
+    if(gironi.length>0){
+      const garePerGirone={};
+      GARE.filter(g=>g['Campionato']===c).forEach(g=>{if(g['Girone'])garePerGirone[g['Girone']]=(garePerGirone[g['Girone']]||0)+1;});
+      (D.gare_future||[]).filter(g=>g['Campionato']===c).forEach(g=>{if(g['Girone'])garePerGirone[g['Girone']]=(garePerGirone[g['Girone']]||0)+1;});
+      gironi.sort().forEach(gi=>{
+        const highlight=gironeQ&&gi.toLowerCase().includes(gironeQ);
+        rows+=`<tr class="camp-sub" data-campgroup="${safe}" style="display:${isExp?'':'none'};background:${highlight?'var(--bl4)':'var(--tbl-even)'}">
+          <td></td>
+          <td style="padding-left:22px;font-size:.72rem;color:var(--mu)">
+            ↳ <span style="cursor:pointer;color:${clr};font-weight:600"
+              onclick="showPage('resoconto');setTimeout(()=>{document.getElementById('res-camp')&&(document.getElementById('res-camp').value='${esc(c)}');},200)"
+              title="Vai al resoconto per questo girone">${escH(gi)}</span>
+            <span style="font-size:.62rem;color:var(--mu2);margin-left:4px">→ resoconto</span>
+          </td>
+          <td colspan="9" style="font-size:.7rem;color:var(--mu)">${garePerGirone[gi]||0} gare</td>
+        </tr>`;
+      });
+    }
+  });
+
+  // Riga totale
+  rows+=`<tr style="background:var(--tbl-hdr);color:#fff;font-weight:600">
+    <td colspan="6" style="color:#fff">Totale — ${camps.length} campionati</td>
+    <td style="text-align:center;color:#90CAF9">${totGare}</td>
+    <td></td><td></td><td></td>
+    <td style="text-align:center;color:#90CAF9">${totSq}</td>
+  </tr>`;
+
+  document.getElementById('camp-list').innerHTML=`<p class="il">${camps.length} campionati</p>
+  <div style="overflow-x:auto"><table class="rtbl" id="tbl-camp"><thead><tr>
+    <th onclick="sT('tbl-camp',0)">#</th>
+    <th onclick="sT('tbl-camp',1)">Campionato</th>
+    <th onclick="sT('tbl-camp',2)">Cat.</th>
+    <th onclick="sT('tbl-camp',3)">Genere</th>
+    <th onclick="sT('tbl-camp',4)">Livello</th>
+    <th>Stato</th>
+    <th onclick="sT('tbl-camp',6)" style="text-align:center">Gare</th>
+    <th>Distribuzione</th>
+    <th onclick="sT('tbl-camp',8)" style="cursor:pointer">Completam.</th>
+    <th onclick="sT('tbl-camp',9)" style="cursor:pointer">Copertura</th>
+    <th onclick="sT('tbl-camp',10)" style="text-align:center">Squadre</th>
+  </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function renderGare(){
@@ -3685,47 +3843,135 @@ function openPersona(nome,campFilter){
         </div>`;
       })()}
 
-      <!-- Calendario presenze -->
+      <!-- Calendario presenze — 3 versioni con tab -->
       ${(()=>{
-        const gaDate=new Set(allG.map(g=>g['Data']||'').filter(Boolean));
-        if(!gaDate.size)return'';
-        const mesiL=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-        // Group by month
         const mesiGiorniMap={};
-        allG.forEach(g=>{const d=g['Data']||'';if(!d)return;const m=d.slice(0,7);if(!mesiGiorniMap[m])mesiGiorniMap[m]={};if(!mesiGiorniMap[m][d])mesiGiorniMap[m][d]=0;mesiGiorniMap[m][d]++;});
+        allG.forEach(g=>{const d=g['Data']||'';if(!d)return;const m=d.slice(0,7);if(!mesiGiorniMap[m])mesiGiorniMap[m]={};mesiGiorniMap[m][d]=(mesiGiorniMap[m][d]||0)+1;});
         const mesi=Object.keys(mesiGiorniMap).sort();
-        return`<div style="margin-top:12px">
-          <div style="font-size:.8rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Calendario presenze</div>
-          <div style="font-size:.6rem;color:var(--mu);margin-bottom:4px">
-            <span style="display:inline-block;width:10px;height:10px;background:#e8f4ff;border:1px solid #ccc;margin-right:4px"></span>0
-            <span style="display:inline-block;width:10px;height:10px;background:var(--bl3);margin:0 4px 0 8px"></span>1
-            <span style="display:inline-block;width:10px;height:10px;background:var(--bl2);margin:0 4px 0 8px"></span>2
-            <span style="display:inline-block;width:10px;height:10px;background:var(--bl);margin:0 4px 0 8px"></span>3
-            <span style="display:inline-block;width:10px;height:10px;background:#c0392b;margin:0 4px 0 8px"></span>4+
-            &nbsp;□ Dom &nbsp;▣ Sab &nbsp;☆ Festivo
-          </div>
-          <div style="display:flex;flex-wrap:wrap;gap:8px">
-          ${mesi.map(m=>{
+        if(!mesi.length)return'';
+        const mesiL=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+        const BG=['#e8f4ff','var(--bl3)','var(--bl2)','var(--bl)','#c0392b'];
+        const uid='cal_'+Math.random().toString(36).slice(2,7);
+
+        // ── VERSIONE A: Heatmap GitHub-style (colonne=settimane, righe=Lun→Dom) ──
+        const calA=mesi.map(m=>{
+          const giorni=mesiGiorniMap[m];
+          const[y,mo]=m.split('-');
+          const label=mesiL[parseInt(mo)-1]+' '+y.slice(2);
+          const dInM=new Date(parseInt(y),parseInt(mo),0).getDate();
+          const firstDow=new Date(parseInt(y),parseInt(mo)-1,1).getDay();
+          const pad=firstDow===0?6:firstDow-1;
+          const cells=Array(pad).fill(`<div style="width:12px;height:12px;"></div>`);
+          for(let d=1;d<=dInM;d++){
+            const ds=`${m}-${d<10?'0':''}${d}`;
+            const cnt=giorni[ds]||0;
+            const dow=new Date(ds+'T12:00').getDay();
+            const isDom=dow===0;
+            const bg=cnt===0?'#e8f4ff':cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt===3?'var(--bl)':'#c0392b';
+            const clr=cnt>1?'#fff':'var(--mu)';
+            cells.push(`<div title="${ds}: ${cnt} gare" style="width:12px;height:12px;background:${bg};border-radius:2px;${isDom?'outline:1.5px solid var(--gold);outline-offset:-1px;':''}cursor:${cnt>0?'pointer':'default'};font-size:.45rem;display:flex;align-items:center;justify-content:center;color:${clr};font-weight:700" ${cnt>0?`onclick="openGiornoModal('${ds}')"`:''}">${cnt>0?cnt:''}</div>`);
+          }
+          return`<div style="flex-shrink:0">
+            <div style="font-size:.6rem;font-weight:700;color:var(--bl);margin-bottom:2px;text-align:center">${label}</div>
+            <div style="display:grid;grid-template-rows:repeat(7,12px);grid-auto-flow:column;gap:2px">${cells.join('')}</div>
+          </div>`;
+        }).join('');
+
+        // ── VERSIONE B: Strip mensile (1 riga per mese, quadrati per giorno) ──
+        const calB=(()=>{
+          const hdr=Array.from({length:31},(_,i)=>`<div style="width:17px;font-size:.55rem;color:var(--mu2);text-align:center">${i+1}</div>`).join('');
+          const rows=mesi.map(m=>{
             const giorni=mesiGiorniMap[m];
-            const [y,mo]=m.split('-');
+            const[y,mo]=m.split('-');
             const label=mesiL[parseInt(mo)-1]+' '+y.slice(2);
             const dInM=new Date(parseInt(y),parseInt(mo),0).getDate();
-            const cells=[];
-            for(let d=1;d<=dInM;d++){
-              const ds=m+'-'+(d<10?'0':'')+d;
+            let tot=0;
+            const cells=Array.from({length:31},(_,i)=>{
+              const d=i+1;
+              if(d>dInM) return`<div style="width:17px;height:20px;flex-shrink:0;"></div>`;
+              const ds=`${m}-${d<10?'0':''}${d}`;
               const cnt=giorni[ds]||0;
               const dow=new Date(ds+'T12:00').getDay();
-              const isWe=dow===0||dow===6;
-              const bg=cnt===0?(isWe?'#f5f5f5':'#e8f4ff'):cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt===3?'var(--bl)':'#c0392b';
+              const isDom=dow===0;
+              const bg=cnt===0?'#e8f4ff':cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt===3?'var(--bl)':'#c0392b';
               const clr=cnt>1?'#fff':'var(--mu)';
-              cells.push(`<div title="${ds}: ${cnt} gare" style="width:14px;height:14px;background:${bg};border-radius:2px;border:1px solid ${isWe?'#ddd':'#e8eeff'};display:flex;align-items:center;justify-content:center;cursor:${cnt>0?'pointer':'default'};font-size:.5rem;color:${clr};font-weight:700" ${cnt>0?`onclick="openGiornoModal('${ds}')"`:''}">${cnt>0?cnt:''}</div>`);
-            }
-            return`<div style="flex-shrink:0">
-              <div style="font-size:.62rem;font-weight:700;color:var(--bl);margin-bottom:2px">${label}</div>
-              <div style="display:flex;flex-wrap:wrap;gap:2px;width:${7*16}px">${cells.join('')}</div>
+              tot+=cnt;
+              return`<div title="${ds}: ${cnt} gare" style="width:17px;height:20px;border-radius:2px;background:${bg};${isDom?'border-bottom:2px solid var(--gold);':''}display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:700;color:${clr};flex-shrink:0;cursor:${cnt>0?'pointer':'default'}" ${cnt>0?`onclick="openGiornoModal('${ds}')"`:''}">${cnt>0?cnt:''}</div>`;
+            }).join('');
+            return`<div style="display:flex;align-items:center;gap:2px;padding:2px 0;border-bottom:1px solid var(--br)">
+              <div style="width:40px;font-size:.65rem;font-weight:600;color:var(--mu);flex-shrink:0">${label}</div>
+              <div style="display:flex;gap:2px">${cells}</div>
+              <div style="width:22px;font-size:.68rem;font-weight:700;text-align:right;color:var(--bl);flex-shrink:0">${tot}</div>
             </div>`;
-          }).join('')}
+          }).join('');
+          return`<div style="margin-top:4px">
+            <div style="display:flex;align-items:center;gap:2px;margin-bottom:2px;padding-left:42px">
+              <div style="display:flex;gap:2px">${hdr}</div>
+            </div>
+            ${rows}
+          </div>`;
+        })();
+
+        // ── VERSIONE C: Barre settimanali (domenica separata) ──
+        const calC=mesi.map(m=>{
+          const giorni=mesiGiorniMap[m];
+          const[y,mo]=m.split('-');
+          const label=mesiL[parseInt(mo)-1]+' '+y.slice(2);
+          const dInM=new Date(parseInt(y),parseInt(mo),0).getDate();
+          let tot=0,d=1,wn=1;
+          const weeks=[];
+          while(d<=dInM){
+            let wTot=0,domG=0;
+            while(d<=dInM){
+              const dow=new Date(`${m}-${d<10?'0':''}${d}T12:00`).getDay();
+              const ds=`${m}-${d<10?'0':''}${d}`;
+              const cnt=giorni[ds]||0;
+              wTot+=cnt;tot+=cnt;
+              if(dow===0)domG=cnt;
+              d++;
+              if(dow===6)break;
+              if(d<=dInM&&new Date(`${m}-${d<10?'0':''}${d}T12:00`).getDay()===1)break;
+            }
+            const maxH=36;
+            const barH=wTot>0?Math.max(4,Math.round(wTot/6*maxH)):3;
+            const domH=domG>0?Math.max(3,Math.round(domG/4*maxH)):0;
+            weeks.push(`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px">
+              <div style="display:flex;gap:1px;align-items:flex-end;height:${maxH}px">
+                ${domH>0?`<div style="width:7px;height:${domH}px;border-radius:2px 2px 0 0;background:var(--gold);cursor:help" title="Dom: ${domG}g"></div>`:''}
+                <div style="width:${domH>0?10:14}px;height:${barH}px;border-radius:2px 2px 0 0;background:var(--bl2);cursor:help" title="Sett.${wn}: ${wTot}g"></div>
+              </div>
+              <div style="font-size:.5rem;color:var(--mu2)">S${wn}</div>
+            </div>`);
+            wn++;
+          }
+          return`<div style="display:flex;align-items:center;gap:4px;padding:3px 0;border-bottom:1px solid var(--br)">
+            <div style="width:40px;font-size:.65rem;font-weight:600;color:var(--mu);flex-shrink:0">${label}</div>
+            <div style="display:flex;flex:1;gap:3px;align-items:flex-end">${weeks.join('')}</div>
+            <div style="width:24px;font-size:.68rem;font-weight:700;text-align:right;color:var(--bl);flex-shrink:0">${tot}</div>
+          </div>`;
+        }).join('');
+
+        return`<div style="margin-top:12px">
+          <div style="font-size:.8rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Calendario presenze</div>
+          <!-- Tab switcher -->
+          <div style="display:flex;gap:4px;margin-bottom:8px">
+            <button id="${uid}_btnA" onclick="calSwitch('${uid}','A')" style="font-size:.65rem;padding:2px 8px;border:1px solid var(--br);border-radius:4px;background:var(--bl);color:#fff;cursor:pointer">A — Heatmap</button>
+            <button id="${uid}_btnB" onclick="calSwitch('${uid}','B')" style="font-size:.65rem;padding:2px 8px;border:1px solid var(--br);border-radius:4px;background:var(--bg);color:var(--bl);cursor:pointer">B — Strip</button>
+            <button id="${uid}_btnC" onclick="calSwitch('${uid}','C')" style="font-size:.65rem;padding:2px 8px;border:1px solid var(--br);border-radius:4px;background:var(--bg);color:var(--bl);cursor:pointer">C — Barre</button>
           </div>
+          <!-- Legenda -->
+          <div id="${uid}_leg" style="font-size:.6rem;color:var(--mu);margin-bottom:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span><span style="display:inline-block;width:10px;height:10px;background:#e8f4ff;border:1px solid #ccc;margin-right:3px"></span>0</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:var(--bl3);margin-right:3px"></span>1</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:var(--bl2);margin-right:3px"></span>2</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:var(--bl);margin-right:3px"></span>3</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#c0392b;margin-right:3px"></span>4+</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border:1.5px solid var(--gold);background:#e8f4ff;margin-right:3px"></span>Dom</span>
+          </div>
+          <!-- Pannelli -->
+          <div id="${uid}_A" style="overflow-x:auto"><div style="display:flex;flex-wrap:wrap;gap:8px">${calA}</div></div>
+          <div id="${uid}_B" style="display:none;overflow-x:auto">${calB}</div>
+          <div id="${uid}_C" style="display:none">${calC}</div>
         </div>`;
       })()}
 
@@ -6062,30 +6308,60 @@ function renderCampClassifica(camp, container){
 
 
 // ── COPERTURA ──
+let _copExp={};
+function copToggleAll(val){
+  Object.keys(_copExp).forEach(k=>_copExp[k]=val);
+  document.querySelectorAll('tr.cop-sub').forEach(r=>r.style.display=val?'':'none');
+  document.querySelectorAll('button[onclick^="copToggle("]').forEach(b=>b.textContent=val?'▼':'▶');
+}
+
+// Calendario presenze — switch tra versioni A/B/C
+function calSwitch(uid,ver){
+  ['A','B','C'].forEach(v=>{
+    const panel=document.getElementById(uid+'_'+v);
+    const btn=document.getElementById(uid+'_btn'+v);
+    if(panel) panel.style.display=v===ver?'block':'none';
+    if(btn){btn.style.background=v===ver?'var(--bl)':'var(--bg)';btn.style.color=v===ver?'#fff':'var(--bl)';}
+  });
+}
+function copToggle(c){
+  _copExp[c]=!_copExp[c];
+  const safe=c.replace(/[^a-zA-Z0-9]/g,'_');
+  document.querySelectorAll(`tr[data-copgroup="${safe}"]`).forEach(r=>r.style.display=_copExp[c]?'':'none');
+  const btn=document.querySelector(`button[onclick="copToggle('${c.replace(/'/g,"\\'")}')"]`);
+  if(btn)btn.textContent=_copExp[c]?'▼':'▶';
+}
+
+// Determina categoria campionato
+function campCat(c){
+  const meta=CAMP_META[c]||{};
+  const grp=(meta.gruppo||'').toLowerCase();
+  const sk=(meta.sort_key||[99])[0];
+  if(grp.includes('mini')||c.toLowerCase().includes('aquilott')||c.toLowerCase().includes('scoiatt')||c.toLowerCase().includes('libellul')||c.toLowerCase().includes('esordi')) return 'mini';
+  if(sk<=3) return 'senior';
+  return 'junior';
+}
+
 function renderCopertura(){
-  // Popola dropdown campionati al primo accesso
   const campSel=document.getElementById('cop-camp');
   if(campSel&&campSel.options.length<=1){
     CAMPS.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;campSel.appendChild(o);});
   }
   const campFilter=campSel?.value||'';
   const girFilter=document.getElementById('cop-girone')?.value||'';
+  const catFilter=document.getElementById('cop-cat')?.value||'';
 
-  // Aggiorna gironi quando cambia campionato
   const girSel=document.getElementById('cop-girone');
   if(girSel&&campFilter){
-    const cs2=CS[campFilter];
-    const curGir=girSel.value;
+    const cs2=CS[campFilter];const curGir=girSel.value;
     girSel.innerHTML='<option value="">Tutti i gironi</option>';
     (cs2?.gironi||[]).forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;if(g===curGir)o.selected=true;girSel.appendChild(o);});
-  } else if(girSel){
-    girSel.innerHTML='<option value="">Tutti i gironi</option>';
-  }
+  } else if(girSel) girSel.innerHTML='<option value="">Tutti i gironi</option>';
 
-  // Filtra gare
   const gare=(D.gare||[]).filter(g=>{
     if(campFilter&&g['Campionato']!==campFilter)return false;
     if(girFilter&&g['Girone']!==girFilter)return false;
+    if(catFilter&&campCat(g['Campionato']||'')!==catFilter)return false;
     return true;
   });
 
@@ -6105,9 +6381,7 @@ function renderCopertura(){
   const arbEl=document.getElementById('cop-arb');
   if(arbEl) arbEl.innerHTML=
     `<div style="font-size:.72rem;font-weight:700;color:var(--mu);margin-bottom:6px">Totale: <b style="color:var(--bl)">${tot}</b> gare</div>`+
-    bar('2 Arbitri',con2,'#1a7a3c')+
-    bar('1 Arbitro',con1,'#f39c12')+
-    bar('Senza arbitri',senza,'#c0392b');
+    bar('2 Arbitri',con2,'#1a7a3c')+bar('1 Arbitro',con1,'#f39c12')+bar('Senza arbitri',senza,'#c0392b');
 
   const figEl=document.getElementById('cop-fig');
   if(figEl) figEl.innerHTML=
@@ -6119,81 +6393,141 @@ function renderCopertura(){
   const tblEl=document.getElementById('cop-tbl');
   if(tblEl) tblEl.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:.78rem">
     <thead><tr>${['Metrica','N','%'].map(h=>`<th style="padding:5px 8px;background:var(--tbl-hdr);color:#fff;text-align:left">${h}</th>`).join('')}</tr></thead>
-    <tbody>${[
-      ['Totale gare',tot,'100%'],['2 arbitri',con2,Math.round(con2/tot*100)+'%'],
-      ['1 arbitro',con1,Math.round(con1/tot*100)+'%'],['Senza arbitri',senza,Math.round(senza/tot*100)+'%'],
-      ['Con UDC',conUdc,Math.round(conUdc/tot*100)+'%'],['Con Osservatore',conOss,Math.round(conOss/tot*100)+'%'],
-      ['Copertura completa',completa,Math.round(completa/tot*100)+'%'],
-    ].map(([m,v,p],i)=>`<tr style="background:${i%2?'#f6f8ff':'#fff'}"><td style="padding:4px 8px">${m}</td><td style="padding:4px 8px;font-weight:700">${v}</td><td style="padding:4px 8px;color:#6b7a99">${p}</td></tr>`).join('')}</tbody>
-  </table>`;
+    <tbody>${[['Totale gare',tot,'100%'],['2 arbitri',con2,Math.round(con2/tot*100)+'%'],['1 arbitro',con1,Math.round(con1/tot*100)+'%'],['Senza arbitri',senza,Math.round(senza/tot*100)+'%'],['Con UDC',conUdc,Math.round(conUdc/tot*100)+'%'],['Con Osservatore',conOss,Math.round(conOss/tot*100)+'%'],['Copertura completa',completa,Math.round(completa/tot*100)+'%']].map(([m,v,p],i)=>`<tr style="background:${i%2?'#f6f8ff':'#fff'}"><td style="padding:4px 8px">${m}</td><td style="padding:4px 8px;font-weight:700">${v}</td><td style="padding:4px 8px;color:#6b7a99">${p}</td></tr>`).join('')}</tbody></table>`;
 
-  // Tabella per campionato (solo quando non filtrato)
+  // Tabella per campionato — versione migliorata
   const byCampEl=document.getElementById('cop-by-camp');
-  if(byCampEl){
-    const campRows=CAMPS.map(c=>{
-      const cg=(D.gare||[]).filter(g=>g['Campionato']===c);
-      if(!cg.length)return null;
-      const ct=cg.length;
-      const c2=cg.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')).length;
-      const c1=cg.filter(g=>(pns(g['Arbitro 1']||'')||pns(g['Arbitro 2']||''))&&!(pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||''))).length;
-      const c0=cg.filter(g=>!pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||'')).length;
-      // Per girone
-      const gironi=[...new Set(cg.map(g=>g['Girone']).filter(Boolean))].sort();
-      return{c,ct,c2,c1,c0,gironi,cg};
-    }).filter(Boolean);
+  if(!byCampEl)return;
 
-    byCampEl.innerHTML=`<div style="overflow-x:auto"><table class="rtbl"><thead><tr>
-      <th>Campionato</th><th>Gironi</th><th>Gare</th>
-      <th title="2 arbitri">2 Arb.</th><th title="1 arbitro">1 Arb.</th><th title="Senza">0 Arb.</th>
-      <th title="% copertura doppia">% doppio</th><th>Barra copertura</th>
-    </tr></thead><tbody>${campRows.map((r,i)=>{
-      const pct2=Math.round(r.c2/r.ct*100);
-      const pct1=Math.round(r.c1/r.ct*100);
-      const pct0=Math.round(r.c0/r.ct*100);
-      // Sottorighe per girone
-      const subRowsGir=r.gironi.length>1?r.gironi.map(gi=>{
+  // Colori per categoria
+  const catColors={senior:'#2456a4',junior:'#6c3dc8',mini:'#e67e22'};
+
+  let campsList=CAMPS.filter(c=>!campFilter||c===campFilter);
+  if(catFilter) campsList=campsList.filter(c=>campCat(c)===catFilter);
+
+  const campRows=campsList.map(c=>{
+    const cg=(D.gare||[]).filter(g=>g['Campionato']===c&&(!girFilter||g['Girone']===girFilter));
+    if(!cg.length)return null;
+    const ct=cg.length;
+    const c2=cg.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')).length;
+    const c1=cg.filter(g=>(pns(g['Arbitro 1']||'')||pns(g['Arbitro 2']||''))&&!(pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||''))).length;
+    const c0=cg.filter(g=>!pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||'')).length;
+    const gironi=[...new Set(cg.map(g=>g['Girone']).filter(Boolean))].sort();
+    return{c,ct,c2,c1,c0,gironi,cg};
+  }).filter(Boolean);
+
+  if(!campRows.length){byCampEl.innerHTML='<p style="color:var(--mu);padding:10px">Nessun dato</p>';return;}
+
+  const totT=campRows.reduce((s,r)=>s+r.ct,0);
+  const tot2=campRows.reduce((s,r)=>s+r.c2,0);
+  const tot1=campRows.reduce((s,r)=>s+r.c1,0);
+  const tot0=campRows.reduce((s,r)=>s+r.c0,0);
+
+  let rows='';
+  campRows.forEach(r=>{
+    const pct2=Math.round(r.c2/r.ct*100);
+    const pct1=Math.round(r.c1/r.ct*100);
+    const pct0=Math.round(r.c0/r.ct*100);
+    const clr=campColor(r.c);
+    const cat=campCat(r.c);
+    const catClr=catColors[cat]||'#636e72';
+    const isExp=!!_copExp[r.c];
+    const safe=r.c.replace(/[^a-zA-Z0-9]/g,'_');
+    const tip=`title="2 arb: ${r.c2} · 1 arb: ${r.c1} · 0 arb: ${r.c0}"`;
+
+    rows+=`<tr style="border-left:3px solid ${catClr}">
+      <td>
+        ${r.gironi.length>1?`<button onclick="copToggle('${esc(r.c)}')" style="background:none;border:none;cursor:pointer;font-size:.6rem;color:var(--mu);margin-right:2px">${isExp?'▼':'▶'}</button>`:''}
+        <span style="font-weight:700;cursor:pointer;color:${clr}" onclick="openCampionato('${esc(r.c)}')">${escH(r.c)}</span>
+      </td>
+      <td style="font-size:.68rem;color:var(--mu);text-align:center">${r.gironi.length} giron${r.gironi.length===1?'e':'i'}</td>
+      <td style="text-align:center;font-weight:700">${r.ct}</td>
+      <td style="text-align:center;color:var(--green);font-weight:700">${r.c2}</td>
+      <td style="text-align:center;color:var(--gold);font-weight:700">${r.c1}</td>
+      <td style="text-align:center;color:var(--red)">${r.c0}</td>
+      <td style="text-align:center;white-space:nowrap">
+        <span style="font-weight:700;color:${pct2>=80?'var(--green)':pct2>=50?'var(--gold)':'var(--red)'}">${pct2}%</span>
+        <span style="color:var(--mu2);font-size:.65rem"> / </span>
+        <span style="font-weight:700;color:${pct0>=50?'var(--red)':pct0>=20?'var(--gold)':'var(--green)'}">${pct0}%</span>
+      </td>
+      <td style="min-width:120px">
+        <div style="height:8px;border-radius:4px;overflow:hidden;display:flex;cursor:help" ${tip}>
+          <div style="height:100%;background:var(--green);width:${pct2}%"></div>
+          <div style="height:100%;background:var(--gold);width:${pct1}%"></div>
+          <div style="height:100%;background:var(--red);width:${pct0}%"></div>
+        </div>
+      </td>
+    </tr>`;
+
+    // Sub-righe gironi
+    if(r.gironi.length>1){
+      r.gironi.forEach(gi=>{
         const gg=r.cg.filter(g=>g['Girone']===gi);
-        const gt=gg.length,g2=gg.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')).length;
+        const gt=gg.length;
+        const g2=gg.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')).length;
         const g1=gg.filter(g=>(pns(g['Arbitro 1']||'')||pns(g['Arbitro 2']||''))&&!(pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||''))).length;
         const g0=gg.filter(g=>!pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||'')).length;
         const gp2=Math.round(g2/gt*100),gp1=Math.round(g1/gt*100),gp0=Math.round(g0/gt*100);
-        const clr=campColor(r.c);
-        return`<tr style="background:#f8faff;font-size:.72rem">
+        rows+=`<tr class="cop-sub" data-copgroup="${safe}" style="display:${isExp?'':'none'};background:var(--tbl-even);font-size:.72rem">
           <td style="padding-left:22px;color:${clr}">↳ ${escH(gi)}</td>
-          <td style="font-size:.65rem;color:var(--mu);text-align:center">—</td>
+          <td style="text-align:center;color:var(--mu)">—</td>
           <td style="text-align:center">${gt}</td>
           <td style="text-align:center;color:var(--green);font-weight:700">${g2}</td>
           <td style="text-align:center;color:var(--gold)">${g1}</td>
           <td style="text-align:center;color:var(--red)">${g0}</td>
-          <td style="text-align:center;color:${gp2>=80?'var(--green)':gp2>=50?'var(--gold)':'var(--red)'}">${gp2}%</td>
-          <td style="min-width:120px">
-            <div style="height:6px;border-radius:3px;overflow:hidden;display:flex">
+          <td style="text-align:center;white-space:nowrap">
+            <span style="font-weight:700;color:${gp2>=80?'var(--green)':gp2>=50?'var(--gold)':'var(--red)'}">${gp2}%</span>
+            <span style="color:var(--mu2);font-size:.62rem"> / </span>
+            <span style="color:${gp0>=50?'var(--red)':gp0>=20?'var(--gold)':'var(--green)'}">${gp0}%</span>
+          </td>
+          <td>
+            <div style="height:6px;border-radius:3px;overflow:hidden;display:flex;cursor:help" title="2 arb: ${g2} · 1 arb: ${g1} · 0 arb: ${g0}">
               <div style="height:100%;background:var(--green);width:${gp2}%"></div>
               <div style="height:100%;background:var(--gold);width:${gp1}%"></div>
               <div style="height:100%;background:var(--red);width:${gp0}%"></div>
             </div>
           </td>
         </tr>`;
-      }).join(''):'';
-      return`<tr>
-        <td><span style="font-weight:700;cursor:pointer;color:${campColor(r.c)}" onclick="openCampionato('${esc(r.c)}')">${escH(r.c)}</span></td>
-        <td style="font-size:.68rem;color:var(--mu)">${r.gironi.length} giron${r.gironi.length===1?'e':'i'}</td>
-        <td style="text-align:center;font-weight:700">${r.ct}</td>
-        <td style="text-align:center;color:var(--green);font-weight:700">${r.c2}</td>
-        <td style="text-align:center;color:var(--gold);font-weight:700">${r.c1}</td>
-        <td style="text-align:center;color:var(--red)">${r.c0}</td>
-        <td style="text-align:center;font-weight:700;color:${pct2>=80?'var(--green)':pct2>=50?'var(--gold)':'var(--red)'}">${pct2}%</td>
-        <td style="min-width:120px">
-          <div style="height:10px;border-radius:5px;overflow:hidden;display:flex">
-            <div style="height:100%;background:var(--green);width:${pct2}%" title="2 arb: ${pct2}%"></div>
-            <div style="height:100%;background:var(--gold);width:${pct1}%" title="1 arb: ${pct1}%"></div>
-            <div style="height:100%;background:var(--red);width:${pct0}%" title="0 arb: ${pct0}%"></div>
-          </div>
-        </td>
-      </tr>${subRowsGir}`;
-    }).join('')}</tbody></table></div>`;
-  }
-}
+      });
+    }
+  });
+
+  // Riga totale
+  const tp2=Math.round(tot2/totT*100),tp0=Math.round(tot0/totT*100);
+  rows+=`<tr style="background:var(--tbl-hdr);color:#fff;font-weight:600">
+    <td colspan="2" style="color:#fff">Totale — ${campRows.length} campionati</td>
+    <td style="text-align:center;color:#90CAF9">${totT}</td>
+    <td style="text-align:center;color:#a8f0c6">${tot2}</td>
+    <td style="text-align:center;color:#ffd580">${tot1}</td>
+    <td style="text-align:center;color:#ff9f9f">${tot0}</td>
+    <td style="text-align:center;white-space:nowrap">
+      <span style="color:#a8f0c6">${tp2}%</span> / <span style="color:#ff9f9f">${tp0}%</span>
+    </td>
+    <td>
+      <div style="height:8px;border-radius:4px;overflow:hidden;display:flex">
+        <div style="height:100%;background:#a8f0c6;width:${tp2}%"></div>
+        <div style="height:100%;background:#ffd580;width:${Math.round(tot1/totT*100)}%"></div>
+        <div style="height:100%;background:#ff9f9f;width:${tp0}%"></div>
+      </div>
+    </td>
+  </tr>`;
+
+  byCampEl.innerHTML=`<div style="overflow-x:auto"><table class="rtbl">
+    <thead><tr>
+      <th>Campionato</th><th style="text-align:center">Gironi</th><th style="text-align:center">Gare</th>
+      <th style="text-align:center;color:#a8f0c6">2 Arb.</th>
+      <th style="text-align:center;color:#ffd580">1 Arb.</th>
+      <th style="text-align:center;color:#ff9f9f">0 Arb.</th>
+      <th title="% doppio / % zero">% dop. / 0</th>
+      <th>Barra copertura</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>
+  <div style="font-size:.65rem;color:var(--mu2);margin-top:6px">
+    <span style="display:inline-block;width:10px;height:4px;background:#2456a4;border-radius:2px;margin-right:4px"></span>Senior &nbsp;
+    <span style="display:inline-block;width:10px;height:4px;background:#6c3dc8;border-radius:2px;margin-right:4px"></span>Giovanili &nbsp;
+    <span style="display:inline-block;width:10px;height:4px;background:#e67e22;border-radius:2px;margin-right:4px"></span>Minibasket
+  </div>`;
 
 // ── MAPPA ──
 const PROV_XY={
