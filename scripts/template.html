@@ -6965,8 +6965,8 @@ function mapDrawSidePanels(){
   const pvEl=document.getElementById('map-prov-list');
   if(pvEl) pvEl.innerHTML=Object.entries(pv5).map(([p,nome])=>{
     const pd=PV[p]||{};const nc=Object.values(CAMPI||{}).filter(c=>c.prov===p).length;
-    return`<div style="display:flex;align-items:center;gap:5px;padding:4px 6px;cursor:pointer;font-size:.72rem;border-radius:5px;transition:background .12s" onmouseover="this.style.background='var(--bl4)'" onmouseout="this.style.background=''"
-      onclick="if(_lmap&&typeof L!=='undefined'&&'${p}' in {'CA':1,'SS':1,'NU':1,'OR':1,'SU':1}){const b=${JSON.stringify({CA:[[38.8,8.8],[39.5,9.4]],SS:[[40.3,8.1],[41.1,9.2]],NU:[[39.9,9.0],[40.8,9.8]],OR:[[39.6,8.3],[40.3,9.0]],SU:[[38.8,8.3],[39.5,9.0]]}})['${p}'];if(b)_lmap.fitBounds(b);}document.getElementById('map-pv-filter').value='${p}';mapApplyFilter()">
+    return`<div style="display:flex;align-items:center;gap:5px;padding:4px 6px;cursor:pointer;font-size:.72rem;border-radius:5px" onmouseover="this.style.background='var(--bl4)'" onmouseout="this.style.background=''"
+      onclick="mapZoomProv('${p}')">
       <div style="width:9px;height:9px;border-radius:50%;background:${PC[p]||'#333'};flex-shrink:0"></div>
       <b>${p}</b><span style="color:var(--mu)">${nome}</span>
       <span style="margin-left:auto;color:var(--mu2)"><b>${pd.n_gare||0}</b>g · <b>${nc}</b>c</span>
@@ -6975,13 +6975,29 @@ function mapDrawSidePanels(){
 
   const caEl=document.getElementById('map-campi-list');
   if(caEl) caEl.innerHTML=Object.values(CAMPI||{}).sort((a,b)=>b.gare-a.gare).slice(0,10).map((c,i)=>`
-    <div style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:.7rem;cursor:pointer;border-radius:4px;transition:background .12s" onmouseover="this.style.background='var(--bl4)'" onmouseout="this.style.background=''"
-      onclick="(function(){const gps=typeof CAMPO_GPS!=='undefined'&&CAMPO_GPS['${esc(c.campo)}'];if(gps&&_lmap){_lmap.setView([gps.lat,gps.lng],14);document.getElementById('map-sel-info').innerHTML='<b style=\\'color:var(--bl)\\'>${escH(c.nome_breve||c.campo.split(',')[0])}</b><br><b>${c.gare}</b> gare · ${pvB(c.prov)}';}else if(_lmap)openCampoModal('${esc(c.campo)}');})()">
+    <div style="display:flex;align-items:center;gap:4px;padding:3px 6px;font-size:.7rem;cursor:pointer;border-radius:4px" onmouseover="this.style.background='var(--bl4)'" onmouseout="this.style.background=''"
+      onclick="mapClickCampo('${esc(c.campo)}','${escH(c.nome_breve||c.campo.split(',')[0])}',${c.gare},'${c.prov}')">
       <span style="color:#9aa3b8;width:14px;font-size:.65rem">${i+1}</span>
       <div style="width:7px;height:7px;border-radius:50%;background:${PC[c.prov]||'#333'};flex-shrink:0"></div>
       <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(c.nome_breve||c.campo.split(',')[0])}</span>
       <b style="color:var(--bl)">${c.gare}</b>
     </div>`).join('');
+}
+
+function mapZoomProv(p){
+  const bounds={CA:[[38.8,8.8],[39.5,9.4]],SS:[[40.3,8.1],[41.1,9.2]],NU:[[39.9,9.0],[40.8,9.8]],OR:[[39.6,8.3],[40.3,9.0]],SU:[[38.8,8.3],[39.5,9.0]]};
+  if(_lmap&&bounds[p])_lmap.fitBounds(bounds[p]);
+  const sel=document.getElementById('map-pv-filter');
+  if(sel)sel.value=p;
+  mapApplyFilter();
+}
+
+function mapClickCampo(campo,nome,gare,prov){
+  const gps=typeof CAMPO_GPS!=='undefined'&&CAMPO_GPS[campo];
+  if(gps&&_lmap) _lmap.setView([gps.lat,gps.lng],14);
+  const el=document.getElementById('map-sel-info');
+  if(el) el.innerHTML=`<b style="color:var(--bl)">${escH(nome)}</b><br><b>${gare}</b> gare · ${pvB(prov)}<br>
+    <button class="btn b-bl" style="padding:2px 8px;font-size:.65rem;margin-top:4px" onclick="openCampoModal('${esc(campo)}')">↗ Dettaglio</button>`;
 }
 
 
