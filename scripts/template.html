@@ -737,11 +737,17 @@ tr.loss-row td{background:#fdecea!important;}
   </div>
 
   <!-- ROW 8: Attività mensile collassabile -->
-  <div class="db-card">
+  <div class="db-card" style="margin-bottom:12px">
     <div class="db-card-hd" style="cursor:pointer" onclick="toggleSection('h-mesi-wrap','h-mesi-tog')">
       📊 Attività mensile <span id="h-mesi-tog" style="float:right;font-size:.8rem;color:var(--mu)">▼</span>
     </div>
     <div id="h-mesi-wrap"><div id="gs-mesi"></div></div>
+  </div>
+
+  <!-- ROW 9: Province compatte inline -->
+  <div class="db-card">
+    <div class="db-card-hd">📍 Province <span class="db-hd-link" onclick="showPage('province')">→ dettaglio completo</span></div>
+    <div id="h-pv-inline"></div>
   </div>
 
 </div>
@@ -2337,7 +2343,6 @@ function renderHome(){
         else if(d>=t60&&d<t30) cnt2[n]=(cnt2[n]||0)+1;
       });
     });
-    // Calcola variazione %
     const allArbs=[...new Set([...Object.keys(cnt1),...Object.keys(cnt2)])];
     const trends=allArbs.map(n=>{
       const c1=cnt1[n]||0, c2=cnt2[n]||0;
@@ -2371,6 +2376,64 @@ function renderHome(){
         </div>
       </div>`;
   }catch(e){}
+
+  // ── PROVINCE INLINE nella home ─────────────────────────────
+  try{
+    const pvInline=document.getElementById('h-pv-inline');
+    if(pvInline){
+      const ALL_PV_NOMI={'CA':'Cagliari','SS':'Sassari','NU':'Nuoro','OR':'Oristano','SU':'Sud Sardegna'};
+      const pvSorted=Object.entries(ALL_PV_NOMI).map(([pv,nome])=>{
+        const ps=PV[pv]||{n_gare:0,sq_residenti:[],sq_ospiti:[],arbitri_residenti:[],udc_residenti:[],oss_residenti:[]};
+        return{pv,nome,ps};
+      }).sort((a,b)=>(b.ps.n_gare||0)-(a.ps.n_gare||0));
+      const maxG=pvSorted[0]?.ps.n_gare||1;
+      pvInline.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:4px 0">${pvSorted.map(({pv,nome,ps})=>{
+        const clr=PC[pv]||'#888';
+        const barPct=Math.round((ps.n_gare||0)/maxG*100);
+        const nArb=ps.arbitri_residenti?.length||0;
+        const nUdc=ps.udc_residenti?.length||0;
+        const nOss=ps.oss_residenti?.length||0;
+        const nSqRes=ps.sq_residenti?.length||0;
+        const nSqOsp=ps.sq_ospiti?.length||0;
+        const doppio=(D.gare||[]).filter(g=>{
+          const cf=CAMPI[g['Campo']]||{};
+          return cf.prov===pv && pns(g['Arbitro 1']||'') && pns(g['Arbitro 2']||'');
+        }).length;
+        const doppioPct=ps.n_gare?Math.round(doppio/ps.n_gare*100):0;
+        const dopClr=doppioPct>=70?'var(--green)':doppioPct>=40?'#f39c12':'var(--red)';
+        return `<div style="background:#fff;border:2px solid ${clr}33;border-left:4px solid ${clr};border-radius:10px;padding:10px 12px;cursor:pointer;transition:all .15s" onmouseover="this.style.boxShadow='0 4px 14px ${clr}33'" onmouseout="this.style.boxShadow=''" onclick="openProvincia('${pv}')">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+            <span style="background:${clr};color:#fff;border-radius:6px;padding:3px 10px;font-size:.85rem;font-weight:900">${pv}</span>
+            <span style="font-size:.72rem;font-weight:600;color:var(--mu)">${nome}</span>
+            <span style="margin-left:auto;font-size:1.15rem;font-weight:900;color:${clr}">${ps.n_gare||0}</span>
+          </div>
+          <div style="height:5px;background:#eef1fa;border-radius:3px;margin-bottom:8px">
+            <div style="height:5px;background:${clr};border-radius:3px;width:${barPct}%;transition:width .4s"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:.64rem;color:var(--mu);text-align:center">
+            <div style="background:#f8faff;border-radius:5px;padding:3px 2px;cursor:pointer" onclick="event.stopPropagation();openProvincia('${pv}')">
+              <div style="font-size:.82rem;font-weight:800;color:${clr}">${nArb}</div>Arbitri
+            </div>
+            <div style="background:#f8faff;border-radius:5px;padding:3px 2px;cursor:pointer" onclick="event.stopPropagation();openProvincia('${pv}')">
+              <div style="font-size:.82rem;font-weight:800;color:${clr}">${nUdc}</div>UDC
+            </div>
+            <div style="background:#f8faff;border-radius:5px;padding:3px 2px;cursor:pointer" onclick="event.stopPropagation();openProvincia('${pv}')">
+              <div style="font-size:.82rem;font-weight:800;color:${clr}">${nSqRes}</div>Squadre
+            </div>
+            <div style="background:#f8faff;border-radius:5px;padding:3px 2px;cursor:pointer" onclick="event.stopPropagation();openProvincia('${pv}')">
+              <div style="font-size:.82rem;font-weight:800;color:${clr}">${nOss}</div>Oss.
+            </div>
+            <div style="background:#f8faff;border-radius:5px;padding:3px 2px;cursor:pointer" onclick="event.stopPropagation();openProvincia('${pv}')">
+              <div style="font-size:.82rem;font-weight:800;color:${clr}">${nSqOsp}</div>Ospiti
+            </div>
+            <div style="background:${dopClr}15;border-radius:5px;padding:3px 2px;border:1px solid ${dopClr}44" title="% gare con doppio arbitraggio">
+              <div style="font-size:.82rem;font-weight:800;color:${dopClr}">${doppioPct}%</div>Dop.
+            </div>
+          </div>
+        </div>`;
+      }).join('')}</div>`;
+    }
+  }catch(e){console.warn('Province inline error:',e);}
 }
 
 // ── RESOCONTO A DATA ─────────────────────────────────────────
@@ -3549,10 +3612,80 @@ function exportCSV(){
 
 // PROVINCE CARDS
 function renderProvCards(){
-  // Mostra TUTTE le 9 province, anche quelle con 0 gare
   const ALL_PV_NOMI={'CA':'Cagliari','SS':'Sassari','NU':'Nuoro','OR':'Oristano','SU':'Sud Sardegna'};
-  const pvData=Object.fromEntries(Object.keys(ALL_PV_NOMI).map(pv=>[pv, PV[pv]||{n_gare:0,sq_residenti:[],sq_ospiti:[],arbitri_residenti:[],udc_residenti:[],oss_residenti:[],campionati:{}}]));
-  document.getElementById('pv-cards').innerHTML=`<div class="prov-grid">${Object.entries(pvData).sort((a,b)=>(b[1].n_gare||0)-(a[1].n_gare||0)).map(([pv,ps])=>`<div class="pc pc-${pv}" onclick="openProvincia('${pv}')"><h4>${pv}</h4><div class="pvs">Gare nel campo: <b>${ps.n_gare}</b></div><div class="pvs">Arbitri res.: <b>${ps.arbitri_residenti.length}</b></div><div class="pvs">UDC res.: <b>${ps.udc_residenti.length}</b></div><div class="pvs">Oss. res.: <b>${ps.oss_residenti.length}</b></div><div class="pvs">Sq. res.: <b>${ps.sq_residenti.length}</b></div><div class="pvs">Sq. ospiti: <b>${ps.sq_ospiti.length}</b></div></div>`).join('')}</div>`;
+  const pvSorted=Object.entries(ALL_PV_NOMI).map(([pv,nome])=>{
+    const ps=PV[pv]||{n_gare:0,sq_residenti:[],sq_ospiti:[],arbitri_residenti:[],udc_residenti:[],oss_residenti:[]};
+    return{pv,nome,ps};
+  }).sort((a,b)=>(b.ps.n_gare||0)-(a.ps.n_gare||0));
+  const maxG=pvSorted[0]?.ps.n_gare||1;
+  const totalG=pvSorted.reduce((s,{ps})=>s+(ps.n_gare||0),0);
+
+  // Riga sommario totale in cima
+  const summaryHtml=`<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px">${pvSorted.map(({pv,nome,ps})=>{
+    const clr=PC[pv]||'#888';
+    const pct=totalG?Math.round((ps.n_gare||0)/totalG*100):0;
+    return`<div style="background:#fff;border:2px solid ${clr}44;border-top:4px solid ${clr};border-radius:8px;padding:8px 10px;text-align:center;cursor:pointer" onclick="openProvincia('${pv}')">
+      <div style="font-size:.78rem;font-weight:900;color:${clr}">${pv}</div>
+      <div style="font-size:.64rem;color:var(--mu);margin-bottom:4px">${nome}</div>
+      <div style="font-size:1.4rem;font-weight:900;color:${clr}">${ps.n_gare||0}</div>
+      <div style="font-size:.6rem;color:var(--mu)">gare (${pct}%)</div>
+    </div>`;
+  }).join('')}</div>`;
+
+  // Card dettaglio per ogni provincia
+  const cardsHtml=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">${pvSorted.map(({pv,nome,ps})=>{
+    const clr=PC[pv]||'#888';
+    const barPct=Math.round((ps.n_gare||0)/maxG*100);
+    const nArb=ps.arbitri_residenti?.length||0;
+    const nUdc=ps.udc_residenti?.length||0;
+    const nOss=ps.oss_residenti?.length||0;
+    const nSqRes=ps.sq_residenti?.length||0;
+    const nSqOsp=ps.sq_ospiti?.length||0;
+    const doppio=(D.gare||[]).filter(g=>{
+      const cf=CAMPI[g['Campo']]||{};
+      return cf.prov===pv && pns(g['Arbitro 1']||'') && pns(g['Arbitro 2']||'');
+    }).length;
+    const doppioPct=ps.n_gare?Math.round(doppio/ps.n_gare*100):0;
+    const dopClr=doppioPct>=70?'var(--green)':doppioPct>=40?'#f39c12':'var(--red)';
+    // Top arbitro della provincia
+    const arbPv=Object.values(P).filter(p=>p.provincia===pv&&p.categoria==='Arbitro').sort((a,b)=>b.n_gare-a.n_gare)[0];
+    return `<div class="pc pc-${pv}" onclick="openProvincia('${pv}')" style="border-left:4px solid ${clr};padding:12px 14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="background:${clr};color:#fff;border-radius:6px;padding:3px 10px;font-size:.9rem;font-weight:900">${pv}</span>
+        <span style="font-size:.75rem;font-weight:600;color:var(--mu)">${nome}</span>
+        <span style="margin-left:auto;font-size:1.3rem;font-weight:900;color:${clr}">${ps.n_gare||0}</span>
+      </div>
+      <div style="height:6px;background:#eef1fa;border-radius:3px;margin-bottom:10px">
+        <div style="height:6px;background:${clr};border-radius:3px;width:${barPct}%"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;font-size:.65rem;color:var(--mu);text-align:center;margin-bottom:8px">
+        <div style="background:#f8faff;border-radius:5px;padding:4px 2px">
+          <div style="font-size:.9rem;font-weight:800;color:${clr}">${nArb}</div>Arbitri
+        </div>
+        <div style="background:#f8faff;border-radius:5px;padding:4px 2px">
+          <div style="font-size:.9rem;font-weight:800;color:${clr}">${nUdc}</div>UDC
+        </div>
+        <div style="background:#f8faff;border-radius:5px;padding:4px 2px">
+          <div style="font-size:.9rem;font-weight:800;color:${clr}">${nOss}</div>Oss.
+        </div>
+        <div style="background:#f8faff;border-radius:5px;padding:4px 2px">
+          <div style="font-size:.9rem;font-weight:800;color:${clr}">${nSqRes}</div>Sq. Res.
+        </div>
+        <div style="background:#f8faff;border-radius:5px;padding:4px 2px">
+          <div style="font-size:.9rem;font-weight:800;color:${clr}">${nSqOsp}</div>Ospiti
+        </div>
+        <div style="background:${dopClr}15;border-radius:5px;padding:4px 2px;border:1px solid ${dopClr}44" title="% gare con doppio arbitraggio">
+          <div style="font-size:.9rem;font-weight:800;color:${dopClr}">${doppioPct}%</div>Dop.
+        </div>
+      </div>
+      ${arbPv?`<div style="border-top:1px solid #f0f2f8;padding-top:6px;font-size:.63rem;color:var(--mu)">
+        🥇 Top arbitro: <span class="rn rn-Arbitro" style="font-weight:700;color:${clr}" data-n="${arbPv.nome}" onclick="event.stopPropagation();openPersona('${esc(arbPv.nome)}')">${escH(arbPv.nome)}</span>
+        <span style="font-weight:800;color:${clr}">${arbPv.n_gare} gare</span>
+      </div>`:''}
+    </div>`;
+  }).join('')}</div>`;
+
+  document.getElementById('pv-cards').innerHTML=summaryHtml+cardsHtml;
 }
 
 // GARE TOTALI MODAL
