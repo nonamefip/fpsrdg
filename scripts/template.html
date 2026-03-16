@@ -699,11 +699,11 @@ tr.loss-row td{background:#fdecea!important;}
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:5px;">
-      <button class="tl-nav-btn" onclick="navTl(-1)" title="Settimana precedente">&#8249;</button>
+      <button class="tl-nav-btn" onclick="navTl(-1)">&#8249;</button>
       <div class="tl-outer">
         <div class="timeline-7" id="h-timeline7"></div>
       </div>
-      <button class="tl-nav-btn" onclick="navTl(1)" title="Settimana successiva">&#8250;</button>
+      <button class="tl-nav-btn" onclick="navTl(1)">&#8250;</button>
     </div>
     <div class="tl-info" id="tl-footer"></div>
   </div>
@@ -2153,154 +2153,161 @@ function exportArbCSV(){
 }
 
 
-// ════════════════════════════════════════════
-// TIMELINE GIORNATE
-// ════════════════════════════════════════════
+// ═══════════════════════════════════════════
+// TIMELINE GIORNATE — funzioni
+// ═══════════════════════════════════════════
 let _tlMode='future', _tlOffset=0;
 
 function setTlMode(m){
   _tlMode=m; _tlOffset=0;
-  ['future','tutto','passate'].forEach(k=>{
-    const b=document.getElementById('tlf-'+k);
-    if(b)b.classList.toggle('active',k===m);
+  ['future','tutto','passate'].forEach(function(k){
+    var b=document.getElementById('tlf-'+k);
+    if(b) b.classList.toggle('active',k===m);
   });
-  const lbl=document.getElementById('tl-mode-label');
-  if(lbl)lbl.textContent=m==='future'?'prossimi giorni':m==='passate'?'giorni passati':'tutta la stagione';
+  var lbl=document.getElementById('tl-mode-label');
+  if(lbl) lbl.textContent=m==='future'?'prossimi giorni':m==='passate'?'giorni passati':'tutta la stagione';
   renderTimeline();
 }
 
-function navTl(dir){_tlOffset+=dir*7; renderTimeline();}
+function navTl(dir){ _tlOffset+=dir*7; renderTimeline(); }
 
 function renderTimeline(){
-  const el=document.getElementById('h-timeline7');
-  const footer=document.getElementById('tl-footer');
-  if(!el)return;
+  var el=document.getElementById('h-timeline7');
+  var footer=document.getElementById('tl-footer');
+  if(!el) return;
 
-  // data di oggi — variabili private con prefisso per non collidere con renderHome
-  const _tn=new Date(); _tn.setHours(0,0,0,0);
-  const _ts=_tn.toISOString().split('T')[0];
+  var _tn=new Date(); _tn.setHours(0,0,0,0);
+  var _ts=_tn.toISOString().split('T')[0];
 
-  // mappa gare per giorno
-  const _pf={};
-  (D.gare_future||[]).forEach(g=>{const d=g['Data'];if(d)_pf[d]=(_pf[d]||0)+1;});
-  const _pg=(typeof GS!=='undefined'&&GS.per_giorno)||{};
+  var _pf={};
+  (D.gare_future||[]).forEach(function(g){ var d=g['Data']; if(d) _pf[d]=(_pf[d]||0)+1; });
 
-  // copertura futura
-  const _cov={};
-  (D.gare_future||[]).forEach(g=>{
-    const d=g['Data'];if(!d)return;
-    if(!_cov[d])_cov[d]={t:0,c:0};
+  var _pg=(typeof GS!=='undefined' && GS && GS.per_giorno) ? GS.per_giorno : {};
+
+  var _cov={};
+  (D.gare_future||[]).forEach(function(g){
+    var d=g['Data']; if(!d) return;
+    if(!_cov[d]) _cov[d]={t:0,c:0};
     _cov[d].t++;
-    if((g['Arbitro 1']||'').trim()||(g['Arbitro 2']||'').trim())_cov[d].c++;
+    if((g['Arbitro 1']||'').trim() || (g['Arbitro 2']||'').trim()) _cov[d].c++;
   });
 
-  const _DW=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
-  const _ME=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  var _DW=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+  var _ME=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
 
-  // raccolta date disponibili
-  const _ds=new Set();
-  Object.keys(_pg).forEach(d=>{if((_pg[d]?.gare||0)>0)_ds.add(d);});
-  Object.keys(_pf).forEach(d=>{if(_pf[d]>0)_ds.add(d);});
+  var _ds=new Set();
+  Object.keys(_pg).forEach(function(d){ if((_pg[d] && _pg[d].gare||0)>0) _ds.add(d); });
+  Object.keys(_pf).forEach(function(d){ if(_pf[d]>0) _ds.add(d); });
 
-  const _all=[..._ds].sort().filter(d=>{
+  var _all=[..._ds].sort().filter(function(d){
     if(_tlMode==='future') return d>=_ts;
     if(_tlMode==='passate') return d<_ts;
     return true;
   });
 
   if(!_all.length){
-    el.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessuna giornata nel periodo</span>';
+    el.innerHTML='<span style="color:var(--mu);font-size:.75rem;padding:8px 0">Nessuna giornata</span>';
+    if(footer) footer.innerHTML='';
     return;
   }
 
-  // finestra visibile
-  let _ai=_all.findIndex(d=>d>=_ts);
-  if(_ai<0)_ai=_all.length-1;
-  const _ws=Math.max(0,_ai+_tlOffset);
-  const _vis=_all.slice(_ws,_ws+20);
-  const _mx=Math.max(..._all.map(d=>(_pg[d]?.gare||0)+(_pf[d]||0)),1);
+  var _ai=_all.findIndex(function(d){ return d>=_ts; });
+  if(_ai<0) _ai=_all.length-1;
+  var _ws=Math.max(0, _ai+_tlOffset);
+  var _vis=_all.slice(_ws, _ws+20);
+  var _mx=Math.max.apply(null, _all.map(function(d){ return (_pg[d]&&_pg[d].gare||0)+(_pf[d]||0); }).concat([1]));
 
-  let html=''; let _pm=-1;
-  _vis.forEach(ds=>{
-    const d=new Date(ds);
-    const mo=d.getMonth();
-    const nP=_pg[ds]?.gare||0;
-    const nF=_pf[ds]||0;
-    const nT=nP+nF;
-    const isT=ds===_ts, isP=ds<_ts;
-    const dw=d.getDay();
+  var html=''; var _pm=-1;
+  _vis.forEach(function(ds){
+    var d=new Date(ds);
+    var mo=d.getMonth();
+    var nP=(_pg[ds]&&_pg[ds].gare)||0;
+    var nF=_pf[ds]||0;
+    var nT=nP+nF;
+    var isT=(ds===_ts), isP=(ds<_ts);
+    var dw=d.getDay();
 
-    if(_pm>=0&&mo!==_pm){
-      html+=`<div style="flex-shrink:0;width:12px;display:flex;flex-direction:column;align-items:center;justify-content:center">
-        <div style="width:1px;flex:1;background:var(--br)"></div>
-        <div style="writing-mode:vertical-rl;font-size:.5rem;color:var(--mu);opacity:.6">${_ME[mo]}</div>
-        <div style="width:1px;flex:1;background:var(--br)"></div>
-      </div>`;
+    if(_pm>=0 && mo!==_pm){
+      html+='<div style="flex-shrink:0;width:12px;display:flex;flex-direction:column;align-items:center;justify-content:center">'
+           +'<div style="width:1px;flex:1;background:var(--br)"></div>'
+           +'<div style="writing-mode:vertical-rl;font-size:.5rem;color:var(--mu);opacity:.6">'+_ME[mo]+'</div>'
+           +'<div style="width:1px;flex:1;background:var(--br)"></div>'
+           +'</div>';
     }
     _pm=mo;
 
-    let bg=isT?'var(--gold2)':isP?'#e6f1fb':'#fff';
-    let bc=isT?'var(--gold)':isP?'#b5d4f4':nT>60?'var(--bl2)':'var(--br)';
-    const nc=isT?'var(--gold)':isP?'var(--bl2)':nT>100?'var(--red)':nT>50?'#c98a00':'var(--tx)';
-    const dc=dw===0?'var(--red)':dw===6?'#c0176e':'var(--mu)';
-    const bp=Math.round(nT/_mx*100);
-    const bclr=isT?'var(--gold)':isP?'var(--bl2)':nT>80?'var(--red)':nT>40?'#c98a00':'var(--bl2)';
+    var bg=isT?'var(--gold2)':isP?'#e6f1fb':'#fff';
+    var bc=isT?'var(--gold)':isP?'#b5d4f4':nT>60?'var(--bl2)':'var(--br)';
+    var nc=isT?'var(--gold)':isP?'var(--bl2)':nT>100?'var(--red)':nT>50?'#c98a00':'var(--tx)';
+    var dc=dw===0?'var(--red)':dw===6?'#c0176e':'var(--mu)';
+    var bp=Math.round(nT/_mx*100);
+    var bclr=isT?'var(--gold)':isP?'var(--bl2)':nT>80?'var(--red)':nT>40?'#c98a00':'var(--bl2)';
 
-    let cv='#ccc';
-    if(isT||isP){cv='#1a7a3c';}
-    else{const c=_cov[ds];cv=c&&c.t?(c.c/c.t>=.8?'#1a7a3c':c.c/c.t>=.5?'var(--gold)':'var(--red)'):'var(--red)';}
+    var cv='#ccc';
+    if(isT||isP){ cv='#1a7a3c'; }
+    else{
+      var c=_cov[ds];
+      if(c&&c.t>0) cv=(c.c/c.t>=.8?'#1a7a3c':c.c/c.t>=.5?'var(--gold)':'var(--red)');
+      else cv='var(--red)';
+    }
 
-    html+=`<div class="tl-day${isT?' today':''}${isP?' tl-past':''}"
-      style="background:${bg};border-color:${bc}"
-      onclick="openGiornoModal('${ds}')"
-      onmouseenter="showTlTip(event,'${ds}',${nT})"
-      onmousemove="moveTlTip(event)" onmouseleave="hideTlTip()">
-      <div class="tl-dow" style="color:${dc}">${_DW[dw]}</div>
-      <div class="tl-date">${d.getDate()}/${d.getMonth()+1}</div>
-      <div class="tl-n" style="color:${nc}">${nT||'–'}</div>
-      <div class="tl-sub">${nT?'gare':''}</div>
-      <div class="tl-bar"><div class="tl-bar-fill" style="width:${bp}%;background:${bclr}"></div></div>
-      <div class="tl-cov" style="background:${cv}"></div>
-    </div>`;
+    html+='<div class="tl-day'+(isT?' today':'')+(isP?' tl-past':'')+'"'
+         +' style="background:'+bg+';border-color:'+bc+'"'
+         +' onclick="openGiornoModal(\''+ds+'\')"'
+         +' onmouseenter="showTlTip(event,\''+ds+'\','+nT+')"'
+         +' onmousemove="moveTlTip(event)" onmouseleave="hideTlTip()">'
+         +'<div class="tl-dow" style="color:'+dc+'">'+_DW[dw]+'</div>'
+         +'<div class="tl-date">'+d.getDate()+'/'+(d.getMonth()+1)+'</div>'
+         +'<div class="tl-n" style="color:'+nc+'">'+(nT||'–')+'</div>'
+         +'<div class="tl-sub">'+(nT?'gare':'')+'</div>'
+         +'<div class="tl-bar"><div class="tl-bar-fill" style="width:'+bp+'%;background:'+bclr+'"></div></div>'
+         +'<div class="tl-cov" style="background:'+cv+'"></div>'
+         +'</div>';
   });
 
   el.innerHTML=html;
 
   if(footer){
-    const tot=_all.reduce((s,d)=>s+(_pg[d]?.gare||0)+(_pf[d]||0),0);
-    const nd=_all.filter(d=>(_pg[d]?.gare||0)+(_pf[d]||0)>0).length;
-    const sc=Object.values(_cov).reduce((s,c)=>s+(c.t-c.c),0);
-    footer.innerHTML=`<span>${nd} giorni con gare · ${tot.toLocaleString('it')} gare totali</span>`
-      +(sc>0?`<span style="color:var(--red);font-weight:700">⚠ ${sc} future scoperte</span>`
-            :`<span style="color:var(--green)">✓ Tutte le future coperte</span>`);
+    var tot=_all.reduce(function(s,d){ return s+(_pg[d]&&_pg[d].gare||0)+(_pf[d]||0); },0);
+    var nd=_all.filter(function(d){ return (_pg[d]&&_pg[d].gare||0)+(_pf[d]||0)>0; }).length;
+    var sc=Object.values(_cov).reduce(function(s,c){ return s+(c.t-c.c); },0);
+    footer.innerHTML='<span>'+nd+' giorni con gare · '+tot.toLocaleString('it')+' gare totali</span>'
+      +(sc>0?'<span style="color:var(--red);font-weight:700;margin-left:10px">⚠ '+sc+' future scoperte</span>'
+            :'<span style="color:var(--green);margin-left:10px">✓ Tutte le future coperte</span>');
   }
 }
 
-// ── Tooltip timeline
-let _tlTip=null;
+var _tlTip=null;
 function showTlTip(e,ds,nT){
-  if(!_tlTip){_tlTip=document.createElement('div');_tlTip.style.cssText='position:fixed;background:#fff;border:1px solid var(--br);border-radius:8px;padding:8px 11px;font-size:.72rem;line-height:1.5;pointer-events:none;z-index:99999;min-width:150px;box-shadow:0 4px 14px rgba(0,0,50,.14);display:none';document.body.appendChild(_tlTip);}
-  const d=new Date(ds);
-  const gd=[...(D.gare||[]).filter(g=>g['Data']===ds),...(D.gare_future||[]).filter(g=>g['Data']===ds)];
-  const cm={};gd.forEach(g=>{const c=g['Campionato']||'';if(c)cm[c]=(cm[c]||0)+1;});
-  const tc=Object.entries(cm).sort((a,b)=>b[1]-a[1]).slice(0,4);
-  const cop=gd.filter(g=>(g['Arbitro 1']||'').trim()||(g['Arbitro 2']||'').trim()).length;
-  const ME=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-  const DW=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
-  _tlTip.innerHTML=`<b style="color:var(--bl);font-size:.78rem">${DW[d.getDay()]} ${d.getDate()} ${ME[d.getMonth()]}</b><br>
-    <span style="color:var(--mu)">Gare: </span><b>${nT}</b>
-    ${nT-cop>0?`<span style="color:var(--red);margin-left:6px">⚠ ${nT-cop} scoperte</span>`:nT>0?'<span style="color:var(--green);margin-left:6px">✓</span>':''}
-    ${tc.length?'<hr style="border:none;border-top:1px solid var(--br);margin:4px 0">'+tc.map(([c,n])=>`<div style="color:var(--mu)">· ${escH(c.length>28?c.slice(0,28)+'…':c)} <b>${n}</b></div>`).join(''):''}`;
+  if(!_tlTip){
+    _tlTip=document.createElement('div');
+    _tlTip.style.cssText='position:fixed;background:#fff;border:1px solid var(--br);border-radius:8px;padding:8px 11px;font-size:.72rem;line-height:1.5;pointer-events:none;z-index:99999;min-width:150px;box-shadow:0 4px 14px rgba(0,0,50,.14);display:none';
+    document.body.appendChild(_tlTip);
+  }
+  var d=new Date(ds);
+  var gd=(D.gare||[]).filter(function(g){ return g['Data']===ds; })
+        .concat((D.gare_future||[]).filter(function(g){ return g['Data']===ds; }));
+  var cm={};
+  gd.forEach(function(g){ var c=g['Campionato']||''; if(c) cm[c]=(cm[c]||0)+1; });
+  var tc=Object.entries(cm).sort(function(a,b){ return b[1]-a[1]; }).slice(0,4);
+  var cop=gd.filter(function(g){ return (g['Arbitro 1']||'').trim()||(g['Arbitro 2']||'').trim(); }).length;
+  var ME=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  var DW=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+  var sc2=nT-cop;
+  _tlTip.innerHTML='<b style="color:var(--bl);font-size:.78rem">'+DW[d.getDay()]+' '+d.getDate()+' '+ME[d.getMonth()]+'</b><br>'
+    +'<span style="color:var(--mu)">Gare: </span><b>'+nT+'</b>'
+    +(sc2>0?'<span style="color:var(--red);margin-left:6px">⚠ '+sc2+' scoperte</span>':(nT>0?'<span style="color:var(--green);margin-left:6px">✓</span>':''))
+    +(tc.length?'<hr style="border:none;border-top:1px solid var(--br);margin:4px 0">'+tc.map(function(x){ return '<div style="color:var(--mu)">· '+(x[0].length>28?x[0].slice(0,28)+'…':x[0])+' <b>'+x[1]+'</b></div>'; }).join(''):'');
   _tlTip.style.display='block';
   moveTlTip(e);
 }
 function moveTlTip(e){
-  if(!_tlTip)return;
-  const x=e.clientX,y=e.clientY,w=_tlTip.offsetWidth,h=_tlTip.offsetHeight;
+  if(!_tlTip) return;
+  var x=e.clientX,y=e.clientY,w=_tlTip.offsetWidth,h=_tlTip.offsetHeight;
   _tlTip.style.left=(x+14+w>window.innerWidth?x-w-8:x+14)+'px';
   _tlTip.style.top=(y+16+h>window.innerHeight?y-h-8:y+16)+'px';
 }
-function hideTlTip(){if(_tlTip)_tlTip.style.display='none';}
+function hideTlTip(){ if(_tlTip) _tlTip.style.display='none'; }
 
 function renderHome(){
   // ── KPI Header
