@@ -1,5 +1,5 @@
 name: Aggiorna Dashboard FIP Sardegna
- 
+
 on:
   push:
     branches:
@@ -9,26 +9,26 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '30 2 * * *'
- 
+
 # ── Permessi espliciti write per gh-pages ──
 permissions:
   contents: write
   pages: write
   id-token: write
- 
+
 jobs:
   build:
     runs-on: ubuntu-latest
- 
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
- 
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
- 
+
       - name: Cache dipendenze Python
         uses: actions/cache@v4
         with:
@@ -36,23 +36,22 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
- 
+
       - name: Installa dipendenze
         run: pip install -r requirements.txt
- 
+
       - name: Scarica dati FIP
         run: python scripts/fip_scraper.py
- 
+
       - name: Genera dati JSON
         run: python scripts/gen_data.py
- 
+
       - name: Genera dashboard HTML
         run: python scripts/build.py
- 
+
       - name: Deploy su GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
           publish_branch: gh-pages
- 
