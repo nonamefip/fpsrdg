@@ -126,35 +126,33 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 .hero-kpi .ht{font-size:.7rem;color:rgba(255,255,255,.4);margin-top:2px;}
 
 /* ══════════ TIMELINE GIORNATE ══════════ */
-.tl-wrap{display:flex;align-items:center;gap:6px;}
-.tl-nav{flex-shrink:0;width:26px;height:26px;border-radius:50%;
-  border:1px solid var(--br);background:#fff;cursor:pointer;font-size:14px;
-  display:flex;align-items:center;justify-content:center;transition:all .15s;color:var(--tx);}
-.tl-nav:hover{background:var(--bl4);border-color:var(--bl2);}
-.tl-outer{flex:1;overflow:hidden;}
-.timeline-7{display:flex;gap:5px;padding:4px 2px 6px;transition:none;}
-.tl-day{flex-shrink:0;width:74px;background:#fff;border:1.5px solid var(--br);
-  border-radius:8px;padding:7px 5px 5px;cursor:pointer;transition:transform .12s;
+.tl-nav-btn{width:24px;height:24px;border-radius:50%;border:1px solid var(--br);
+  background:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;
+  justify-content:center;transition:all .15s;color:var(--tx);flex-shrink:0;padding:0;}
+.tl-nav-btn:hover{background:var(--bl4);border-color:var(--bl2);}
+.tl-outer{flex:1;overflow:hidden;min-width:0;}
+.timeline-7{display:flex;gap:4px;padding:2px 0 4px;}
+.tl-day{flex:1;min-width:0;background:#fff;border:1.5px solid var(--br);
+  border-radius:8px;padding:6px 3px 5px;cursor:pointer;transition:transform .12s;
   text-align:center;}
-.tl-day:hover{transform:translateY(-3px);box-shadow:var(--shadow);}
+.tl-day:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
 .tl-day.today{border-color:var(--gold);background:var(--gold2);}
 .tl-day.tl-past{background:#e6f1fb;border-color:#b5d4f4;}
-.tl-day.tl-future-busy{border-color:var(--bl2);}
-.tl-day .tl-dow{font-size:.6rem;font-weight:700;color:var(--mu);
-  text-transform:uppercase;letter-spacing:.4px;margin-bottom:1px;}
-.tl-day .tl-date{font-size:.75rem;font-weight:700;color:var(--tx);margin-bottom:2px;}
-.tl-day .tl-n{font-size:1.25rem;font-weight:900;line-height:1.1;}
-.tl-day .tl-sub{font-size:.55rem;color:var(--mu2);margin-top:1px;}
-.tl-day .tl-bar{height:4px;background:var(--bl3);border-radius:2px;margin:4px 4px 2px;overflow:hidden;}
+.tl-day .tl-dow{font-size:.58rem;font-weight:700;color:var(--mu);
+  text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;}
+.tl-day .tl-date{font-size:.7rem;font-weight:700;color:var(--tx);margin:1px 0 2px;}
+.tl-day .tl-n{font-size:1.15rem;font-weight:900;line-height:1.1;}
+.tl-day .tl-sub{font-size:.52rem;color:var(--mu2);}
+.tl-day .tl-bar{height:3px;background:var(--bl3);border-radius:2px;margin:3px 4px 1px;overflow:hidden;}
 .tl-day .tl-bar-fill{height:100%;border-radius:2px;}
-.tl-day .tl-cov{width:7px;height:7px;border-radius:50%;margin:3px auto 0;}
-.tl-filters{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
-.tl-fbtn{padding:3px 10px;border-radius:12px;border:1px solid var(--br);
-  background:#fff;color:var(--mu);font-size:.68rem;font-weight:600;cursor:pointer;transition:all .15s;}
+.tl-day .tl-cov{width:6px;height:6px;border-radius:50%;margin:2px auto 0;}
+.tl-filters{display:flex;align-items:center;gap:5px;margin-bottom:7px;flex-wrap:wrap;}
+.tl-fbtn{padding:2px 9px;border-radius:10px;border:1px solid var(--br);
+  background:#fff;color:var(--mu);font-size:.66rem;font-weight:600;cursor:pointer;transition:all .15s;}
 .tl-fbtn.active{background:var(--bl);color:#fff;border-color:var(--bl);}
-.tl-legend{display:flex;gap:10px;font-size:.62rem;color:var(--mu);margin-left:auto;flex-wrap:wrap;}
-.tl-ldot{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:2px;vertical-align:middle;}
-.tl-info{font-size:.65rem;color:var(--mu);margin-top:5px;display:flex;align-items:center;gap:10px;}
+.tl-legend{display:flex;gap:8px;font-size:.6rem;color:var(--mu);margin-left:auto;flex-wrap:wrap;align-items:center;}
+.tl-ldot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:2px;vertical-align:middle;}
+.tl-info{font-size:.63rem;color:var(--mu);margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 
 /* ══════════ WIDGET CARDS HOME ══════════ */
 .widget-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
@@ -701,12 +699,12 @@ tr.loss-row td{background:#fdecea!important;}
         <span><span class="tl-ldot" style="background:var(--red);border-radius:50%"></span>Scoperta</span>
       </div>
     </div>
-    <div class="tl-wrap">
-      <button class="tl-nav" onclick="navTl(-1)" title="Settimana precedente">&#8249;</button>
+    <div style="display:flex;align-items:center;gap:5px;">
+      <button class="tl-nav-btn" onclick="navTl(-1)" title="Settimana precedente">&#8249;</button>
       <div class="tl-outer">
         <div class="timeline-7" id="h-timeline7"></div>
       </div>
-      <button class="tl-nav" onclick="navTl(1)" title="Settimana successiva">&#8250;</button>
+      <button class="tl-nav-btn" onclick="navTl(1)" title="Settimana successiva">&#8250;</button>
     </div>
     <div class="tl-info" id="tl-footer"></div>
   </div>
@@ -2156,8 +2154,9 @@ function exportArbCSV(){
 }
 
 
-
-// ── TIMELINE GIORNATE — stato ────────────────────────────────────
+// ════════════════════════════════════════════════════════════
+// TIMELINE GIORNATE — stato e funzioni
+// ════════════════════════════════════════════════════════════
 let _tlMode='future';
 let _tlOffset=0;
 
@@ -2179,228 +2178,172 @@ function renderTimeline(){
   const footer=document.getElementById('tl-footer');
   if(!el)return;
 
-  // Costruisci mappa completa giorno→gare (passate + future)
-  const perFut={};
-  (D.gare_future||[]).forEach(g=>{perFut[g['Data']]=(perFut[g['Data']]||0)+1;});
-  const perG=GS.per_giorno||{};
+  // ── data corrente (locale, non usa variabili esterne) ──
+  const _now=new Date();_now.setHours(0,0,0,0);
+  const _todayStr=_now.toISOString().split('T')[0];
 
-  // Copertura per giorno dalle gare future
-  const covFut={};
+  // ── mappa giorno→gare ──
+  const _perFut={};
   (D.gare_future||[]).forEach(g=>{
     const ds=g['Data'];if(!ds)return;
-    if(!covFut[ds])covFut[ds]={tot:0,cop:0};
-    covFut[ds].tot++;
-    if(pns(g['Arbitro 1']||'')||pns(g['Arbitro 2']||''))covFut[ds].cop++;
+    _perFut[ds]=(_perFut[ds]||0)+1;
+  });
+  const _perG=(typeof GS!=='undefined'?GS.per_giorno:null)||{};
+
+  // ── copertura per giorno futuro ──
+  const _covFut={};
+  (D.gare_future||[]).forEach(g=>{
+    const ds=g['Data'];if(!ds)return;
+    if(!_covFut[ds])_covFut[ds]={tot:0,cop:0};
+    _covFut[ds].tot++;
+    if((g['Arbitro 1']||'').trim()||(g['Arbitro 2']||'').trim())_covFut[ds].cop++;
   });
 
-  const todayD=new Date();todayD.setHours(0,0,0,0);
-  const todayStr=todayD.toISOString().split('T')[0];
-  const DAYS=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
-  const MESI=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const _DAYS=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+  const _MESI=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
 
-  // Raccogli tutte le date disponibili filtrate per modalità
-  const allDates=new Set();
-  // Passate da GS.per_giorno
-  Object.keys(perG).forEach(ds=>{if((perG[ds]?.gare||0)>0)allDates.add(ds);});
-  // Future
-  Object.keys(perFut).forEach(ds=>{if(perFut[ds]>0)allDates.add(ds);});
+  // ── raccolta date ──
+  const _allSet=new Set();
+  Object.keys(_perG).forEach(ds=>{if((_perG[ds]?.gare||0)>0)_allSet.add(ds);});
+  Object.keys(_perFut).forEach(ds=>{if(_perFut[ds]>0)_allSet.add(ds);});
 
-  let dates=[...allDates].sort().filter(ds=>{
-    if(_tlMode==='future') return ds>=todayStr;
-    if(_tlMode==='passate') return ds<todayStr;
+  const _dates=[..._allSet].sort().filter(ds=>{
+    if(_tlMode==='future') return ds>=_todayStr;
+    if(_tlMode==='passate') return ds<_todayStr;
     return true;
   });
 
-  if(!dates.length){el.innerHTML='<span style="color:var(--mu);font-size:.75rem;padding:8px">Nessuna giornata nel periodo</span>';return;}
+  if(!_dates.length){
+    el.innerHTML='<span style="color:var(--mu);font-size:.75rem;padding:8px 0">Nessuna giornata nel periodo selezionato</span>';
+    return;
+  }
 
-  // Finestra di visualizzazione: ancora su oggi (o primo futuro) + offset
-  let anchorIdx=dates.findIndex(ds=>ds>=todayStr);
-  if(anchorIdx<0)anchorIdx=dates.length-1;
-  const windowStart=Math.max(0,anchorIdx+_tlOffset);
-  const visible=dates.slice(windowStart,windowStart+20);
+  // ── finestra visibile ──
+  let _anchorIdx=_dates.findIndex(ds=>ds>=_todayStr);
+  if(_anchorIdx<0)_anchorIdx=_dates.length-1;
+  const _winStart=Math.max(0,_anchorIdx+_tlOffset);
+  const _visible=_dates.slice(_winStart,_winStart+20);
 
-  // Massimo gare per barra proporzionale
-  const maxN=Math.max(...dates.map(ds=>(perG[ds]?.gare||0)+(perFut[ds]||0)),1);
+  // max per barra proporzionale
+  const _maxN=Math.max(..._dates.map(ds=>(_perG[ds]?.gare||0)+(_perFut[ds]||0)),1);
 
   let html='';
-  let prevMonth=null;
-  visible.forEach(ds=>{
+  let _prevM=null;
+  _visible.forEach(ds=>{
     const d=new Date(ds);
-    const m=d.getMonth();
-    const nPast=perG[ds]?.gare||0;
-    const nFut=perFut[ds]||0;
+    const mo=d.getMonth();
+    const nPast=_perG[ds]?.gare||0;
+    const nFut=_perFut[ds]||0;
     const nTot=nPast+nFut;
-    const isToday=ds===todayStr;
-    const isPast=ds<todayStr;
+    const isToday=ds===_todayStr;
+    const isPast=ds<_todayStr;
     const dow=d.getDay();
-    const isSun=dow===0,isSat=dow===6;
+    const isSun=dow===0, isSat=dow===6;
 
-    // Separatore mese
-    if(prevMonth!==null&&m!==prevMonth){
-      html+=`<div style="flex-shrink:0;width:1px;background:var(--br);margin:2px 2px;align-self:stretch"></div>
-             <div style="flex-shrink:0;writing-mode:vertical-rl;font-size:.55rem;color:var(--mu);padding:2px 0;opacity:.6;align-self:center">${MESI[m]}</div>`;
+    // separatore mese
+    if(_prevM!==null&&mo!==_prevM){
+      html+=`<div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 2px">
+        <div style="width:1px;flex:1;background:var(--br)"></div>
+        <div style="writing-mode:vertical-rl;font-size:.52rem;color:var(--mu);opacity:.6;padding:2px 0">${_MESI[mo]}</div>
+        <div style="width:1px;flex:1;background:var(--br)"></div>
+      </div>`;
     }
-    prevMonth=m;
+    _prevM=mo;
 
-    // Stili card
-    let cardBg,cardBorder;
-    if(isToday){cardBg='var(--gold2)';cardBorder='var(--gold)';}
-    else if(isPast){cardBg='#e6f1fb';cardBorder='#b5d4f4';}
-    else{cardBg='#fff';cardBorder=nTot>80?'var(--bl2)':'var(--br)';}
+    // stili
+    let bg,border;
+    if(isToday){bg='var(--gold2)';border='var(--gold)';}
+    else if(isPast){bg='#e6f1fb';border='#b5d4f4';}
+    else{bg='#fff';border=nTot>60?'var(--bl2)':'var(--br)';}
 
-    // Colore numero
     const numClr=isToday?'var(--gold)':isPast?'var(--bl2)':nTot>100?'var(--red)':nTot>50?'#c98a00':'var(--tx)';
-
-    // Colore giorno settimana
     const dowClr=isSun?'var(--red)':isSat?'#c0176e':'var(--mu)';
-
-    // Barra proporzionale
-    const barPct=Math.round(nTot/maxN*100);
+    const barPct=Math.round(nTot/_maxN*100);
     const barClr=isToday?'var(--gold)':isPast?'var(--bl2)':nTot>80?'var(--red)':nTot>40?'#c98a00':'var(--bl2)';
 
-    // Pallino copertura
-    let covDotClr='#ccc';
+    // pallino copertura
+    let covClr='#ccc';
     if(isToday||isPast){
-      // Per le passate assumiamo copertura alta
-      covDotClr='#1a7a3c';
-    } else {
-      const cv=covFut[ds];
+      covClr='#1a7a3c'; // passate = coperte
+    }else{
+      const cv=_covFut[ds];
       if(cv&&cv.tot>0){
         const pct=cv.cop/cv.tot;
-        covDotClr=pct>=0.8?'#1a7a3c':pct>=0.5?'var(--gold)':'var(--red)';
-      } else covDotClr='var(--red)';
+        covClr=pct>=0.8?'#1a7a3c':pct>=0.5?'var(--gold)':'var(--red)';
+      }else covClr='var(--red)';
     }
 
-    const covTitle=isPast||isToday?'Gare completate':(()=>{
-      const cv=covFut[ds];
-      if(!cv||cv.tot===0)return'Nessuna gara';
+    const covTit=isPast||isToday?'Completata':(()=>{
+      const cv=_covFut[ds];
+      if(!cv||!cv.tot)return'Nessuna gara';
       return Math.round(cv.cop/cv.tot*100)+'% coperta ('+cv.cop+'/'+cv.tot+')';
     })();
 
-    html+=`<div class="tl-day${isToday?' today':''}${isPast?' tl-past':''}${!isPast&&!isToday&&nTot>50?' tl-future-busy':''}"
-      style="background:${cardBg};border-color:${cardBorder}"
+    html+=`<div class="tl-day${isToday?' today':''}${isPast?' tl-past':''}"
+      style="background:${bg};border-color:${border}"
       onclick="openGiornoModal('${ds}')"
-      onmouseenter="showTlTip(event,'${ds}','${d.getDate()}/${d.getMonth()+1}',${nTot},${isPast?1:0})"
+      onmouseenter="showTlTip(event,'${ds}',${nTot},${isPast?1:0})"
       onmousemove="moveTlTip(event)"
       onmouseleave="hideTlTip()">
-      <div class="tl-dow" style="color:${dowClr}">${DAYS[dow]}</div>
+      <div class="tl-dow" style="color:${dowClr}">${_DAYS[dow]}</div>
       <div class="tl-date">${d.getDate()}/${d.getMonth()+1}</div>
       <div class="tl-n" style="color:${numClr}">${nTot||'–'}</div>
       <div class="tl-sub">${nTot>0?'gare':''}</div>
       <div class="tl-bar"><div class="tl-bar-fill" style="width:${barPct}%;background:${barClr}"></div></div>
-      <div class="tl-cov" style="background:${covDotClr}" title="${covTitle}"></div>
+      <div class="tl-cov" style="background:${covClr}" title="${covTit}"></div>
     </div>`;
   });
 
   el.innerHTML=html;
 
-  // Footer riepilogo
+  // footer
   if(footer){
-    const totG=dates.reduce((s,ds)=>s+(perG[ds]?.gare||0)+(perFut[ds]||0),0);
-    const nDays=dates.filter(ds=>(perG[ds]?.gare||0)+(perFut[ds]||0)>0).length;
-    const futureSc=Object.values(covFut).reduce((s,c)=>s+(c.tot-c.cop),0);
-    footer.innerHTML=`<span>${nDays} giorni con gare · ${totG.toLocaleString('it')} gare totali</span>`
-      +(futureSc>0?`<span style="color:var(--red);font-weight:700">⚠ ${futureSc} future scoperte</span>`
-                 :`<span style="color:var(--green)">Tutte le future coperte</span>`);
+    const totG=_dates.reduce((s,ds)=>s+(_perG[ds]?.gare||0)+(_perFut[ds]||0),0);
+    const nDays=_dates.filter(ds=>(_perG[ds]?.gare||0)+(_perFut[ds]||0)>0).length;
+    const totSc=Object.values(_covFut).reduce((s,c)=>s+(c.tot-c.cop),0);
+    footer.innerHTML=`<span>${nDays} giorni con gare &nbsp;·&nbsp; ${totG.toLocaleString('it')} gare totali</span>`
+      +(totSc>0
+        ?`<span style="color:var(--red);font-weight:700">⚠ ${totSc} future scoperte</span>`
+        :`<span style="color:var(--green)">✓ Tutte le future coperte</span>`);
   }
 }
 
-// ── TOOLTIP TIMELINE ────────────────────────────────────────────
+// ── Tooltip timeline ─────────────────────────────────────
 let _tlTip=null;
 function _ensureTlTip(){
   if(!_tlTip){
     _tlTip=document.createElement('div');
-    _tlTip.style.cssText='position:fixed;background:#fff;border:1px solid var(--br);border-radius:8px;padding:8px 11px;font-size:.72rem;line-height:1.5;pointer-events:none;z-index:9999;min-width:140px;box-shadow:0 4px 14px rgba(0,0,50,.12);display:none';
+    _tlTip.style.cssText='position:fixed;background:#fff;border:1px solid var(--br);border-radius:8px;padding:8px 11px;font-size:.72rem;line-height:1.5;pointer-events:none;z-index:99999;min-width:150px;box-shadow:0 4px 14px rgba(0,0,50,.14);display:none';
     document.body.appendChild(_tlTip);
   }
   return _tlTip;
 }
-function showTlTip(e,ds,dateLabel,nTot,isPast){
+function showTlTip(e,ds,nTot,isPast){
   const tip=_ensureTlTip();
-  const perG2=GS.per_giorno||{};
-  const perFut2={};(D.gare_future||[]).forEach(g=>{perFut2[g['Data']]=(perFut2[g['Data']]||0)+1;});
-  // Campionati del giorno
-  const campsDay={};
+  const _todS=new Date().toISOString().split('T')[0];
+  const d=new Date(ds);
   const allGDay=[...(D.gare||[]).filter(g=>g['Data']===ds),...(D.gare_future||[]).filter(g=>g['Data']===ds)];
+  const campsDay={};
   allGDay.forEach(g=>{const c=g['Campionato']||'';if(c)campsDay[c]=(campsDay[c]||0)+1;});
-  const topCamps=Object.entries(campsDay).sort((a,b)=>b[1]-a[1]).slice(0,4);
-  // Copertura
-  const cop=allGDay.filter(g=>pns(g['Arbitro 1']||'')||pns(g['Arbitro 2']||'')).length;
-  const scoperte=nTot-cop;
-  tip.innerHTML=`
-    <b style="color:var(--bl);font-size:.78rem">${dateLabel}</b><br>
+  const topC=Object.entries(campsDay).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const cop=allGDay.filter(g=>(g['Arbitro 1']||'').trim()||(g['Arbitro 2']||'').trim()).length;
+  const sc=nTot-cop;
+  const MESI=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const DAYS=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+  tip.innerHTML=`<b style="color:var(--bl);font-size:.78rem">${DAYS[d.getDay()]} ${d.getDate()} ${MESI[d.getMonth()]}</b><br>
     <span style="color:var(--mu)">Gare: </span><b>${nTot}</b>
-    ${scoperte>0?`<span style="color:var(--red);margin-left:6px">⚠ ${scoperte} scoperte</span>`:'<span style="color:var(--green);margin-left:6px">✓ coperte</span>'}
-    ${topCamps.length?'<hr style="border:none;border-top:1px solid var(--br);margin:4px 0">'+topCamps.map(([c,n])=>`<div style="color:var(--mu)">· ${escH(c.length>28?c.slice(0,28)+'…':c)} <b style="color:var(--tx)">${n}</b></div>`).join(''):''}
-  `;
+    ${sc>0?`<span style="color:var(--red);margin-left:6px">⚠ ${sc} scoperte</span>`:(nTot>0?'<span style="color:var(--green);margin-left:6px">✓ coperte</span>':'')}
+    ${topC.length?'<hr style="border:none;border-top:1px solid var(--br);margin:4px 0">'+topC.map(([c,n])=>`<div style="color:var(--mu)">· ${escH(c.length>28?c.slice(0,28)+'…':c)} <b style="color:var(--tx)">${n}</b></div>`).join(''):''}`;
   tip.style.display='block';
   moveTlTip(e);
 }
 function moveTlTip(e){
   if(!_tlTip)return;
-  const x=e.clientX,y=e.clientY;
-  const w=_tlTip.offsetWidth,h=_tlTip.offsetHeight;
+  const x=e.clientX,y=e.clientY,w=_tlTip.offsetWidth,h=_tlTip.offsetHeight;
   _tlTip.style.left=(x+14+w>window.innerWidth?x-w-8:x+14)+'px';
   _tlTip.style.top=(y+16+h>window.innerHeight?y-h-8:y+16)+'px';
 }
 function hideTlTip(){if(_tlTip)_tlTip.style.display='none';}
-
-// ── HELPER: Record personale arbitro ──────────────────────────────
-function getArbRecord(p){
-  if(!p||!p.gare||!p.gare.length)return null;
-  const mc={};
-  (p.gare||[]).forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)mc[m]=(mc[m]||0)+1;});
-  const topM=Object.entries(mc).sort((a,b)=>b[1]-a[1])[0];
-  const dates=[...new Set((p.gare||[]).map(g=>g['Data']||'').filter(Boolean))].sort().reverse();
-  let streak=0;
-  const todayS=new Date().toISOString().split('T')[0];
-  let prev=null;
-  for(const d of dates){
-    if(!prev){const diff=Math.round((new Date(todayS)-new Date(d))/86400000);if(diff>14)break;}
-    if(prev){const diff=Math.round((new Date(prev)-new Date(d))/86400000);if(diff>7)break;}
-    streak++;prev=d;
-  }
-  const pvCoord={CA:[39.22,9.12],SS:[40.73,8.56],NU:[40.32,9.33],OR:[39.90,8.59],SU:[39.37,8.78]};
-  const pvCenter=pvCoord[p.provincia]||null;
-  let inProv=0,outProv=0;
-  (p.gare||[]).forEach(g=>{
-    const gps=CAMPO_GPS[g['Campo']||''];
-    if(!gps||!pvCenter)return;
-    const d=Math.sqrt((gps.lat-pvCenter[0])**2+(gps.lng-pvCenter[1])**2);
-    if(d<0.8)inProv++;else outProv++;
-  });
-  const thisMonth=new Date().toISOString().slice(0,7);
-  const thisMonthG=mc[thisMonth]||0;
-  const avgMonth=Object.values(mc).length?Math.round(Object.values(mc).reduce((a,b)=>a+b,0)/Object.values(mc).length):0;
-  return{topM,streak,inProv,outProv,thisMonthG,avgMonth,totalDays:dates.length};
-}
-
-// ── HELPER: Stats provincia ────────────────────────────────────────
-function getProvStats(pv){
-  const ps=PV[pv]||{};
-  const arbs=(ps.arbitri_residenti||[]).map(n=>P[n]).filter(Boolean);
-  const nF=arbs.filter(p=>p.genere==='F').length;
-  const pctF=arbs.length?Math.round(nF/arbs.length*100):0;
-  let totKm=0;
-  arbs.forEach(p=>{totKm+=calcKmArb(p)||0;});
-  const avgKm=arbs.length?Math.round(totKm/arbs.length):0;
-  const coppie={};
-  (D.gare||[]).forEach(g=>{
-    const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
-    if(a1&&a2){const p1=P[a1],p2=P[a2];if(p1?.provincia===pv&&p2?.provincia===pv){const k=[a1,a2].sort().join('|||');coppie[k]=(coppie[k]||0)+1;}}
-  });
-  const topCoppia=Object.entries(coppie).sort((a,b)=>b[1]-a[1])[0];
-  return{nF,pctF,avgKm,topCoppia};
-}
-
-// ── HELPER: Gare scoperte ──────────────────────────────────────────
-function calcGareScoperte(){
-  const allG=[...(D.gare||[]),...(D.gare_future||[])];
-  const scoperte=allG.filter(g=>!pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||''));
-  const singolo=allG.filter(g=>pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||''));
-  const future=(D.gare_future||[]).filter(g=>!pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||''));
-  return{scoperte:scoperte.length,singolo:singolo.length,futureScoperte:future.length};
-}
 
 function renderHome(){
   // ── KPI Header
@@ -2430,7 +2373,7 @@ function renderHome(){
   document.getElementById('hb-comp-sub').textContent=`${gareConRis}/${gareTot+gareFuture} disputate`;
   document.getElementById('hb-doppio').textContent=doppioPct+'%';
 
-  // ── TIMELINE GIORNATE (con passate+future, barre, copertura, frecce)
+  // ── TIMELINE GIORNATE
   renderTimeline();
 
   // ── WIDGET: gara più combattuta (ultimi 30gg)
