@@ -1,53 +1,56 @@
-name: 🏀 Aggiorna Dashboard FIP Sardegna
+name: Aggiorna Dashboard FIP Sardegna
 
 on:
-  schedule:
-    - cron: '30 1 * * *'
+  # ── Trigger automatico: parte quando si fa push di template.html su main
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/template.html'
+
+  # ── Trigger manuale: resta disponibile come prima
   workflow_dispatch:
 
+  # ── Trigger schedulato: ogni notte alle 02:30 (UTC) per aggiornare i dati FIP
+  schedule:
+    - cron: '30 2 * * *'
+
 jobs:
-  aggiorna:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
 
     steps:
-      - name: 📥 Scarica il repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🐍 Installa Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
-      - name: 📦 Installa librerie
-        run: pip install requests beautifulsoup4 lxml
+      - name: Cache dipendenze Python
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
-      - name: 🌐 Scarica gare da fip.it
-        run: python scripts/fip_scraper.py --future-days 14
-        env:
-          PYTHONUNBUFFERED: '1'
+      - name: Installa dipendenze
+        run: pip install -r requirements.txt
 
-      - name: ⚙️ Calcola statistiche
+      - name: Scarica dati FIP
+        run: python scripts/fip_scraper.py
+
+      - name: Genera dati JSON
         run: python scripts/gen_data.py
 
-      - name: 🔨 Compila dashboard HTML
+      - name: Genera dashboard HTML
         run: python scripts/build.py
 
-      - name: 💾 Salva dati aggiornati
-        run: |
-          git config user.name "FIP Bot"
-          git config user.email "fip-bot@users.noreply.github.com"
-          git add cache/ docs/
-          git diff --staged --quiet || git commit -m "🏀 Aggiornamento $(date +'%Y-%m-%d %H:%M')"
-          git push
-
-      - name: 🚀 Pubblica su GitHub Pages
+      - name: Deploy su GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
+          publish_branch: gh-pages
