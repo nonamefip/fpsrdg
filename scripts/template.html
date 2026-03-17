@@ -3710,7 +3710,7 @@ function _gCellVal(col,g,ri){
   if(k==='n') return'<span style="color:var(--mu2);font-size:.65rem">'+(ri+1)+'</span>';
   if(k==='data') return g['Data']||'';
   if(k==='ora') return g['Ora']||'';
-  if(k==='num'){var ngn=(g['Numero Gara']||'').replace(/'/g,"\\'");return'<span class="ng-pill" style="cursor:pointer" onclick="openGara(\''+ngn+'\')">'+escH(g['Numero Gara']||'')+'</span>';}
+  if(k==='num'){var ngn=(g['Numero Gara']||'').replace(/'/g,"\\'");return'<span class="ng-pill" style="cursor:pointer" onclick="event.stopPropagation();openGara(\''+ngn+'\')">'+escH(g['Numero Gara']||'')+'</span>';}
   if(k==='camp'){var cc=campColor(g['Campionato']||'');var eck=(g['Campionato']||'').replace(/'/g,"\\'");return'<span style="background:'+cc+';color:#fff;border-radius:4px;padding:2px 6px;font-size:.65rem;font-weight:500;cursor:pointer;white-space:nowrap" onclick="openCampionato(\''+eck+'\')">' + escH(g['Campionato']||'')+'</span>';}
   if(k==='cpv') return _gPv(cpvF,false);
   if(k==='gir') return'<span style="font-size:.68rem;color:var(--mu)">'+escH(g['Girone']||'')+'</span>';
@@ -3866,17 +3866,14 @@ function _gStartResize(e,cid){
   document.onmousemove=function(ev){if(!_gResizing)return;var c=_gCOLS.find(function(x){return x.id===_gResizing.cid;});if(c)c.w=Math.max(36,_gResizing.sw+(ev.clientX-_gResizing.sx));document.querySelectorAll('#gtbl-main th').forEach(function(th,i){var vc=_gCOLS.filter(function(x){return!_gHidden.has(x.id);})[i];if(vc)th.style.width=vc.w+'px';});};
   document.onmouseup=function(){_gResizing=null;document.onmousemove=null;document.onmouseup=null;};
 }
-// Event delegation per apertura gara — robusto e non bloccabile
-document.addEventListener('DOMContentLoaded', function(){
-  var tbody = document.getElementById('gtbl-main-body');
-  if(tbody){
-    tbody.addEventListener('click', function(e){
-      var tr = e.target.closest('tr');
-      if(!tr) return;
-      var gNum = tr.getAttribute('data-gnum');
-      if(gNum) openGara(gNum);
-    });
-  }
+// Event delegation per apertura gara — listener a livello documento, sempre attivo
+document.addEventListener('click', function(e){
+  // Ignora click su elementi che hanno già un loro onclick (squadra, arbitro, pill, ecc.)
+  if(e.target.closest('.rn') || e.target.closest('.ng-pill') || e.target.closest('[onclick]')) return;
+  var tr = e.target.closest('#gtbl-main-body tr[data-gnum]');
+  if(!tr) return;
+  var gNum = tr.getAttribute('data-gnum');
+  if(gNum) openGara(gNum);
 });
 
 function renderGare(){
