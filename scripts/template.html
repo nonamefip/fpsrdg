@@ -6040,7 +6040,15 @@ function renderForma(forma){
 function openGara(numGara){
   const g=(D.gare||[]).find(x=>x['Numero Gara']===numGara)
         ||(D.gare_future||[]).find(x=>x['Numero Gara']===numGara);
-  if(!g){alert('Gara non trovata: '+numGara);return;}
+  if(!g){
+    // Prova anche cercando senza zeri iniziali
+    const numStr=String(numGara).trim();
+    const g2=(D.gare||[]).find(x=>String(x['Numero Gara']||'').trim()===numStr)
+           ||(D.gare_future||[]).find(x=>String(x['Numero Gara']||'').trim()===numStr);
+    if(!g2){alert('Gara non trovata: ['+numGara+']');return;}
+    return openGara(g2['Numero Gara']);
+  }
+  try{
   document.getElementById('mg-title').innerHTML='<span class="ng-pill">#'+escH(g['Numero Gara']||'')+'</span>';
   const casa=g['Squadra Casa']||'',osp=g['Squadra Ospite']||'';
   const camp=g['Campionato']||'',girone=g['Girone']||'';
@@ -6179,6 +6187,7 @@ function openGara(numGara){
     +'<div class="mg-sec"><div class="mg-sec-hd">Statistiche comparative</div>'+cmpHtml+'</div>'
     +techHtml;
   openMo('mo-gara');
+  }catch(e){console.error('openGara error:',e);alert('Errore: '+e.message);}
 }
 
 // ── RICERCA GLOBALE ──
