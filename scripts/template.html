@@ -3698,7 +3698,7 @@ var _gCOLS=[
   {id:'campo',label:'Campo',      w:180},
 ];
 function _gPv(p,sm){if(!p||!PC[p])return'';var s=sm?'font-size:7px;padding:0 3px':'font-size:9px;padding:1px 5px';return'<span style="display:inline-flex;align-items:center;justify-content:center;border-radius:3px;font-weight:800;color:#fff;'+s+';background:'+PC[p]+'">'+p+'</span>';}
-function _gSqCell(n){var p=P[n]&&P[n].provincia||'';var en=esc(n);return'<div style="display:flex;flex-direction:column;gap:1px"><span class="rn rn-sq" onclick="openSquadra(\"'+en+'\")">'+escH(n)+'</span>'+(p?'<div>'+_gPv(p,true)+'</div>':'')+'</div>';}
+function _gSqCell(n){var p=P[n]&&P[n].provincia||'';var en=(n||'').replace(/'/g,"\\'");return'<div style="display:flex;flex-direction:column;gap:1px"><span class="rn rn-sq" onclick="openSquadra(\''+en+'\')">' + escH(n)+'</span>'+(p?'<div>'+_gPv(p,true)+'</div>':'')+'</div>';}
 function _gArbCell(n,hi){if(!n)return'<span style="color:var(--mu2)">&#8212;</span>';var pv=P[n]&&P[n].provincia||'';var clr=PC[pv]||'#aaa';var bg=hi?'background:#fffbe6;border-radius:3px;padding:1px 3px':'';return'<div style="display:flex;align-items:center;gap:3px;'+bg+'">'+_gPv(pv,true)+'<span style="width:5px;height:5px;border-radius:50%;background:'+clr+';flex-shrink:0;display:inline-block"></span><span class="rn rn-Arbitro" data-n="'+escH(n)+'" onclick="openPersona(this.dataset.n)" style="font-size:.68rem;color:#8a6200;font-weight:500">'+escH(n)+'</span>'+genderDot(n)+'</div>';}
 function _gUdcCell(f){var n=pns(f||'');return n?'<span style="font-size:.68rem;color:var(--udc-tx)">'+escH(n)+'</span>':'&#8212;';}
 function _gOssCell(f){var n=pns(f||'');return n?'<span class="rn rn-Osservatore" data-n="'+escH(n)+'" onclick="openPersona(this.dataset.n)" style="font-size:.68rem">'+escH(n)+'</span>'+genderDot(n):'&#8212;';}
@@ -3710,8 +3710,8 @@ function _gCellVal(col,g,ri){
   if(k==='n') return'<span style="color:var(--mu2);font-size:.65rem">'+(ri+1)+'</span>';
   if(k==='data') return g['Data']||'';
   if(k==='ora') return g['Ora']||'';
-  if(k==='num'){var ngn=esc(g['Numero Gara']||'');return'<span class="ng-pill" style="cursor:pointer" onclick="openGara(\"'+ngn+'\")">'+escH(g['Numero Gara']||'')+'</span>';}
-  if(k==='camp'){var cc=campColor(g['Campionato']||'');var eck=esc(g['Campionato']||'');return'<span style="background:'+cc+';color:#fff;border-radius:4px;padding:2px 6px;font-size:.65rem;font-weight:500;cursor:pointer;white-space:nowrap" onclick="openCampionato(\"'+eck+'\")">'+escH(g['Campionato']||'')+'</span>';}
+  if(k==='num'){var ngn=(g['Numero Gara']||'').replace(/'/g,"\\'");return'<span class="ng-pill" style="cursor:pointer" onclick="openGara(\''+ngn+'\')">'+escH(g['Numero Gara']||'')+'</span>';}
+  if(k==='camp'){var cc=campColor(g['Campionato']||'');var eck=(g['Campionato']||'').replace(/'/g,"\\'");return'<span style="background:'+cc+';color:#fff;border-radius:4px;padding:2px 6px;font-size:.65rem;font-weight:500;cursor:pointer;white-space:nowrap" onclick="openCampionato(\''+eck+'\')">' + escH(g['Campionato']||'')+'</span>';}
   if(k==='cpv') return _gPv(cpvF,false);
   if(k==='gir') return'<span style="font-size:.68rem;color:var(--mu)">'+escH(g['Girone']||'')+'</span>';
   if(k==='casa') return _gSqCell(g['Squadra Casa']||'');
