@@ -3803,8 +3803,8 @@ function _gRenderTable(){
     var a1n=pns(g['Arbitro 1']||''),a2n=pns(g['Arbitro 2']||'');
     var nArb=(a1n?1:0)+(a2n?1:0);
     var rCls=nArb===0?'g0arb':nArb===1?'g1arb':'';
-    var gNum=(g['Numero Gara']||'').replace(/'/g,"\'");
-    html+='<tr class="'+rCls+'" style="cursor:pointer" onclick="openGara(\''+gNum+'\')">'; 
+        var gNum=(g['Numero Gara']||'');
+    html+='<tr class="'+rCls+'" data-gnum="'+gNum+'" style="cursor:pointer">';
     vis.forEach(function(col){
       var isFrz=_gFrozen.has(col.id);
       var frzSt=isFrz?'position:sticky;left:'+frzOff[col.id]+'px;z-index:4;':'';
@@ -3866,6 +3866,19 @@ function _gStartResize(e,cid){
   document.onmousemove=function(ev){if(!_gResizing)return;var c=_gCOLS.find(function(x){return x.id===_gResizing.cid;});if(c)c.w=Math.max(36,_gResizing.sw+(ev.clientX-_gResizing.sx));document.querySelectorAll('#gtbl-main th').forEach(function(th,i){var vc=_gCOLS.filter(function(x){return!_gHidden.has(x.id);})[i];if(vc)th.style.width=vc.w+'px';});};
   document.onmouseup=function(){_gResizing=null;document.onmousemove=null;document.onmouseup=null;};
 }
+// Event delegation per apertura gara — robusto e non bloccabile
+document.addEventListener('DOMContentLoaded', function(){
+  var tbody = document.getElementById('gtbl-main-body');
+  if(tbody){
+    tbody.addEventListener('click', function(e){
+      var tr = e.target.closest('tr');
+      if(!tr) return;
+      var gNum = tr.getAttribute('data-gnum');
+      if(gNum) openGara(gNum);
+    });
+  }
+});
+
 function renderGare(){
   const q=document.getElementById('fg-q').value.toLowerCase();
   const d1=document.getElementById('fg-d1').value;
