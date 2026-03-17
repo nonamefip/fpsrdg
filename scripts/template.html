@@ -6132,7 +6132,8 @@ function openGara(numGara){
         +'<span class="mg-prec-s" style="color:'+(casaW?'#27500a':'#a32d2d')+'">'+pc+'-'+po+'</span></div>';
     });
     const vC=precs.filter(p=>{const isCasaP=p['Squadra Casa']===casa;const pc=parseInt(p['Punti Casa'])||0,po=parseInt(p['Punti Ospite'])||0;return isCasaP?pc>po:po>pc;}).length;
-    precHtml+='<div style="font-size:10px;color:var(--mu);margin-top:4px;padding:3px 7px;background:var(--bl5);border-radius:5px">Bilancio: <b>'+escH(casa.split(' ').pop())+' '+vC+'V \u2014 '+(precs.length-vC)+'S</b></div>';
+    const vO=precs.length-vC;
+    precHtml+='<div style="font-size:10px;color:var(--mu);margin-top:4px;padding:3px 7px;background:var(--bl5);border-radius:5px">Bilancio: <b style="color:#185fa5">'+escH(casa.split(' ').slice(-1)[0])+' '+vC+'V</b> \u2013 <b style="color:#1d9e75">'+escH(osp.split(' ').slice(-1)[0])+' '+vO+'V</b></div>';
   } else {
     precHtml='<div style="font-size:11px;color:var(--mu);font-style:italic;padding:6px">Primo confronto della stagione</div>';
   }
@@ -6142,24 +6143,49 @@ function openGara(numGara){
       +forma.map(f=>'<div class="mg-fb '+f.r+'">'+f.r+'</div>').join('')
       +'<span style="font-size:10px;color:var(--mu);margin-left:3px">'+forma.filter(f=>f.r==='W').length+'/'+forma.length+'</span></div>';
   }
+  // Ultima gara punti segnati
+  function getLastPts(sq){
+    const gs=(D.gare||[]).filter(x=>(x['Squadra Casa']===sq||x['Squadra Ospite']===sq)&&x['Risultato'])
+      .sort((a,b)=>b['Data'].localeCompare(a['Data']));
+    if(!gs.length)return 0;
+    const last=gs[0];const isCasa=last['Squadra Casa']===sq;
+    return isCasa?(parseInt(last['Punti Casa'])||0):(parseInt(last['Punti Ospite'])||0);
+  }
+  function getHomePct(sq){
+    const gs=(D.gare||[]).filter(x=>x['Squadra Casa']===sq&&x['Risultato']);
+    if(!gs.length)return 0;
+    const v=gs.filter(x=>(parseInt(x['Punti Casa'])||0)>(parseInt(x['Punti Ospite'])||0)).length;
+    return Math.round(v/gs.length*100);
+  }
+  const lastC=getLastPts(casa),lastO=getLastPts(osp);
+  const homePctC=getHomePct(casa),homePctO=getHomePct(osp);
   const statsRows=[
-    {lbl:'Punti medi segnati',ca:stC.ptF,os:stO.ptF,hi:'ca',fmt:v=>v.toFixed(1)},
-    {lbl:'Punti medi subiti',ca:stC.ptS,os:stO.ptS,hi:'os',fmt:v=>v.toFixed(1)},
-    {lbl:'% vittorie',ca:stC.pct,os:stO.pct,hi:'ca',fmt:v=>v+'%'},
-    {lbl:'Scarto medio pt',ca:stC.scarto,os:stO.scarto,hi:'ca',fmt:v=>(v>0?'+':'')+v.toFixed(1)},
-    {lbl:'Forma (ult. 5)',ca:formaCasa.filter(x=>x.r==='W').length,os:formaOsp.filter(x=>x.r==='W').length,hi:'ca',fmt:v=>v+'/5'},
-  ].map(s=>({...s,hi:s.ca>s.os?'ca':s.ca<s.os?'os':'tie'}));
-  let cmpHtml='<table class="mg-cmp"><thead><tr><th>Statistica</th>'
-    +'<th><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#185fa5;margin-right:3px;vertical-align:middle"></span>'+escH(casa.split(' ').pop())+'</th>'
-    +'<th><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#1d9e75;margin-right:3px;vertical-align:middle"></span>'+escH(osp.split(' ').pop())+'</th>'
-    +'</tr></thead><tbody>';
+    {lbl:'Punti medi',ca:stC.ptF,os:stO.ptF,fmt:v=>v.toFixed(1)},
+    {lbl:'Punti subiti medi',ca:stC.ptS,os:stO.ptS,fmt:v=>v.toFixed(1),loIsBetter:true},
+    {lbl:'% vittorie casa',ca:homePctC,os:homePctO,fmt:v=>v+'%'},
+    {lbl:'Media pt ultima gara',ca:lastC,os:lastO,fmt:v=>v+''},
+  ].map(s=>({...s,hi:s.loIsBetter?(s.ca<s.os?'ca':s.ca>s.os?'os':'tie'):(s.ca>s.os?'ca':s.ca<s.os?'os':'tie')}));
+  // Build visual-bar comparative section (like screenshot)
+  let cmpHtml='<div style="font-size:.68rem;color:var(--mu);margin-bottom:5px;display:flex;justify-content:space-between">'
+    +'<span style="font-weight:600;color:#185fa5">'+escH(casa)+'</span>'
+    +'<span style="font-weight:600;color:#1d9e75">'+escH(osp)+'</span></div>';
   statsRows.forEach(s=>{
-    const caW=s.hi==='ca',osW=s.hi==='os',tie=s.hi==='tie';
-    cmpHtml+='<tr><td style="color:var(--mu)">'+s.lbl+'</td>'
-      +'<td><span class="'+(caW?'mg-win':tie?'mg-tie':'mg-lose')+'">'+s.fmt(s.ca)+'</span></td>'
-      +'<td><span class="'+(osW?'mg-win':tie?'mg-tie':'mg-lose')+'">'+s.fmt(s.os)+'</span></td></tr>';
+    const tot=s.ca+s.os||1;
+    const pctCa=Math.round(s.ca/tot*100);
+    const caW=s.hi==='ca',osW=s.hi==='os';
+    cmpHtml+='<div style="margin-bottom:8px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">'
+      +'<span style="font-size:.75rem;font-weight:'+(caW?'700':'400')+';color:'+(caW?'var(--tx)':'var(--mu)')+'">'+s.fmt(s.ca)+'</span>'
+      +'<span style="font-size:.63rem;color:var(--mu)">'+s.lbl+'</span>'
+      +'<span style="font-size:.75rem;font-weight:'+(osW?'700':'400')+';color:'+(osW?'var(--tx)':'var(--mu)')+'">'+s.fmt(s.os)+'</span>'
+      +'</div>'
+      +'<div style="height:6px;background:#eef2ff;border-radius:3px;overflow:hidden;display:flex">'
+      +'<div style="width:'+pctCa+'%;background:#185fa5;border-radius:3px 0 0 3px;transition:width .3s"></div>'
+      +'<div style="flex:1;background:#1d9e75;border-radius:0 3px 3px 0"></div>'
+      +'</div>'
+      +'</div>';
   });
-  cmpHtml+='</tbody></table>';
+
   let techHtml='<div class="mg-tech">'
     +'<div class="mg-tech-hd" onclick="this.nextElementSibling.classList.toggle(\'open\')">'
     +'&#9654; Dettagli tecnici</div>'
@@ -6176,9 +6202,13 @@ function openGara(numGara){
     +'</table></div></div>';
   document.getElementById('mg-gara-body').innerHTML=
     '<div class="mg-hd-bar">'
-    +'<div class="mg-camp-lbl" style="display:flex;align-items:center;gap:6px">'
+    +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
+    +'<div><div class="mg-camp-lbl" style="display:flex;align-items:center;gap:6px">'
     +'<span style="background:'+cc+';color:#fff;border-radius:4px;padding:2px 7px;font-size:.68rem">'+escH(camp)+'</span>'+escH(girone)+'</div>'
     +'<div class="mg-sub">'+g['Data']+(g['Ora']?' &middot; '+g['Ora']:'')+' &middot; '+escH((g['Campo']||'').split(',')[0])+'</div>'
+    +'</div>'
+    +'<span style="background:rgba(255,255,255,.18);color:#fff;border-radius:5px;padding:3px 9px;font-size:.68rem;font-weight:600;white-space:nowrap;flex-shrink:0">Gara #'+escH(g['Numero Gara']||'')+'</span>'
+    +'</div>'
     +'</div>'
     +'<div class="mg-hero">'
     +'<div class="mg-team"><div class="mg-tn">'+escH(casa)+'</div><div class="mg-tsub">'+pvB(pvCasa||cpvF)+posCasa+'&#186; &middot; '+((classifica[casa]&&classifica[casa].v)||0)+'V '+((classifica[casa]&&classifica[casa].s)||0)+'S</div></div>'
@@ -6189,7 +6219,7 @@ function openGara(numGara){
     +'<span class="mg-pill bl">&#128197; '+giornataNum+'&#186; giornata su '+totGiornate+'</span>'
     +'<span class="mg-pill bl">'+(isAndata?'&#8617; Andata':'&#8618; Ritorno')+'</span>'
     +(precs.length?'<span class="mg-pill am">'+precs.length+' precedente'+(precs.length>1?'i':'')+'</span>':'')
-    +'<span class="mg-pill '+(nArb===2?'gn':nArb===1?'am':'rd')+'">'+nArb+'/2 arbitri</span>'
+    +(nArb>0?'<span class="mg-pill gn">&#10003; Arbitri designati</span>':'<span class="mg-pill rd">&#9888; Arbitri mancanti</span>')
     +'<span class="mg-pill am">'+gareMancCasa+' gare rimanenti</span>'
     +'</div>'
     +'<div class="mg-2col">'
