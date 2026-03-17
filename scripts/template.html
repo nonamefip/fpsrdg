@@ -3868,10 +3868,11 @@ function _gStartResize(e,cid){
 }
 // Event delegation per apertura gara — listener a livello documento, sempre attivo
 document.addEventListener('click', function(e){
-  // Ignora click su elementi che hanno già un loro onclick (squadra, arbitro, pill, ecc.)
-  if(e.target.closest('.rn') || e.target.closest('.ng-pill') || e.target.closest('[onclick]')) return;
+  // Prima controlla se siamo in una riga della tabella gare
   var tr = e.target.closest('#gtbl-main-body tr[data-gnum]');
   if(!tr) return;
+  // Ignora click su elementi che aprono altri modal (squadra, arbitro ecc.) ma NON ng-pill
+  if(e.target.closest('.rn-sq') || e.target.closest('.rn-Arbitro') || e.target.closest('.rn-UDC') || e.target.closest('.rn-Osservatore')) return;
   var gNum = tr.getAttribute('data-gnum');
   if(gNum) openGara(gNum);
 });
