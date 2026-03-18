@@ -1437,8 +1437,8 @@ Argomenti: /c "cd C:\percorso\cartella && python fip_scraper_v5.py && python gen
 
 <!-- MODAL CAMPO -->
 <div class="mo" id="mo-campo"><div class="mbox" style="max-width:750px">
-  <div class="mhd"><span>🏟</span><h3 id="mc-title">Campo</h3><button onclick="closeMo('mo-campo')">✕</button></div>
-  <div class="mbody" id="mc-body"></div>
+  <div class="mhd"><span>🏟</span><h3 id="mca-title">Campo</h3><button onclick="closeMo('mo-campo')">✕</button></div>
+  <div class="mbody" id="mca-body"></div>
 </div></div>
 
 <!-- MODAL GIORNATA -->
@@ -8040,21 +8040,21 @@ function openCampoModal(campo){
     c=Object.values(CAMPI).find(cx=>(cx.nome_breve||'').toLowerCase()===nomeCampo||(cx.campo||'').toLowerCase().startsWith(nomeCampo))||null;
     if(!c){
       // Fallback minimale: mostra solo le gare di quel campo
-      document.getElementById('mc-title').textContent=campo.split(',')[0]||campo;
+      document.getElementById('mca-title').textContent=campo.split(',')[0]||campo;
       const gare2=(D.gare||[]).filter(g=>g['Campo']===campo);
-      document.getElementById('mc-body').innerHTML=`<div class="il" style="padding:10px 0">Campo non censito. <b>${gare2.length}</b> gare trovate.</div>
+      document.getElementById('mca-body').innerHTML=`<div class="il" style="padding:10px 0">Campo non censito. <b>${gare2.length}</b> gare trovate.</div>
         <div style="overflow-x:auto">${mkTbl(gare2.slice(0,100).map(g=>'<tr><td>'+escH(g['Data'])+'</td><td style="font-size:.68rem">'+escH(g['Campionato']||'')+'</td><td><span class="rn rn-sq" onclick="openSquadra(\''+esc(g['Squadra Casa']||'')+'\')">'+escH(g['Squadra Casa']||'')+'</span></td><td><span class="rn rn-sq" onclick="openSquadra(\''+esc(g['Squadra Ospite']||'')+'\')">'+escH(g['Squadra Ospite']||'')+'</span></td><td>'+escH(g['Risultato']||'')+'</td></tr>').join(''),['Data','Camp.','Casa','Ospite','Ris.'],'tbl-campo-fb')}</div>`;
       openMo('mo-campo');return;
     }
   }
-  document.getElementById('mc-title').textContent=c.nome_breve||campo;
+  document.getElementById('mca-title').textContent=c.nome_breve||campo;
   const sqCasa=c.sq_casa||c.squadre_casa||[];
   const sqOspiti=c.sq_ospiti||[];
   const gare=(D.gare||[]).filter(function(g){
     const cv=g['Campo']||'';
     return cv===campo||(c.varianti||[]).indexOf(cv)>=0;
   }).sort(function(a,b){return b['Data'].localeCompare(a['Data']);});
-  document.getElementById('mc-body').innerHTML=`
+  document.getElementById('mca-body').innerHTML=`
     <div class="scs" style="margin-bottom:12px">
       <div class="sc"><div class="sv">${c.gare}</div><div class="sl">Gare totali</div></div>
       <div class="sc"><div class="sv">${c.prov||'—'}</div><div class="sl">Provincia</div></div>
@@ -8094,8 +8094,8 @@ function openCampoModal(campo){
       }).join(''),['Data','Campionato','Casa','Ospite','Ris.'],'tbl-campo-gare')}</div>
     </div>`;  openMo('mo-campo');
   }catch(err){
-    document.getElementById('mc-title').textContent='Errore';
-    document.getElementById('mc-body').innerHTML='<div style="padding:16px;color:red"><b>Errore:</b> '+escH(err.message)+'</div>';
+    document.getElementById('mca-title').textContent='Errore';
+    document.getElementById('mca-body').innerHTML='<div style="padding:16px;color:red"><b>Errore:</b> '+escH(err.message)+'</div>';
     openMo('mo-campo');
   }
 }
