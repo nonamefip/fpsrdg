@@ -1158,7 +1158,7 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="mfoot"><button class="btn b-go" onclick="printMo('mo-prov')">🖨</button><button class="btn b-gr" onclick="closeMo('mo-prov')">Chiudi</button></div>
 </div></div>
 
-<div class="mo" id="mo-camp"><div class="mbox" id="mo-camp-box">
+<div class="mo" id="mo-camp"><div class="mbox" id="mo-camp-box" style="max-width:960px;width:96%">
   <div class="mhd"><span style="font-size:1.1rem">🥇</span><h3 id="mc-title">–</h3>
   <button class="mbtn" onclick="printMo('mo-camp')">🖨</button><button class="mbtn" onclick="toggleMoFullscreen('mo-camp')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-camp')">✕</button></div>
   <div class="mbody" id="mc-body"></div>
@@ -5603,6 +5603,8 @@ function openCampionato(camp){
       <button class="mt" onclick="swTab(this,'mct-')">🏆 Squadre (${cs.n_squadre})</button>
       <button class="mt" onclick="swTab(this,'mct-')">👨‍⚖️ Arbitri (${topArb.length})</button>
       <button class="mt" onclick="swTab(this,'mct-')">📅 Gare (${allCampGare.length})</button>
+      <button class="mt" onclick="swTab(this,'mct-')">📆 Calendario</button>
+      <button class="mt" onclick="swTab(this,'mct-')">🏆 Tabellone</button>
     </div>
     <div class="mtc active" id="mct-0">
       <div class="scs">
@@ -5808,8 +5810,175 @@ function openCampionato(camp){
         </tr>`;
       }).join(''),['Data','Girone','Casa','Ospite','Ris.','Arb.','Arbitro 1','Arbitro 2','Campo'],'tbl-camp-gare')}</div>
     </div>`;
-  _grtCamp=camp; _grtDone=[false,false,false,false];
-  openMo('mo-camp');
+    <div class="mtc hidden" id="mct-6">
+      ${(()=>{
+        // Raggruppa gare per fase poi per date, accoppia andata/ritorno
+        const fasi=[...new Set(allCampGare.map(g=>g['Fase']||'').filter(Boolean))];
+        const faseOrder=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi','Playoff Semifinale','Finale Playoff'];
+        fasi.sort((a,b)=>{const ia=faseOrder.findIndex(x=>a.includes(x)),ib=faseOrder.findIndex(x=>b.includes(x));return(ia<0?99:ia)-(ib<0?99:ib);});
+        if(!fasi.length) return '<div style="padding:20px;text-align:center;color:var(--mu)">Nessun dato di fase disponibile</div>';
+
+        return fasi.map(fase=>{
+          const gFase=allCampGare.filter(g=>g['Fase']===fase).sort((a,b)=>a['Data'].localeCompare(b['Data']));
+          const gironi=[...new Set(gFase.map(g=>g['Girone']||''))];
+
+          return gironi.map(girone=>{
+            const gGir=gFase.filter(g=>g['Girone']===girone);
+            // Raggruppa per data
+            const byDate={};
+            gGir.forEach(g=>{if(!byDate[g['Data']])byDate[g['Data']]=[];byDate[g['Data']].push(g);});
+            const dates=Object.keys(byDate).sort();
+            if(!dates.length) return '';
+            const mid=Math.ceil(dates.length/2);
+            const andataDates=dates.slice(0,mid);
+            const ritornoDates=dates.slice(mid);
+
+            function renderColGiornate(datesArr, label){
+              if(!datesArr.length) return '<div style="flex:1"></div>';
+              return '<div style="flex:1;min-width:0">'+datesArr.map((d,i)=>{
+                const gare=byDate[d];
+                const allDone=gare.every(x=>x['Risultato']);
+                const dayLabel=new Date(d).toLocaleDateString('it',{weekday:'short',day:'numeric',month:'short'});
+                const gareHtml=gare.map(m=>{
+                  const pc=parseInt(m['Punti Casa'])||0,po=parseInt(m['Punti Ospite'])||0;
+                  const aW=m['Risultato']&&pc>po,bW=m['Risultato']&&po>pc;
+                  const num=(m['Numero Gara']||'').replace(/'/g,"\\'");
+                  return'<div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:4px;align-items:center;padding:7px 10px;border-bottom:0.5px solid var(--br);cursor:pointer" onclick="closeMo(\'mo-camp\');setTimeout(()=>openGara(\''+num+'\'),80)">'
+                    +'<span style="font-size:.72rem;font-weight:'+(aW?'600':'400')+';color:'+(aW?'#0c447c':bW?'var(--mu)':'var(--tx)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(m['Squadra Casa'])+'</span>'
+                    +'<div style="text-align:center">'+(m['Risultato']
+                      ?'<span style="font-size:.82rem;font-weight:500;color:var(--tx)">'+pc+'–'+po+'</span>'
+                      :'<span style="font-size:.65rem;color:var(--mu);background:var(--bl4);border-radius:3px;padding:1px 4px">'+(m['Ora']||'–')+'</span>')+'</div>'
+                    +'<span style="font-size:.72rem;font-weight:'+(bW?'600':'400')+';color:'+(bW?'#0c447c':aW?'var(--mu)':'var(--tx)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">'+escH(m['Squadra Ospite'])+'</span>'
+                    +'</div>';
+                }).join('');
+                return'<div style="margin-bottom:10px;border:0.5px solid var(--br);border-radius:8px;overflow:hidden">'
+                  +'<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:'+(allDone?'#1e3a6e':'var(--bl4)')+';">'
+                  +'<span style="font-size:.72rem;font-weight:500;color:'+(allDone?'#fff':'var(--bl)')+'">'+label+' G'+(i+1)+'</span>'
+                  +'<span style="font-size:.65rem;color:'+(allDone?'rgba(255,255,255,.65)':'var(--mu)')+'">'+dayLabel+'</span>'
+                  +(allDone?'<span style="font-size:.6rem;background:rgba(255,255,255,.15);color:#fff;border-radius:3px;padding:1px 5px">✓ Completata</span>':'')
+                  +'</div>'+gareHtml+'</div>';
+              }).join('')+'</div>';
+            }
+
+            return'<div style="margin-bottom:18px">'
+              +'<div style="font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:10px;display:flex;align-items:center;gap:8px">'
+              +'<span style="background:var(--bl);color:#fff;border-radius:4px;padding:2px 8px;font-size:.68rem">'+escH(fase)+'</span>'
+              +(girone?'<span style="color:var(--mu)">'+escH(girone)+'</span>':'')+'</div>'
+              +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+              +'<div><div style="font-size:.65rem;font-weight:600;color:#185fa5;text-transform:uppercase;letter-spacing:.4px;padding:3px 0;border-bottom:2px solid #185fa5;margin-bottom:8px;text-align:center">Andata</div>'
+              +renderColGiornate(andataDates,'A')+'</div>'
+              +'<div><div style="font-size:.65rem;font-weight:600;color:#6c3dc8;text-transform:uppercase;letter-spacing:.4px;padding:3px 0;border-bottom:2px solid #6c3dc8;margin-bottom:8px;text-align:center">Ritorno</div>'
+              +renderColGiornate(ritornoDates,'R')+'</div>'
+              +'</div></div>';
+          }).join('');
+        }).join('');
+      })()}
+    </div>
+    <div class="mtc hidden" id="mct-7">
+      ${(()=>{
+        // Fasi playoff = fasi che non sono Qualificazione/Girone normale
+        const fasePlain=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi'];
+        const fasiAll=[...new Set(allCampGare.map(g=>g['Fase']||'').filter(Boolean))];
+        const fasiPlayoff=fasiAll.filter(f=>!fasePlain.some(fp=>f.includes(fp)));
+        if(!fasiPlayoff.length) return '<div style="padding:30px;text-align:center;color:var(--mu);font-size:.82rem">Nessuna fase playoff disponibile per questo campionato</div>';
+
+        const faseOrder2=['Playoff Semifinale','Finale Playoff'];
+        fasiPlayoff.sort((a,b)=>{const ia=faseOrder2.findIndex(x=>a.includes(x)),ib=faseOrder2.findIndex(x=>b.includes(x));return(ia<0?99:ia)-(ib<0?99:ib);});
+
+        // Costruisci rounds per il bracket
+        const rounds=fasiPlayoff.map(fase=>{
+          const gFase=allCampGare.filter(g=>g['Fase']===fase);
+          const gironi=[...new Set(gFase.map(g=>g['Girone']||''))];
+          const series=gironi.map(gi=>{
+            const gare=gFase.filter(g=>g['Girone']===gi).sort((a,b)=>a['Data'].localeCompare(b['Data']));
+            return{label:gi,gare};
+          });
+          return{name:fase,series};
+        });
+
+        // SVG bracket
+        const RW=200,RH=30,COL_W=240;
+        const maxSeries=rounds[0]?rounds[0].series.length:1;
+        const totalH=Math.max(200,maxSeries*(RH*2+12+20)+70);
+        const W=rounds.length*COL_W+80;
+
+        function seriesY(ri,si){
+          const factor=Math.pow(2,ri);
+          const baseH=(RH*2+12+20)*factor;
+          const off=(baseH-(RH*2+12))/2;
+          return 44+si*baseH+off;
+        }
+        function seriesWinner(gare){
+          const done=gare.filter(g=>g['Risultato']);
+          if(!done.length)return null;
+          const teamA=gare[0]&&gare[0]['Squadra Casa'];
+          const teamB=gare[0]&&gare[0]['Squadra Ospite'];
+          let vA=0,vB=0;
+          done.forEach(g=>{
+            const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+            const isFirstGame=g===gare[0];
+            const aScore=isFirstGame?pc:po,bScore=isFirstGame?po:pc;
+            if(aScore>bScore)vA++;else if(bScore>aScore)vB++;
+          });
+          if(vA>vB)return{team:teamA,vA,vB};
+          if(vB>vA)return{team:teamB,vA,vB};
+          return null;
+        }
+
+        let svg='<svg viewBox="0 0 '+W+' '+totalH+'" style="width:100%;min-width:400px;display:block;height:'+totalH+'px;font-family:system-ui,sans-serif">';
+        rounds.forEach((round,ri)=>{
+          const x=ri*COL_W+20;
+          const isFinale=ri===rounds.length-1;
+          svg+='<rect x="'+x+'" y="0" width="'+RW+'" height="24" rx="4" fill="'+(isFinale?'#c9900a':'#1e3a6e')+'"/>';
+          svg+='<text x="'+(x+RW/2)+'" y="16" font-size="10" fill="#fff" text-anchor="middle" font-weight="500">'+escH(round.name.toUpperCase())+'</text>';
+
+          round.series.forEach((serie,si)=>{
+            const y=seriesY(ri,si);
+            const teamA=serie.gare[0]?serie.gare[0]['Squadra Casa']:'?';
+            const teamB=serie.gare[0]?serie.gare[0]['Squadra Ospite']:'?';
+            const winner=seriesWinner(serie.gare);
+            const aW=winner&&winner.team===teamA,bW=winner&&winner.team===teamB;
+            const allDone=serie.gare.length>0&&serie.gare.every(g=>g['Risultato']);
+
+            svg+='<text x="'+(x+RW/2)+'" y="'+(y-6)+'" font-size="8.5" fill="#aaa" text-anchor="middle">'+escH(serie.label)+'</text>';
+            svg+='<rect x="'+x+'" y="'+y+'" width="'+RW+'" height="'+(RH*2+12)+'" rx="6" fill="white" stroke="'+(allDone?'#b5d4f4':'#ddd')+'" stroke-width="0.5"/>';
+
+            // Team A
+            svg+='<rect x="'+(x+0.5)+'" y="'+(y+0.5)+'" width="'+(RW-1)+'" height="'+RH+'" rx="5" fill="'+(aW?'#e6f1fb':'transparent')+'"/>';
+            const aLbl=teamA.length>22?teamA.slice(0,21)+'…':teamA;
+            svg+='<text x="'+(x+10)+'" y="'+(y+RH/2+4)+'" font-size="11" fill="'+(aW?'#0c447c':'#444')+'" font-weight="'+(aW?'600':'400')+'">'+escH(aLbl)+'</text>';
+            if(winner)svg+='<text x="'+(x+RW-10)+'" y="'+(y+RH/2+4)+'" font-size="11" fill="'+(aW?'#0c447c':'#aaa')+'" text-anchor="end" font-weight="'+(aW?'700':'400')+'">'+(aW?winner.vA:winner.vB)+'V</text>';
+
+            // Divider
+            svg+='<line x1="'+(x+6)+'" y1="'+(y+RH+6)+'" x2="'+(x+RW-6)+'" y2="'+(y+RH+6)+'" stroke="#eef0f8" stroke-width="1"/>';
+
+            // Team B
+            svg+='<rect x="'+(x+0.5)+'" y="'+(y+RH+6.5)+'" width="'+(RW-1)+'" height="'+RH+'" rx="0" fill="'+(bW?'#e6f1fb':'transparent')+'"/>';
+            const bLbl=teamB.length>22?teamB.slice(0,21)+'…':teamB;
+            svg+='<text x="'+(x+10)+'" y="'+(y+RH+6+RH/2+4)+'" font-size="11" fill="'+(bW?'#0c447c':'#444')+'" font-weight="'+(bW?'600':'400')+'">'+escH(bLbl)+'</text>';
+            if(winner)svg+='<text x="'+(x+RW-10)+'" y="'+(y+RH+6+RH/2+4)+'" font-size="11" fill="'+(bW?'#0c447c':'#aaa')+'" text-anchor="end" font-weight="'+(bW?'700':'400')+'">'+(bW?winner.vA:winner.vB)+'V</text>';
+
+            // Stella campione
+            if(isFinale&&winner){
+              svg+='<text x="'+(x+RW+10)+'" y="'+(y+RH+10)+'" font-size="18" fill="#c9900a">★</text>';
+              svg+='<text x="'+(x+RW+10)+'" y="'+(y+RH+24)+'" font-size="8" fill="#c9900a" font-weight="500">CAMPIONE</text>';
+            }
+
+            // Connettore
+            if(ri<rounds.length-1){
+              const ex=x+RW,ey=y+RH+6;
+              const nextSi=Math.floor(si/2);
+              const nextY=seriesY(ri+1,nextSi);
+              const targetY=si%2===0?nextY+RH/2:nextY+RH+6+RH/2;
+              const mx=ex+16;
+              svg+='<path d="M'+ex+','+ey+' H'+mx+' V'+targetY+' H'+(ex+COL_W-RW+20)+'" stroke="#c5d8f0" stroke-width="1.2" fill="none" stroke-dasharray="'+(allDone?'none':'4,3')+'"/>';
+            }
+          });
+        });
+        svg+='</svg>';
+        return'<div style="overflow-x:auto">'+svg+'</div>';
+      })()}
+    </div>`;
   if((cs.gironi||[]).length) setTimeout(function(){initGironi(camp);},50);
 }
 
