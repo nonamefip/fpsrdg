@@ -5812,74 +5812,284 @@ function openCampionato(camp){
     </div>
     <div class="mtc hidden" id="mct-6">
       ${(()=>{
-        // Raggruppa gare per fase poi per date, accoppia andata/ritorno
-        const fasi=[...new Set(allCampGare.map(g=>g['Fase']||'').filter(Boolean))];
         const faseOrder=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi','Playoff Semifinale','Finale Playoff'];
+        const fasePlain=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi'];
+        const fasi=[...new Set(allCampGare.map(g=>g['Fase']||'').filter(Boolean))];
         fasi.sort((a,b)=>{const ia=faseOrder.findIndex(x=>a.includes(x)),ib=faseOrder.findIndex(x=>b.includes(x));return(ia<0?99:ia)-(ib<0?99:ib);});
-        if(!fasi.length) return '<div style="padding:20px;text-align:center;color:var(--mu)">Nessun dato di fase disponibile</div>';
+        const fasiCalendario=fasi.filter(f=>fasePlain.some(fp=>f.includes(fp)));
+        if(!fasiCalendario.length) return '<div style="padding:20px;text-align:center;color:var(--mu)">Nessun dato disponibile</div>';
 
-        return fasi.map(fase=>{
+        // ID unico per questo campionato per non avere conflitti tra modal aperti
+        const calId='cal_'+camp.replace(/[^a-z0-9]/gi,'_');
+
+        // Costruisce dati per tutte le fasi/gironi
+        const allFasiGironi=[];
+        fasiCalendario.forEach(fase=>{
           const gFase=allCampGare.filter(g=>g['Fase']===fase).sort((a,b)=>a['Data'].localeCompare(b['Data']));
           const gironi=[...new Set(gFase.map(g=>g['Girone']||''))];
-
-          return gironi.map(girone=>{
+          gironi.forEach(girone=>{
             const gGir=gFase.filter(g=>g['Girone']===girone);
-            // Raggruppa per data
-            const byDate={};
-            gGir.forEach(g=>{if(!byDate[g['Data']])byDate[g['Data']]=[];byDate[g['Data']].push(g);});
-            const dates=Object.keys(byDate).sort();
-            if(!dates.length) return '';
-            const mid=Math.ceil(dates.length/2);
-            const andataDates=dates.slice(0,mid);
-            const ritornoDates=dates.slice(mid);
-
-            function renderColGiornate(datesArr, label){
-              if(!datesArr.length) return '<div style="flex:1"></div>';
-              return '<div style="flex:1;min-width:0">'+datesArr.map((d,i)=>{
-                const gare=byDate[d];
-                const allDone=gare.every(x=>x['Risultato']);
-                const dayLabel=new Date(d).toLocaleDateString('it',{weekday:'short',day:'numeric',month:'short'});
-                const gareHtml=gare.map(m=>{
-                  const pc=parseInt(m['Punti Casa'])||0,po=parseInt(m['Punti Ospite'])||0;
-                  const aW=m['Risultato']&&pc>po,bW=m['Risultato']&&po>pc;
-                  const num=(m['Numero Gara']||'').replace(/'/g,"\\'");
-                  return'<div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:4px;align-items:center;padding:7px 10px;border-bottom:0.5px solid var(--br);cursor:pointer" onclick="closeMo(\'mo-camp\');setTimeout(()=>openGara(\''+num+'\'),80)">'
-                    +'<span style="font-size:.72rem;font-weight:'+(aW?'600':'400')+';color:'+(aW?'#0c447c':bW?'var(--mu)':'var(--tx)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(m['Squadra Casa'])+'</span>'
-                    +'<div style="text-align:center">'+(m['Risultato']
-                      ?'<span style="font-size:.82rem;font-weight:500;color:var(--tx)">'+pc+'–'+po+'</span>'
-                      :'<span style="font-size:.65rem;color:var(--mu);background:var(--bl4);border-radius:3px;padding:1px 4px">'+(m['Ora']||'–')+'</span>')+'</div>'
-                    +'<span style="font-size:.72rem;font-weight:'+(bW?'600':'400')+';color:'+(bW?'#0c447c':aW?'var(--mu)':'var(--tx)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">'+escH(m['Squadra Ospite'])+'</span>'
-                    +'</div>';
-                }).join('');
-                return'<div style="margin-bottom:10px;border:0.5px solid var(--br);border-radius:8px;overflow:hidden">'
-                  +'<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:'+(allDone?'#1e3a6e':'var(--bl4)')+';">'
-                  +'<span style="font-size:.72rem;font-weight:500;color:'+(allDone?'#fff':'var(--bl)')+'">'+label+' G'+(i+1)+'</span>'
-                  +'<span style="font-size:.65rem;color:'+(allDone?'rgba(255,255,255,.65)':'var(--mu)')+'">'+dayLabel+'</span>'
-                  +(allDone?'<span style="font-size:.6rem;background:rgba(255,255,255,.15);color:#fff;border-radius:3px;padding:1px 5px">✓ Completata</span>':'')
-                  +'</div>'+gareHtml+'</div>';
-              }).join('')+'</div>';
+            // Costruisce turni: raggruppa per "round" — ogni squadra appare 1 volta per turno
+            const squadre=[...new Set(gGir.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]))].filter(Boolean);
+            const gareLeft=[...gGir];
+            const turni=[];
+            let safetyBreak=0;
+            while(gareLeft.length>0&&safetyBreak<100){
+              safetyBreak++;
+              const turno=[];
+              const sqUsate=new Set();
+              const daRimuovere=[];
+              gareLeft.forEach((g,idx)=>{
+                if(!sqUsate.has(g['Squadra Casa'])&&!sqUsate.has(g['Squadra Ospite'])){
+                  turno.push(g);sqUsate.add(g['Squadra Casa']);sqUsate.add(g['Squadra Ospite']);daRimuovere.push(idx);
+                }
+              });
+              daRimuovere.reverse().forEach(i=>gareLeft.splice(i,1));
+              if(turno.length>0) turni.push(turno);
+              else break;
             }
+            // Date range del turno
+            turni.forEach(t=>{
+              const dates=[...new Set(t.map(g=>g['Data']))].sort();
+              const fmt=d=>new Date(d).toLocaleDateString('it',{weekday:'short',day:'numeric',month:'short'});
+              t._dateLabel=dates.length===1?fmt(dates[0]):fmt(dates[0])+' · '+fmt(dates[dates.length-1]);
+            });
+            const mid=Math.ceil(turni.length/2);
+            allFasiGironi.push({fase,girone,turni,squadre,mid});
+          });
+        });
 
-            return'<div style="margin-bottom:18px">'
-              +'<div style="font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:10px;display:flex;align-items:center;gap:8px">'
-              +'<span style="background:var(--bl);color:#fff;border-radius:4px;padding:2px 8px;font-size:.68rem">'+escH(fase)+'</span>'
-              +(girone?'<span style="color:var(--mu)">'+escH(girone)+'</span>':'')+'</div>'
-              +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-              +'<div><div style="font-size:.65rem;font-weight:600;color:#185fa5;text-transform:uppercase;letter-spacing:.4px;padding:3px 0;border-bottom:2px solid #185fa5;margin-bottom:8px;text-align:center">Andata</div>'
-              +renderColGiornate(andataDates,'A')+'</div>'
-              +'<div><div style="font-size:.65rem;font-weight:600;color:#6c3dc8;text-transform:uppercase;letter-spacing:.4px;padding:3px 0;border-bottom:2px solid #6c3dc8;margin-bottom:8px;text-align:center">Ritorno</div>'
-              +renderColGiornate(ritornoDates,'R')+'</div>'
-              +'</div></div>';
-          }).join('');
+        // Tabs gironi (se più di uno)
+        const hasMultiGirone=allFasiGironi.length>1;
+        const tabsHtml=hasMultiGirone
+          ?'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px" id="'+calId+'_gtabs">'
+            +allFasiGironi.map((fg,i)=>'<button onclick="campCalSwitch(\''+calId+'\','+i+')" id="'+calId+'_gt'+i+'" style="padding:5px 14px;border-radius:6px;border:0.5px solid '+(i===0?'#185fa5':'var(--br)')+';background:'+(i===0?'#e6f1fb':'#fff')+';color:'+(i===0?'#0c447c':'var(--mu)')+';font-size:.72rem;cursor:pointer">'+escH(fg.fase)+' · '+escH(fg.girone)+'</button>').join('')
+            +'</div>'
+          :'';
+
+        // Switcher vista
+        const switchHtml='<div style="display:flex;gap:6px;margin-bottom:14px">'
+          +'<button onclick="campCalView(\''+calId+'\',\'classic\')" id="'+calId+'_vclassic" style="padding:4px 12px;border-radius:6px;border:0.5px solid #185fa5;background:#e6f1fb;color:#0c447c;font-size:.7rem;cursor:pointer;">Andata/Ritorno</button>'
+          +'<button onclick="campCalView(\''+calId+'\',\'grid\')" id="'+calId+'_vgrid" style="padding:4px 12px;border-radius:6px;border:0.5px solid var(--br);background:#fff;color:var(--mu);font-size:.7rem;cursor:pointer;">Griglia squadre</button>'
+          +'</div>';
+
+        // Genera HTML per ogni fase/girone
+        const fasiHtml=allFasiGironi.map((fg,fgIdx)=>{
+          // VISTA CLASSICA
+          function renderGiornataClassica(turno,n,isRitorno){
+            const allDone=turno.every(g=>g['Risultato']);
+            const isProg=!turno.some(g=>g['Risultato']);
+            const accentColor=isRitorno?'#6c3dc8':'#185fa5';
+            const hdrBg=allDone?'#1e3a6e':isProg?'var(--bl4)':'#2a4a7e';
+            const hdrTx=(allDone||!isProg)?'#fff':'var(--bl)';
+            const rows=turno.map(m=>{
+              const pc=parseInt(m['Punti Casa'])||0,po=parseInt(m['Punti Ospite'])||0;
+              const aW=m['Risultato']&&pc>po,bW=m['Risultato']&&po>pc;
+              const num=(m['Numero Gara']||'').replace(/'/g,"\\'");
+              return'<div style="padding:9px 12px;border-bottom:0.5px solid var(--br);cursor:pointer;border-top:3px solid transparent" onclick="closeMo(\'mo-camp\');setTimeout(()=>openGara(\''+num+'\'),80)">'
+                +'<div style="display:grid;grid-template-columns:1fr 64px 1fr;align-items:center;margin-bottom:4px">'
+                +'<span style="font-size:.75rem;font-weight:'+(aW?'500':'400')+';color:'+(aW?'#0c447c':bW?'var(--mu)':'var(--tx)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(m['Squadra Casa'])+'</span>'
+                +'<div style="text-align:center">'+(m['Risultato']?'<span style="font-size:.9rem;font-weight:500;color:var(--tx)">'+pc+'–'+po+'</span>':'<span style="font-size:.68rem;color:var(--mu);background:var(--bl4);border-radius:3px;padding:1px 5px">'+(m['Ora']||'–')+'</span>')+'</div>'
+                +'<span style="font-size:.75rem;font-weight:'+(bW?'500':'400')+';color:'+(bW?'#0c447c':aW?'var(--mu)':'var(--tx)')+';text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(m['Squadra Ospite'])+'</span>'
+                +'</div>'
+                +'<div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--mu2)">'
+                +'<span>'+escH(m['Data']||'')+(m['Ora']?' · '+m['Ora']:'')+'</span>'
+                +'<span style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH((m['Campo']||'').split(',')[0])+'</span>'
+                +'</div></div>';
+            }).join('');
+            // stats giornata
+            const done=turno.filter(g=>g['Risultato']);
+            const statsBar=allDone&&done.length?'<div style="display:flex;gap:12px;padding:5px 12px;background:var(--bl4);font-size:.65rem;color:var(--mu);border-bottom:0.5px solid var(--br)">'
+              +'<span>Media: <b style="color:var(--tx)">'+(Math.round(done.reduce((a,m)=>a+(parseInt(m['Punti Casa'])||0)+(parseInt(m['Punti Ospite'])||0),0)/done.length))+'</b></span>'
+              +'</div>':'';
+            return'<div style="margin-bottom:12px;border:0.5px solid '+(allDone?accentColor+'66':'var(--br)')+';border-radius:10px;overflow:hidden;border-top:3px solid '+accentColor+'">'
+              +'<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:'+hdrBg+'">'
+              +'<div style="display:flex;align-items:center;gap:8px">'
+              +'<span style="width:24px;height:24px;border-radius:50%;background:'+accentColor+';color:#fff;font-size:.68rem;font-weight:500;display:inline-flex;align-items:center;justify-content:center">'+n+'</span>'
+              +'<div><div style="font-size:.75rem;font-weight:500;color:'+hdrTx+'">'+(isRitorno?'Ritorno':'Andata')+' · Giornata '+n+'</div>'
+              +'<div style="font-size:.62rem;color:'+(allDone||!isProg?'rgba(255,255,255,.5)':'var(--mu2)')+'">'+turno.length+' partite</div></div>'
+              +'</div>'
+              +(allDone?'<span style="font-size:.62rem;background:rgba(255,255,255,.15);color:#fff;border-radius:3px;padding:2px 7px">Completata</span>'
+                :isProg?'<span style="font-size:.62rem;background:var(--bl3);color:var(--bl);border-radius:3px;padding:2px 7px">In programma</span>':'')
+              +'</div>'+statsBar+rows+'</div>';
+          }
+
+          const mid=fg.mid;
+          const classicHtml='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px">'
+            +'<div><div style="font-size:.65rem;font-weight:600;color:#185fa5;text-transform:uppercase;letter-spacing:.4px;padding:3px 0;border-bottom:2px solid #185fa5;margin-bottom:10px;text-align:center">Andata</div>'
+            +fg.turni.slice(0,mid).map((t,i)=>renderGiornataClassica(t,i+1,false)).join('')
+            +'</div>'
+            +'<div><div style="font-size:.65rem;font-weight:600;color:#6c3dc8;text-transform:uppercase;letter-spacing:.4px;padding:3px 0;border-bottom:2px solid #6c3dc8;margin-bottom:10px;text-align:center">Ritorno</div>'
+            +fg.turni.slice(mid).map((t,i)=>renderGiornataClassica(t,mid+i+1,true)).join('')
+            +'</div></div>';
+
+          // VISTA GRIGLIA
+          const giornate=fg.turni;
+          const squadre=fg.squadre;
+          let gridHtml='<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:.68rem;min-width:600px;width:100%">'
+            +'<thead><tr style="background:var(--tbl-hdr)">'
+            +'<th style="padding:7px 10px;text-align:left;color:#fff;position:sticky;left:0;z-index:2;background:var(--tbl-hdr);min-width:130px">Squadra</th>'
+            +giornate.map((t,i)=>{
+              const isMid=i===mid;
+              const bg=i<mid?'#1e3a6e':'#162d55';
+              return'<th style="padding:6px 8px;text-align:center;color:#fff;min-width:85px;border-left:0.5px solid rgba(255,255,255,.1);background:'+bg+(isMid?';border-left:2px solid rgba(255,255,255,.3)':'')+'">'
+                +'<div style="font-weight:500;font-size:.7rem">G'+(i+1)+'</div>'
+                +'<div style="opacity:.55;font-size:.58rem">'+(i<mid?'Andata':'Ritorno')+'</div>'
+                +'</th>';
+            }).join('')
+            +'</tr></thead><tbody>';
+
+          squadre.forEach((sq,si)=>{
+            gridHtml+='<tr style="background:'+(si%2?'var(--bl5)':'#fff')+'">'
+              +'<td style="padding:7px 10px;font-weight:500;font-size:.72rem;color:var(--tx);position:sticky;left:0;z-index:1;background:'+(si%2?'var(--bl5)':'#fff')+';border-bottom:0.5px solid var(--br);white-space:nowrap">'+escH(sq)+'</td>';
+            giornate.forEach((t,gi)=>{
+              const match=t.find(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
+              const isMid=gi===mid;
+              const borderL=isMid?'border-left:2px solid #b5d4f4;':'border-left:0.5px solid var(--br);';
+              if(!match){gridHtml+='<td style="padding:6px 8px;text-align:center;color:var(--mu2);border-bottom:0.5px solid var(--br);'+borderL+'">—</td>';return;}
+              const isCasa=match['Squadra Casa']===sq;
+              const pc=parseInt(match['Punti Casa'])||0,po=parseInt(match['Punti Ospite'])||0;
+              const myPts=isCasa?pc:po,avvPts=isCasa?po:pc;
+              const myW=match['Risultato']&&myPts>avvPts;
+              const avv=isCasa?match['Squadra Ospite']:match['Squadra Casa'];
+              const avvShort=avv.split(' ').slice(-1)[0];
+              const num=(match['Numero Gara']||'').replace(/'/g,"\\'");
+              const bg=!match['Risultato']?'':'background:'+(myW?'#e6f1fb':'#fdecea')+';';
+              gridHtml+='<td style="padding:5px 6px;text-align:center;border-bottom:0.5px solid var(--br);'+borderL+bg+'cursor:pointer;vertical-align:middle" onclick="closeMo(\'mo-camp\');setTimeout(()=>openGara(\''+num+'\'),80)">'
+                +'<div style="font-size:.62rem;color:var(--mu);margin-bottom:1px;white-space:nowrap">'+(isCasa?'🏠':'✈')+' '+escH(avvShort)+'</div>'
+                +(match['Risultato']
+                  ?'<div style="font-size:.78rem;font-weight:500;color:'+(myW?'#0c447c':'#a32d2d')+'">'+myPts+'–'+avvPts+'</div>'
+                  +'<div style="font-size:.58rem;color:'+(myW?'var(--green)':'var(--red)')+';font-weight:600">'+(myW?'V':'S')+'</div>'
+                  :'<div style="font-size:.62rem;color:var(--mu)">'+escH(match['Data']||'')+'</div>')
+                +'</td>';
+            });
+            gridHtml+='</tr>';
+          });
+
+          gridHtml+='</tbody></table></div>'
+            +'<div style="display:flex;gap:12px;margin-top:8px;font-size:.65rem;color:var(--mu)">'
+            +'<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#e6f1fb;border:0.5px solid #b5d4f4;display:inline-block"></span>Vittoria</span>'
+            +'<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#fdecea;border:0.5px solid #f7c1c1;display:inline-block"></span>Sconfitta</span>'
+            +'<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#fff;border:0.5px solid var(--br);display:inline-block"></span>Da giocare</span>'
+            +'</div>';
+
+          return'<div id="'+calId+'_fg'+fgIdx+'" style="'+(fgIdx>0?'display:none':'')+'">'
+            +'<div id="'+calId+'_classic'+fgIdx+'">'+classicHtml+'</div>'
+            +'<div id="'+calId+'_grid'+fgIdx+'" style="display:none">'+gridHtml+'</div>'
+            +'</div>';
         }).join('');
+
+        // Inietta funzioni tramite attributo onload su un elemento dummy invece di script tag
+        const jsSwitch='';
+
+        return tabsHtml+switchHtml+fasiHtml+jsSwitch;
       })()}
     </div>
     <div class="mtc hidden" id="mct-7">
       ${(()=>{
-        // Fasi playoff = fasi che non sono Qualificazione/Girone normale
         const fasePlain=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi'];
         const fasiAll=[...new Set(allCampGare.map(g=>g['Fase']||'').filter(Boolean))];
         const fasiPlayoff=fasiAll.filter(f=>!fasePlain.some(fp=>f.includes(fp)));
+        if(!fasiPlayoff.length) return '<div style="padding:30px;text-align:center;color:var(--mu);font-size:.82rem">Nessuna fase playoff disponibile per questo campionato</div>';
+
+        // Raggruppa in bracket separati per tipo (playoff vs playout)
+        const playoutKeywords=['playout','Playout','PLAYOUT'];
+        const fasiPO=fasiPlayoff.filter(f=>playoutKeywords.some(k=>f.toLowerCase().includes(k.toLowerCase())));
+        const fasiPL=fasiPlayoff.filter(f=>!playoutKeywords.some(k=>f.toLowerCase().includes(k.toLowerCase())));
+
+        const faseOrder2=['Playoff','Semifinal','Quarto','Final'];
+        function sortFasi(arr){return arr.slice().sort((a,b)=>{const ia=faseOrder2.findIndex(x=>a.includes(x)),ib=faseOrder2.findIndex(x=>b.includes(x));return(ia<0?99:ia)-(ib<0?99:ib);});}
+
+        function buildBracketData(fasiBracket){
+          return sortFasi(fasiBracket).map(fase=>{
+            const gFase=allCampGare.filter(g=>g['Fase']===fase);
+            const gironi=[...new Set(gFase.map(g=>g['Girone']||''))];
+            const series=gironi.map(gi=>{
+              const gare=gFase.filter(g=>g['Girone']===gi).sort((a,b)=>a['Data'].localeCompare(b['Data']));
+              const teamA=gare[0]?gare[0]['Squadra Casa']:'?';
+              const teamB=gare[0]?gare[0]['Squadra Ospite']:'?';
+              return{label:gi,teamA,teamB,gare};
+            });
+            return{name:fase,series};
+          });
+        }
+
+        function renderBracket(rounds,title,color){
+          if(!rounds.length) return '';
+
+          function getWinner(serie){
+            const tot=serie.gare.length;
+            const needed=Math.ceil(tot/2);
+            let vA=0,vB=0;
+            serie.gare.forEach((g,i)=>{
+              if(!g['Risultato'])return;
+              const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+              const aS=i%2===0?pc:po,bS=i%2===0?po:pc;
+              if(aS>bS)vA++;else if(bS>aS)vB++;
+            });
+            return{vA,vB,needed,winner:vA>=needed?serie.teamA:vB>=needed?serie.teamB:null};
+          }
+
+          const roundsHtml=rounds.map((round,ri)=>{
+            const isLast=ri===rounds.length-1;
+            const cardsHtml=round.series.map(serie=>{
+              const r=getWinner(serie);
+              const aW=r.winner===serie.teamA,bW=r.winner===serie.teamB;
+              const inProg=serie.gare.some(g=>g['Risultato'])&&!r.winner;
+
+              // Punteggi singole gare
+              const scoresList=serie.gare.map((g,i)=>{
+                if(!g['Risultato'])return'<span style="font-size:.65rem;color:#ccc;background:var(--bl5);border-radius:3px;padding:2px 6px">G'+(i+1)+'</span>';
+                const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+                const aS=i%2===0?pc:po,bS=i%2===0?po:pc;
+                const aWg=aS>bS;
+                return'<span style="font-size:.65rem;border-radius:3px;padding:2px 6px;background:'+(aWg?'#e6f1fb':'#fdecea')+';color:'+(aWg?'#0c447c':'#a32d2d')+'">'+aS+'–'+bS+'</span>';
+              }).join('');
+
+              const aLbl=serie.teamA.length>22?serie.teamA.slice(0,21)+'…':serie.teamA;
+              const bLbl=serie.teamB.length>22?serie.teamB.slice(0,21)+'…':serie.teamB;
+              const num0=(serie.gare[0]&&serie.gare[0]['Numero Gara']||'').replace(/'/g,"\\'");
+
+              return'<div style="border:0.5px solid '+(r.winner?color+'66':'var(--br)')+';border-radius:10px;overflow:hidden;margin-bottom:10px;'+(r.winner?'border-left:3px solid '+color:'')+'">'+
+                '<div style="padding:6px 12px;background:var(--bl5);border-bottom:0.5px solid var(--br);display:flex;align-items:center;justify-content:space-between">'+
+                '<span style="font-size:.65rem;color:var(--mu)">'+escH(serie.label)+'</span>'+
+                '<div style="display:flex;gap:4px;flex-wrap:wrap">'+scoresList+'</div>'+
+                '</div>'+
+                '<div style="background:'+(aW?'#e6f1fb':'#fff')+';padding:11px 14px;border-bottom:0.5px solid var(--br);display:flex;align-items:center;justify-content:space-between">'+
+                '<span style="font-size:.8rem;font-weight:'+(aW?'500':'400')+';color:'+(aW?'#0c447c':bW?'var(--mu)':'var(--tx)')+'">'+escH(aLbl)+'</span>'+
+                '<div style="display:flex;align-items:center;gap:7px;flex-shrink:0">'+
+                (aW?'<span style="font-size:.62rem;background:#0c447c;color:#fff;border-radius:3px;padding:2px 7px;font-weight:500">Vince</span>':'')+
+                '<span style="font-size:1.1rem;font-weight:500;color:'+(aW?'#0c447c':'var(--mu2)')+';min-width:16px;text-align:right">'+r.vA+'</span>'+
+                '</div></div>'+
+                '<div style="background:'+(bW?'#e6f1fb':'#fff')+';padding:11px 14px;display:flex;align-items:center;justify-content:space-between">'+
+                '<span style="font-size:.8rem;font-weight:'+(bW?'500':'400')+';color:'+(bW?'#0c447c':aW?'var(--mu)':'var(--tx)')+'">'+escH(bLbl)+'</span>'+
+                '<div style="display:flex;align-items:center;gap:7px;flex-shrink:0">'+
+                (bW?'<span style="font-size:.62rem;background:#0c447c;color:#fff;border-radius:3px;padding:2px 7px;font-weight:500">Vince</span>':'')+
+                '<span style="font-size:1.1rem;font-weight:500;color:'+(bW?'#0c447c':'var(--mu2)')+';min-width:16px;text-align:right">'+r.vB+'</span>'+
+                '</div></div>'+
+                (isLast&&r.winner?'<div style="background:#faeeda;padding:7px 14px;text-align:center;border-top:0.5px solid #fac775"><span style="font-size:.72rem;font-weight:500;color:#633806">🏆 Campione: '+escH(r.winner)+'</span></div>':'')+
+                (inProg?'<div style="background:#e6f1fb;padding:5px 12px;border-top:0.5px solid #b5d4f4;text-align:center"><span style="font-size:.62rem;color:#185fa5">In corso · '+r.vA+'–'+r.vB+' (serve '+r.needed+' vittorie)</span></div>':'')+
+                '</div>';
+            }).join('');
+
+            return'<div style="margin-bottom:16px">'
+              +'<div style="font-size:.72rem;font-weight:600;color:'+color+';text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid '+color+';padding-bottom:5px;margin-bottom:10px">'+escH(round.name)+'</div>'
+              +cardsHtml+'</div>';
+          }).join('');
+
+          return'<div style="border:0.5px solid var(--br);border-radius:12px;overflow:hidden">'
+            +'<div style="background:'+color+';padding:12px 18px"><span style="font-size:.88rem;font-weight:500;color:#fff">'+escH(title)+'</span></div>'
+            +'<div style="padding:16px">'+roundsHtml+'</div>'
+            +'</div>';
+        }
+
+        const plHtml=fasiPL.length?renderBracket(buildBracketData(fasiPL),'Fase Playoff','#1e3a6e'):'';
+        const poHtml=fasiPO.length?renderBracket(buildBracketData(fasiPO),'Playout','#854f0b'):'';
+
+        if(plHtml&&poHtml) return'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'+plHtml+poHtml+'</div>';
+        return plHtml||poHtml;
+      })()}
+    </div>`;
         if(!fasiPlayoff.length) return '<div style="padding:30px;text-align:center;color:var(--mu);font-size:.82rem">Nessuna fase playoff disponibile per questo campionato</div>';
 
         const faseOrder2=['Playoff Semifinale','Finale Playoff'];
@@ -6386,10 +6596,10 @@ function openGara(numGara){
     +'</div>'
     +'</div>'  // chiude mg-hd-bar
     +'<div class="mg-hero">'
-    +(isPast?'<div style="font-size:.65rem;background:#fff8e6;color:#8a6200;border:0.5px solid #fac775;border-radius:5px;padding:3px 8px;margin:8px 0 0;display:inline-flex;align-items:center;gap:4px">&#128337; Statistiche al '+g['Data']+'</div>':'')
-    +'<div class="mg-team"><div class="mg-tn">'+escH(casa)+'</div><div class="mg-tsub">'+pvB(pvCasa||cpvF)+posCasa+'&#186; &middot; '+((classifica[casa]&&classifica[casa].v)||0)+'V '+((classifica[casa]&&classifica[casa].s)||0)+'S</div></div>'
-    +'<div class="mg-vs"><div class="mg-score">'+(haRis?escH(g['Risultato']):'&ndash;')+'</div><div class="mg-slbl">'+(haRis?'Finale':'In programma')+'</div></div>'
-    +'<div class="mg-team right"><div class="mg-tn">'+escH(osp)+'</div><div class="mg-tsub">'+((classifica[osp]&&classifica[osp].v)||0)+'V '+((classifica[osp]&&classifica[osp].s)||0)+'S &middot; '+posOsp+'&#186; '+pvB(pvOsp||cpvF)+'</div></div>'
+    +(isPast?'<div style="grid-column:1/-1;font-size:.65rem;background:#fff8e6;color:#8a6200;border:0.5px solid #fac775;border-radius:5px;padding:3px 8px;margin-bottom:6px;display:inline-flex;align-items:center;gap:4px">&#128337; Statistiche al '+g['Data']+'</div>':'')
+    +'<div class="mg-team"><div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">'+pvB(pvCasa||cpvF)+'<span style="font-size:.65rem;color:var(--mu)">'+posCasa+'° &middot; '+((classifica[casa]&&classifica[casa].v)||0)+'V '+((classifica[casa]&&classifica[casa].s)||0)+'S</span></div><div class="mg-tn">'+escH(casa)+'</div></div>'
+    +'<div class="mg-vs"><div class="mg-score">'+(haRis?escH(g['Risultato']):'&ndash;')+'</div><div class="mg-slbl">'+(haRis?'Risultato finale':'In programma')+'</div></div>'
+    +'<div class="mg-team right"><div style="display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-bottom:5px"><span style="font-size:.65rem;color:var(--mu)">'+((classifica[osp]&&classifica[osp].v)||0)+'V '+((classifica[osp]&&classifica[osp].s)||0)+'S &middot; '+posOsp+'°</span>'+pvB(pvOsp||cpvF)+'</div><div class="mg-tn">'+escH(osp)+'</div></div>'
     +'</div>'
     +'<div class="mg-pills">'
     +'<span class="mg-pill bl">&#128197; '+giornataNum+'&#186; giornata su '+totGiornate+'</span>'
@@ -9059,6 +9269,29 @@ function grtOriginali(gironi,garecamp,camp,clr){
       +'<span style="font-size:.68rem;color:var(--mu)">'+pct+'%</span></div>'
       +'</div>';
   }).join('');
+}
+
+function campCalSwitch(id,idx){
+  var panels=document.querySelectorAll('[id^="'+id+'_fg"]');
+  panels.forEach(function(el,i){el.style.display=i===idx?'':'none';});
+  var tabs=document.querySelectorAll('[id^="'+id+'_gt"]');
+  tabs.forEach(function(bt,i){bt.style.background=i===idx?'#e6f1fb':'#fff';bt.style.color=i===idx?'#0c447c':'var(--mu)';bt.style.borderColor=i===idx?'#185fa5':'var(--br)';});
+  window['_calCurrIdx_'+id]=idx;
+}
+function campCalView(id,view){
+  window['_calCurrView_'+id]=view;
+  var idx=window['_calCurrIdx_'+id]||0;
+  var panels=document.querySelectorAll('[id^="'+id+'_fg"]');
+  panels.forEach(function(el,i){
+    var c=document.getElementById(id+'_classic'+i);
+    var g=document.getElementById(id+'_grid'+i);
+    if(c)c.style.display=view==='classic'?'':'none';
+    if(g)g.style.display=view==='grid'?'':'none';
+  });
+  var vc=document.getElementById(id+'_vclassic');
+  var vg=document.getElementById(id+'_vgrid');
+  if(vc){vc.style.background=view==='classic'?'#e6f1fb':'#fff';vc.style.color=view==='classic'?'#0c447c':'var(--mu)';vc.style.borderColor=view==='classic'?'#185fa5':'var(--br)';}
+  if(vg){vg.style.background=view==='grid'?'#e6f1fb':'#fff';vg.style.color=view==='grid'?'#0c447c':'var(--mu)';vg.style.borderColor=view==='grid'?'#185fa5':'var(--br)';}
 }
 </script>
 </body></html>
