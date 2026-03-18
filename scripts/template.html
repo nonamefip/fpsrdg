@@ -5809,7 +5809,7 @@ function openCampionato(camp){
           <td>${campo?`<span style="font-size:.66rem;cursor:pointer;color:var(--bl)" onclick="openCampoModal('${esc(campo)}')">${escH(campo.split(',')[0])}</span>`:''}</td>
         </tr>`;
       }).join(''),['Data','Girone','Casa','Ospite','Ris.','Arb.','Arbitro 1','Arbitro 2','Campo'],'tbl-camp-gare')}</div>
-    </div>`;
+    </div>
     <div class="mtc hidden" id="mct-6">
       ${(()=>{
         // Raggruppa gare per fase poi per date, accoppia andata/ritorno
