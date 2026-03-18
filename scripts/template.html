@@ -6071,17 +6071,28 @@ function openGara(numGara){
   const cc=campColor(camp);
   function pvB(p){return p&&PC[p]?'<span style="display:inline-flex;align-items:center;justify-content:center;border-radius:3px;font-size:7px;font-weight:800;color:#fff;padding:0 3px;background:'+PC[p]+'">'+p+'</span>':'';}
   function pLink(f,cls){const n=pns(g[f]||'');return n?'<span class="rn '+cls+'" data-n="'+escH(n)+'" onclick="openP(this);closeMo(\'mo-gara\')">'+escH(n)+'</span>':'\u2014';}
+
+
   const allGirone=(D.gare||[]).filter(x=>x['Campionato']===camp&&x['Girone']===girone);
   const sqGirone=[...new Set(allGirone.flatMap(x=>[x['Squadra Casa'],x['Squadra Ospite']]))].filter(Boolean);
   const nSq=sqGirone.length||2;
   const totGiornate=nSq-1;
-  const garePrima=allGirone.filter(x=>x['Data']<g['Data']).length;
+  // Dati storici: per gare passate usa solo gare precedenti alla data della gara
+  const today=new Date().toISOString().slice(0,10);
+  const isPast=g['Data']<today&&haRis;
+  const cutoff=g['Data']; // data di riferimento
+  // Filtra gare per calcoli storici: se gara passata, usa solo gare con Data < cutoff
+  const gareStoriche=(D.gare||[]).filter(x=>x['Risultato']&&(isPast?x['Data']<cutoff:true));
+  const allGironeStorico=gareStoriche.filter(x=>x['Campionato']===camp&&x['Girone']===girone);
+  const garePrima=allGironeStorico.filter(x=>x['Data']<g['Data']).length;
   const giornataNum=garePrima>0?Math.ceil(garePrima/(nSq/2))+1:1;
-  const precs=allGirone.filter(x=>(x['Squadra Casa']===casa&&x['Squadra Ospite']===osp||x['Squadra Casa']===osp&&x['Squadra Ospite']===casa)&&x['Numero Gara']!==numGara&&x['Risultato']);
+  // Precedenti tra le due squadre (prima della gara corrente)
+  const precs=allGironeStorico.filter(x=>(x['Squadra Casa']===casa&&x['Squadra Ospite']===osp||x['Squadra Casa']===osp&&x['Squadra Ospite']===casa)&&x['Numero Gara']!==numGara);
   const isAndata=precs.length===0;
+  // Classifica storica al momento della gara
   const classifica={};
   sqGirone.forEach(s=>{classifica[s]={v:0,s:0,pf:0,ps:0};});
-  allGirone.filter(x=>x['Risultato']).forEach(x=>{
+  allGironeStorico.forEach(x=>{
     const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;
     if(!classifica[x['Squadra Casa']])classifica[x['Squadra Casa']]={v:0,s:0,pf:0,ps:0};
     if(!classifica[x['Squadra Ospite']])classifica[x['Squadra Ospite']]={v:0,s:0,pf:0,ps:0};
@@ -6094,30 +6105,39 @@ function openGara(numGara){
   const posCasa=(rank.findIndex(r=>r[0]===casa)+1)||'–';
   const posOsp=(rank.findIndex(r=>r[0]===osp)+1)||'–';
   const leader=rank[0]?rank[0][1].v*2+rank[0][1].s:0;
+  // Forma storica: ultime 5 gare prima della data corrente
   function getForma(sq){
-    return(D.gare||[]).filter(x=>(x['Squadra Casa']===sq||x['Squadra Ospite']===sq)&&x['Risultato'])
+    return gareStoriche.filter(x=>(x['Squadra Casa']===sq||x['Squadra Ospite']===sq)&&(isPast?x['Data']<cutoff:true))
       .sort((a,b)=>b['Data'].localeCompare(a['Data'])).slice(0,5)
       .map(x=>{const isCasa=x['Squadra Casa']===sq;const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;return{r:isCasa?pc>po?'W':'L':po>pc?'W':'L',sc:pc+'-'+po};});
   }
   const formaCasa=getForma(casa),formaOsp=getForma(osp);
+  // Statistiche storiche
   function getStat(sq){
-    const gs=(D.gare||[]).filter(x=>(x['Squadra Casa']===sq||x['Squadra Ospite']===sq)&&x['Risultato']);
-    if(!gs.length)return{ptF:0,ptS:0,pct:0,scarto:0};
-    let pf=0,ps=0,v=0;
-    gs.forEach(x=>{const isCasa=x['Squadra Casa']===sq;const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;pf+=isCasa?pc:po;ps+=isCasa?po:pc;if(isCasa?pc>po:po>pc)v++;});
-    return{ptF:Math.round(pf/gs.length*10)/10,ptS:Math.round(ps/gs.length*10)/10,pct:Math.round(v/gs.length*100),scarto:Math.round((pf-ps)/gs.length*10)/10};
+    const gs=gareStoriche.filter(x=>(x['Squadra Casa']===sq||x['Squadra Ospite']===sq));
+    if(!gs.length)return{ptF:0,ptS:0,pct:0,homePct:0,lastPts:0};
+    let pf=0,ps=0,v=0,gh=0,vh=0,lastPts=0;
+    const sorted=gs.slice().sort((a,b)=>b['Data'].localeCompare(a['Data']));
+    gs.forEach(x=>{const isCasa=x['Squadra Casa']===sq;const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;pf+=isCasa?pc:po;ps+=isCasa?po:pc;if(isCasa?pc>po:po>pc)v++;if(isCasa){gh++;if(pc>po)vh++;}});
+    const last=sorted[0];if(last){const isCasa=last['Squadra Casa']===sq;lastPts=isCasa?(parseInt(last['Punti Casa'])||0):(parseInt(last['Punti Ospite'])||0);}
+    return{ptF:Math.round(pf/gs.length*10)/10,ptS:Math.round(ps/gs.length*10)/10,pct:Math.round(v/gs.length*100),homePct:gh?Math.round(vh/gh*100):0,lastPts};
   }
   const stC=getStat(casa),stO=getStat(osp);
   const a1n=pns(g['Arbitro 1']||''),a2n=pns(g['Arbitro 2']||'');
   const nArb=(a1n?1:0)+(a2n?1:0);
   const gareMancCasa=allGirone.filter(x=>(x['Squadra Casa']===casa||x['Squadra Ospite']===casa)&&!x['Risultato']).length;
+  // Classifica con evidenziazione casa (blu) e ospite (verde)
   let stHtml='<table class="mg-st"><tr><th>#</th><th>Squadra</th><th>V</th><th>S</th><th>Pt</th><th>+/-</th></tr>';
   rank.forEach(([sq,r],i)=>{
-    const pt=r.v*2+r.s,delta=pt-leader,cls=sq===casa?'mc':sq===osp?'mo':'';
-    stHtml+='<tr class="'+cls+'"><td style="color:var(--mu);font-weight:500">'+(i+1)+'</td>'
-      +'<td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(cls?'<b>':'')+'<span style="font-size:10.5px">'+escH(sq)+'</span>'+(cls?'</b>':'')+'</td>'
-      +'<td>'+r.v+'</td><td>'+r.s+'</td><td><b>'+pt+'</b></td>'
-      +'<td style="font-size:9.5px;color:var(--mu)">'+(delta===0?'&#8212;':delta)+'</td></tr>';
+    const pt=r.v*2+r.s,delta=pt-leader;
+    const isCasa=sq===casa,isOsp=sq===osp;
+    const bg=isCasa?'background:#e6f1fb':isOsp?'background:#eaf3de':'';
+    const txC=isCasa?'color:#0c447c':isOsp?'color:#27500a':'color:var(--mu)';
+    const fw=isCasa||isOsp?'font-weight:500':'';
+    stHtml+='<tr style="'+bg+'"><td style="'+txC+';font-weight:500">'+(i+1)+'</td>'
+      +'<td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;'+txC+';'+fw+'">'+escH(sq)+'</td>'
+      +'<td style="'+txC+'">'+r.v+'</td><td style="'+txC+'">'+r.s+'</td><td style="font-weight:500;'+txC+'">'+pt+'</td>'
+      +'<td style="font-size:9.5px;'+txC+'">'+(delta===0?'&#8212;':delta)+'</td></tr>';
   });
   stHtml+='</table>';
   let precHtml='';
@@ -6142,48 +6162,30 @@ function openGara(numGara){
       +forma.map(f=>'<div class="mg-fb '+f.r+'">'+f.r+'</div>').join('')
       +'<span style="font-size:10px;color:var(--mu);margin-left:3px">'+forma.filter(f=>f.r==='W').length+'/'+forma.length+'</span></div>';
   }
-  // Ultima gara punti segnati
-  function getLastPts(sq){
-    const gs=(D.gare||[]).filter(x=>(x['Squadra Casa']===sq||x['Squadra Ospite']===sq)&&x['Risultato'])
-      .sort((a,b)=>b['Data'].localeCompare(a['Data']));
-    if(!gs.length)return 0;
-    const last=gs[0];const isCasa=last['Squadra Casa']===sq;
-    return isCasa?(parseInt(last['Punti Casa'])||0):(parseInt(last['Punti Ospite'])||0);
-  }
-  function getHomePct(sq){
-    const gs=(D.gare||[]).filter(x=>x['Squadra Casa']===sq&&x['Risultato']);
-    if(!gs.length)return 0;
-    const v=gs.filter(x=>(parseInt(x['Punti Casa'])||0)>(parseInt(x['Punti Ospite'])||0)).length;
-    return Math.round(v/gs.length*100);
-  }
-  const lastC=getLastPts(casa),lastO=getLastPts(osp);
-  const homePctC=getHomePct(casa),homePctO=getHomePct(osp);
-  const statsRows=[
-    {lbl:'Punti medi',ca:stC.ptF,os:stO.ptF,fmt:v=>v.toFixed(1)},
-    {lbl:'Punti subiti medi',ca:stC.ptS,os:stO.ptS,fmt:v=>v.toFixed(1),loIsBetter:true},
-    {lbl:'% vittorie casa',ca:homePctC,os:homePctO,fmt:v=>v+'%'},
-    {lbl:'Media pt ultima gara',ca:lastC,os:lastO,fmt:v=>v+''},
+  // Opzione C — tabella con badge WIN
+  const statsRowsC=[
+    {lbl:'Punti medi segnati',ca:stC.ptF,os:stO.ptF,fmt:v=>v.toFixed(1)},
+    {lbl:'Punti medi subiti',ca:stC.ptS,os:stO.ptS,fmt:v=>v.toFixed(1),loIsBetter:true},
+    {lbl:'% vittorie totali',ca:stC.pct,os:stO.pct,fmt:v=>v+'%'},
+    {lbl:'% vittorie casa',ca:stC.homePct,os:stO.homePct,fmt:v=>v+'%'},
+    {lbl:'Scarto medio pt',ca:Math.round((stC.ptF-stC.ptS)*10)/10,os:Math.round((stO.ptF-stO.ptS)*10)/10,fmt:v=>(v>0?'+':'')+v.toFixed(1)},
+    {lbl:'Media pt ultima gara',ca:stC.lastPts,os:stO.lastPts,fmt:v=>v+''},
   ].map(s=>({...s,hi:s.loIsBetter?(s.ca<s.os?'ca':s.ca>s.os?'os':'tie'):(s.ca>s.os?'ca':s.ca<s.os?'os':'tie')}));
-  // Build visual-bar comparative section (like screenshot)
-  let cmpHtml='<div style="font-size:.68rem;color:var(--mu);margin-bottom:5px;display:flex;justify-content:space-between">'
-    +'<span style="font-weight:600;color:#185fa5">'+escH(casa)+'</span>'
-    +'<span style="font-weight:600;color:#1d9e75">'+escH(osp)+'</span></div>';
-  statsRows.forEach(s=>{
-    const tot=s.ca+s.os||1;
-    const pctCa=Math.round(s.ca/tot*100);
+  const winBadge=(col)=>'<span style="font-size:9px;background:'+(col==='ca'?'#e6f1fb':'#eaf3de')+';color:'+(col==='ca'?'#185fa5':'#27500a')+';border-radius:3px;padding:1px 5px;font-weight:500;margin:0 3px">WIN</span>';
+  let cmpHtml='<div style="display:grid;grid-template-columns:1fr 130px 1fr;gap:6px;padding-bottom:7px;border-bottom:0.5px solid var(--br);margin-bottom:7px">'
+    +'<span style="font-size:.72rem;font-weight:600;color:#185fa5">'+escH(casa)+'</span>'
+    +'<span style="font-size:.65rem;color:var(--mu);text-align:center">Statistica</span>'
+    +'<span style="font-size:.72rem;font-weight:600;color:#1d9e75;text-align:right">'+escH(osp)+'</span></div>';
+  statsRowsC.forEach((s,i)=>{
     const caW=s.hi==='ca',osW=s.hi==='os';
-    cmpHtml+='<div style="margin-bottom:8px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">'
-      +'<span style="font-size:.75rem;font-weight:'+(caW?'700':'400')+';color:'+(caW?'var(--tx)':'var(--mu)')+'">'+s.fmt(s.ca)+'</span>'
-      +'<span style="font-size:.63rem;color:var(--mu)">'+s.lbl+'</span>'
-      +'<span style="font-size:.75rem;font-weight:'+(osW?'700':'400')+';color:'+(osW?'var(--tx)':'var(--mu)')+'">'+s.fmt(s.os)+'</span>'
-      +'</div>'
-      +'<div style="height:6px;background:#eef2ff;border-radius:3px;overflow:hidden;display:flex">'
-      +'<div style="width:'+pctCa+'%;background:#185fa5;border-radius:3px 0 0 3px;transition:width .3s"></div>'
-      +'<div style="flex:1;background:#1d9e75;border-radius:0 3px 3px 0"></div>'
-      +'</div>'
+    cmpHtml+='<div style="display:grid;grid-template-columns:1fr 130px 1fr;gap:6px;padding:5px 0;'+(i<statsRowsC.length-1?'border-bottom:0.5px solid var(--br)':'')+'align-items:center">'
+      +'<div style="display:flex;align-items:center">'+(caW?winBadge('ca'):'')+' <span style="font-size:.78rem;font-weight:'+(caW?'700':'400')+';color:'+(caW?'#185fa5':'var(--mu)')+'">'+s.fmt(s.ca)+'</span></div>'
+      +'<span style="font-size:.65rem;color:var(--mu);text-align:center">'+s.lbl+'</span>'
+      +'<div style="display:flex;align-items:center;justify-content:flex-end"><span style="font-size:.78rem;font-weight:'+(osW?'700':'400')+';color:'+(osW?'#1d9e75':'var(--mu)')+'">'+s.fmt(s.os)+'</span>'+(osW?winBadge('os'):'')+'</div>'
       +'</div>';
   });
+  // Indicatore dati storici (solo per gare passate)
+  const storBadge=isPast?'<div style="font-size:.65rem;background:#fff8e6;color:#8a6200;border:0.5px solid #fac775;border-radius:5px;padding:3px 8px;margin-bottom:8px;display:inline-flex;align-items:center;gap:4px">&#128337; Dati al '+g['Data']+'</div>':'';
 
   let techHtml='<div class="mg-tech">'
     +'<div class="mg-tech-hd" onclick="this.nextElementSibling.classList.toggle(\'open\')">'
@@ -6210,6 +6212,7 @@ function openGara(numGara){
     +'</div>'
     +'</div>'  // chiude mg-hd-bar
     +'<div class="mg-hero">'
+    +(isPast?'<div style="font-size:.65rem;background:#fff8e6;color:#8a6200;border:0.5px solid #fac775;border-radius:5px;padding:3px 8px;margin:8px 0 0;display:inline-flex;align-items:center;gap:4px">&#128337; Statistiche al '+g['Data']+'</div>':'')
     +'<div class="mg-team"><div class="mg-tn">'+escH(casa)+'</div><div class="mg-tsub">'+pvB(pvCasa||cpvF)+posCasa+'&#186; &middot; '+((classifica[casa]&&classifica[casa].v)||0)+'V '+((classifica[casa]&&classifica[casa].s)||0)+'S</div></div>'
     +'<div class="mg-vs"><div class="mg-score">'+escH(haRis?g['Risultato']:'&#8211;')+'</div><div class="mg-slbl">'+(haRis?'Finale':'In programma')+'</div></div>'
     +'<div class="mg-team right"><div class="mg-tn">'+escH(osp)+'</div><div class="mg-tsub">'+((classifica[osp]&&classifica[osp].v)||0)+'V '+((classifica[osp]&&classifica[osp].s)||0)+'S &middot; '+posOsp+'&#186; '+pvB(pvOsp||cpvF)+'</div></div>'
