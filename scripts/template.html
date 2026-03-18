@@ -5991,15 +5991,11 @@ function openCampionato(camp){
         const fasiAll=[...new Set(allCampGare.map(g=>g['Fase']||'').filter(Boolean))];
         const fasiPlayoff=fasiAll.filter(f=>!fasePlain.some(fp=>f.includes(fp)));
         if(!fasiPlayoff.length) return '<div style="padding:30px;text-align:center;color:var(--mu);font-size:.82rem">Nessuna fase playoff disponibile per questo campionato</div>';
-
-        // Raggruppa in bracket separati per tipo (playoff vs playout)
-        const playoutKeywords=['playout','Playout','PLAYOUT'];
-        const fasiPO=fasiPlayoff.filter(f=>playoutKeywords.some(k=>f.toLowerCase().includes(k.toLowerCase())));
-        const fasiPL=fasiPlayoff.filter(f=>!playoutKeywords.some(k=>f.toLowerCase().includes(k.toLowerCase())));
-
-        const faseOrder2=['Playoff','Semifinal','Quarto','Final'];
-        function sortFasi(arr){return arr.slice().sort((a,b)=>{const ia=faseOrder2.findIndex(x=>a.includes(x)),ib=faseOrder2.findIndex(x=>b.includes(x));return(ia<0?99:ia)-(ib<0?99:ib);});}
-
+        const playoutKw=['playout','Playout','PLAYOUT'];
+        const fasiPO=fasiPlayoff.filter(f=>playoutKw.some(k=>f.toLowerCase().includes(k.toLowerCase())));
+        const fasiPL=fasiPlayoff.filter(f=>!playoutKw.some(k=>f.toLowerCase().includes(k.toLowerCase())));
+        const faseOrd=['Playoff','Semifinal','Quarto','Final'];
+        function sortFasi(arr){return arr.slice().sort((a,b)=>{const ia=faseOrd.findIndex(x=>a.includes(x)),ib=faseOrd.findIndex(x=>b.includes(x));return(ia<0?99:ia)-(ib<0?99:ib);});}
         function buildBracketData(fasiBracket){
           return sortFasi(fasiBracket).map(fase=>{
             const gFase=allCampGare.filter(g=>g['Fase']===fase);
@@ -6013,180 +6009,58 @@ function openCampionato(camp){
             return{name:fase,series};
           });
         }
-
+        function getWinner(serie){
+          const tot=serie.gare.length;const needed=Math.ceil(tot/2);let vA=0,vB=0;
+          serie.gare.forEach((g,i)=>{
+            if(!g['Risultato'])return;
+            const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+            const aS=i%2===0?pc:po,bS=i%2===0?po:pc;
+            if(aS>bS)vA++;else if(bS>aS)vB++;
+          });
+          return{vA,vB,needed,winner:vA>=needed?serie.teamA:vB>=needed?serie.teamB:null};
+        }
         function renderBracket(rounds,title,color){
-          if(!rounds.length) return '';
-
-          function getWinner(serie){
-            const tot=serie.gare.length;
-            const needed=Math.ceil(tot/2);
-            let vA=0,vB=0;
-            serie.gare.forEach((g,i)=>{
-              if(!g['Risultato'])return;
-              const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
-              const aS=i%2===0?pc:po,bS=i%2===0?po:pc;
-              if(aS>bS)vA++;else if(bS>aS)vB++;
-            });
-            return{vA,vB,needed,winner:vA>=needed?serie.teamA:vB>=needed?serie.teamB:null};
-          }
-
+          if(!rounds.length)return'';
           const roundsHtml=rounds.map((round,ri)=>{
             const isLast=ri===rounds.length-1;
             const cardsHtml=round.series.map(serie=>{
               const r=getWinner(serie);
               const aW=r.winner===serie.teamA,bW=r.winner===serie.teamB;
               const inProg=serie.gare.some(g=>g['Risultato'])&&!r.winner;
-
-              // Punteggi singole gare
               const scoresList=serie.gare.map((g,i)=>{
                 if(!g['Risultato'])return'<span style="font-size:.65rem;color:#ccc;background:var(--bl5);border-radius:3px;padding:2px 6px">G'+(i+1)+'</span>';
                 const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
                 const aS=i%2===0?pc:po,bS=i%2===0?po:pc;
-                const aWg=aS>bS;
-                return'<span style="font-size:.65rem;border-radius:3px;padding:2px 6px;background:'+(aWg?'#e6f1fb':'#fdecea')+';color:'+(aWg?'#0c447c':'#a32d2d')+'">'+aS+'–'+bS+'</span>';
+                return'<span style="font-size:.65rem;border-radius:3px;padding:2px 6px;background:'+(aS>bS?'#e6f1fb':'#fdecea')+';color:'+(aS>bS?'#0c447c':'#a32d2d')+'">'+aS+'\u2013'+bS+'</span>';
               }).join('');
-
-              const aLbl=serie.teamA.length>22?serie.teamA.slice(0,21)+'…':serie.teamA;
-              const bLbl=serie.teamB.length>22?serie.teamB.slice(0,21)+'…':serie.teamB;
-              const num0=(serie.gare[0]&&serie.gare[0]['Numero Gara']||'').replace(/'/g,"\\'");
-
+              const aLbl=serie.teamA.length>22?serie.teamA.slice(0,21)+'\u2026':serie.teamA;
+              const bLbl=serie.teamB.length>22?serie.teamB.slice(0,21)+'\u2026':serie.teamB;
               return'<div style="border:0.5px solid '+(r.winner?color+'66':'var(--br)')+';border-radius:10px;overflow:hidden;margin-bottom:10px;'+(r.winner?'border-left:3px solid '+color:'')+'">'+
                 '<div style="padding:6px 12px;background:var(--bl5);border-bottom:0.5px solid var(--br);display:flex;align-items:center;justify-content:space-between">'+
                 '<span style="font-size:.65rem;color:var(--mu)">'+escH(serie.label)+'</span>'+
-                '<div style="display:flex;gap:4px;flex-wrap:wrap">'+scoresList+'</div>'+
-                '</div>'+
+                '<div style="display:flex;gap:4px;flex-wrap:wrap">'+scoresList+'</div></div>'+
                 '<div style="background:'+(aW?'#e6f1fb':'#fff')+';padding:11px 14px;border-bottom:0.5px solid var(--br);display:flex;align-items:center;justify-content:space-between">'+
                 '<span style="font-size:.8rem;font-weight:'+(aW?'500':'400')+';color:'+(aW?'#0c447c':bW?'var(--mu)':'var(--tx)')+'">'+escH(aLbl)+'</span>'+
                 '<div style="display:flex;align-items:center;gap:7px;flex-shrink:0">'+
                 (aW?'<span style="font-size:.62rem;background:#0c447c;color:#fff;border-radius:3px;padding:2px 7px;font-weight:500">Vince</span>':'')+
-                '<span style="font-size:1.1rem;font-weight:500;color:'+(aW?'#0c447c':'var(--mu2)')+';min-width:16px;text-align:right">'+r.vA+'</span>'+
-                '</div></div>'+
+                '<span style="font-size:1.1rem;font-weight:500;color:'+(aW?'#0c447c':'var(--mu2)')+';min-width:16px;text-align:right">'+r.vA+'</span></div></div>'+
                 '<div style="background:'+(bW?'#e6f1fb':'#fff')+';padding:11px 14px;display:flex;align-items:center;justify-content:space-between">'+
                 '<span style="font-size:.8rem;font-weight:'+(bW?'500':'400')+';color:'+(bW?'#0c447c':aW?'var(--mu)':'var(--tx)')+'">'+escH(bLbl)+'</span>'+
                 '<div style="display:flex;align-items:center;gap:7px;flex-shrink:0">'+
                 (bW?'<span style="font-size:.62rem;background:#0c447c;color:#fff;border-radius:3px;padding:2px 7px;font-weight:500">Vince</span>':'')+
-                '<span style="font-size:1.1rem;font-weight:500;color:'+(bW?'#0c447c':'var(--mu2)')+';min-width:16px;text-align:right">'+r.vB+'</span>'+
-                '</div></div>'+
-                (isLast&&r.winner?'<div style="background:#faeeda;padding:7px 14px;text-align:center;border-top:0.5px solid #fac775"><span style="font-size:.72rem;font-weight:500;color:#633806">🏆 Campione: '+escH(r.winner)+'</span></div>':'')+
-                (inProg?'<div style="background:#e6f1fb;padding:5px 12px;border-top:0.5px solid #b5d4f4;text-align:center"><span style="font-size:.62rem;color:#185fa5">In corso · '+r.vA+'–'+r.vB+' (serve '+r.needed+' vittorie)</span></div>':'')+
+                '<span style="font-size:1.1rem;font-weight:500;color:'+(bW?'#0c447c':'var(--mu2)')+';min-width:16px;text-align:right">'+r.vB+'</span></div></div>'+
+                (isLast&&r.winner?'<div style="background:#faeeda;padding:7px 14px;text-align:center;border-top:0.5px solid #fac775"><span style="font-size:.72rem;font-weight:500;color:#633806">\uD83C\uDFC6 Campione: '+escH(r.winner)+'</span></div>':'')+
+                (inProg?'<div style="background:#e6f1fb;padding:5px 12px;border-top:0.5px solid #b5d4f4;text-align:center"><span style="font-size:.62rem;color:#185fa5">In corso \u00b7 '+r.vA+'\u2013'+r.vB+' (serve '+r.needed+' vittorie)</span></div>':'')+
                 '</div>';
             }).join('');
-
-            return'<div style="margin-bottom:16px">'
-              +'<div style="font-size:.72rem;font-weight:600;color:'+color+';text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid '+color+';padding-bottom:5px;margin-bottom:10px">'+escH(round.name)+'</div>'
-              +cardsHtml+'</div>';
+            return'<div style="margin-bottom:16px"><div style="font-size:.72rem;font-weight:600;color:'+color+';text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid '+color+';padding-bottom:5px;margin-bottom:10px">'+escH(round.name)+'</div>'+cardsHtml+'</div>';
           }).join('');
-
-          return'<div style="border:0.5px solid var(--br);border-radius:12px;overflow:hidden">'
-            +'<div style="background:'+color+';padding:12px 18px"><span style="font-size:.88rem;font-weight:500;color:#fff">'+escH(title)+'</span></div>'
-            +'<div style="padding:16px">'+roundsHtml+'</div>'
-            +'</div>';
+          return'<div style="border:0.5px solid var(--br);border-radius:12px;overflow:hidden"><div style="background:'+color+';padding:12px 18px"><span style="font-size:.88rem;font-weight:500;color:#fff">'+escH(title)+'</span></div><div style="padding:16px">'+roundsHtml+'</div></div>';
         }
-
         const plHtml=fasiPL.length?renderBracket(buildBracketData(fasiPL),'Fase Playoff','#1e3a6e'):'';
         const poHtml=fasiPO.length?renderBracket(buildBracketData(fasiPO),'Playout','#854f0b'):'';
-
-        if(plHtml&&poHtml) return'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'+plHtml+poHtml+'</div>';
+        if(plHtml&&poHtml)return'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'+plHtml+poHtml+'</div>';
         return plHtml||poHtml;
-      })()}
-    </div>`;
-        if(!fasiPlayoff.length) return '<div style="padding:30px;text-align:center;color:var(--mu);font-size:.82rem">Nessuna fase playoff disponibile per questo campionato</div>';
-
-        const faseOrder2=['Playoff Semifinale','Finale Playoff'];
-        fasiPlayoff.sort((a,b)=>{const ia=faseOrder2.findIndex(x=>a.includes(x)),ib=faseOrder2.findIndex(x=>b.includes(x));return(ia<0?99:ia)-(ib<0?99:ib);});
-
-        // Costruisci rounds per il bracket
-        const rounds=fasiPlayoff.map(fase=>{
-          const gFase=allCampGare.filter(g=>g['Fase']===fase);
-          const gironi=[...new Set(gFase.map(g=>g['Girone']||''))];
-          const series=gironi.map(gi=>{
-            const gare=gFase.filter(g=>g['Girone']===gi).sort((a,b)=>a['Data'].localeCompare(b['Data']));
-            return{label:gi,gare};
-          });
-          return{name:fase,series};
-        });
-
-        // SVG bracket
-        const RW=200,RH=30,COL_W=240;
-        const maxSeries=rounds[0]?rounds[0].series.length:1;
-        const totalH=Math.max(200,maxSeries*(RH*2+12+20)+70);
-        const W=rounds.length*COL_W+80;
-
-        function seriesY(ri,si){
-          const factor=Math.pow(2,ri);
-          const baseH=(RH*2+12+20)*factor;
-          const off=(baseH-(RH*2+12))/2;
-          return 44+si*baseH+off;
-        }
-        function seriesWinner(gare){
-          const done=gare.filter(g=>g['Risultato']);
-          if(!done.length)return null;
-          const teamA=gare[0]&&gare[0]['Squadra Casa'];
-          const teamB=gare[0]&&gare[0]['Squadra Ospite'];
-          let vA=0,vB=0;
-          done.forEach(g=>{
-            const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
-            const isFirstGame=g===gare[0];
-            const aScore=isFirstGame?pc:po,bScore=isFirstGame?po:pc;
-            if(aScore>bScore)vA++;else if(bScore>aScore)vB++;
-          });
-          if(vA>vB)return{team:teamA,vA,vB};
-          if(vB>vA)return{team:teamB,vA,vB};
-          return null;
-        }
-
-        let svg='<svg viewBox="0 0 '+W+' '+totalH+'" style="width:100%;min-width:400px;display:block;height:'+totalH+'px;font-family:system-ui,sans-serif">';
-        rounds.forEach((round,ri)=>{
-          const x=ri*COL_W+20;
-          const isFinale=ri===rounds.length-1;
-          svg+='<rect x="'+x+'" y="0" width="'+RW+'" height="24" rx="4" fill="'+(isFinale?'#c9900a':'#1e3a6e')+'"/>';
-          svg+='<text x="'+(x+RW/2)+'" y="16" font-size="10" fill="#fff" text-anchor="middle" font-weight="500">'+escH(round.name.toUpperCase())+'</text>';
-
-          round.series.forEach((serie,si)=>{
-            const y=seriesY(ri,si);
-            const teamA=serie.gare[0]?serie.gare[0]['Squadra Casa']:'?';
-            const teamB=serie.gare[0]?serie.gare[0]['Squadra Ospite']:'?';
-            const winner=seriesWinner(serie.gare);
-            const aW=winner&&winner.team===teamA,bW=winner&&winner.team===teamB;
-            const allDone=serie.gare.length>0&&serie.gare.every(g=>g['Risultato']);
-
-            svg+='<text x="'+(x+RW/2)+'" y="'+(y-6)+'" font-size="8.5" fill="#aaa" text-anchor="middle">'+escH(serie.label)+'</text>';
-            svg+='<rect x="'+x+'" y="'+y+'" width="'+RW+'" height="'+(RH*2+12)+'" rx="6" fill="white" stroke="'+(allDone?'#b5d4f4':'#ddd')+'" stroke-width="0.5"/>';
-
-            // Team A
-            svg+='<rect x="'+(x+0.5)+'" y="'+(y+0.5)+'" width="'+(RW-1)+'" height="'+RH+'" rx="5" fill="'+(aW?'#e6f1fb':'transparent')+'"/>';
-            const aLbl=teamA.length>22?teamA.slice(0,21)+'…':teamA;
-            svg+='<text x="'+(x+10)+'" y="'+(y+RH/2+4)+'" font-size="11" fill="'+(aW?'#0c447c':'#444')+'" font-weight="'+(aW?'600':'400')+'">'+escH(aLbl)+'</text>';
-            if(winner)svg+='<text x="'+(x+RW-10)+'" y="'+(y+RH/2+4)+'" font-size="11" fill="'+(aW?'#0c447c':'#aaa')+'" text-anchor="end" font-weight="'+(aW?'700':'400')+'">'+(aW?winner.vA:winner.vB)+'V</text>';
-
-            // Divider
-            svg+='<line x1="'+(x+6)+'" y1="'+(y+RH+6)+'" x2="'+(x+RW-6)+'" y2="'+(y+RH+6)+'" stroke="#eef0f8" stroke-width="1"/>';
-
-            // Team B
-            svg+='<rect x="'+(x+0.5)+'" y="'+(y+RH+6.5)+'" width="'+(RW-1)+'" height="'+RH+'" rx="0" fill="'+(bW?'#e6f1fb':'transparent')+'"/>';
-            const bLbl=teamB.length>22?teamB.slice(0,21)+'…':teamB;
-            svg+='<text x="'+(x+10)+'" y="'+(y+RH+6+RH/2+4)+'" font-size="11" fill="'+(bW?'#0c447c':'#444')+'" font-weight="'+(bW?'600':'400')+'">'+escH(bLbl)+'</text>';
-            if(winner)svg+='<text x="'+(x+RW-10)+'" y="'+(y+RH+6+RH/2+4)+'" font-size="11" fill="'+(bW?'#0c447c':'#aaa')+'" text-anchor="end" font-weight="'+(bW?'700':'400')+'">'+(bW?winner.vA:winner.vB)+'V</text>';
-
-            // Stella campione
-            if(isFinale&&winner){
-              svg+='<text x="'+(x+RW+10)+'" y="'+(y+RH+10)+'" font-size="18" fill="#c9900a">★</text>';
-              svg+='<text x="'+(x+RW+10)+'" y="'+(y+RH+24)+'" font-size="8" fill="#c9900a" font-weight="500">CAMPIONE</text>';
-            }
-
-            // Connettore
-            if(ri<rounds.length-1){
-              const ex=x+RW,ey=y+RH+6;
-              const nextSi=Math.floor(si/2);
-              const nextY=seriesY(ri+1,nextSi);
-              const targetY=si%2===0?nextY+RH/2:nextY+RH+6+RH/2;
-              const mx=ex+16;
-              svg+='<path d="M'+ex+','+ey+' H'+mx+' V'+targetY+' H'+(ex+COL_W-RW+20)+'" stroke="#c5d8f0" stroke-width="1.2" fill="none" stroke-dasharray="'+(allDone?'none':'4,3')+'"/>';
-            }
-          });
-        });
-        svg+='</svg>';
-        return'<div style="overflow-x:auto">'+svg+'</div>';
       })()}
     </div>`;
   openMo('mo-camp');
