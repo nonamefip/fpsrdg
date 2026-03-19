@@ -1799,13 +1799,13 @@ function renderPersonsTable(cid,persons,opts={}){
   // Intestazioni gruppo (solo per arbitri)
   const groupHeaderHtml=isArb?`<tr>
     <th colspan="2" style="background:var(--tbl-hdr);border:none;"></th>
-    <th colspan="3" class="th-ana" style="text-align:center;font-size:.6rem;border-radius:4px 4px 0 0;padding:3px 6px;">Anagrafica</th>
-    <th colspan="${5+ae}" class="th-att" style="text-align:center;font-size:.6rem;border-radius:4px 4px 0 0;padding:3px 6px;">Attività svolta</th>
-    <th colspan="2" class="th-fare" style="text-align:center;font-size:.6rem;border-radius:4px 4px 0 0;padding:3px 6px;">Da completare</th>
-    <th colspan="3" class="th-camp" style="text-align:center;font-size:.6rem;border-radius:4px 4px 0 0;padding:3px 6px;">Campionati</th>
-    <th colspan="1" class="th-sq" style="text-align:center;font-size:.6rem;border-radius:4px 4px 0 0;padding:3px 6px;">Sq.</th>
-    <th colspan="3" class="th-km" style="text-align:center;font-size:.6rem;border-radius:4px 4px 0 0;padding:3px 6px;">Percorrenza</th>
-    <th style="background:var(--tbl-hdr);border:none;" colspan="3"></th>
+    <th colspan="3" class="th-ana" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Anagrafica</th>
+    <th colspan="${5+ae}" class="th-att" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Attività svolta</th>
+    <th colspan="2" class="th-fare" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Da completare</th>
+    <th colspan="4" class="th-camp" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Campionati</th>
+    <th colspan="2" class="th-sq" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Squadre</th>
+    <th colspan="2" class="th-km" style="text-align:center;font-size:.6rem;padding:3px 6px;">Percorrenza</th>
+    <th style="background:var(--tbl-hdr);border:none;" colspan="1"></th>
   </tr>`:'';
 
   // Accumulatori per riga media
@@ -1876,6 +1876,7 @@ function renderPersonsTable(cid,persons,opts={}){
       <td ${tdAna} style="font-family:monospace;font-size:.7rem;color:#34495e">${fip}</td>
       ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
       <td ${tdAtt} data-val="${p.n_gare}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}"
+        title="Gare fatte fino ad oggi"
         data-n="${p.nome}" onclick="event.stopPropagation();openPersona(this.dataset.n)">${p.n_gare}</td>
       <td ${tdAtt} data-val="${p.n_gare_arbitro||0}" style="text-align:center">${p.n_gare_arbitro?mkLink(p.n_gare_arbitro,1,pvColor):''}</td>
       <td ${tdAtt} data-val="${p.n_gare_udc||0}" style="text-align:center">${p.n_gare_udc?mkLink(p.n_gare_udc,1,pvColor):''}</td>
@@ -1898,13 +1899,6 @@ function renderPersonsTable(cid,persons,opts={}){
       <td ${tdSq} data-val="${Object.keys(p.squadre||{}).length}" style="text-align:center">${Object.keys(p.squadre||{}).length}</td>
       <td ${tdKm} data-val="${km}" style="text-align:right;font-size:.8rem;font-weight:600;color:var(--mu)">${km>0?km.toLocaleString('it'):'—'}</td>
       ${isArb?`<td ${tdKm} data-val="${kmGara}" style="text-align:right;font-size:.78rem;color:var(--mu)">${kmGara>0?kmGara:'—'}</td>`:''}
-      ${isArb?(()=>{
-        const tr=_trendMap[p.nome]||{c1:0,c2:0,delta:0};
-        const arrow=tr.delta>0?'↑':tr.delta<0?'↓':'→';
-        const clr=tr.delta>0?'var(--green)':tr.delta<0?'var(--red)':'var(--mu)';
-        const label=tr.delta>0?'+'+tr.delta:tr.delta===0?'=':tr.delta;
-        return `<td data-val="${tr.delta}" style="text-align:center;font-weight:700;color:${clr};font-size:.8rem" title="${tr.c2}→${tr.c1} gare (30gg)">${arrow}${label}</td>`;
-      })():''}
       ${isArb?(()=>{
         const mesiCount={};
         (p.gare||[]).forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)mesiCount[m]=(mesiCount[m]||0)+1;});
@@ -1938,7 +1932,7 @@ function renderPersonsTable(cid,persons,opts={}){
     <td class="td-sq" style="background:#784212;"></td>
     <td class="td-km" style="text-align:right;color:#B0BEC5">${Math.round(sumKm/n).toLocaleString('it')}</td>
     <td class="td-km" style="text-align:right;color:#B0BEC5">${sumTot>0?Math.round(sumKm/sumTot):'—'}</td>
-    <td colspan="3" style="background:var(--tbl-hdr);"></td>
+    <td style="background:var(--tbl-hdr);"></td>
   </tr>`:'';
 
   document.getElementById(cid).innerHTML=`<p class="il">${persons.length} persone</p>
@@ -1946,36 +1940,35 @@ function renderPersonsTable(cid,persons,opts={}){
   <thead>
     ${groupHeaderHtml}
     <tr>
-    <th class="freeze-col freeze-1" onclick="sT('${tableId}',0)">#</th>
-    <th class="freeze-col freeze-2" onclick="sT('${tableId}',1)">Nome</th>
-    <th class="th-ana" onclick="sT('${tableId}',2)">Prov.</th>
-    <th class="th-ana" onclick="sT('${tableId}',3)">Citta</th>
-    <th class="th-ana" onclick="sT('${tableId}',4)" title="Codice FIP">Cod.</th>
-    ${showCat?`<th onclick="sT('${tableId}',5)">Cat.</th>`:''}
-    <th class="th-att" onclick="sT('${tableId}',${4+co})" title="Totale gare">Tot.</th>
-    <th class="th-att" onclick="sT('${tableId}',${5+co})" title="Come arbitro">Arb.</th>
-    <th class="th-att" onclick="sT('${tableId}',${6+co})" title="Come UDC">UDC</th>
-    <th class="th-att" onclick="sT('${tableId}',${7+co})" title="Come osservatore">Oss.</th>
-    <th class="th-att" onclick="sT('${tableId}',${8+co})" title="Giorni">Gg.</th>
+    <th class="freeze-col freeze-1" onclick="sT('${tableId}',0)" style="cursor:pointer">#</th>
+    <th class="freeze-col freeze-2" onclick="sT('${tableId}',1)" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Nome</th>
+    <th class="th-ana" onclick="sT('${tableId}',2)" style="cursor:pointer">Prov.</th>
+    <th class="th-ana" onclick="sT('${tableId}',3)" style="cursor:pointer">Città</th>
+    <th class="th-ana" onclick="sT('${tableId}',4)" title="Codice FIP" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Cod.</th>
+    ${showCat?`<th onclick="sT('${tableId}',5)" style="cursor:pointer">Cat.</th>`:''}
+    <th class="th-att" onclick="sT('${tableId}',${4+co})" title="Gare fatte fino ad oggi" style="cursor:pointer">Tot.</th>
+    <th class="th-att" onclick="sT('${tableId}',${5+co})" title="Come arbitro" style="cursor:pointer">Arb.</th>
+    <th class="th-att" onclick="sT('${tableId}',${6+co})" title="Come UDC" style="cursor:pointer">UDC</th>
+    <th class="th-att" onclick="sT('${tableId}',${7+co})" title="Come osservatore" style="cursor:pointer">Oss.</th>
+    <th class="th-att" onclick="sT('${tableId}',${8+co})" title="Giorni attivi" style="cursor:pointer">Gg.</th>
     ${isArb?`
-    <th class="th-att" onclick="sT('${tableId}',${9+co})" title="4+ partite" style="color:#f5a0a0">4g</th>
-    <th class="th-att" onclick="sT('${tableId}',${10+co})" title="3 partite" style="color:#ffc77d">3g</th>
-    <th class="th-att" onclick="sT('${tableId}',${11+co})" title="2 partite" style="color:#ffe07a">2g</th>
-    <th class="th-att" onclick="sT('${tableId}',${12+co})" title="1 partita" style="color:#a0e0b0">1g</th>
-    <th class="th-att" onclick="sT('${tableId}',${13+co})" title="Media/giorno">Med/g</th>
+    <th class="th-att" onclick="sT('${tableId}',${9+co})" title="Giornate con 4+ gare" style="cursor:pointer;color:#f5a0a0">4g</th>
+    <th class="th-att" onclick="sT('${tableId}',${10+co})" title="Giornate con 3 gare" style="cursor:pointer;color:#ffc77d">3g</th>
+    <th class="th-att" onclick="sT('${tableId}',${11+co})" title="Giornate con 2 gare" style="cursor:pointer;color:#ffe07a">2g</th>
+    <th class="th-att" onclick="sT('${tableId}',${12+co})" title="Giornate con 1 gara" style="cursor:pointer;color:#a0e0b0">1g</th>
+    <th class="th-att" onclick="sT('${tableId}',${13+co})" title="Media gare/giorno" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Med/g</th>
     `:''}
-    <th class="th-fare" onclick="sT('${tableId}',${9+co+ae})" title="Gare future">Da fare</th>
-    <th class="th-fare" onclick="sT('${tableId}',${10+co+ae})" title="Totale previsto">Tot.prev.</th>
-    <th class="th-camp" onclick="sT('${tableId}',${11+co+ae})" title="Campi diversi">&#127967;</th>
-    <th class="th-camp" onclick="sT('${tableId}',${12+co+ae})" title="Colleghi">&#129309;</th>
-    <th class="th-camp" onclick="sT('${tableId}',${13+co+ae})" title="Campionati">Camp.</th>
-    <th class="th-sq" onclick="sT('${tableId}',${14+co+ae})" title="Gare in singolo">Sing.</th>
-    <th class="th-sq" onclick="sT('${tableId}',${15+co+ae})" title="Gare in coppia">Dopp.</th>
-    <th class="th-sq" onclick="sT('${tableId}',${16+co+ae})" title="Squadre">Sqd.</th>
-    <th class="th-km" onclick="sT('${tableId}',${17+co+ae},true)" title="Km stimati">&#128664; Km</th>
-    ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true)" title="Km medi/gara">Km/g</th>
-    <th onclick="sT('${tableId}',${19+co+ae})" title="Trend 30gg">Trend</th>
-    <th onclick="sT('${tableId}',${20+co+ae})" title="Mese top">Top mese</th>`:''}
+    <th class="th-fare" onclick="sT('${tableId}',${9+co+ae})" title="Gare future assegnate" style="cursor:pointer">Da fare</th>
+    <th class="th-fare" onclick="sT('${tableId}',${10+co+ae})" title="Totale previsto (fatte + future)" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Tot.prev.</th>
+    <th class="th-camp" onclick="sT('${tableId}',${11+co+ae})" title="Campi diversi" style="cursor:pointer">&#127967;</th>
+    <th class="th-camp" onclick="sT('${tableId}',${12+co+ae})" title="Colleghi" style="cursor:pointer">&#129309;</th>
+    <th class="th-camp" onclick="sT('${tableId}',${13+co+ae})" title="Campionati" style="cursor:pointer">Camp.</th>
+    <th class="th-sq" onclick="sT('${tableId}',${14+co+ae})" title="Gare in singolo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Sing.</th>
+    <th class="th-sq" onclick="sT('${tableId}',${15+co+ae})" title="Gare in coppia" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Dopp.</th>
+    <th class="th-sq" onclick="sT('${tableId}',${16+co+ae})" title="Squadre diverse" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Sqd.</th>
+    <th class="th-km" onclick="sT('${tableId}',${17+co+ae},true)" title="Km stimati" style="cursor:pointer">&#128664; Km</th>
+    ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true)" title="Km medi/gara" style="cursor:pointer">Km/g</th>
+    <th onclick="sT('${tableId}',${19+co+ae})" title="Mese con più gare" style="cursor:pointer">Top mese</th>`:''}
   </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>`;
 }
 function toggleSection(wrId,togId){
