@@ -1824,18 +1824,23 @@ function renderPersonsTable(cid,persons,opts={}){
     } else _lastDay[p.nome]=999;
   });
 
-  // Intestazioni gruppo (solo per arbitri)
-  // Conteggio esatto colonne: 2(vuoto) + 3(ana) + (5+ae)(att) + 2(fare) + 3(camp) + 3(sq) + 2(km) + 1(top mese)
-  // ae=5 per arbitri → att=10, totale=26
+  // Intestazioni gruppo: usa colspan esatti basati sulle colonne reali
+  // Colonne reali per isArb=true, showCat=false:
+  // 2(vuoto) + 3(ana) + 10(att: Tot,Arb,UDC,Oss,Gg,4g,3g,2g,1g,Med/g) + 2(fare) + 3(camp) + 3(sq) + 2(km) + 1(top)
+  const _attCols=isArb?10:5; // 5 base + 5 extra (4g,3g,2g,1g,Med/g)
+  const _sqCols=3; // Sing, Dopp, Sqd
+  const _campCols=3; // 🏠 🤝 Camp
+  const _kmCols=isArb?2:1;
+  const _topCols=isArb?1:0;
   const groupHeaderHtml=isArb?`<tr>
     <th colspan="2" style="background:var(--tbl-hdr);border:none;padding:0"></th>
     <th colspan="3" class="th-ana" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">ANAGRAFICA</th>
-    <th colspan="${5+ae}" class="th-att" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">ATTIVITÀ SVOLTA</th>
+    <th colspan="${_attCols}" class="th-att" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">ATTIVITÀ SVOLTA</th>
     <th colspan="2" class="th-fare" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">DA COMPLETARE</th>
-    <th colspan="3" class="th-camp" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">CAMPIONATI</th>
-    <th colspan="3" class="th-sq" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">SQUADRE</th>
-    <th colspan="2" class="th-km" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">PERCORRENZA</th>
-    <th style="background:var(--tbl-hdr);border:none;padding:0"></th>
+    <th colspan="${_campCols}" class="th-camp" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">CAMPIONATI</th>
+    <th colspan="${_sqCols}" class="th-sq" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">SQUADRE</th>
+    <th colspan="${_kmCols}" class="th-km" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">PERCORRENZA</th>
+    <th style="background:var(--tbl-hdr);border:none;padding:0" colspan="${_topCols}"></th>
   </tr>`:'';
 
   // Accumulatori per riga media
@@ -1959,11 +1964,10 @@ function renderPersonsTable(cid,persons,opts={}){
     <td class="td-att" style="text-align:center;color:#90CAF9">${Math.round(sumUdc/n)}</td>
     <td class="td-att" style="text-align:center;color:#90CAF9">—</td>
     <td class="td-att" style="text-align:center;color:#90CAF9">${Math.round(sumGg/n)}</td>
-    <td class="td-att" colspan="5" style="background:#1a5276;"></td>
+    <td colspan="5" class="td-att" style="background:#1a5276;"></td>
     <td class="td-fare" style="text-align:center;color:#A5D6A7">${Math.round(sumFare/n)}</td>
     <td class="td-fare" style="background:#1e6b3c;"></td>
-    <td class="td-camp" colspan="2" style="background:#6c3483;"></td>
-    <td class="td-camp" style="text-align:center;color:#CE93D8">${Math.round(sumCamp/n)}</td>
+    <td colspan="3" class="td-camp" style="background:#6c3483;"></td>
     <td class="td-sq" style="text-align:center;color:#FFCC80">${Math.round(sumSing/n)}</td>
     <td class="td-sq" style="text-align:center;color:#A5D6A7">${Math.round(sumDopp/n)}</td>
     <td class="td-sq" style="background:#784212;"></td>
