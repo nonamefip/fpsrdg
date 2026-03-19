@@ -1802,9 +1802,9 @@ function renderPersonsTable(cid,persons,opts={}){
     <th colspan="3" class="th-ana" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Anagrafica</th>
     <th colspan="${5+ae}" class="th-att" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Attività svolta</th>
     <th colspan="2" class="th-fare" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Da completare</th>
-    <th colspan="4" class="th-camp" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Campionati</th>
-    <th colspan="2" class="th-sq" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Squadre</th>
-    <th colspan="2" class="th-km" style="text-align:center;font-size:.6rem;padding:3px 6px;">Percorrenza</th>
+    <th colspan="3" class="th-camp" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Campionati</th>
+    <th colspan="3" class="th-sq" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Squadre</th>
+    <th colspan="2" class="th-km" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Percorrenza</th>
     <th style="background:var(--tbl-hdr);border:none;" colspan="1"></th>
   </tr>`:'';
 
@@ -1823,11 +1823,13 @@ function renderPersonsTable(cid,persons,opts={}){
       `<span style="color:${clr};font-weight:700;cursor:pointer" data-n="${p.nome}" onclick="openPersona(this.dataset.n);setTimeout(()=>{document.querySelectorAll('#mp-body .mt')[${tabIdx}]?.click();},280)">${val}</span>`;
     const km=calcKmArb(p);
     let d4=0,d3=0,d2=0,d1=0,mediaG='—';
-    // Gare fatte fino ad oggi (filtrate per data <= today)
-    const gareAdOggi=(p.gare_arbitro||[]).filter(g=>(g.d||g['Data']||'')<=today);
-    const nGareOggi=gareAdOggi.length;
-    const nGareArbOggi=(p.gare_arbitro||[]).filter(g=>(g.d||g['Data']||'')<=today&&(g.r||g['Ruolo']||g.ruolo||'Arbitro').includes('Arbitro')).length||nGareOggi;
-    const nGareUdcOggi=(p.n_gare_udc||0);
+    // Gare fatte fino ad oggi per ruolo
+    const gareArbOggi=(p.gare_arbitro||[]).filter(g=>(g.d||g['Data']||'')<=today);
+    const nGareArbOggi=gareArbOggi.length;
+    const nGareUdcOggi=p.n_gare_udc||0;
+    const nGareOssOggi=p.n_gare_osservatore||0;
+    const nGareOggi=nGareArbOggi+nGareUdcOggi+nGareOssOggi;
+    const nGareArbOggiDisp=nGareArbOggi; // Arb. = solo ruolo arbitro fino ad oggi
     if(isArb){
       Object.values(p.giorni||{}).forEach(cnt=>{if(cnt>=4)d4++;else if(cnt===3)d3++;else if(cnt===2)d2++;else if(cnt===1)d1++;});
       if(nG>0) mediaG=(nGareOggi/nG).toFixed(1);
@@ -1836,9 +1838,9 @@ function renderPersonsTable(cid,persons,opts={}){
     const fip=CODICI_FIP[p.nome]||'';
 
     // Accumula per media
-    sumTot+=nGareOggi; sumArb+=nGareArbOggi; sumUdc+=nGareUdcOggi;
+    sumTot+=nGareOggi; sumArb+=nGareArbOggiDisp; sumUdc+=nGareUdcOggi;
     sumGg+=nG; sumCamp+=nCamp; sumSing+=p.n_singolo||0;
-    sumDopp+=nGareArbOggi-(p.n_singolo||0); sumKm+=km; sumFare+=nFut;
+    sumDopp+=nGareArbOggiDisp-(p.n_singolo||0); sumKm+=km; sumFare+=nFut;
 
     // Badge attività
     const ld=_lastDay[p.nome]||999;
@@ -1881,9 +1883,9 @@ function renderPersonsTable(cid,persons,opts={}){
       <td ${tdAna} style="font-family:monospace;font-size:.68rem">${fip?`<span style="background:#f0f3fa;border:0.5px solid #d0d7e8;border-radius:4px;padding:1px 6px;color:#34495e;letter-spacing:.3px">${fip}</span>`:''}</td>
       ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
       <td ${tdAtt} data-val="${nGareOggi}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}"
-        title="Gare fatte fino ad oggi"
+        title="Gare fatte fino ad oggi (Arb+UDC+Oss)"
         data-n="${p.nome}" onclick="event.stopPropagation();openPersona(this.dataset.n)">${nGareOggi}</td>
-      <td ${tdAtt} data-val="${nGareArbOggi}" style="text-align:center">${nGareArbOggi?mkLink(nGareArbOggi,1,pvColor):''}</td>
+      <td ${tdAtt} data-val="${nGareArbOggiDisp}" style="text-align:center">${nGareArbOggiDisp?mkLink(nGareArbOggiDisp,1,pvColor):''}</td>
       <td ${tdAtt} data-val="${nGareUdcOggi}" style="text-align:center">${nGareUdcOggi?mkLink(nGareUdcOggi,1,pvColor):''}</td>
       <td ${tdAtt} data-val="${p.n_gare_osservatore||0}" style="text-align:center">${p.n_gare_osservatore?mkLink(p.n_gare_osservatore,1,pvColor):''}</td>
       <td ${tdAtt} data-val="${nG}" style="text-align:center;color:var(--mu)">${nG}</td>
@@ -1895,7 +1897,7 @@ function renderPersonsTable(cid,persons,opts={}){
       <td ${tdAtt} data-val="${parseFloat(mediaG)||0}" style="text-align:center;font-weight:700;color:var(--bl)">${mediaG}</td>
       `:''}
       <td ${tdFare} data-val="${nFut}" style="text-align:center;font-weight:${nFut>0?700:400};color:${fareClr}">${nFut||'—'}</td>
-      <td ${tdFare} data-val="${p.n_gare+(nFut)}" style="text-align:center;font-size:.75rem;color:var(--mu)">${p.n_gare+(nFut)}</td>
+      <td ${tdFare} data-val="${nGareOggi+nFut}" style="text-align:center;font-size:.75rem;color:var(--mu)" title="Fatte oggi (${nGareOggi}) + future (${nFut})">${nGareOggi+nFut}</td>
       <td ${tdCamp} data-val="${nCampi}" style="text-align:center">${nCampi?mkLink(nCampi,3,pvColor):0}</td>
       <td ${tdCamp} data-val="${nColl}" style="text-align:center">${nColl?mkLink(nColl,2,pvColor):0}</td>
       <td ${tdCamp} data-val="${nCamp}" style="text-align:center;font-weight:700;color:${pvColor}">${nCamp}</td>
