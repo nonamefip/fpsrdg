@@ -1672,28 +1672,56 @@ const _ss={};
 function sT(tid,ci,defaultAsc){
   const tbl=document.getElementById(tid);
   const tbody=tbl?.querySelector('tbody');if(!tbody)return;
-  const key=tid+'-'+ci;
-  const firstClick=!(key in _ss);
-  const asc=firstClick?(defaultAsc||false):!_ss[key];
-  _ss[key]=asc;
-  tbl.querySelectorAll('th').forEach((th,i)=>{th.classList.remove('sa','sd');if(i===ci)th.classList.add(asc?'sa':'sd');});
+  // Multi-colonna: Shift+click aggiunge colonna secondaria
+  const ev=window._sTev||null;
+  const isShift=ev&&ev.shiftKey;
+  window._sTev=null;
+  if(!window._sTcols)window._sTcols={};
+  if(!window._sTcols[tid])window._sTcols[tid]=[];
+  const cols=window._sTcols[tid];
+  const existing=cols.findIndex(c=>c.ci===ci);
+  if(isShift){
+    if(existing>=0){cols[existing].asc=!cols[existing].asc;}
+    else{cols.push({ci,asc:defaultAsc!==false});}
+  } else {
+    if(cols.length===1&&cols[0].ci===ci){cols[0].asc=!cols[0].asc;}
+    else{window._sTcols[tid]=[{ci,asc:defaultAsc!==false}];}
+  }
+  const activeCols=window._sTcols[tid];
+  // Aggiorna feedback visivo intestazioni
+  tbl.querySelectorAll('th').forEach((th,i)=>{
+    th.classList.remove('sa','sd');
+    const found=activeCols.find(c=>c.ci===i);
+    if(found)th.classList.add(found.asc?'sa':'sd');
+  });
+  // Ordina le righe
   const rows=[...tbody.querySelectorAll('tr:not(.hidden)')];
   rows.sort((a,b)=>{
-    const tda=a.querySelectorAll('td')[ci], tdb=b.querySelectorAll('td')[ci];
-    // Fix #3: usa sempre data-val se presente (garantisce sort numerico su Km e altri)
-    const va=tda?.getAttribute('data-val')??tda?.textContent.trim()??'';
-    const vb=tdb?.getAttribute('data-val')??tdb?.textContent.trim()??'';
-    const na=parseFloat(va),nb=parseFloat(vb);
-    if(!isNaN(na)&&!isNaN(nb))return asc?na-nb:nb-na;
-    return asc?va.localeCompare(vb,'it'):vb.localeCompare(va,'it');
+    for(const col of activeCols){
+      const tda=a.querySelectorAll('td')[col.ci];
+      const tdb=b.querySelectorAll('td')[col.ci];
+      const va=tda?.getAttribute('data-val')??tda?.textContent.trim()??'';
+      const vb=tdb?.getAttribute('data-val')??tdb?.textContent.trim()??'';
+      const na=parseFloat(va),nb=parseFloat(vb);
+      let cmp=0;
+      if(!isNaN(na)&&!isNaN(nb))cmp=na-nb;
+      else cmp=va.localeCompare(vb,'it');
+      if(cmp!==0)return col.asc?cmp:-cmp;
+    }
+    return 0;
   });
   rows.forEach(r=>tbody.appendChild(r));
-  // Fix #4: rinumera colonna # (indice 0) dopo ogni sort
+  // Rinumera colonna # dopo sort
   tbody.querySelectorAll('tr:not(.hidden)').forEach((r,i)=>{
     const td0=r.querySelectorAll('td')[0];
     if(td0&&td0.hasAttribute('data-val')){td0.textContent=i+1;td0.setAttribute('data-val',i+1);}
   });
 }
+// Intercetta evento per Shift detection
+document.addEventListener('click',function(e){
+  const th=e.target.closest('th[onclick]');
+  if(th)window._sTev=e;
+},true);
 
 // COLOR CUSTOMIZER
 function toggleCust(id){document.getElementById(id)?.classList.toggle('open');}
@@ -1797,15 +1825,17 @@ function renderPersonsTable(cid,persons,opts={}){
   });
 
   // Intestazioni gruppo (solo per arbitri)
+  // Conteggio esatto colonne: 2(vuoto) + 3(ana) + (5+ae)(att) + 2(fare) + 3(camp) + 3(sq) + 2(km) + 1(top mese)
+  // ae=5 per arbitri → att=10, totale=26
   const groupHeaderHtml=isArb?`<tr>
-    <th colspan="2" style="background:var(--tbl-hdr);border:none;"></th>
-    <th colspan="3" class="th-ana" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Anagrafica</th>
-    <th colspan="${5+ae}" class="th-att" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Attività svolta</th>
-    <th colspan="2" class="th-fare" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Da completare</th>
-    <th colspan="3" class="th-camp" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Campionati</th>
-    <th colspan="3" class="th-sq" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Squadre</th>
-    <th colspan="2" class="th-km" style="text-align:center;font-size:.6rem;padding:3px 6px;border-right:2px solid rgba(255,255,255,.15)">Percorrenza</th>
-    <th style="background:var(--tbl-hdr);border:none;" colspan="1"></th>
+    <th colspan="2" style="background:var(--tbl-hdr);border:none;padding:0"></th>
+    <th colspan="3" class="th-ana" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">ANAGRAFICA</th>
+    <th colspan="${5+ae}" class="th-att" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">ATTIVITÀ SVOLTA</th>
+    <th colspan="2" class="th-fare" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">DA COMPLETARE</th>
+    <th colspan="3" class="th-camp" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">CAMPIONATI</th>
+    <th colspan="3" class="th-sq" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">SQUADRE</th>
+    <th colspan="2" class="th-km" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">PERCORRENZA</th>
+    <th style="background:var(--tbl-hdr);border:none;padding:0"></th>
   </tr>`:'';
 
   // Accumulatori per riga media
@@ -1880,7 +1910,7 @@ function renderPersonsTable(cid,persons,opts={}){
       </td>
       <td ${tdAna}>${pvB(p.provincia)}</td>
       <td ${tdAna} style="font-size:.72rem;color:var(--mu)">${escH(p.citta||'')}</td>
-      <td ${tdAna} style="font-family:monospace;font-size:.68rem">${fip?`<span style="background:#f0f3fa;border:0.5px solid #d0d7e8;border-radius:4px;padding:1px 6px;color:#34495e;letter-spacing:.3px">${fip}</span>`:''}</td>
+      <td ${tdAna} style="font-family:monospace;font-size:.68rem">${fip?`<span style="background:#eef1f8;border:1px solid #c5ccde;border-radius:5px;padding:2px 7px;color:#2c3e6b;letter-spacing:.5px;font-weight:600;font-size:.67rem">${fip}</span>`:''}</td>
       ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
       <td ${tdAtt} data-val="${nGareOggi}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}"
         title="Gare fatte fino ad oggi (Arb+UDC+Oss)"
@@ -1947,36 +1977,37 @@ function renderPersonsTable(cid,persons,opts={}){
   <thead>
     ${groupHeaderHtml}
     <tr>
-    <th class="freeze-col freeze-1" onclick="sT('${tableId}',0)" style="cursor:pointer">#</th>
-    <th class="freeze-col freeze-2" onclick="sT('${tableId}',1)" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Nome</th>
-    <th class="th-ana" onclick="sT('${tableId}',2)" style="cursor:pointer">Prov.</th>
-    <th class="th-ana" onclick="sT('${tableId}',3)" style="cursor:pointer">Città</th>
-    <th class="th-ana" onclick="sT('${tableId}',4)" title="Codice FIP" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Cod.</th>
-    ${showCat?`<th onclick="sT('${tableId}',5)" style="cursor:pointer">Cat.</th>`:''}
-    <th class="th-att" onclick="sT('${tableId}',${4+co})" title="Gare fatte fino ad oggi" style="cursor:pointer">Tot.</th>
-    <th class="th-att" onclick="sT('${tableId}',${5+co})" title="Come arbitro" style="cursor:pointer">Arb.</th>
-    <th class="th-att" onclick="sT('${tableId}',${6+co})" title="Come UDC" style="cursor:pointer">UDC</th>
-    <th class="th-att" onclick="sT('${tableId}',${7+co})" title="Come osservatore" style="cursor:pointer">Oss.</th>
-    <th class="th-att" onclick="sT('${tableId}',${8+co})" title="Giorni attivi" style="cursor:pointer">Gg.</th>
+    <th class="freeze-col freeze-1" onclick="sT('${tableId}',0)" style="cursor:pointer" title="Ordina per posizione">#</th>
+    <th class="freeze-col freeze-2" onclick="sT('${tableId}',1)" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)" title="Ordina per nome · Shift+click per ordinamento multiplo">Nome</th>
+    <th class="th-ana" onclick="sT('${tableId}',2)" style="cursor:pointer" title="Ordina per provincia · Shift+click per multiplo">Prov.</th>
+    <th class="th-ana" onclick="sT('${tableId}',3)" style="cursor:pointer" title="Ordina per città · Shift+click per multiplo">Città</th>
+    <th class="th-ana" onclick="sT('${tableId}',4)" title="Codice FIP · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Cod.</th>
+    ${showCat?`<th onclick="sT('${tableId}',5)" style="cursor:pointer" title="Categoria">Cat.</th>`:''}
+    <th class="th-att" onclick="sT('${tableId}',${4+co})" title="Gare fatte fino ad oggi · Shift+click per multiplo" style="cursor:pointer">Tot.</th>
+    <th class="th-att" onclick="sT('${tableId}',${5+co})" title="Come arbitro · Shift+click per multiplo" style="cursor:pointer">Arb.</th>
+    <th class="th-att" onclick="sT('${tableId}',${6+co})" title="Come UDC · Shift+click per multiplo" style="cursor:pointer">UDC</th>
+    <th class="th-att" onclick="sT('${tableId}',${7+co})" title="Come osservatore · Shift+click per multiplo" style="cursor:pointer">Oss.</th>
+    <th class="th-att" onclick="sT('${tableId}',${8+co})" title="Giorni attivi · Shift+click per multiplo" style="cursor:pointer">Gg.</th>
     ${isArb?`
     <th class="th-att" onclick="sT('${tableId}',${9+co})" title="Giornate con 4+ gare" style="cursor:pointer;color:#f5a0a0">4g</th>
     <th class="th-att" onclick="sT('${tableId}',${10+co})" title="Giornate con 3 gare" style="cursor:pointer;color:#ffc77d">3g</th>
     <th class="th-att" onclick="sT('${tableId}',${11+co})" title="Giornate con 2 gare" style="cursor:pointer;color:#ffe07a">2g</th>
     <th class="th-att" onclick="sT('${tableId}',${12+co})" title="Giornate con 1 gara" style="cursor:pointer;color:#a0e0b0">1g</th>
-    <th class="th-att" onclick="sT('${tableId}',${13+co})" title="Media gare/giorno" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Med/g</th>
+    <th class="th-att" onclick="sT('${tableId}',${13+co})" title="Media gare/giorno · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Med/g</th>
     `:''}
-    <th class="th-fare" onclick="sT('${tableId}',${9+co+ae})" title="Gare future assegnate" style="cursor:pointer">Da fare</th>
-    <th class="th-fare" onclick="sT('${tableId}',${10+co+ae})" title="Totale previsto (fatte + future)" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Tot.prev.</th>
-    <th class="th-camp" onclick="sT('${tableId}',${11+co+ae})" title="Campi diversi" style="cursor:pointer">&#127967;</th>
-    <th class="th-camp" onclick="sT('${tableId}',${12+co+ae})" title="Colleghi" style="cursor:pointer">&#129309;</th>
-    <th class="th-camp" onclick="sT('${tableId}',${13+co+ae})" title="Campionati" style="cursor:pointer">Camp.</th>
-    <th class="th-sq" onclick="sT('${tableId}',${14+co+ae})" title="Gare in singolo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Sing.</th>
-    <th class="th-sq" onclick="sT('${tableId}',${15+co+ae})" title="Gare in coppia" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Dopp.</th>
-    <th class="th-sq" onclick="sT('${tableId}',${16+co+ae})" title="Squadre diverse" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Sqd.</th>
-    <th class="th-km" onclick="sT('${tableId}',${17+co+ae},true)" title="Km stimati" style="cursor:pointer">&#128664; Km</th>
-    ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true)" title="Km medi/gara" style="cursor:pointer">Km/g</th>
-    <th onclick="sT('${tableId}',${19+co+ae})" title="Mese con più gare" style="cursor:pointer">Top mese</th>`:''}
-  </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>`;
+    <th class="th-fare" onclick="sT('${tableId}',${9+co+ae})" title="Gare future assegnate · Shift+click per multiplo" style="cursor:pointer">Da fare</th>
+    <th class="th-fare" onclick="sT('${tableId}',${10+co+ae})" title="Totale previsto (fatte + future) · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Tot.prev.</th>
+    <th class="th-camp" onclick="sT('${tableId}',${11+co+ae})" title="Campi diversi · Shift+click per multiplo" style="cursor:pointer">&#127967;</th>
+    <th class="th-camp" onclick="sT('${tableId}',${12+co+ae})" title="Colleghi · Shift+click per multiplo" style="cursor:pointer">&#129309;</th>
+    <th class="th-camp" onclick="sT('${tableId}',${13+co+ae})" title="Campionati · Shift+click per multiplo" style="cursor:pointer">Camp.</th>
+    <th class="th-sq" onclick="sT('${tableId}',${14+co+ae})" title="Gare in singolo · Shift+click per multiplo" style="cursor:pointer">Sing.</th>
+    <th class="th-sq" onclick="sT('${tableId}',${15+co+ae})" title="Gare in coppia · Shift+click per multiplo" style="cursor:pointer">Dopp.</th>
+    <th class="th-sq" onclick="sT('${tableId}',${16+co+ae})" title="Squadre diverse · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Sqd.</th>
+    <th class="th-km" onclick="sT('${tableId}',${17+co+ae},true)" title="Km stimati · Shift+click per multiplo" style="cursor:pointer">&#128664; Km</th>
+    ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true)" title="Km medi/gara · Shift+click per multiplo" style="cursor:pointer">Km/g</th>
+    <th onclick="sT('${tableId}',${19+co+ae})" title="Mese con più gare · Shift+click per multiplo" style="cursor:pointer">Top mese</th>`:''}
+  </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>
+  <div style="font-size:.62rem;color:var(--mu);padding:4px 0;margin-top:2px">💡 <b>Shift+click</b> su un'intestazione per aggiungere un secondo livello di ordinamento</div>`;
 }
 function toggleSection(wrId,togId){
   const wr=document.getElementById(wrId),tog=document.getElementById(togId);
