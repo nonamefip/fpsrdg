@@ -1823,17 +1823,22 @@ function renderPersonsTable(cid,persons,opts={}){
       `<span style="color:${clr};font-weight:700;cursor:pointer" data-n="${p.nome}" onclick="openPersona(this.dataset.n);setTimeout(()=>{document.querySelectorAll('#mp-body .mt')[${tabIdx}]?.click();},280)">${val}</span>`;
     const km=calcKmArb(p);
     let d4=0,d3=0,d2=0,d1=0,mediaG='—';
+    // Gare fatte fino ad oggi (filtrate per data <= today)
+    const gareAdOggi=(p.gare_arbitro||[]).filter(g=>(g.d||g['Data']||'')<=today);
+    const nGareOggi=gareAdOggi.length;
+    const nGareArbOggi=(p.gare_arbitro||[]).filter(g=>(g.d||g['Data']||'')<=today&&(g.r||g['Ruolo']||g.ruolo||'Arbitro').includes('Arbitro')).length||nGareOggi;
+    const nGareUdcOggi=(p.n_gare_udc||0);
     if(isArb){
       Object.values(p.giorni||{}).forEach(cnt=>{if(cnt>=4)d4++;else if(cnt===3)d3++;else if(cnt===2)d2++;else if(cnt===1)d1++;});
-      if(nG>0) mediaG=((p.n_gare_arbitro||p.n_gare||0)/nG).toFixed(1);
+      if(nG>0) mediaG=(nGareOggi/nG).toFixed(1);
     }
-    const kmGara=isArb&&km>0&&(p.n_gare_arbitro||p.n_gare||0)>0?Math.round(km/(p.n_gare_arbitro||p.n_gare||1)):0;
+    const kmGara=isArb&&km>0&&nGareOggi>0?Math.round(km/nGareOggi):0;
     const fip=CODICI_FIP[p.nome]||'';
 
     // Accumula per media
-    sumTot+=p.n_gare||0; sumArb+=p.n_gare_arbitro||0; sumUdc+=p.n_gare_udc||0;
+    sumTot+=nGareOggi; sumArb+=nGareArbOggi; sumUdc+=nGareUdcOggi;
     sumGg+=nG; sumCamp+=nCamp; sumSing+=p.n_singolo||0;
-    sumDopp+=(p.n_gare_arbitro||0)-(p.n_singolo||0); sumKm+=km; sumFare+=nFut;
+    sumDopp+=nGareArbOggi-(p.n_singolo||0); sumKm+=km; sumFare+=nFut;
 
     // Badge attività
     const ld=_lastDay[p.nome]||999;
@@ -1873,13 +1878,13 @@ function renderPersonsTable(cid,persons,opts={}){
       </td>
       <td ${tdAna}>${pvB(p.provincia)}</td>
       <td ${tdAna} style="font-size:.72rem;color:var(--mu)">${escH(p.citta||'')}</td>
-      <td ${tdAna} style="font-family:monospace;font-size:.7rem;color:#34495e">${fip}</td>
+      <td ${tdAna} style="font-family:monospace;font-size:.68rem">${fip?`<span style="background:#f0f3fa;border:0.5px solid #d0d7e8;border-radius:4px;padding:1px 6px;color:#34495e;letter-spacing:.3px">${fip}</span>`:''}</td>
       ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
-      <td ${tdAtt} data-val="${p.n_gare}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}"
+      <td ${tdAtt} data-val="${nGareOggi}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}"
         title="Gare fatte fino ad oggi"
-        data-n="${p.nome}" onclick="event.stopPropagation();openPersona(this.dataset.n)">${p.n_gare}</td>
-      <td ${tdAtt} data-val="${p.n_gare_arbitro||0}" style="text-align:center">${p.n_gare_arbitro?mkLink(p.n_gare_arbitro,1,pvColor):''}</td>
-      <td ${tdAtt} data-val="${p.n_gare_udc||0}" style="text-align:center">${p.n_gare_udc?mkLink(p.n_gare_udc,1,pvColor):''}</td>
+        data-n="${p.nome}" onclick="event.stopPropagation();openPersona(this.dataset.n)">${nGareOggi}</td>
+      <td ${tdAtt} data-val="${nGareArbOggi}" style="text-align:center">${nGareArbOggi?mkLink(nGareArbOggi,1,pvColor):''}</td>
+      <td ${tdAtt} data-val="${nGareUdcOggi}" style="text-align:center">${nGareUdcOggi?mkLink(nGareUdcOggi,1,pvColor):''}</td>
       <td ${tdAtt} data-val="${p.n_gare_osservatore||0}" style="text-align:center">${p.n_gare_osservatore?mkLink(p.n_gare_osservatore,1,pvColor):''}</td>
       <td ${tdAtt} data-val="${nG}" style="text-align:center;color:var(--mu)">${nG}</td>
       ${isArb?`
@@ -2772,6 +2777,7 @@ function openGiornoModal(ds){
           <td style="font-size:.7rem;text-align:center;color:var(--mu);white-space:nowrap">${ora||'–'}</td>
           <td style="font-size:.65rem;text-align:center;color:var(--mu2);font-family:monospace">${escH(g['Numero Gara']||'')}</td>
           <td style="font-size:.7rem"><span style="background:${campColor(campName)};color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(campName)}')">${escH(campName)}</span></td>
+          <td style="text-align:center">${pvCampo?`<span style="background:${pvClr};color:#fff;border-radius:3px;padding:0 5px;font-size:.65rem;font-weight:700">${pvCampo}</span>`:''}</td>
           <td style="font-size:.68rem;color:var(--mu2)">${escH(g['Girone']||'')}</td>
           <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa']||'')}');event.stopPropagation()" style="${casaW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Casa']||'')}</span></td>
           <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}');event.stopPropagation()" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite']||'')}</span></td>
@@ -2788,14 +2794,15 @@ function openGiornoModal(ds){
           <th onclick="sT('tbl-giorno',0)" style="cursor:pointer">Ora ▾</th>
           <th onclick="sT('tbl-giorno',1)" style="cursor:pointer">N°</th>
           <th onclick="sT('tbl-giorno',2)" style="cursor:pointer">Campionato</th>
-          <th onclick="sT('tbl-giorno',3)" style="cursor:pointer">Girone</th>
-          <th onclick="sT('tbl-giorno',4)" style="cursor:pointer">Casa</th>
-          <th onclick="sT('tbl-giorno',5)" style="cursor:pointer">Ospite</th>
-          <th onclick="sT('tbl-giorno',6)" style="cursor:pointer">Risultato</th>
-          <th onclick="sT('tbl-giorno',7)" style="cursor:pointer">Arb.</th>
-          <th onclick="sT('tbl-giorno',8)" style="cursor:pointer">Arbitro 1</th>
-          <th onclick="sT('tbl-giorno',9)" style="cursor:pointer">Arbitro 2</th>
-          <th onclick="sT('tbl-giorno',10)" style="cursor:pointer">Campo</th>
+          <th onclick="sT('tbl-giorno',3)" style="cursor:pointer">Prov.</th>
+          <th onclick="sT('tbl-giorno',4)" style="cursor:pointer">Girone</th>
+          <th onclick="sT('tbl-giorno',5)" style="cursor:pointer">Casa</th>
+          <th onclick="sT('tbl-giorno',6)" style="cursor:pointer">Ospite</th>
+          <th onclick="sT('tbl-giorno',7)" style="cursor:pointer">Risultato</th>
+          <th onclick="sT('tbl-giorno',8)" style="cursor:pointer">Arb.</th>
+          <th onclick="sT('tbl-giorno',9)" style="cursor:pointer">Arbitro 1</th>
+          <th onclick="sT('tbl-giorno',10)" style="cursor:pointer">Arbitro 2</th>
+          <th onclick="sT('tbl-giorno',11)" style="cursor:pointer">Campo</th>
         </tr></thead>
         <tbody id="tbl-giorno-body">${rows}</tbody>
       </table></div>`;
@@ -3025,44 +3032,57 @@ function renderSq(){
   sqs.sort((a,b)=>sort==='vinte'?b.vinte-a.vinte:sort==='nome'?a.nome.localeCompare(b.nome,'it'):sort==='prov'?(a.prov||'').localeCompare(b.prov||''):b.n_gare-a.n_gare);
 
   let h=`<p class="il">${sqs.length} squadre &nbsp;<button class="btn" style="font-size:.65rem;padding:2px 8px" onclick="sqToggleAll(true)">▼ Espandi tutto</button> <button class="btn" style="font-size:.65rem;padding:2px 8px" onclick="sqToggleAll(false)">▲ Contrai tutto</button></p><div style="overflow-x:auto"><table class="rtbl" id="tbl-sq"><thead><tr>`;
-  h+=`<th onclick="sT('tbl-sq',0)">#</th>`;
-  h+=`<th onclick="sT('tbl-sq',1)">Squadra / Campionati</th>`;
-  h+=`<th onclick="sT('tbl-sq',2)">Prov.</th>`;
-  h+=`<th onclick="sT('tbl-sq',3)">Gruppo</th>`;
-  h+=`<th onclick="sT('tbl-sq',4)" style="color:#1565c0;font-weight:800" title="Punti classifica totali">Pt</th>`;
-  h+=`<th onclick="sT('tbl-sq',5)">Gare</th>`;
-  h+=`<th onclick="sT('tbl-sq',6)" style="color:var(--green)">Vinte</th>`;
-  h+=`<th onclick="sT('tbl-sq',7)" style="color:var(--red)">Perse</th>`;
-  h+=`<th onclick="sT('tbl-sq',8)">V-Casa</th>`;
-  h+=`<th onclick="sT('tbl-sq',9)">P-Casa</th>`;
-  h+=`<th onclick="sT('tbl-sq',10)">V-Osp</th>`;
-  h+=`<th onclick="sT('tbl-sq',11)">P-Osp</th>`;
-  h+=`<th onclick="sT('tbl-sq',12)">Win%</th>`;
+  h+=`<th onclick="sT('tbl-sq',0)" style="cursor:pointer">#</th>`;
+  h+=`<th onclick="sT('tbl-sq',1)" style="cursor:pointer">Squadra / Campionati</th>`;
+  h+=`<th onclick="sT('tbl-sq',2)" style="cursor:pointer">Prov.</th>`;
+  h+=`<th onclick="sT('tbl-sq',3)" style="cursor:pointer;color:#1565c0;font-weight:800" title="Punti classifica totali">Pt</th>`;
+  h+=`<th onclick="sT('tbl-sq',4)" style="cursor:pointer">Gare</th>`;
+  h+=`<th onclick="sT('tbl-sq',5)" style="cursor:pointer;color:var(--green)">Vinte</th>`;
+  h+=`<th onclick="sT('tbl-sq',6)" style="cursor:pointer;color:var(--red)">Perse</th>`;
+  h+=`<th onclick="sT('tbl-sq',7)" style="cursor:pointer">V-Casa</th>`;
+  h+=`<th onclick="sT('tbl-sq',8)" style="cursor:pointer">P-Casa</th>`;
+  h+=`<th onclick="sT('tbl-sq',9)" style="cursor:pointer">V-Osp</th>`;
+  h+=`<th onclick="sT('tbl-sq',10)" style="cursor:pointer">P-Osp</th>`;
+  h+=`<th onclick="sT('tbl-sq',11)" style="cursor:pointer">Win%</th>`;
   h+=`</tr></thead><tbody>`;
 
+  // Funzione per trovare il nome della squadra con campionato di livello più alto nel gruppo
+  function getNomeGruppo(sqNome){
+    const aliases=AG[sqNome]||[sqNome];
+    let bestNome=sqNome,bestLvl=9999;
+    aliases.forEach(function(alias){
+      const sq=SQ[alias];if(!sq)return;
+      Object.keys(sq.campionati||{}).forEach(function(cn){
+        const lv=((CAMP_META[cn]||{}).sort_key||[99])[0];
+        if(lv<bestLvl){bestLvl=lv;bestNome=alias;}
+      });
+    });
+    return bestNome;
+  }
+
   sqs.forEach(function(s,i){
-    // Calcola punti classifica (2=vittoria, 1=pareggio, 0=sconfitta)
     var ptGlob=(s.vinte||0)*2+(s.pareggi||0);
     var con=(s.gare||[]).filter(g=>g['Risultato']).length;
     var wp=con?Math.round(s.vinte/con*100):0;
     var canonical=s.gruppo||s.nome;
-    var hasGrp=canonical!==s.nome&&(AG[canonical]?.length||0)>1;
-    var gr=hasGrp?`<span class="rn rn-sq" onclick="openSquadra('${esc(canonical)}')" style="font-size:.7rem">${escH(canonical)}</span>`:'–';
-    var rowBg=wp>50?'background:#f0fff4':s.perse>s.vinte?'background:#fff5f5':'background:#fff';
-    var rowBorder=wp>50?'border-left:3px solid var(--green)':s.perse>s.vinte?'border-left:3px solid var(--red)':'border-left:3px solid #eee';
+    // Nome principale = squadra con campionato più importante del gruppo
+    var nomeGruppo=getNomeGruppo(canonical);
+    // Mostra questa riga solo se è la squadra principale del gruppo o non ha gruppo
+    var isGruppoMain=!s.gruppo||s.gruppo===s.nome||nomeGruppo===s.nome;
+    var rowBg=wp>50?'background:#f0fff4':wp>0&&wp<50?'background:#fff5f5':'background:#fff';
+    var rowBorder=wp>50?'border-left:3px solid var(--green)':wp>0&&wp<50?'border-left:3px solid var(--red)':'border-left:3px solid #eee';
     h+=`<tr style="${rowBg};${rowBorder}">`;
     h+=`<td class="rpos ${i===0?'g1':i===1?'g2':i===2?'g3':''}" data-val="${i+1}">${i+1}</td>`;
-    h+=`<td><span class="rn rn-sq" onclick="openSquadra('${esc(s.nome)}')">${escH(s.nome)}</span> <button onclick="sqToggle('sqg-${i}')" style="background:none;border:1px solid #ccc;border-radius:3px;padding:0 4px;font-size:.6rem;cursor:pointer;color:var(--mu)" title="Espandi/Contrai campionati">▼</button></td>`;
+    h+=`<td><span class="rn rn-sq" onclick="openSquadra('${esc(s.nome)}')">${escH(nomeGruppo!==s.nome?nomeGruppo:s.nome)}</span> <button onclick="sqToggle('sqg-${i}')" style="background:none;border:1px solid #ccc;border-radius:3px;padding:0 4px;font-size:.6rem;cursor:pointer;color:var(--mu)" title="Espandi/Contrai campionati">▼</button></td>`;
     h+=`<td>${pvB(s.prov)}</td>`;
-    h+=`<td>${gr}</td>`;
     h+=`<td data-val="${ptGlob}" style="text-align:center;font-weight:800;color:#1565c0;cursor:pointer" onclick="openSquadra('${esc(s.nome)}')" title="Apri classifica">${ptGlob}</td>`;
     h+=`<td data-val="${s.n_gare}" style="cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Vedi gare"><b style="color:var(--bl);text-decoration:underline">${s.n_gare}</b></td>`;
-    h+=`<td data-val="${s.vinte||0}" style="font-weight:700;color:var(--green);cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Vedi gare vinte">${s.vinte||0}</td>`;
-    h+=`<td data-val="${s.perse||0}" style="color:var(--red);cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Vedi gare perse">${s.perse||0}</td>`;
-    h+=`<td data-val="${s.vinte_casa||0}" style="text-align:center;cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Gare vinte in casa">${s.vinte_casa||0}</td>`;
-    h+=`<td data-val="${s.perse_casa||0}" style="text-align:center;cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Gare perse in casa">${s.perse_casa||0}</td>`;
-    h+=`<td data-val="${s.vinte_osp||0}" style="text-align:center;cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Gare vinte in trasferta">${s.vinte_osp||0}</td>`;
-    h+=`<td data-val="${s.perse_osp||0}" style="text-align:center;cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Gare perse in trasferta">${s.perse_osp||0}</td>`;
+    h+=`<td data-val="${s.vinte||0}" style="font-weight:700;color:var(--green);cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)">${s.vinte||0}</td>`;
+    h+=`<td data-val="${s.perse||0}" style="color:var(--red);cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)">${s.perse||0}</td>`;
+    h+=`<td data-val="${s.vinte_casa||0}" style="text-align:center">${s.vinte_casa||0}</td>`;
+    h+=`<td data-val="${s.perse_casa||0}" style="text-align:center">${s.perse_casa||0}</td>`;
+    h+=`<td data-val="${s.vinte_osp||0}" style="text-align:center">${s.vinte_osp||0}</td>`;
+    h+=`<td data-val="${s.perse_osp||0}" style="text-align:center">${s.perse_osp||0}</td>`;
     h+=`<td data-val="${wp}" style="font-weight:700;color:${wp>50?'var(--green)':wp<50?'var(--red)':'var(--mu)'}">${wp}%</td>`;
     h+=`</tr>`;
 
