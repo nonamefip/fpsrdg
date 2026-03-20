@@ -1675,13 +1675,35 @@ function bCal(giorni,nome){
 
 function mkTbl(rows,cols,tid){return`<table class="mtbl" id="${tid}"><thead><tr>${cols.map((c,i)=>`<th onclick="sT('${tid}',${i},event)" style="cursor:pointer">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;}
 
-// TABLE SORT — v3 (logica identica al widget funzionante)
-// TABLE SORT — versione finale pulita
+// TABLE SORT — versione definitiva con listener delegato
 window._sTcols={};
 window._sTfreeze={};
 
+// Listener unico delegato — sostituisce tutti gli onclick inline
+// Intercetta click sui th dell'ultima riga thead, ignora la prima riga (gruppi)
+document.addEventListener('click', function(e){
+  const th=e.target.closest('th[onclick*="sT("]');
+  if(!th)return;
+  const tbl=th.closest('table');
+  if(!tbl||!tbl.id)return;
+  // Verifica che il th sia nella ULTIMA riga del thead (non nella riga gruppi)
+  const thead=tbl.querySelector('thead');
+  if(!thead)return;
+  const rows=[...thead.querySelectorAll('tr')];
+  const thRow=th.closest('tr');
+  if(rows.indexOf(thRow)!==rows.length-1)return;
+  // Calcola ci = indice del th nella sua riga
+  const ci=[...thRow.children].indexOf(th);
+  e.stopPropagation();
+  _doSort(tbl.id, ci, e);
+}, true); // capture=true per arrivare prima di tutto
+
 function sT(tid,ci,ev){
-  if(ev&&ev.stopPropagation)ev.stopPropagation();
+  // sT viene ancora chiamata dagli onclick inline — la ignoriamo
+  // il listener delegato sopra gestisce tutto
+}
+
+function _doSort(tid,ci,ev){
   const isShift=!!(ev&&ev.shiftKey);
   const tbl=document.getElementById(tid);
   const tbody=tbl?.querySelector('tbody');if(!tbody)return;
