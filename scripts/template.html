@@ -2896,12 +2896,12 @@ function openGiornoModal(ds){
           <td style="font-size:.7rem"><span style="background:${campColor(campName)};color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(campName)}')">${escH(campName)}</span></td>
           <td style="text-align:center">${pvCampo?`<span style="background:${pvClr};color:#fff;border-radius:3px;padding:0 5px;font-size:.65rem;font-weight:700">${pvCampo}</span>`:''}</td>
           <td style="font-size:.68rem;color:var(--mu2)">${escH(g['Girone']||'')}</td>
-          <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa']||'')}');event.stopPropagation()" style="${casaW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Casa']||'')}</span></td>
-          <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}');event.stopPropagation()" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite']||'')}</span></td>
+          <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa']||'')}');event.stopPropagation()" style="${casaW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Casa']||'')}</span>${(()=>{const pv=SQ[g['Squadra Casa']]?.prov||'';return pv&&PC[pv]?` <span style="background:${PC[pv]};color:#fff;border-radius:2px;padding:0 3px;font-size:.57rem;font-weight:700;vertical-align:middle">${pv}</span>`:''})()}</td>
+          <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}');event.stopPropagation()" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite']||'')}</span>${(()=>{const pv=SQ[g['Squadra Ospite']]?.prov||'';return pv&&PC[pv]?` <span style="background:${PC[pv]};color:#fff;border-radius:2px;padding:0 3px;font-size:.57rem;font-weight:700;vertical-align:middle">${pv}</span>`:''})()}</td>
           <td style="text-align:center">${(()=>{const r=g['Risultato'];if(!r)return'<span style="color:var(--mu2);font-size:.7rem">In programma</span>';const[a,b]=r.split('-').map(Number);if(a>b)return`<span style="background:#eaf3de;color:#27500A;border-radius:4px;padding:1px 7px;font-weight:700">${r}</span>`;if(b>a)return`<span style="background:#fcebeb;color:#791F1F;border-radius:4px;padding:1px 7px;font-weight:700">${r}</span>`;return`<span style="font-weight:700">${r}</span>`;})()} </td>
           <td style="text-align:center"><b style="color:${arbClr}">${nArb}</b></td>
-          <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" data-n="${a1}" onclick="openPersona(this.dataset.n);event.stopPropagation()">${escH(a1)}</span>${genderDot(a1)}`:''}</td>
-          <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" data-n="${a2}" onclick="openPersona(this.dataset.n);event.stopPropagation()">${escH(a2)}</span>${genderDot(a2)}`:''}</td>
+          <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" data-n="${a1}" onclick="openPersona(this.dataset.n);event.stopPropagation()">${escH(a1)}</span>${genderDot(a1)}${(()=>{const pv=P[a1]?.provincia||'';return pv&&PC[pv]?` <span style="background:${PC[pv]};color:#fff;border-radius:2px;padding:0 3px;font-size:.57rem;font-weight:700;vertical-align:middle">${pv}</span>`:''})()}`:''}</td>
+          <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" data-n="${a2}" onclick="openPersona(this.dataset.n);event.stopPropagation()">${escH(a2)}</span>${genderDot(a2)}${(()=>{const pv=P[a2]?.provincia||'';return pv&&PC[pv]?` <span style="background:${PC[pv]};color:#fff;border-radius:2px;padding:0 3px;font-size:.57rem;font-weight:700;vertical-align:middle">${pv}</span>`:''})()}`:''}</td>
           <td style="font-size:.66rem">${campo?`<span style="cursor:pointer;color:var(--bl)" onclick="openCampoModal('${esc(campo)}');event.stopPropagation()">${escH(campo.split(',')[0])}</span>${pvCampo?` <span style="background:${pvClr};color:#fff;border-radius:2px;padding:0 4px;font-size:.58rem;font-weight:700;vertical-align:middle">${pvCampo}</span>`:''}`:''}</td>
         </tr>`;
       }).join('');
@@ -2943,7 +2943,13 @@ function openGiornoModal(ds){
       const pillHtml=mkGmPills(allProvs,p=>PC[p]||'#888','prov','Provincia')
         +mkGmPills(allArbs,()=>'#2c3e6b','arb','Arbitro')
         +mkGmPills(allCampi,()=>'#3d4d6b','campo','Campo');
-      if(pillHtml) bodyHtml=bodyHtml.replace('<div style="overflow-x:auto" id="gm-tbl-wrap">','<div>'+pillHtml+'</div><div style="overflow-x:auto" id="gm-tbl-wrap">');
+      if(pillHtml){
+        // Insert pills before table wrapper
+        const tblWrapTag='<div style="overflow-x:auto" id="gm-tbl-wrap">';
+        const idx=bodyHtml.indexOf(tblWrapTag);
+        if(idx>=0) bodyHtml=bodyHtml.slice(0,idx)+'<div id="gm-pills-wrap" style="margin-bottom:8px">'+pillHtml+'</div>'+bodyHtml.slice(idx);
+        else bodyHtml='<div id="gm-pills-wrap" style="margin-bottom:8px">'+pillHtml+'</div>'+bodyHtml;
+      }
 
       // Provvedimenti
       const provvGiorno=allDayG.filter(g=>g['Provvedimenti']&&g['Provvedimenti'].trim&&g['Provvedimenti'].trim());
@@ -6354,6 +6360,9 @@ function makeTableSortable(container){
 function openMo(id){
   const el=document.getElementById(id);
   if(!el)return;
+  // Ensure this modal appears on top of any dynamic modal
+  const topZ=Math.max(999999,...[...document.querySelectorAll('.mo.open,[class*=dyn-mo]')].map(m=>parseInt(getComputedStyle(m).zIndex)||999999))+1;
+  el.style.zIndex=topZ;
   el.classList.add('open');
   // Rendi ordinabili tutte le tabelle nel modal
   setTimeout(()=>makeTableSortable(el),50);
