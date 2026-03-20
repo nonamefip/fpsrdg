@@ -1680,8 +1680,13 @@ function mkTbl(rows,cols,tid){return`<table class="mtbl" id="${tid}"><thead><tr>
 window._sTcols={};
 window._sTfreeze={};
 
+window._sTlast={};
 function sT(tid,ci,ev){
   if(ev&&ev.stopPropagation)ev.stopPropagation();
+  // Debounce: ignora chiamate duplicate entro 50ms sullo stesso tid
+  const now=Date.now();
+  if(window._sTlast[tid]&&now-window._sTlast[tid].t<50&&window._sTlast[tid].ci!==ci)return;
+  window._sTlast[tid]={t:now,ci};
   const isShift=!!(ev&&ev.shiftKey);
   const tbl=document.getElementById(tid);
   const tbody=tbl?.querySelector('tbody');if(!tbody)return;
