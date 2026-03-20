@@ -1673,7 +1673,7 @@ function bCal(giorni,nome){
   return h;
 }
 
-function mkTbl(rows,cols,tid){return`<table class="mtbl" id="${tid}"><thead><tr>${cols.map((c,i)=>`<th onclick="sT('${tid}',${i})">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;}
+function mkTbl(rows,cols,tid){return`<table class="mtbl" id="${tid}"><thead><tr>${cols.map((c,i)=>`<th onclick="sT('${tid}',${i},event)" style="cursor:pointer">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;}
 
 // TABLE SORT — v3 (logica identica al widget funzionante)
 window._sTcols={};
@@ -1750,25 +1750,36 @@ function _rtblApplyFreezeById(tid){
   const hdrRow=tbl.querySelector('thead tr:last-child');if(!hdrRow)return;
   const ths=[...hdrRow.children];
   const trs=[...tbl.querySelectorAll('tbody tr,tfoot tr')];
-  // Reset tutto
+  // Reset sticky su tutte le celle
   ths.forEach((th,ci)=>{
     th.style.position='';th.style.left='';th.style.zIndex='';
-    trs.forEach(tr=>{const td=[...tr.children][ci];if(td){td.style.position='';td.style.left='';td.style.zIndex='';td.style.background='';}});
+    trs.forEach(tr=>{
+      const td=[...tr.children][ci];
+      if(td){td.style.position='';td.style.left='';td.style.zIndex='';td.style.background='';}
+    });
   });
   if(!frozen.size)return;
-  // Applica sticky in ordine con offset cumulativo
+  // Calcola offsets reali dopo il reset
   let off=0;
-  ths.forEach((th,ci)=>{
-    if(!frozen.has(ci))return;
-    const w=th.offsetWidth||80;
-    th.style.cssText+=`;position:sticky;left:${off}px;z-index:6;background:var(--tbl-hdr);`;
+  for(let ci=0;ci<ths.length;ci++){
+    if(!frozen.has(ci))continue;
+    const th=ths[ci];
+    const w=th.getBoundingClientRect().width||th.offsetWidth||80;
+    // Applica sticky al th
+    th.style.position='sticky';
+    th.style.left=off+'px';
+    th.style.zIndex='6';
+    // Applica sticky a ogni td della stessa colonna
     trs.forEach(tr=>{
       const td=[...tr.children][ci];if(!td)return;
-      const bg=parseInt(tr.dataset.bg||'0')%2===0?'#fff':'var(--tbl-even)';
-      td.style.cssText+=`;position:sticky;left:${off}px;z-index:3;background:${bg};`;
+      const isEven=parseInt(tr.dataset.bg||'0')%2!==0;
+      td.style.position='sticky';
+      td.style.left=off+'px';
+      td.style.zIndex='3';
+      td.style.background=isEven?'var(--tbl-even)':'#fff';
     });
     off+=w;
-  });
+  }
 }
 
 function rtblAddFreezeBtns(tableId){
@@ -2090,29 +2101,29 @@ function renderPersonsTable(cid,persons,opts={}){
     <th class="th-ana" onclick="sT('${tableId}',3,event)" style="cursor:pointer" title="Ordina per città · Shift+click per multiplo">Città</th>
     <th class="th-ana" onclick="sT('${tableId}',4,event)" title="Codice FIP · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Cod.</th>
     ${showCat?`<th onclick="sT('${tableId}',5,event)" style="cursor:pointer" title="Categoria">Cat.</th>`:''}
-    <th class="th-att" onclick="sT('${tableId}',${4+co})" title="Gare fatte fino ad oggi · Shift+click per multiplo" style="cursor:pointer">Tot.</th>
-    <th class="th-att" onclick="sT('${tableId}',${5+co})" title="Come arbitro · Shift+click per multiplo" style="cursor:pointer">Arb.</th>
-    <th class="th-att" onclick="sT('${tableId}',${6+co})" title="Come UDC · Shift+click per multiplo" style="cursor:pointer">UDC</th>
-    <th class="th-att" onclick="sT('${tableId}',${7+co})" title="Come osservatore · Shift+click per multiplo" style="cursor:pointer">Oss.</th>
-    <th class="th-att" onclick="sT('${tableId}',${8+co})" title="Giorni attivi · Shift+click per multiplo" style="cursor:pointer">Gg.</th>
+    <th class="th-att" onclick="sT('${tableId}',${4+co},event)" title="Gare fatte fino ad oggi · Shift+click per multiplo" style="cursor:pointer">Tot.</th>
+    <th class="th-att" onclick="sT('${tableId}',${5+co},event)" title="Come arbitro · Shift+click per multiplo" style="cursor:pointer">Arb.</th>
+    <th class="th-att" onclick="sT('${tableId}',${6+co},event)" title="Come UDC · Shift+click per multiplo" style="cursor:pointer">UDC</th>
+    <th class="th-att" onclick="sT('${tableId}',${7+co},event)" title="Come osservatore · Shift+click per multiplo" style="cursor:pointer">Oss.</th>
+    <th class="th-att" onclick="sT('${tableId}',${8+co},event)" title="Giorni attivi · Shift+click per multiplo" style="cursor:pointer">Gg.</th>
     ${isArb?`
-    <th class="th-att" onclick="sT('${tableId}',${9+co})" title="Giornate con 4+ gare" style="cursor:pointer;color:#f5a0a0">4g</th>
-    <th class="th-att" onclick="sT('${tableId}',${10+co})" title="Giornate con 3 gare" style="cursor:pointer;color:#ffc77d">3g</th>
-    <th class="th-att" onclick="sT('${tableId}',${11+co})" title="Giornate con 2 gare" style="cursor:pointer;color:#ffe07a">2g</th>
-    <th class="th-att" onclick="sT('${tableId}',${12+co})" title="Giornate con 1 gara" style="cursor:pointer;color:#a0e0b0">1g</th>
-    <th class="th-att" onclick="sT('${tableId}',${13+co})" title="Media gare/giorno · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Med/g</th>
+    <th class="th-att" onclick="sT('${tableId}',${9+co},event)" title="Giornate con 4+ gare" style="cursor:pointer;color:#f5a0a0">4g</th>
+    <th class="th-att" onclick="sT('${tableId}',${10+co},event)" title="Giornate con 3 gare" style="cursor:pointer;color:#ffc77d">3g</th>
+    <th class="th-att" onclick="sT('${tableId}',${11+co},event)" title="Giornate con 2 gare" style="cursor:pointer;color:#ffe07a">2g</th>
+    <th class="th-att" onclick="sT('${tableId}',${12+co},event)" title="Giornate con 1 gara" style="cursor:pointer;color:#a0e0b0">1g</th>
+    <th class="th-att" onclick="sT('${tableId}',${13+co},event)" title="Media gare/giorno · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Med/g</th>
     `:''}
-    <th class="th-fare" onclick="sT('${tableId}',${9+co+ae})" title="Gare future assegnate · Shift+click per multiplo" style="cursor:pointer">Da fare</th>
-    <th class="th-fare" onclick="sT('${tableId}',${10+co+ae})" title="Totale previsto (fatte + future) · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Tot.prev.</th>
-    <th class="th-camp" onclick="sT('${tableId}',${11+co+ae})" title="Campi diversi · Shift+click per multiplo" style="cursor:pointer">&#127967;</th>
-    <th class="th-camp" onclick="sT('${tableId}',${12+co+ae})" title="Colleghi · Shift+click per multiplo" style="cursor:pointer">&#129309;</th>
-    <th class="th-camp" onclick="sT('${tableId}',${13+co+ae})" title="Campionati · Shift+click per multiplo" style="cursor:pointer">Camp.</th>
-    <th class="th-sq" onclick="sT('${tableId}',${14+co+ae})" title="Gare in singolo · Shift+click per multiplo" style="cursor:pointer">Sing.</th>
-    <th class="th-sq" onclick="sT('${tableId}',${15+co+ae})" title="Gare in coppia · Shift+click per multiplo" style="cursor:pointer">Dopp.</th>
-    <th class="th-sq" onclick="sT('${tableId}',${16+co+ae})" title="Squadre diverse · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Sqd.</th>
-    <th class="th-km" onclick="sT('${tableId}',${17+co+ae},true)" title="Km stimati · Shift+click per multiplo" style="cursor:pointer">&#128664; Km</th>
-    ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true)" title="Km medi/gara · Shift+click per multiplo" style="cursor:pointer">Km/g</th>
-    <th onclick="sT('${tableId}',${19+co+ae})" title="Mese con più gare · Shift+click per multiplo" style="cursor:pointer">Top mese</th>`:''}
+    <th class="th-fare" onclick="sT('${tableId}',${9+co+ae},event)" title="Gare future assegnate · Shift+click per multiplo" style="cursor:pointer">Da fare</th>
+    <th class="th-fare" onclick="sT('${tableId}',${10+co+ae},event)" title="Totale previsto (fatte + future) · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Tot.prev.</th>
+    <th class="th-camp" onclick="sT('${tableId}',${11+co+ae},event)" title="Campi diversi · Shift+click per multiplo" style="cursor:pointer">&#127967;</th>
+    <th class="th-camp" onclick="sT('${tableId}',${12+co+ae},event)" title="Colleghi · Shift+click per multiplo" style="cursor:pointer">&#129309;</th>
+    <th class="th-camp" onclick="sT('${tableId}',${13+co+ae},event)" title="Campionati · Shift+click per multiplo" style="cursor:pointer">Camp.</th>
+    <th class="th-sq" onclick="sT('${tableId}',${14+co+ae},event)" title="Gare in singolo · Shift+click per multiplo" style="cursor:pointer">Sing.</th>
+    <th class="th-sq" onclick="sT('${tableId}',${15+co+ae},event)" title="Gare in coppia · Shift+click per multiplo" style="cursor:pointer">Dopp.</th>
+    <th class="th-sq" onclick="sT('${tableId}',${16+co+ae},event)" title="Squadre diverse · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Sqd.</th>
+    <th class="th-km" onclick="sT('${tableId}',${17+co+ae},true,event)" title="Km stimati · Shift+click per multiplo" style="cursor:pointer">&#128664; Km</th>
+    ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true,event)" title="Km medi/gara · Shift+click per multiplo" style="cursor:pointer">Km/g</th>
+    <th onclick="sT('${tableId}',${19+co+ae},event)" title="Mese con più gare · Shift+click per multiplo" style="cursor:pointer">Top mese</th>`:''}
   </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>
   <div style="font-size:.62rem;color:var(--mu);padding:4px 0;margin-top:2px">💡 <b>Shift+click</b> su un'intestazione per aggiungere un secondo livello di ordinamento</div>`;
 }
@@ -8552,14 +8563,14 @@ function renderProssime(){
       '<span>'+wd+' '+d.substring(8)+'/'+d.substring(5,7)+'/'+d.substring(0,4)+'</span>'+
       '<span style="font-weight:400;font-size:.68rem;color:var(--mu)">'+gs.length+' gare</span></div>';
     html+='<div style="overflow-x:auto;margin-bottom:8px"><table class="gtbl" id="'+tid+'"><thead><tr>'+
-      '<th onclick="sT(\''+tid+'\',0)" style="cursor:pointer">Ora</th>'+
-      '<th onclick="sT(\''+tid+'\',1)" style="cursor:pointer">Campionato</th>'+
-      '<th onclick="sT(\''+tid+'\',2)" style="cursor:pointer">Casa</th>'+
-      '<th onclick="sT(\''+tid+'\',3)" style="cursor:pointer">Ospite</th>'+
-      '<th onclick="sT(\''+tid+'\',4)" style="cursor:pointer">Arbitro 1</th>'+
-      '<th onclick="sT(\''+tid+'\',5)" style="cursor:pointer">Arbitro 2</th>'+
-      '<th onclick="sT(\''+tid+'\',6)" style="cursor:pointer">UdC</th>'+
-      '<th onclick="sT(\''+tid+'\',7)" style="cursor:pointer">Campo</th>'+
+      '<th onclick="sT(\''+tid+'\',0,event)" style="cursor:pointer">Ora</th>'+
+      '<th onclick="sT(\''+tid+'\',1,event)" style="cursor:pointer">Campionato</th>'+
+      '<th onclick="sT(\''+tid+'\',2,event)" style="cursor:pointer">Casa</th>'+
+      '<th onclick="sT(\''+tid+'\',3,event)" style="cursor:pointer">Ospite</th>'+
+      '<th onclick="sT(\''+tid+'\',4,event)" style="cursor:pointer">Arbitro 1</th>'+
+      '<th onclick="sT(\''+tid+'\',5,event)" style="cursor:pointer">Arbitro 2</th>'+
+      '<th onclick="sT(\''+tid+'\',6,event)" style="cursor:pointer">UdC</th>'+
+      '<th onclick="sT(\''+tid+'\',7,event)" style="cursor:pointer">Campo</th>'+
       '</tr></thead><tbody>';
     gs.forEach(function(g){
       var a1n=pns(g['Arbitro 1']||''),a2n=pns(g['Arbitro 2']||'');
