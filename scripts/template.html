@@ -1676,78 +1676,69 @@ function bCal(giorni,nome){
 function mkTbl(rows,cols,tid){return`<table class="mtbl" id="${tid}"><thead><tr>${cols.map((c,i)=>`<th onclick="sT('${tid}',${i},event)" style="cursor:pointer">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;}
 
 // TABLE SORT — v3 (logica identica al widget funzionante)
-// TABLE SORT v4 — usa data-key invece di indice colonna
+// TABLE SORT — versione finale pulita
 window._sTcols={};
 window._sTfreeze={};
 
-function sT(tid,ci,evOrDefault){
-  const isShift=!!(evOrDefault&&evOrDefault.shiftKey);
+function sT(tid,ci,ev){
+  const isShift=!!(ev&&ev.shiftKey);
   const tbl=document.getElementById(tid);
   const tbody=tbl?.querySelector('tbody');if(!tbody)return;
-  // Leggi la chiave data-key dal th, fallback all'indice
-  const hdrRow=tbl.querySelector('thead tr:last-child');
-  const th=hdrRow?[...hdrRow.children][ci]:null;
-  const key=th?.dataset.key||String(ci);
-  const type=th?.dataset.type||'s';
+  // Stato sort per questa tabella
   if(!window._sTcols[tid])window._sTcols[tid]=[];
   const cols=window._sTcols[tid];
-  const existing=cols.findIndex(c=>c.key===key);
+  const ex=cols.findIndex(c=>c.ci===ci);
   if(isShift){
-    if(existing>=0)cols[existing].asc=!cols[existing].asc;
-    else if(cols.length<3)cols.push({key,type,ci,asc:true});
+    if(ex>=0)cols[ex].asc=!cols[ex].asc;
+    else if(cols.length<3)cols.push({ci,asc:true});
   } else {
-    if(existing===0&&cols.length===1)cols[0].asc=!cols[0].asc;
-    else window._sTcols[tid]=[{key,type,ci,asc:true}];
+    if(ex===0&&cols.length===1)cols[0].asc=!cols[0].asc;
+    else window._sTcols[tid]=[{ci,asc:true}];
   }
-  const activeCols=window._sTcols[tid];
-  // Feedback header — usa data-key per trovare il th giusto
-  if(hdrRow)[...hdrRow.children].forEach(t=>{
-    t.classList.remove('sa','sd');
-    const f=activeCols.find(c=>c.key===(t.dataset.key||t.dataset.col||''));
-    if(f)t.classList.add(f.asc?'sa':'sd');
+  // Frecce header
+  const hdr=tbl.querySelector('thead tr:last-child');
+  if(hdr)[...hdr.children].forEach((th,i)=>{
+    th.classList.remove('sa','sd');
+    const f=cols.find(c=>c.ci===i);
+    if(f)th.classList.add(f.asc?'sa':'sd');
   });
-  // Separa righe fisse e sub-righe
-  const allRows=[...tbody.children];
-  const fixedRows=allRows.filter(tr=>tr.hasAttribute('data-avg'));
-  const sortable=allRows.filter(tr=>!tr.hasAttribute('data-avg'));
-  const groups=[];let cur=null;
-  sortable.forEach(tr=>{
-    const isSub=tr.hasAttribute('data-sqgroup')||tr.hasAttribute('data-sqmember')||
-                tr.hasAttribute('data-campgroup')||tr.classList.contains('sq-sub')||
-                tr.classList.contains('camp-sub');
-    if(!isSub){cur={main:tr,subs:[]};groups.push(cur);}
-    else if(cur)cur.subs.push(tr);
-  });
-  const visible=groups.filter(g=>g.main.style.display!=='none'&&!g.main.classList.contains('hidden'));
-  const hidden=groups.filter(g=>g.main.style.display==='none'||g.main.classList.contains('hidden'));
-  // Leggi data-val dalla td usando l'indice colonna ci salvato in cols
-  function getVal(tr,col){
-    const td=[...tr.children][col.ci!=null?col.ci:ci];if(!td)return'';
-    const dv=td.getAttribute('data-val');if(dv!=null&&dv!=='')return dv;
-    const sp=td.querySelector('span[style],span[class]');
-    if(sp&&sp.textContent.trim())return sp.textContent.trim();
-    return td.textContent.trim();
+  // Leggi valore da td[ci]: data-val prima, poi testo primo span, poi textContent
+  function val(tr,c){
+    const td=[...tr.children][c.ci];if(!td)return'';
+    const dv=td.getAttribute('data-val');if(dv!==null&&dv!=='')return dv;
+    const sp=td.querySelector('span');
+    return sp?sp.textContent.trim():td.textContent.trim();
   }
-  visible.sort((a,b)=>{
-    for(const col of activeCols){
-      const va=getVal(a.main,col),vb=getVal(b.main,col);
+  // Separa righe fisse (data-avg) e sub-righe, raggruppa principale+sub
+  const all=[...tbody.children];
+  const fixed=all.filter(r=>r.hasAttribute('data-avg'));
+  const rest=all.filter(r=>!r.hasAttribute('data-avg'));
+  const grps=[];let cur=null;
+  rest.forEach(r=>{
+    const sub=r.hasAttribute('data-sqgroup')||r.hasAttribute('data-sqmember')||
+               r.hasAttribute('data-campgroup')||r.classList.contains('sq-sub')||
+               r.classList.contains('camp-sub');
+    if(!sub){cur={m:r,s:[]};grps.push(cur);}else if(cur)cur.s.push(r);
+  });
+  const vis=grps.filter(g=>g.m.style.display!=='none'&&!g.m.classList.contains('hidden'));
+  const hid=grps.filter(g=>g.m.style.display==='none'||g.m.classList.contains('hidden'));
+  vis.sort((a,b)=>{
+    for(const c of cols){
+      const va=val(a.m,c),vb=val(b.m,c);
       const na=parseFloat(va),nb=parseFloat(vb);
-      const isNum=col.type==='n'||(!isNaN(na)&&!isNaN(nb)&&va!==''&&vb!=='');
-      let cmp=isNum?(na-nb):va.localeCompare(vb,'it');
-      if(cmp!==0)return col.asc?cmp:-cmp;
+      const num=!isNaN(na)&&!isNaN(nb)&&va!==''&&vb!=='';
+      const cmp=num?(na-nb):va.localeCompare(vb,'it');
+      if(cmp)return c.asc?cmp:-cmp;
     }
     return 0;
   });
   const frag=document.createDocumentFragment();
-  [...visible,...hidden].forEach(g=>{frag.appendChild(g.main);g.subs.forEach(s=>frag.appendChild(s));});
-  fixedRows.forEach(r=>frag.appendChild(r));
+  [...vis,...hid].forEach(g=>{frag.appendChild(g.m);g.s.forEach(s=>frag.appendChild(s));});
+  fixed.forEach(r=>frag.appendChild(r));
   tbody.appendChild(frag);
-  [...tbody.querySelectorAll('tr:not([data-avg])')].forEach((tr,i)=>tr.dataset.bg=String(i%2));
 }
 
-function _rtblApplyFreezeById(tid){
-  // Freeze disabilitato temporaneamente — solo sort attivo
-}
+function _rtblApplyFreezeById(tid){}
 
 function rtblAddFreezeBtns(tableId){
   // Freeze disabilitato temporaneamente — solo sort attivo
