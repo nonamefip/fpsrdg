@@ -349,7 +349,7 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 .rtbl th:hover .frz-btn{display:block;}
 .rtbl th.frz-locked .frz-btn{display:block;background:rgba(255,255,255,.35);color:#fff;}
 .rtbl th.frz-locked{position:sticky;z-index:6;background:var(--tbl-hdr);}
-.rtbl td.frz-locked{position:sticky;z-index:3;background:inherit;}
+.rtbl td.frz-locked{position:sticky;z-index:3;}
 .rtbl th,.mtbl th,.gtbl th{color:var(--tbl-hdr-tx);padding:7px 9px;
   text-align:left;font-size:.67rem;font-weight:700;cursor:pointer;
   white-space:nowrap;user-select:none;}
@@ -1674,61 +1674,86 @@ function bCal(giorni,nome){
 
 function mkTbl(rows,cols,tid){return`<table class="mtbl" id="${tid}"><thead><tr>${cols.map((c,i)=>`<th onclick="sT('${tid}',${i})">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;}
 
-// TABLE SORT
-const _ss={};
+// TABLE SORT — v2 (robusto per tabelle con sub-righe)
+window._sTcols={};
 function sT(tid,ci,defaultAsc){
   const tbl=document.getElementById(tid);
   const tbody=tbl?.querySelector('tbody');if(!tbody)return;
-  // Multi-colonna: Shift+click aggiunge colonna secondaria
+  // Shift detection
   const ev=window._sTev||null;
-  const isShift=ev&&ev.shiftKey;
+  const isShift=!!(ev&&ev.shiftKey);
   window._sTev=null;
-  if(!window._sTcols)window._sTcols={};
   if(!window._sTcols[tid])window._sTcols[tid]=[];
   const cols=window._sTcols[tid];
   const existing=cols.findIndex(c=>c.ci===ci);
   if(isShift){
     if(existing>=0){cols[existing].asc=!cols[existing].asc;}
-    else{cols.push({ci,asc:defaultAsc!==false});}
+    else if(cols.length<3){cols.push({ci,asc:defaultAsc!==false});}
   } else {
-    if(cols.length===1&&cols[0].ci===ci){cols[0].asc=!cols[0].asc;}
+    if(existing===0&&cols.length===1){cols[0].asc=!cols[0].asc;}
     else{window._sTcols[tid]=[{ci,asc:defaultAsc!==false}];}
   }
   const activeCols=window._sTcols[tid];
-  // Aggiorna feedback visivo intestazioni
-  tbl.querySelectorAll('th').forEach((th,i)=>{
-    th.classList.remove('sa','sd');
-    const found=activeCols.find(c=>c.ci===i);
-    if(found)th.classList.add(found.asc?'sa':'sd');
+  // Feedback visivo: aggiorna solo le th della riga intestazione colonne (ultima tr di thead)
+  const hdrRow=tbl.querySelector('thead tr:last-child');
+  if(hdrRow){
+    [...hdrRow.querySelectorAll('th')].forEach((th,i)=>{
+      th.classList.remove('sa','sd');
+      const found=activeCols.find(c=>c.ci===i);
+      if(found)th.classList.add(found.asc?'sa':'sd');
+    });
+  }
+  // Separa righe di primo livello (hanno data-val su td[0]) dalle sub-righe
+  // Le sub-righe hanno data-sqgroup o data-sqmember o data-campgroup o class sq-sub/camp-sub
+  const allRows=[...tbody.children];
+  // Raggruppa: ogni riga principale porta con sé le sue sub-righe
+  const groups=[];
+  let cur=null;
+  allRows.forEach(tr=>{
+    const isSub=tr.hasAttribute('data-sqgroup')||tr.hasAttribute('data-sqmember')||
+                tr.hasAttribute('data-campgroup')||tr.classList.contains('sq-sub')||
+                tr.classList.contains('camp-sub');
+    if(!isSub){
+      cur={main:tr,subs:[]};
+      groups.push(cur);
+    } else if(cur){
+      cur.subs.push(tr);
+    }
   });
-  // Ordina le righe
-  const rows=[...tbody.querySelectorAll('tr:not(.hidden)')];
-  rows.sort((a,b)=>{
+  // Ordina solo le righe principali visibili
+  const visible=groups.filter(g=>g.main.style.display!=='none'&&!g.main.classList.contains('hidden'));
+  const hidden=groups.filter(g=>g.main.style.display==='none'||g.main.classList.contains('hidden'));
+  function getVal(tr,colIdx){
+    const td=[...tr.children][colIdx];
+    if(!td)return'';
+    const dv=td.getAttribute('data-val');
+    if(dv!=null)return dv;
+    return td.textContent.trim();
+  }
+  visible.sort((a,b)=>{
     for(const col of activeCols){
-      const tda=a.querySelectorAll('td')[col.ci];
-      const tdb=b.querySelectorAll('td')[col.ci];
-      const va=tda?.getAttribute('data-val')??tda?.textContent.trim()??'';
-      const vb=tdb?.getAttribute('data-val')??tdb?.textContent.trim()??'';
+      const va=getVal(a.main,col.ci);
+      const vb=getVal(b.main,col.ci);
       const na=parseFloat(va),nb=parseFloat(vb);
-      let cmp=0;
-      if(!isNaN(na)&&!isNaN(nb))cmp=na-nb;
-      else cmp=va.localeCompare(vb,'it');
+      let cmp=(!isNaN(na)&&!isNaN(nb))?(na-nb):va.localeCompare(vb,'it');
       if(cmp!==0)return col.asc?cmp:-cmp;
     }
     return 0;
   });
-  rows.forEach(r=>tbody.appendChild(r));
-  // Rinumera colonna # dopo sort (aggiorna solo data-val, non sovrascrive il DOM)
-  let _rnum=0;
-  tbody.querySelectorAll('tr:not(.hidden)').forEach((r)=>{
-    const td0=r.querySelectorAll('td')[0];
+  // Reinserisci nell'ordine: riga principale + sue sub-righe, poi le nascoste
+  const frag=document.createDocumentFragment();
+  [...visible,...hidden].forEach(g=>{frag.appendChild(g.main);g.subs.forEach(s=>frag.appendChild(s));});
+  tbody.appendChild(frag);
+  // Rinumera colonna # — aggiorna solo data-val e nodo testo diretto
+  let _rn=0;
+  visible.forEach(g=>{
+    const td0=[...g.main.children][0];
     if(td0&&td0.hasAttribute('data-val')){
-      _rnum++;
-      td0.setAttribute('data-val',_rnum);
-      // aggiorna solo nodi testo diretti, non figli con classi
+      _rn++;
+      td0.setAttribute('data-val',_rn);
       const tn=[...td0.childNodes].find(n=>n.nodeType===3&&n.textContent.trim());
-      if(tn)tn.textContent=_rnum;
-      else if(!td0.children.length)td0.textContent=_rnum;
+      if(tn)tn.textContent=_rn;
+      else if(!td0.children.length)td0.textContent=_rn;
     }
   });
 }
@@ -1739,51 +1764,58 @@ document.addEventListener('click',function(e){
 },true);
 
 // FREEZE COLONNE per rtbl (lucchetto su th)
+function rtblApplyFreeze(tbl){
+  // Legge le th bloccate in ordine, calcola gli offset reali, li applica a th e td
+  const hdrRow=tbl.querySelector('thead tr:last-child');
+  if(!hdrRow)return;
+  const allThs=[...hdrRow.children];
+  // Prima rimuovi tutti gli stili sticky dalle colonne NON bloccate
+  allThs.forEach(th=>{
+    if(!th.classList.contains('frz-locked')){th.style.position='';th.style.left='';th.style.zIndex='';}
+  });
+  tbl.querySelectorAll('tbody tr,tfoot tr').forEach(tr=>{
+    [...tr.children].forEach((td,i)=>{
+      if(!allThs[i]?.classList.contains('frz-locked')){td.style.position='';td.style.left='';td.style.zIndex='';td.style.background='';}
+    });
+  });
+  // Calcola offset: somma le larghezze reali delle th bloccate precedenti
+  let off=0;
+  allThs.forEach((th,ci)=>{
+    if(!th.classList.contains('frz-locked'))return;
+    const w=th.getBoundingClientRect().width||th.offsetWidth||60;
+    // applica a th
+    th.style.position='sticky';th.style.left=off+'px';th.style.zIndex='6';
+    // applica a tutte le td della stessa colonna
+    tbl.querySelectorAll('tbody tr,tfoot tr').forEach(tr=>{
+      const td=[...tr.children][ci];
+      if(!td)return;
+      td.style.position='sticky';td.style.left=off+'px';td.style.zIndex='3';
+      // sfondo esplicito (non inherit — non funziona con sticky)
+      if(!td.style.background||td.style.background==='inherit'){
+        const computed=getComputedStyle(tr).backgroundColor;
+        td.style.background=computed&&computed!=='rgba(0, 0, 0, 0)'?computed:'#fff';
+      }
+    });
+    off+=w;
+  });
+}
 function rtblToggleFreeze(btn){
   const th=btn.closest('th');if(!th)return;
   const tbl=th.closest('table');if(!tbl)return;
-  const thIdx=[...th.parentElement.children].indexOf(th);
   const isLocked=th.classList.toggle('frz-locked');
-  btn.textContent=isLocked?'🔒':'📌';
+  btn.textContent=isLocked?'🔒':'⬚';
   btn.title=isLocked?'Sblocca colonna':'Blocca colonna';
-  // Calcola offset sticky per ogni th bloccato in ordine
-  const allThs=[...tbl.querySelectorAll('thead tr:last-child th')];
-  let off=0;
-  allThs.forEach((t,i)=>{
-    if(t.classList.contains('frz-locked')){
-      t.style.left=off+'px';
-      off+=t.offsetWidth||80;
-    } else {
-      t.style.left='';
-    }
-  });
-  // Applica sticky anche alle td della stessa colonna
-  tbl.querySelectorAll('tbody tr').forEach(tr=>{
-    const td=[...tr.children][thIdx];
-    if(!td)return;
-    if(isLocked){
-      td.classList.add('frz-locked');
-    } else {
-      td.classList.remove('frz-locked');
-    }
-  });
-  // Ricalcola left su tutte le td bloccate
-  const lockedIdxs=[...allThs].map((t,i)=>t.classList.contains('frz-locked')?i:-1).filter(i=>i>=0);
-  tbl.querySelectorAll('tbody tr').forEach(tr=>{
-    let off2=0;
-    lockedIdxs.forEach(ci=>{
-      const td=[...tr.children][ci];
-      if(td){td.style.left=off2+'px';off2+=td.offsetWidth||80;}
-    });
-  });
+  // Aspetta un frame per avere offsetWidth reale, poi applica
+  requestAnimationFrame(()=>rtblApplyFreeze(tbl));
 }
-// Inietta bottone 🔒 nei th delle rtbl dopo il render
+// Inietta bottone nei th delle rtbl dopo il render
 function rtblAddFreezeBtns(tableId){
   const tbl=document.getElementById(tableId);if(!tbl)return;
-  tbl.querySelectorAll('thead tr:last-child th').forEach(th=>{
+  const hdrRow=tbl.querySelector('thead tr:last-child');if(!hdrRow)return;
+  [...hdrRow.querySelectorAll('th')].forEach(th=>{
     if(th.querySelector('.frz-btn'))return;
     const btn=document.createElement('button');
-    btn.className='frz-btn';btn.textContent='📌';btn.title='Blocca colonna';
+    btn.className='frz-btn';btn.textContent='⬚';btn.title='Blocca colonna';
     btn.onclick=function(e){e.stopPropagation();rtblToggleFreeze(this);};
     th.appendChild(btn);
   });
