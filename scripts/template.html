@@ -340,9 +340,10 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 
 /* ══════════ TABLES ══════════ */
 .rtbl,.mtbl,.gtbl{width:100%;border-collapse:collapse;font-size:var(--tbl-fs);table-layout:auto;}
-.rtbl{background:#fff;border-radius:var(--radius);overflow:hidden;
+.rtbl{background:#fff;border-radius:var(--radius);overflow:visible;
   box-shadow:var(--shadow);}
 .rtbl thead,.mtbl thead,.gtbl thead{background:var(--tbl-hdr);}
+.rtbl thead{position:sticky;top:0;z-index:10;}
 .rtbl th,.mtbl th,.gtbl th{color:var(--tbl-hdr-tx);padding:7px 9px;
   text-align:left;font-size:.67rem;font-weight:700;cursor:pointer;
   white-space:nowrap;user-select:none;}
@@ -1846,6 +1847,7 @@ function renderPersonsTable(cid,persons,opts={}){
   // Accumulatori per riga media
   let sumTot=0,sumArb=0,sumUdc=0,sumGg=0,sumCamp=0,sumSing=0,sumDopp=0,sumKm=0,sumFare=0,n=persons.length||1;
 
+  const _maxKmGara=isArb?Math.max(...persons.map(p=>{const km=calcKmArb(p);const ng=(p.gare_arbitro||[]).filter(g=>(g.d||g['Data']||'')<=new Date().toISOString().split('T')[0]).length;return ng>0?Math.round(km/ng):0;}),1):1;
   const rows=persons.map((p,i)=>{
     const nCamp=Object.keys(p.campionati||{}).length;
     const nG=Object.keys(p.giorni||{}).length;
@@ -1870,6 +1872,13 @@ function renderPersonsTable(cid,persons,opts={}){
       if(nG>0) mediaG=(nGareOggi/nG).toFixed(1);
     }
     const kmGara=isArb&&km>0&&nGareOggi>0?Math.round(km/nGareOggi):0;
+    // Gare imminenti (nei prossimi 7 giorni)
+    const in7days=new Date();in7days.setDate(in7days.getDate()+7);
+    const d7=in7days.toISOString().split('T')[0];
+    const hasImminente=isArb&&(D.gare_future||[]).some(g=>{
+      const gd=(g['Data']||'');
+      return gd>=today&&gd<=d7&&['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto'].some(f=>(g[f]||'').toLowerCase().includes(p.nome.toLowerCase()));
+    });
     const fip=CODICI_FIP[p.nome]||'';
 
     // Accumula per media
@@ -1903,14 +1912,16 @@ function renderPersonsTable(cid,persons,opts={}){
     const tdSq=isArb?'class="td-sq"':'';
     const tdKm=isArb?'class="td-km"':'';
 
-    return`<tr style="cursor:pointer" onclick="showArbSpotlight('${esc(p.nome)}')">
+    const _trBg=hasImminente?'background:#fffbeb':'';
+    return`<tr style="cursor:pointer;${_trBg}" onclick="showArbSpotlight('${esc(p.nome)}')">
       <td class="rpos freeze-col freeze-1 ${i<3?'g'+(i+1):''}" data-val="${i+1}" style="background:#fff">${i+1}</td>
-      <td class="freeze-col freeze-2" style="white-space:nowrap;background:#fff">
+      <td class="freeze-col freeze-2" style="white-space:nowrap;background:${hasImminente?'#fffbeb':'#fff'}">
         <div style="display:flex;align-items:center;gap:2px">
           <span class="act-dot ${actCls}" title="${actTip}"></span>
           <span style="font-weight:700;cursor:pointer;color:${pvColor}" data-n="${p.nome}"
             onclick="event.stopPropagation();openPersona(this.dataset.n)">${escH(p.nome)}</span>
           ${sexDot}${dualHtml}
+          ${hasImminente?`<span style="font-size:.58rem;background:#b45309;color:#fff;border-radius:3px;padding:0 4px;margin-left:3px">7gg</span>`:''}
         </div>
       </td>
       <td ${tdAna}>${pvB(p.provincia)}</td>
@@ -1940,7 +1951,10 @@ function renderPersonsTable(cid,persons,opts={}){
       <td ${tdSq} data-val="${(p.n_gare_arbitro||0)-(p.n_singolo||0)}" style="text-align:center;color:var(--green)">${(p.n_gare_arbitro||0)-(p.n_singolo||0)}</td>
       <td ${tdSq} data-val="${Object.keys(p.squadre||{}).length}" style="text-align:center">${Object.keys(p.squadre||{}).length}</td>
       <td ${tdKm} data-val="${km}" style="text-align:right;font-size:.8rem;font-weight:600;color:var(--mu)">${km>0?km.toLocaleString('it'):'—'}</td>
-      ${isArb?`<td ${tdKm} data-val="${kmGara}" style="text-align:right;font-size:.78rem;color:var(--mu)">${kmGara>0?kmGara:'—'}</td>`:''}
+      ${isArb?`<td ${tdKm} data-val="${kmGara}" style="position:relative;text-align:right;font-size:.78rem;padding:0">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:${Math.round(kmGara/_maxKmGara*100)}%;background:var(--bl3);opacity:.35;pointer-events:none"></div>
+        <span style="position:relative;z-index:1;padding:4px 6px;display:block;font-weight:${kmGara>0?600:400};color:${kmGara>0?'var(--bl)':'var(--mu2)'}">${kmGara>0?kmGara:'—'}</span>
+      </td>`:''}
       ${isArb?(()=>{
         const mesiCount={};
         (p.gare||[]).forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)mesiCount[m]=(mesiCount[m]||0)+1;});
@@ -3400,25 +3414,38 @@ function renderGruppi(){
     return{tot,v,p,vcasa,pcasa,vosp,posp};
   }
 
+  // Filtro provincia
+  const _sqAllProvs=[...new Set(grps.map(([,members])=>{const m=bestMember(members);return(SQ[m]||SQ[members[0]])?.provincia||'';}).filter(Boolean))].sort();
+  const _sqProvBtns=_sqAllProvs.map(pv=>`<button id="sqfp-${pv}" onclick="sqFiltProv('${pv}')" style="padding:2px 10px;border-radius:12px;border:0.5px solid var(--br);background:var(--bl4);color:var(--bl);font-size:.68rem;cursor:pointer">${pv}</button>`).join('');
+  const provFilterHtml=`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;align-items:center"><span style="font-size:.68rem;color:var(--mu)">Provincia:</span><button id="sqfp-all" onclick="sqFiltProv('')" style="padding:2px 10px;border-radius:12px;border:0.5px solid var(--br);background:#555;color:#fff;font-size:.68rem;cursor:pointer">Tutti</button>${_sqProvBtns}</div>`;
+  window.sqFiltProv=function(pv){
+    document.querySelectorAll('[id^="sqfp-"]').forEach(b=>{const iA=b.id===(pv?'sqfp-'+pv:'sqfp-all');b.style.background=iA?(pv?(PC[pv]||'#555'):'#555'):'var(--bl4)';b.style.color=iA?'#fff':(pv?'var(--bl)':'var(--bl)');});
+    document.querySelectorAll('#tbl-gruppi tr[data-prov]').forEach(r=>{r.style.display=(pv&&r.dataset.prov!==pv)?'none':'';});
+  };
+  function mkFormaGruppo(sq){
+    if(!sq||!sq.forma_recente||!sq.forma_recente.length)return'';
+    return sq.forma_recente.slice(-5).map(f=>`<span style="display:inline-block;width:11px;height:11px;border-radius:2px;font-size:7px;line-height:11px;text-align:center;color:#fff;font-weight:600;background:${(f.res||f)==='V'?'var(--green)':'var(--red)'};margin:0 1px">${f.res||f||'?'}</span>`).join('');
+  }
+
   let num=0;
-  let html=`<p class="il">${grps.length} gruppi · ${grps.filter(([,v])=>v.length>1).length} con varianti
+  let html=provFilterHtml+`<p class="il" id="sq-count">${grps.length} gruppi · ${grps.filter(([,v])=>v.length>1).length} con varianti
     &nbsp;<button class="btn" style="font-size:.65rem;padding:2px 8px" onclick="sqToggleAll(true)">▼ Espandi tutto</button>
     <button class="btn" style="font-size:.65rem;padding:2px 8px" onclick="sqToggleAll(false)">▲ Contrai tutto</button>
   </p>
   <div style="overflow-x:auto"><table class="rtbl" id="tbl-gruppi"><thead><tr>
-    <th>#</th>
-    <th>Squadra / Campionati</th>
-    <th>Prov.</th>
-    <th>Gruppo</th>
-    <th onclick="sT('tbl-gruppi',4)" style="color:var(--bl);cursor:pointer">Pt</th>
-    <th onclick="sT('tbl-gruppi',5)" style="cursor:pointer">Gare</th>
-    <th onclick="sT('tbl-gruppi',6)" style="color:var(--green);cursor:pointer">Vinte</th>
-    <th onclick="sT('tbl-gruppi',7)" style="color:var(--red);cursor:pointer">Perse</th>
-    <th onclick="sT('tbl-gruppi',8)" style="cursor:pointer">V-Casa</th>
-    <th onclick="sT('tbl-gruppi',9)" style="cursor:pointer">P-Casa</th>
-    <th onclick="sT('tbl-gruppi',10)" style="cursor:pointer">V-Osp</th>
-    <th onclick="sT('tbl-gruppi',11)" style="cursor:pointer">P-Osp</th>
-    <th onclick="sT('tbl-gruppi',12)" style="cursor:pointer">Win%</th>
+    <th onclick="sT('tbl-gruppi',0)" style="cursor:pointer">#</th>
+    <th onclick="sT('tbl-gruppi',1)" style="cursor:pointer">Squadra / Campionati</th>
+    <th onclick="sT('tbl-gruppi',2)" style="cursor:pointer">Prov.</th>
+    <th onclick="sT('tbl-gruppi',3)" style="color:var(--bl);cursor:pointer">Pt</th>
+    <th onclick="sT('tbl-gruppi',4)" style="cursor:pointer">Gare</th>
+    <th onclick="sT('tbl-gruppi',5)" style="color:var(--green);cursor:pointer">Vinte</th>
+    <th onclick="sT('tbl-gruppi',6)" style="color:var(--red);cursor:pointer">Perse</th>
+    <th onclick="sT('tbl-gruppi',7)" style="cursor:pointer">V-Casa</th>
+    <th onclick="sT('tbl-gruppi',8)" style="cursor:pointer">P-Casa</th>
+    <th onclick="sT('tbl-gruppi',9)" style="cursor:pointer">V-Osp</th>
+    <th onclick="sT('tbl-gruppi',10)" style="cursor:pointer">P-Osp</th>
+    <th onclick="sT('tbl-gruppi',11)" style="cursor:pointer">Win%</th>
+    <th>Forma</th>
   </tr></thead><tbody>`;
 
   grps.forEach(([canonical,members])=>{
@@ -3439,7 +3466,8 @@ function renderGruppi(){
     const rowBorder=wp>50?'border-left:3px solid var(--green)':totP>totV?'border-left:3px solid var(--red)':'border-left:3px solid #eee';
 
     // ── RIGA PRINCIPALE (totale aggregato gruppo) ──
-    html+=`<tr style="${rowBg};${rowBorder}">
+    const mainProv=(s?.prov||'');
+    html+=`<tr style="${rowBg};${rowBorder}" data-prov="${mainProv}">
       <td class="rpos ${num<=3?'g'+num:''}" data-val="${num}">${num}</td>
       <td>
         <button onclick="sqToggle('sqg-${num}')" style="background:none;border:none;cursor:pointer;font-size:.6rem;color:var(--mu);margin-right:2px" title="Espandi/Comprimi">▶</button>
@@ -3447,7 +3475,6 @@ function renderGruppi(){
         ${isMulti?`<span class="badge" style="background:var(--bl2);color:#fff;margin-left:4px;font-size:.6rem">${members.length}</span>`:''}
       </td>
       <td>${s?.prov?pvB(s.prov):''}</td>
-      <td style="font-size:.62rem;color:var(--mu)">${isMulti?members.filter(m=>m!==canonical).map(m=>`<span style="cursor:pointer" onclick="openSquadra('${esc(m)}')">${escH(m)}</span>`).join(', '):'—'}</td>
       <td data-val="${ptGlob}" style="text-align:center;font-weight:800;color:var(--bl)">${ptGlob}</td>
       <td data-val="${totG}" style="text-align:center;font-weight:700;cursor:pointer" onclick="openSquadra('${esc(main)}')">${totG}</td>
       <td data-val="${totV}" style="text-align:center;font-weight:700;color:var(--green)">${totV}</td>
@@ -3457,6 +3484,7 @@ function renderGruppi(){
       <td data-val="${vosp}" style="text-align:center">${vosp}</td>
       <td data-val="${posp}" style="text-align:center">${posp}</td>
       <td data-val="${wp}" style="text-align:center;font-weight:700;color:${wp>50?'var(--green)':wp<40?'var(--red)':'var(--mu)'}">${wp}%</td>
+      <td></td>
     </tr>`;
 
     // ── SUB-ROWS: un blocco per ogni ALIAS/MEMBRO ──
@@ -3481,7 +3509,9 @@ function renderGruppi(){
       const isSelf=m===canonical;
 
       // Riga alias (livello 2)
-      html+=`<tr class="sq-sub" data-sqgroup="sqg-${num}" style="display:none;background:#f8faff;border-left:3px solid var(--bl3)">
+      const mFormaHtml=mkFormaGruppo(sq);
+      const mRowBg=mWp>50?'#f0fff4':mWp<40&&mG>0?'#fff5f5':'#f8faff';
+      html+=`<tr class="sq-sub" data-sqgroup="sqg-${num}" style="display:none;background:${mRowBg};border-left:3px solid var(--bl3)">
         <td></td>
         <td style="padding:3px 8px 3px 20px">
           <button onclick="sqToggleMember('sqm-${num}-${esc(m)}')" style="background:none;border:none;cursor:pointer;font-size:.58rem;color:var(--mu);margin-right:2px">▶</button>
@@ -3489,7 +3519,6 @@ function renderGruppi(){
           ${isSelf?`<span style="background:var(--bl3);color:var(--bl2);border-radius:4px;padding:0 5px;font-size:.6rem;font-weight:600;margin-left:4px">stesso nome</span>`:''}
         </td>
         <td>${pvB(sq.prov||'')}</td>
-        <td></td>
         <td style="text-align:center;font-weight:700;color:var(--bl);font-size:.78rem">${mPt}</td>
         <td style="text-align:center;font-weight:700;font-size:.78rem;cursor:pointer" onclick="openSquadra('${esc(m)}')">${mG}</td>
         <td style="text-align:center;font-weight:700;color:var(--green);font-size:.78rem">${mV}</td>
@@ -3499,6 +3528,7 @@ function renderGruppi(){
         <td style="text-align:center;font-size:.78rem">${mVosp}</td>
         <td style="text-align:center;font-size:.78rem">${mPosp}</td>
         <td style="text-align:center;font-weight:700;font-size:.78rem;color:${mWp>50?'var(--green)':mWp<40?'var(--red)':'var(--mu)'}">${mWp}%</td>
+        <td style="text-align:center">${mFormaHtml}</td>
       </tr>`;
 
       // Riga categorie del membro (livello 3) — ordinate per importanza campionato
@@ -3520,7 +3550,7 @@ function renderGruppi(){
           <td style="padding:2px 8px 2px 44px">
             <span style="background:${col};color:#fff;border-radius:10px;padding:1px 8px;font-size:.6rem;font-weight:600;cursor:pointer" onclick="openCampionato('${esc(cn)}')">${isFemmC?'♀ ':''}${escH(cn)}</span>
           </td>
-          <td></td><td></td>
+          <td></td>
           <td style="text-align:center;font-size:.7rem;font-weight:700;color:var(--bl)">${cpt}</td>
           <td style="text-align:center;font-size:.7rem;font-weight:700">${cs.tot}</td>
           <td style="text-align:center;font-size:.7rem;font-weight:700;color:var(--green)">${cs.v}</td>
@@ -3530,6 +3560,7 @@ function renderGruppi(){
           <td style="text-align:center;font-size:.7rem">${cs.vosp}</td>
           <td style="text-align:center;font-size:.7rem">${cs.posp}</td>
           <td style="text-align:center;font-size:.7rem;font-weight:700;color:${cwp>50?'var(--green)':cwp<40?'var(--red)':'var(--mu)'}">${cwp}%</td>
+          <td></td>
         </tr>`;
       });
     });
