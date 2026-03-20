@@ -344,6 +344,12 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
   box-shadow:var(--shadow);}
 .rtbl thead,.mtbl thead,.gtbl thead{background:var(--tbl-hdr);}
 .rtbl thead{position:sticky;top:0;z-index:10;}
+.rtbl th{position:relative;}
+.rtbl th .frz-btn{display:none;position:absolute;right:2px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);border:none;color:rgba(255,255,255,.7);width:14px;height:14px;border-radius:2px;cursor:pointer;font-size:.55rem;line-height:14px;text-align:center;padding:0;}
+.rtbl th:hover .frz-btn{display:block;}
+.rtbl th.frz-locked .frz-btn{display:block;background:rgba(255,255,255,.35);color:#fff;}
+.rtbl th.frz-locked{position:sticky;z-index:6;background:var(--tbl-hdr);}
+.rtbl td.frz-locked{position:sticky;z-index:3;background:inherit;}
 .rtbl th,.mtbl th,.gtbl th{color:var(--tbl-hdr-tx);padding:7px 9px;
   text-align:left;font-size:.67rem;font-weight:700;cursor:pointer;
   white-space:nowrap;user-select:none;}
@@ -1712,10 +1718,18 @@ function sT(tid,ci,defaultAsc){
     return 0;
   });
   rows.forEach(r=>tbody.appendChild(r));
-  // Rinumera colonna # dopo sort
-  tbody.querySelectorAll('tr:not(.hidden)').forEach((r,i)=>{
+  // Rinumera colonna # dopo sort (aggiorna solo data-val, non sovrascrive il DOM)
+  let _rnum=0;
+  tbody.querySelectorAll('tr:not(.hidden)').forEach((r)=>{
     const td0=r.querySelectorAll('td')[0];
-    if(td0&&td0.hasAttribute('data-val')){td0.textContent=i+1;td0.setAttribute('data-val',i+1);}
+    if(td0&&td0.hasAttribute('data-val')){
+      _rnum++;
+      td0.setAttribute('data-val',_rnum);
+      // aggiorna solo nodi testo diretti, non figli con classi
+      const tn=[...td0.childNodes].find(n=>n.nodeType===3&&n.textContent.trim());
+      if(tn)tn.textContent=_rnum;
+      else if(!td0.children.length)td0.textContent=_rnum;
+    }
   });
 }
 // Intercetta evento per Shift detection
@@ -1723,6 +1737,57 @@ document.addEventListener('click',function(e){
   const th=e.target.closest('th[onclick]');
   if(th)window._sTev=e;
 },true);
+
+// FREEZE COLONNE per rtbl (lucchetto su th)
+function rtblToggleFreeze(btn){
+  const th=btn.closest('th');if(!th)return;
+  const tbl=th.closest('table');if(!tbl)return;
+  const thIdx=[...th.parentElement.children].indexOf(th);
+  const isLocked=th.classList.toggle('frz-locked');
+  btn.textContent=isLocked?'🔒':'📌';
+  btn.title=isLocked?'Sblocca colonna':'Blocca colonna';
+  // Calcola offset sticky per ogni th bloccato in ordine
+  const allThs=[...tbl.querySelectorAll('thead tr:last-child th')];
+  let off=0;
+  allThs.forEach((t,i)=>{
+    if(t.classList.contains('frz-locked')){
+      t.style.left=off+'px';
+      off+=t.offsetWidth||80;
+    } else {
+      t.style.left='';
+    }
+  });
+  // Applica sticky anche alle td della stessa colonna
+  tbl.querySelectorAll('tbody tr').forEach(tr=>{
+    const td=[...tr.children][thIdx];
+    if(!td)return;
+    if(isLocked){
+      td.classList.add('frz-locked');
+    } else {
+      td.classList.remove('frz-locked');
+    }
+  });
+  // Ricalcola left su tutte le td bloccate
+  const lockedIdxs=[...allThs].map((t,i)=>t.classList.contains('frz-locked')?i:-1).filter(i=>i>=0);
+  tbl.querySelectorAll('tbody tr').forEach(tr=>{
+    let off2=0;
+    lockedIdxs.forEach(ci=>{
+      const td=[...tr.children][ci];
+      if(td){td.style.left=off2+'px';off2+=td.offsetWidth||80;}
+    });
+  });
+}
+// Inietta bottone 🔒 nei th delle rtbl dopo il render
+function rtblAddFreezeBtns(tableId){
+  const tbl=document.getElementById(tableId);if(!tbl)return;
+  tbl.querySelectorAll('thead tr:last-child th').forEach(th=>{
+    if(th.querySelector('.frz-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='frz-btn';btn.textContent='📌';btn.title='Blocca colonna';
+    btn.onclick=function(e){e.stopPropagation();rtblToggleFreeze(this);};
+    th.appendChild(btn);
+  });
+}
 
 // COLOR CUSTOMIZER
 function toggleCust(id){document.getElementById(id)?.classList.toggle('open');}
@@ -1926,7 +1991,7 @@ function renderPersonsTable(cid,persons,opts={}){
       </td>
       <td ${tdAna}>${pvB(p.provincia)}</td>
       <td ${tdAna} style="font-size:.72rem;color:var(--mu)">${escH(p.citta||'')}</td>
-      <td ${tdAna} style="font-family:monospace;font-size:.68rem">${fip?`<span style="background:#eef1f8;border:1px solid #c5ccde;border-radius:5px;padding:2px 7px;color:#2c3e6b;letter-spacing:.5px;font-weight:600;font-size:.67rem">${fip}</span>`:''}</td>
+      <td ${tdAna} style="font-family:monospace;font-size:.68rem">${fip?`<span style="background:#1a3a6b;color:#b5d4f4;border-radius:4px;padding:2px 8px;font-size:.65rem;font-weight:700;letter-spacing:1.5px;font-family:'Courier New',Courier,monospace">${fip}</span>`:''}</td>
       ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
       <td ${tdAtt} data-val="${nGareOggi}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}"
         title="Gare fatte fino ad oggi (Arb+UDC+Oss)"
@@ -3020,6 +3085,7 @@ function renderTutti(){
   if(pv)all=all.filter(p=>p.provincia===pv);
   all.sort((a,b)=>sort==='nome'?a.nome.localeCompare(b.nome,'it'):sort==='provincia'?a.provincia.localeCompare(b.provincia):sort==='categoria'?a.categoria.localeCompare(b.categoria):b.n_gare-a.n_gare);
   renderPersonsTable('tutti-list',all,{showCat:true,tid:'tbl-tutti'});
+  setTimeout(()=>rtblAddFreezeBtns('tbl-tutti'),50);
 }
 function renderArb(){
   const q=document.getElementById('fa-q').value.toLowerCase();
@@ -3034,6 +3100,7 @@ function renderArb(){
   if(camp)a=a.filter(p=>p.campionati[camp]);
   a.sort((x,y)=>sort==='nome'?x.nome.localeCompare(y.nome,'it'):sort==='provincia'?x.provincia.localeCompare(y.provincia):sort==='km'?calcKmArb(y)-calcKmArb(x):y.n_gare_arbitro-x.n_gare_arbitro);
   renderPersonsTable('arb-list',a,{tid:'tbl-arb',mainGare:'n_gare_arbitro'});
+  setTimeout(()=>rtblAddFreezeBtns('tbl-arb'),50);
 }
 function renderUDC(){
   const q=document.getElementById('fu-q').value.toLowerCase();
@@ -3046,6 +3113,7 @@ function renderUDC(){
   if(role)u=u.filter(p=>(p.ruoli||[]).includes(role));
   u.sort((a,b)=>sort==='nome'?a.nome.localeCompare(b.nome,'it'):b.n_gare_udc-a.n_gare_udc);
   renderPersonsTable('udc-list',u,{tid:'tbl-udc'});
+  setTimeout(()=>rtblAddFreezeBtns('tbl-udc'),50);
 }
 function renderOss(){
   const q=document.getElementById('fo-q').value.toLowerCase();
@@ -3055,6 +3123,7 @@ function renderOss(){
   if(pv)o=o.filter(p=>p.provincia===pv);
   o.sort((a,b)=>b.n_gare_osservatore-a.n_gare_osservatore);
   renderPersonsTable('oss-list',o,{tid:'tbl-oss',mainGare:'n_gare_osservatore'});
+  setTimeout(()=>rtblAddFreezeBtns('tbl-oss'),50);
 }
 function livelloC(cn){
   var campOrdL=['Serie B Femminile','Serie C','Divisione regionale 1','Divisione Regionale 1',
@@ -3568,6 +3637,7 @@ function renderGruppi(){
 
   html+=`</tbody></table></div>`;
   document.getElementById('gruppi-list').innerHTML=html;
+  setTimeout(()=>rtblAddFreezeBtns('tbl-gruppi'),50);
 }
 
 // Toggle alias level (livello 2 + livello 3 dipendente)
