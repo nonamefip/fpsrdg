@@ -2889,7 +2889,8 @@ function openGiornoModal(ds){
         const campName=g['Campionato']||'';
         const pvCampo=cpv(campo);
         const pvClr=pvCampo&&PC[pvCampo]?PC[pvCampo]:'transparent';
-        return`<tr data-camp="${escH(campName)}" data-risultato="${g['Risultato']?'1':''}" data-arb="${nArb>0?'1':''}" style="border-left:3px solid ${pvClr}">
+        return`<tr data-camp="${escH(campName)}" data-risultato="${g['Risultato']?'1':''}" data-arb="${nArb>0?'1':''}" data-arb1="${escH(a1)}" data-prov="${pvCampo||''}" data-campo="${escH(campo)}" style="border-left:3px solid ${pvClr}">
+          <td class="gm-rnum" style="text-align:center;font-size:.7rem;color:var(--mu2)"></td>
           <td style="font-size:.7rem;text-align:center;color:var(--mu);white-space:nowrap">${ora||'–'}</td>
           <td style="font-size:.65rem;text-align:center;color:var(--mu2);font-family:monospace">${escH(g['Numero Gara']||'')}</td>
           <td style="font-size:.7rem"><span style="background:${campColor(campName)};color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(campName)}')">${escH(campName)}</span></td>
@@ -2897,7 +2898,7 @@ function openGiornoModal(ds){
           <td style="font-size:.68rem;color:var(--mu2)">${escH(g['Girone']||'')}</td>
           <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa']||'')}');event.stopPropagation()" style="${casaW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Casa']||'')}</span></td>
           <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}');event.stopPropagation()" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite']||'')}</span></td>
-          <td style="font-weight:700;text-align:center">${g['Risultato']||`<span style="color:var(--mu2);font-size:.7rem">In programma</span>`}</td>
+          <td style="text-align:center">${(()=>{const r=g['Risultato'];if(!r)return'<span style="color:var(--mu2);font-size:.7rem">In programma</span>';const[a,b]=r.split('-').map(Number);if(a>b)return`<span style="background:#eaf3de;color:#27500A;border-radius:4px;padding:1px 7px;font-weight:700">${r}</span>`;if(b>a)return`<span style="background:#fcebeb;color:#791F1F;border-radius:4px;padding:1px 7px;font-weight:700">${r}</span>`;return`<span style="font-weight:700">${r}</span>`;})()} </td>
           <td style="text-align:center"><b style="color:${arbClr}">${nArb}</b></td>
           <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" data-n="${a1}" onclick="openPersona(this.dataset.n);event.stopPropagation()">${escH(a1)}</span>${genderDot(a1)}`:''}</td>
           <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" data-n="${a2}" onclick="openPersona(this.dataset.n);event.stopPropagation()">${escH(a2)}</span>${genderDot(a2)}`:''}</td>
@@ -2907,21 +2908,42 @@ function openGiornoModal(ds){
 
       bodyHtml+=`<table class="gtbl" id="tbl-giorno">
         <thead><tr>
-          <th onclick="sT('tbl-giorno',0,event)" style="cursor:pointer">Ora ▾</th>
-          <th onclick="sT('tbl-giorno',1,event)" style="cursor:pointer">N°</th>
-          <th onclick="sT('tbl-giorno',2,event)" style="cursor:pointer">Campionato</th>
-          <th onclick="sT('tbl-giorno',3,event)" style="cursor:pointer">Prov.</th>
-          <th onclick="sT('tbl-giorno',4,event)" style="cursor:pointer">Girone</th>
-          <th onclick="sT('tbl-giorno',5,event)" style="cursor:pointer">Casa</th>
-          <th onclick="sT('tbl-giorno',6,event)" style="cursor:pointer">Ospite</th>
-          <th onclick="sT('tbl-giorno',7,event)" style="cursor:pointer">Risultato</th>
-          <th onclick="sT('tbl-giorno',8,event)" style="cursor:pointer">Arb.</th>
-          <th onclick="sT('tbl-giorno',9,event)" style="cursor:pointer">Arbitro 1</th>
-          <th onclick="sT('tbl-giorno',10,event)" style="cursor:pointer">Arbitro 2</th>
-          <th onclick="sT('tbl-giorno',11,event)" style="cursor:pointer">Campo</th>
+          <th style="width:28px">#</th>
+          <th onclick="sT('tbl-giorno',1,event)" style="cursor:pointer">Ora ▾</th>
+          <th onclick="sT('tbl-giorno',2,event)" style="cursor:pointer">N°</th>
+          <th onclick="sT('tbl-giorno',3,event)" style="cursor:pointer">Campionato</th>
+          <th onclick="sT('tbl-giorno',4,event)" style="cursor:pointer">Prov.</th>
+          <th onclick="sT('tbl-giorno',5,event)" style="cursor:pointer">Girone</th>
+          <th onclick="sT('tbl-giorno',6,event)" style="cursor:pointer">Casa</th>
+          <th onclick="sT('tbl-giorno',7,event)" style="cursor:pointer">Ospite</th>
+          <th onclick="sT('tbl-giorno',8,event)" style="cursor:pointer">Risultato</th>
+          <th onclick="sT('tbl-giorno',9,event)" style="cursor:pointer">Arb.</th>
+          <th onclick="sT('tbl-giorno',10,event)" style="cursor:pointer">Arbitro 1</th>
+          <th onclick="sT('tbl-giorno',11,event)" style="cursor:pointer">Arbitro 2</th>
+          <th onclick="sT('tbl-giorno',12,event)" style="cursor:pointer">Campo</th>
         </tr></thead>
         <tbody id="tbl-giorno-body">${rows}</tbody>
-      </table></div>`;
+      </table>
+      <div style="font-size:.65rem;color:var(--mu);padding:5px 2px" id="gm-tbl-footer"></div>
+      </div>`;
+
+      // Filtri pill per province, arbitri, campi
+      const allProvs=[...new Set(allDayG.map(g=>cpv(g['Campo']||'')).filter(Boolean))].sort();
+      const allArbs=[...new Set(allDayG.flatMap(g=>['Arbitro 1','Arbitro 2'].map(f=>pns(g[f]||'')).filter(Boolean)))].sort();
+      const allCampi=[...new Set(allDayG.map(g=>(g['Campo']||'').split(',')[0].trim()).filter(Boolean))].sort();
+      const mkGmPills=(items,colorFn,filterFn,label)=>{
+        if(!items.length)return'';
+        return'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;align-items:center">'
+          +'<span style="font-size:.6rem;color:var(--mu);margin-right:2px">'+label+':</span>'
+          +items.map(item=>`<span style="background:${colorFn(item)};color:#fff;border-radius:10px;padding:1px 8px;font-size:.65rem;font-weight:600;cursor:pointer;transition:opacity .15s" onclick="gmTogglePill(this,'${filterFn}','${escH(item).replace(/'/g,'\\'')}')">${escH(item)}</span>`).join('')
+          +'<span style="background:#999;color:#fff;border-radius:10px;padding:1px 8px;font-size:.65rem;cursor:pointer" onclick="gmResetPills(\''+filterFn+'\')" title="Mostra tutti">✕</span>'
+          +'</div>';
+      };
+      // inserisci pill PRIMA della tabella
+      const pillHtml=mkGmPills(allProvs,p=>PC[p]||'#888','prov','Provincia')
+        +mkGmPills(allArbs,()=>'#2c3e6b','arb','Arbitro')
+        +mkGmPills(allCampi,()=>'#3d4d6b','campo','Campo');
+      if(pillHtml) bodyHtml=bodyHtml.replace('<div style="overflow-x:auto" id="gm-tbl-wrap">','<div>'+pillHtml+'</div><div style="overflow-x:auto" id="gm-tbl-wrap">');
 
       // Provvedimenti
       const provvGiorno=allDayG.filter(g=>g['Provvedimenti']&&g['Provvedimenti'].trim&&g['Provvedimenti'].trim());
@@ -2982,7 +3004,52 @@ function openGiornoModal(ds){
     window.gmFilterCamp=function(camp){
       const rows=modal.querySelectorAll('#tbl-giorno-body tr');
       rows.forEach(r=>r.style.display=(r.dataset.camp===camp||!camp)?'':'none');
+      gmRenumber();
     };
+    // Pill filters per province, arbitri, campi
+    window._gmHidden={prov:new Set(),arb:new Set(),campo:new Set()};
+    window.gmTogglePill=function(btn,type,val){
+      if(window._gmHidden[type]&&window._gmHidden[type].has(val)){
+        window._gmHidden[type].delete(val);btn.style.opacity='1';
+      } else {
+        if(!window._gmHidden[type])window._gmHidden[type]=new Set();
+        window._gmHidden[type].add(val);btn.style.opacity='.22';
+      }
+      gmApplyPillFilters();
+    };
+    window.gmResetPills=function(type){
+      if(window._gmHidden[type])window._gmHidden[type].clear();
+      // reset opacity di tutte le pill di quel tipo
+      const rows=modal.querySelectorAll('#tbl-giorno-body tr');
+      rows.forEach(r=>r.style.display='');
+      gmApplyPillFilters();
+      // reset visivo pill
+      modal.querySelectorAll('[onclick*="gmTogglePill"]').forEach(p=>{
+        if(p.getAttribute('onclick').includes("'"+type+"'"))p.style.opacity='1';
+      });
+    };
+    function gmApplyPillFilters(){
+      const rows=modal.querySelectorAll('#tbl-giorno-body tr');
+      rows.forEach(r=>{
+        const campo=(r.dataset.campo||'').split(',')[0].trim();
+        const arb=r.dataset.arb1||'';
+        const prov=r.dataset.prov||'';
+        const hide=(window._gmHidden.campo&&window._gmHidden.campo.has(campo))||
+                   (window._gmHidden.arb&&window._gmHidden.arb.has(arb))||
+                   (window._gmHidden.prov&&window._gmHidden.prov.has(prov));
+        r.style.display=hide?'none':'';
+      });
+      gmRenumber();
+    }
+    function gmRenumber(){
+      let n=0;
+      const rows=modal.querySelectorAll('#tbl-giorno-body tr:not([style*="none"])');
+      rows.forEach(r=>{n++;const td=r.querySelector('.gm-rnum');if(td)td.textContent=n;});
+      const footer=modal.querySelector('#gm-tbl-footer');
+      if(footer)footer.textContent=n+' gare visibili';
+    }
+    // Numera subito le righe al primo caricamento
+    setTimeout(gmRenumber,50);
 
   }catch(err){
     console.error('openGiornoModal error:',err);
@@ -8326,14 +8393,41 @@ function openCampoModal(campo){
       </div>`).join('')}
     </div>
     <div class="card">
-      <div class="card-title">📅 Gare (${gare.length})</div>
-      <div style="overflow-x:auto">${mkTbl(gare.slice(0,200).map(function(g,i){
-        return '<tr><td>'+escH(g['Data'])+'</td>'+
-          '<td style="font-size:.68rem">'+escH(g['Campionato']||'')+'</td>'+
-          '<td><span class="rn rn-sq" onclick="openSquadra(\''+esc(g['Squadra Casa']||'')+'\')">'+ escH(g['Squadra Casa']||'')+'</span></td>'+
-          '<td><span class="rn rn-sq" onclick="openSquadra(\''+esc(g['Squadra Ospite']||'')+'\')">'+ escH(g['Squadra Ospite']||'')+'</span></td>'+
-          '<td style="font-weight:700">'+escH(g['Risultato']||'')+'</td></tr>';
-      }).join(''),['Data','Campionato','Casa','Ospite','Ris.'],'tbl-campo-gare')}</div>
+      <div class="card-title">📅 Tutte le gare (${gare.length}) — da settembre a fine stagione</div>
+      <div style="overflow-x:auto"><table class="gtbl" style="width:100%">
+        <thead><tr><th>#</th><th>Data</th><th>Campionato</th><th>Casa</th><th>Ris.</th><th>Ospite</th></tr></thead>
+        <tbody>${(()=>{
+          const today=new Date().toISOString().split('T')[0];
+          // Ordina dal più vecchio al più nuovo
+          const sorted=[...gare,(D.gare_future||[]).filter(g2=>{const cv=g2['Campo']||'';return cv===campo||(c.varianti||[]).indexOf(cv)>=0;})].flat()
+            .filter((g2,i,arr)=>arr.findIndex(x=>(x['Numero Gara']||x['Squadra Casa']+x['Data'])===(g2['Numero Gara']||g2['Squadra Casa']+g2['Data']))===i)
+            .sort((a,b)=>a['Data'].localeCompare(b['Data']));
+          let rn=0,html='',todayDone=false;
+          sorted.forEach(g2=>{
+            rn++;
+            const isToday=g2['Data']===today;
+            const isFuture=g2['Data']>today&&!g2['Risultato'];
+            if(isToday&&!todayDone){
+              html+='<tr><td colspan="6" style="background:#e6f1fb;color:#0c447c;font-size:.65rem;font-weight:700;padding:4px 8px;border-left:3px solid #185FA5">📅 Oggi — '+today.split('-').reverse().join('/')+'</td></tr>';
+              todayDone=true;
+            }
+            const bg=isToday?'background:#fffbeb':isFuture?'background:#fafbff':'';
+            const bl=isToday?'border-left:3px solid #BA7517':isFuture?'border-left:3px solid #185FA5':'';
+            const r=g2['Risultato']||'';
+            let risBadge='<span style="color:var(--mu2);font-size:.68rem">—</span>';
+            if(r){const[a,b]=r.split('-').map(Number);if(a>b)risBadge='<span style="background:#eaf3de;color:#27500A;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.75rem">'+r+'</span>';else if(b>a)risBadge='<span style="background:#fcebeb;color:#791F1F;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.75rem">'+r+'</span>';else risBadge='<span style="font-weight:700;font-size:.75rem">'+r+'</span>';}
+            html+='<tr style="'+bg+';'+bl+';cursor:pointer" onclick="openGara(\''+esc(g2['Numero Gara']||'')+'\')">'+
+              '<td style="text-align:center;color:var(--mu2);font-size:.68rem">'+rn+'</td>'+
+              '<td style="font-size:.68rem">'+escH(g2['Data']||'').split('-').reverse().join('/')+'</td>'+
+              '<td><span style="background:'+campColor(g2['Campionato']||'')+';color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem">'+escH(g2['Campionato']||'')+'</span></td>'+
+              '<td style="font-weight:500;font-size:.72rem"><span class="rn rn-sq" onclick="event.stopPropagation();openSquadra(\''+esc(g2['Squadra Casa']||'')+'\')">'+escH(g2['Squadra Casa']||'')+'</span></td>'+
+              '<td style="text-align:center">'+risBadge+'</td>'+
+              '<td style="font-size:.72rem"><span class="rn rn-sq" onclick="event.stopPropagation();openSquadra(\''+esc(g2['Squadra Ospite']||'')+'\')">'+escH(g2['Squadra Ospite']||'')+'</span></td>'+
+              '</tr>';
+          });
+          return html;
+        })()}</tbody>
+      </table></div>
     </div>`;  openMo('mo-campo');
   }catch(err){
     document.getElementById('mca-title').textContent='Errore';
