@@ -344,12 +344,13 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
   box-shadow:var(--shadow);}
 .rtbl thead,.mtbl thead,.gtbl thead{background:var(--tbl-hdr);}
 .rtbl thead{position:sticky;top:0;z-index:10;}
-.rtbl th{position:relative;}
-.rtbl th .frz-btn{display:none;position:absolute;right:2px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);border:none;color:rgba(255,255,255,.7);width:14px;height:14px;border-radius:2px;cursor:pointer;font-size:.55rem;line-height:14px;text-align:center;padding:0;}
-.rtbl th:hover .frz-btn{display:block;}
-.rtbl th.frz-locked .frz-btn{display:block;background:rgba(255,255,255,.35);color:#fff;}
 .rtbl th.frz-locked{position:sticky;z-index:6;background:var(--tbl-hdr);}
 .rtbl td.frz-locked{position:sticky;z-index:3;}
+/* Barra freeze colonne — separata dalla tabella */
+#rtbl-freeze-bar{display:flex;flex-wrap:wrap;gap:4px;padding:4px 0;margin-bottom:4px;min-height:0;}
+#rtbl-freeze-bar button{font-size:.62rem;padding:2px 8px;border-radius:3px;border:0.5px solid var(--br);
+  background:var(--bl4);color:var(--bl);cursor:pointer;}
+#rtbl-freeze-bar button.locked{background:#1a3a6b;color:#fff;border-color:#1a3a6b;}
 .rtbl th,.mtbl th,.gtbl th{color:var(--tbl-hdr-tx);padding:7px 9px;
   text-align:left;font-size:.67rem;font-weight:700;cursor:pointer;
   white-space:nowrap;user-select:none;}
@@ -1322,13 +1323,13 @@ tr.loss-row td{background:#fdecea!important;}
   </div>
   <div style="overflow-x:auto"><table class="gtbl" id="tbl-provv">
     <thead><tr>
-      <th onclick="sT('tbl-provv',0)" style="cursor:pointer">#</th>
-      <th onclick="sT('tbl-provv',1)" style="cursor:pointer">Data ▾</th>
-      <th onclick="sT('tbl-provv',2)" style="cursor:pointer">Campionato</th>
-      <th onclick="sT('tbl-provv',3)" style="cursor:pointer">Casa</th>
-      <th onclick="sT('tbl-provv',4)" style="cursor:pointer">Ospite</th>
-      <th onclick="sT('tbl-provv',5)" style="cursor:pointer">Arbitro 1</th>
-      <th onclick="sT('tbl-provv',6)" style="cursor:pointer">Arbitro 2</th>
+      <th onclick="sT('tbl-provv',0,event)" style="cursor:pointer">#</th>
+      <th onclick="sT('tbl-provv',1,event)" style="cursor:pointer">Data ▾</th>
+      <th onclick="sT('tbl-provv',2,event)" style="cursor:pointer">Campionato</th>
+      <th onclick="sT('tbl-provv',3,event)" style="cursor:pointer">Casa</th>
+      <th onclick="sT('tbl-provv',4,event)" style="cursor:pointer">Ospite</th>
+      <th onclick="sT('tbl-provv',5,event)" style="cursor:pointer">Arbitro 1</th>
+      <th onclick="sT('tbl-provv',6,event)" style="cursor:pointer">Arbitro 2</th>
       <th>Provvedimento</th>
     </tr></thead>
     <tbody id="tbl-provv-body"></tbody>
@@ -1356,15 +1357,15 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="il" id="campi-info"></div>
   <div style="overflow-x:auto"><table class="gtbl" id="tbl-campi">
     <thead><tr>
-      <th onclick="sT('tbl-campi',0)" style="cursor:pointer">#</th>
-      <th onclick="sT('tbl-campi',1)" style="cursor:pointer">Campo</th>
+      <th onclick="sT('tbl-campi',0,event)" style="cursor:pointer">#</th>
+      <th onclick="sT('tbl-campi',1,event)" style="cursor:pointer">Campo</th>
       <th>Indirizzo</th>
-      <th onclick="sT('tbl-campi',3)" style="cursor:pointer">Località</th>
-      <th onclick="sT('tbl-campi',4)" style="cursor:pointer">Prov.</th>
-      <th onclick="sT('tbl-campi',5)" style="cursor:pointer">Gare</th>
+      <th onclick="sT('tbl-campi',3,event)" style="cursor:pointer">Località</th>
+      <th onclick="sT('tbl-campi',4,event)" style="cursor:pointer">Prov.</th>
+      <th onclick="sT('tbl-campi',5,event)" style="cursor:pointer">Gare</th>
       <th>🏠 Squadre casa</th>
       <th>✈️ Ospitate</th>
-      <th onclick="sT('tbl-campi',8)" style="cursor:pointer">Camp.</th>
+      <th onclick="sT('tbl-campi',8,event)" style="cursor:pointer">Camp.</th>
     </tr></thead>
     <tbody id="tbl-campi-body"></tbody>
   </table></div>
@@ -1676,22 +1677,21 @@ function mkTbl(rows,cols,tid){return`<table class="mtbl" id="${tid}"><thead><tr>
 
 // TABLE SORT — v2 (robusto per tabelle con sub-righe)
 window._sTcols={};
-function sT(tid,ci,defaultAsc){
+function sT(tid,ci,evOrDefault,_unused){
+  // evOrDefault può essere l'event (passato inline) o defaultAsc (boolean/undefined)
+  const defaultAsc=(typeof evOrDefault==='boolean')?evOrDefault:true;
+  const isShift=!!(evOrDefault&&evOrDefault.shiftKey);
   const tbl=document.getElementById(tid);
   const tbody=tbl?.querySelector('tbody');if(!tbody)return;
-  // Shift detection
-  const ev=window._sTev||null;
-  const isShift=!!(ev&&ev.shiftKey);
-  window._sTev=null;
   if(!window._sTcols[tid])window._sTcols[tid]=[];
   const cols=window._sTcols[tid];
   const existing=cols.findIndex(c=>c.ci===ci);
   if(isShift){
     if(existing>=0){cols[existing].asc=!cols[existing].asc;}
-    else if(cols.length<3){cols.push({ci,asc:defaultAsc!==false});}
+    else if(cols.length<3){cols.push({ci,asc:defaultAsc});}
   } else {
-    if(existing===0&&cols.length===1){cols[0].asc=!cols[0].asc;}
-    else{window._sTcols[tid]=[{ci,asc:defaultAsc!==false}];}
+    if(existing>=0&&cols.length===1){cols[0].asc=!cols[0].asc;}
+    else{window._sTcols[tid]=[{ci,asc:defaultAsc}];}
   }
   const activeCols=window._sTcols[tid];
   // Feedback visivo: aggiorna solo le th della riga intestazione colonne (ultima tr di thead)
@@ -1706,10 +1706,13 @@ function sT(tid,ci,defaultAsc){
   // Separa righe di primo livello (hanno data-val su td[0]) dalle sub-righe
   // Le sub-righe hanno data-sqgroup o data-sqmember o data-campgroup o class sq-sub/camp-sub
   const allRows=[...tbody.children];
+  // Separa righe fisse (media, footer) che non vanno ordinate
+  const fixedRows=allRows.filter(tr=>tr.hasAttribute('data-avg'));
+  const sortableRows=allRows.filter(tr=>!tr.hasAttribute('data-avg'));
   // Raggruppa: ogni riga principale porta con sé le sue sub-righe
   const groups=[];
   let cur=null;
-  allRows.forEach(tr=>{
+  sortableRows.forEach(tr=>{
     const isSub=tr.hasAttribute('data-sqgroup')||tr.hasAttribute('data-sqmember')||
                 tr.hasAttribute('data-campgroup')||tr.classList.contains('sq-sub')||
                 tr.classList.contains('camp-sub');
@@ -1727,7 +1730,10 @@ function sT(tid,ci,defaultAsc){
     const td=[...tr.children][colIdx];
     if(!td)return'';
     const dv=td.getAttribute('data-val');
-    if(dv!=null)return dv;
+    if(dv!=null&&dv!=='')return dv;
+    // Fallback: leggi il primo span con testo, oppure textContent diretto
+    const span=td.querySelector('span[style],span[class]');
+    if(span&&span.textContent.trim())return span.textContent.trim();
     return td.textContent.trim();
   }
   visible.sort((a,b)=>{
@@ -1740,85 +1746,77 @@ function sT(tid,ci,defaultAsc){
     }
     return 0;
   });
-  // Reinserisci nell'ordine: riga principale + sue sub-righe, poi le nascoste
+  // Reinserisci: visibili ordinati, poi nascosti, poi righe fisse (media) sempre alla fine
   const frag=document.createDocumentFragment();
   [...visible,...hidden].forEach(g=>{frag.appendChild(g.main);g.subs.forEach(s=>frag.appendChild(s));});
+  fixedRows.forEach(r=>frag.appendChild(r));
   tbody.appendChild(frag);
-  // Rinumera colonna # — aggiorna solo data-val e nodo testo diretto
-  let _rn=0;
-  visible.forEach(g=>{
-    const td0=[...g.main.children][0];
-    if(td0&&td0.hasAttribute('data-val')){
-      _rn++;
-      td0.setAttribute('data-val',_rn);
-      const tn=[...td0.childNodes].find(n=>n.nodeType===3&&n.textContent.trim());
-      if(tn)tn.textContent=_rn;
-      else if(!td0.children.length)td0.textContent=_rn;
-    }
-  });
+  // Nota: NON rinumerare la colonna # dopo il sort.
+  // Il data-val originale (posizione iniziale) serve come chiave stabile per il secondo sort.
 }
-// Intercetta evento per Shift detection
-document.addEventListener('click',function(e){
-  const th=e.target.closest('th[onclick]');
-  if(th)window._sTev=e;
-},true);
+// sT riceve l'event direttamente dall'onclick inline — no listener capture necessario
 
 // FREEZE COLONNE per rtbl (lucchetto su th)
 function rtblApplyFreeze(tbl){
-  // Legge le th bloccate in ordine, calcola gli offset reali, li applica a th e td
-  const hdrRow=tbl.querySelector('thead tr:last-child');
-  if(!hdrRow)return;
+  const hdrRow=tbl.querySelector('thead tr:last-child');if(!hdrRow)return;
   const allThs=[...hdrRow.children];
-  // Prima rimuovi tutti gli stili sticky dalle colonne NON bloccate
-  allThs.forEach(th=>{
-    if(!th.classList.contains('frz-locked')){th.style.position='';th.style.left='';th.style.zIndex='';}
-  });
-  tbl.querySelectorAll('tbody tr,tfoot tr').forEach(tr=>{
-    [...tr.children].forEach((td,i)=>{
-      if(!allThs[i]?.classList.contains('frz-locked')){td.style.position='';td.style.left='';td.style.zIndex='';td.style.background='';}
+  // Rimuovi sticky da colonne non bloccate
+  allThs.forEach((th,ci)=>{
+    const locked=th.classList.contains('frz-locked');
+    if(!locked){th.style.position='';th.style.left='';th.style.zIndex='';}
+    tbl.querySelectorAll('tbody tr,tfoot tr').forEach(tr=>{
+      const td=[...tr.children][ci];
+      if(td&&!locked){td.style.position='';td.style.left='';td.style.zIndex='';td.style.background='';}
     });
   });
-  // Calcola offset: somma le larghezze reali delle th bloccate precedenti
+  // Applica sticky a colonne bloccate con offset cumulativo
   let off=0;
   allThs.forEach((th,ci)=>{
     if(!th.classList.contains('frz-locked'))return;
-    const w=th.getBoundingClientRect().width||th.offsetWidth||60;
-    // applica a th
+    const w=th.offsetWidth||80;
     th.style.position='sticky';th.style.left=off+'px';th.style.zIndex='6';
-    // applica a tutte le td della stessa colonna
     tbl.querySelectorAll('tbody tr,tfoot tr').forEach(tr=>{
-      const td=[...tr.children][ci];
-      if(!td)return;
+      const td=[...tr.children][ci];if(!td)return;
       td.style.position='sticky';td.style.left=off+'px';td.style.zIndex='3';
-      // sfondo esplicito (non inherit — non funziona con sticky)
-      if(!td.style.background||td.style.background==='inherit'){
-        const computed=getComputedStyle(tr).backgroundColor;
-        td.style.background=computed&&computed!=='rgba(0, 0, 0, 0)'?computed:'#fff';
-      }
+      const bg=getComputedStyle(tr).backgroundColor;
+      td.style.background=(bg&&bg!=='rgba(0, 0, 0, 0)')?bg:'#fff';
     });
     off+=w;
   });
 }
-function rtblToggleFreeze(btn){
-  const th=btn.closest('th');if(!th)return;
-  const tbl=th.closest('table');if(!tbl)return;
-  const isLocked=th.classList.toggle('frz-locked');
-  btn.textContent=isLocked?'🔒':'⬚';
-  btn.title=isLocked?'Sblocca colonna':'Blocca colonna';
-  // Aspetta un frame per avere offsetWidth reale, poi applica
-  requestAnimationFrame(()=>rtblApplyFreeze(tbl));
-}
-// Inietta bottone nei th delle rtbl dopo il render
+// Barra freeze separata dalla tabella — nessun elemento dentro i th
 function rtblAddFreezeBtns(tableId){
   const tbl=document.getElementById(tableId);if(!tbl)return;
   const hdrRow=tbl.querySelector('thead tr:last-child');if(!hdrRow)return;
-  [...hdrRow.querySelectorAll('th')].forEach(th=>{
-    if(th.querySelector('.frz-btn'))return;
+  // Trova o crea la barra sopra la tabella
+  const wrapper=tbl.closest('div[style*="overflow"]')||tbl.parentElement;
+  let bar=wrapper.parentElement.querySelector('#rtbl-freeze-bar-'+tableId);
+  if(bar)bar.remove();
+  bar=document.createElement('div');
+  bar.id='rtbl-freeze-bar-'+tableId;
+  bar.id='rtbl-freeze-bar-'+tableId;
+  bar.style.cssText='display:flex;flex-wrap:wrap;gap:4px;padding:3px 0;margin-bottom:4px;';
+  const lbl=document.createElement('span');
+  lbl.style.cssText='font-size:.62rem;color:var(--mu);padding:2px 4px;';
+  lbl.textContent='🔒 Blocca:';
+  bar.appendChild(lbl);
+  [...hdrRow.querySelectorAll('th')].forEach((th,i)=>{
+    const label=th.textContent.trim().replace(/[⬚🔒📌]/g,'').trim()||('#'+i);
+    if(!label||label.length>12)return; // salta th vuote o troppo lunghe
     const btn=document.createElement('button');
-    btn.className='frz-btn';btn.textContent='⬚';btn.title='Blocca colonna';
-    btn.onclick=function(e){e.stopPropagation();rtblToggleFreeze(this);};
-    th.appendChild(btn);
+    btn.style.cssText='font-size:.62rem;padding:1px 7px;border-radius:3px;border:0.5px solid var(--br);background:var(--bl4);color:var(--bl);cursor:pointer;';
+    btn.textContent=label;
+    btn.dataset.ci=i;
+    btn.onclick=function(){
+      const isLocked=th.classList.toggle('frz-locked');
+      btn.style.background=isLocked?'#1a3a6b':'var(--bl4)';
+      btn.style.color=isLocked?'#fff':'var(--bl)';
+      btn.style.borderColor=isLocked?'#1a3a6b':'var(--br)';
+      requestAnimationFrame(()=>rtblApplyFreeze(tbl));
+    };
+    bar.appendChild(btn);
   });
+  wrapper.parentElement.insertBefore(bar,wrapper);
 }
 
 // COLOR CUSTOMIZER
@@ -2012,7 +2010,7 @@ function renderPersonsTable(cid,persons,opts={}){
     const _trBg=hasImminente?'background:#fffbeb':'';
     return`<tr style="cursor:pointer;${_trBg}" onclick="showArbSpotlight('${esc(p.nome)}')">
       <td class="rpos freeze-col freeze-1 ${i<3?'g'+(i+1):''}" data-val="${i+1}" style="background:#fff">${i+1}</td>
-      <td class="freeze-col freeze-2" style="white-space:nowrap;background:${hasImminente?'#fffbeb':'#fff'}">
+      <td class="freeze-col freeze-2" data-val="${escH(p.nome)}" style="white-space:nowrap;background:${hasImminente?'#fffbeb':'#fff'}">
         <div style="display:flex;align-items:center;gap:2px">
           <span class="act-dot ${actCls}" title="${actTip}"></span>
           <span style="font-weight:700;cursor:pointer;color:${pvColor}" data-n="${p.nome}"
@@ -2021,9 +2019,9 @@ function renderPersonsTable(cid,persons,opts={}){
           ${hasImminente?`<span style="font-size:.58rem;background:#b45309;color:#fff;border-radius:3px;padding:0 4px;margin-left:3px">7gg</span>`:''}
         </div>
       </td>
-      <td ${tdAna}>${pvB(p.provincia)}</td>
-      <td ${tdAna} style="font-size:.72rem;color:var(--mu)">${escH(p.citta||'')}</td>
-      <td ${tdAna} style="font-family:monospace;font-size:.68rem">${fip?`<span style="background:#1a3a6b;color:#b5d4f4;border-radius:4px;padding:2px 8px;font-size:.65rem;font-weight:700;letter-spacing:1.5px;font-family:'Courier New',Courier,monospace">${fip}</span>`:''}</td>
+      <td ${tdAna} data-val="${p.provincia||''}">${pvB(p.provincia)}</td>
+      <td ${tdAna} data-val="${p.citta||''}" style="font-size:.72rem;color:var(--mu)">${escH(p.citta||'')}</td>
+      <td ${tdAna} data-val="${fip}" style="font-family:monospace;font-size:.68rem">${fip?`<span style="background:#1a3a6b;color:#b5d4f4;border-radius:4px;padding:2px 8px;font-size:.65rem;font-weight:700;letter-spacing:1.5px;font-family:'Courier New',Courier,monospace">${fip}</span>`:''}</td>
       ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
       <td ${tdAtt} data-val="${nGareOggi}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}"
         title="Gare fatte fino ad oggi (Arb+UDC+Oss)"
@@ -2066,7 +2064,7 @@ function renderPersonsTable(cid,persons,opts={}){
   }).join('');
 
   // Riga media (solo arbitri)
-  const avgRow=isArb?`<tr style="background:var(--tbl-hdr);color:#fff;font-style:italic;font-size:.72rem">
+  const avgRow=isArb?`<tr data-avg="1" style="background:var(--tbl-hdr);color:#fff;font-style:italic;font-size:.72rem">
     <td class="freeze-col freeze-1" style="background:var(--tbl-hdr);color:#fff;text-align:center">—</td>
     <td class="freeze-col freeze-2" style="background:var(--tbl-hdr);color:#fff;font-style:italic">⌀ Media gruppo</td>
     <td colspan="3" class="td-ana" style="background:#2c3e50;"></td>
@@ -2092,12 +2090,12 @@ function renderPersonsTable(cid,persons,opts={}){
   <thead>
     ${groupHeaderHtml}
     <tr>
-    <th class="freeze-col freeze-1" onclick="sT('${tableId}',0)" style="cursor:pointer" title="Ordina per posizione">#</th>
-    <th class="freeze-col freeze-2" onclick="sT('${tableId}',1)" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)" title="Ordina per nome · Shift+click per ordinamento multiplo">Nome</th>
-    <th class="th-ana" onclick="sT('${tableId}',2)" style="cursor:pointer" title="Ordina per provincia · Shift+click per multiplo">Prov.</th>
-    <th class="th-ana" onclick="sT('${tableId}',3)" style="cursor:pointer" title="Ordina per città · Shift+click per multiplo">Città</th>
-    <th class="th-ana" onclick="sT('${tableId}',4)" title="Codice FIP · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Cod.</th>
-    ${showCat?`<th onclick="sT('${tableId}',5)" style="cursor:pointer" title="Categoria">Cat.</th>`:''}
+    <th class="freeze-col freeze-1" onclick="sT('${tableId}',0,event)" style="cursor:pointer" title="Ordina per posizione">#</th>
+    <th class="freeze-col freeze-2" onclick="sT('${tableId}',1,event)" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)" title="Ordina per nome · Shift+click per ordinamento multiplo">Nome</th>
+    <th class="th-ana" onclick="sT('${tableId}',2,event)" style="cursor:pointer" title="Ordina per provincia · Shift+click per multiplo">Prov.</th>
+    <th class="th-ana" onclick="sT('${tableId}',3,event)" style="cursor:pointer" title="Ordina per città · Shift+click per multiplo">Città</th>
+    <th class="th-ana" onclick="sT('${tableId}',4,event)" title="Codice FIP · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Cod.</th>
+    ${showCat?`<th onclick="sT('${tableId}',5,event)" style="cursor:pointer" title="Categoria">Cat.</th>`:''}
     <th class="th-att" onclick="sT('${tableId}',${4+co})" title="Gare fatte fino ad oggi · Shift+click per multiplo" style="cursor:pointer">Tot.</th>
     <th class="th-att" onclick="sT('${tableId}',${5+co})" title="Come arbitro · Shift+click per multiplo" style="cursor:pointer">Arb.</th>
     <th class="th-att" onclick="sT('${tableId}',${6+co})" title="Come UDC · Shift+click per multiplo" style="cursor:pointer">UDC</th>
@@ -2939,18 +2937,18 @@ function openGiornoModal(ds){
 
       bodyHtml+=`<table class="gtbl" id="tbl-giorno">
         <thead><tr>
-          <th onclick="sT('tbl-giorno',0)" style="cursor:pointer">Ora ▾</th>
-          <th onclick="sT('tbl-giorno',1)" style="cursor:pointer">N°</th>
-          <th onclick="sT('tbl-giorno',2)" style="cursor:pointer">Campionato</th>
-          <th onclick="sT('tbl-giorno',3)" style="cursor:pointer">Prov.</th>
-          <th onclick="sT('tbl-giorno',4)" style="cursor:pointer">Girone</th>
-          <th onclick="sT('tbl-giorno',5)" style="cursor:pointer">Casa</th>
-          <th onclick="sT('tbl-giorno',6)" style="cursor:pointer">Ospite</th>
-          <th onclick="sT('tbl-giorno',7)" style="cursor:pointer">Risultato</th>
-          <th onclick="sT('tbl-giorno',8)" style="cursor:pointer">Arb.</th>
-          <th onclick="sT('tbl-giorno',9)" style="cursor:pointer">Arbitro 1</th>
-          <th onclick="sT('tbl-giorno',10)" style="cursor:pointer">Arbitro 2</th>
-          <th onclick="sT('tbl-giorno',11)" style="cursor:pointer">Campo</th>
+          <th onclick="sT('tbl-giorno',0,event)" style="cursor:pointer">Ora ▾</th>
+          <th onclick="sT('tbl-giorno',1,event)" style="cursor:pointer">N°</th>
+          <th onclick="sT('tbl-giorno',2,event)" style="cursor:pointer">Campionato</th>
+          <th onclick="sT('tbl-giorno',3,event)" style="cursor:pointer">Prov.</th>
+          <th onclick="sT('tbl-giorno',4,event)" style="cursor:pointer">Girone</th>
+          <th onclick="sT('tbl-giorno',5,event)" style="cursor:pointer">Casa</th>
+          <th onclick="sT('tbl-giorno',6,event)" style="cursor:pointer">Ospite</th>
+          <th onclick="sT('tbl-giorno',7,event)" style="cursor:pointer">Risultato</th>
+          <th onclick="sT('tbl-giorno',8,event)" style="cursor:pointer">Arb.</th>
+          <th onclick="sT('tbl-giorno',9,event)" style="cursor:pointer">Arbitro 1</th>
+          <th onclick="sT('tbl-giorno',10,event)" style="cursor:pointer">Arbitro 2</th>
+          <th onclick="sT('tbl-giorno',11,event)" style="cursor:pointer">Campo</th>
         </tr></thead>
         <tbody id="tbl-giorno-body">${rows}</tbody>
       </table></div>`;
@@ -3184,18 +3182,18 @@ function renderSq(){
   sqs.sort((a,b)=>sort==='vinte'?b.vinte-a.vinte:sort==='nome'?a.nome.localeCompare(b.nome,'it'):sort==='prov'?(a.prov||'').localeCompare(b.prov||''):b.n_gare-a.n_gare);
 
   let h=`<p class="il">${sqs.length} squadre &nbsp;<button class="btn" style="font-size:.65rem;padding:2px 8px" onclick="sqToggleAll(true)">▼ Espandi tutto</button> <button class="btn" style="font-size:.65rem;padding:2px 8px" onclick="sqToggleAll(false)">▲ Contrai tutto</button></p><div style="overflow-x:auto"><table class="rtbl" id="tbl-sq"><thead><tr>`;
-  h+=`<th onclick="sT('tbl-sq',0)" style="cursor:pointer">#</th>`;
-  h+=`<th onclick="sT('tbl-sq',1)" style="cursor:pointer">Squadra / Campionati</th>`;
-  h+=`<th onclick="sT('tbl-sq',2)" style="cursor:pointer">Prov.</th>`;
-  h+=`<th onclick="sT('tbl-sq',3)" style="cursor:pointer;color:#1565c0;font-weight:800" title="Punti classifica totali">Pt</th>`;
-  h+=`<th onclick="sT('tbl-sq',4)" style="cursor:pointer">Gare</th>`;
-  h+=`<th onclick="sT('tbl-sq',5)" style="cursor:pointer;color:var(--green)">Vinte</th>`;
-  h+=`<th onclick="sT('tbl-sq',6)" style="cursor:pointer;color:var(--red)">Perse</th>`;
-  h+=`<th onclick="sT('tbl-sq',7)" style="cursor:pointer">V-Casa</th>`;
-  h+=`<th onclick="sT('tbl-sq',8)" style="cursor:pointer">P-Casa</th>`;
-  h+=`<th onclick="sT('tbl-sq',9)" style="cursor:pointer">V-Osp</th>`;
-  h+=`<th onclick="sT('tbl-sq',10)" style="cursor:pointer">P-Osp</th>`;
-  h+=`<th onclick="sT('tbl-sq',11)" style="cursor:pointer">Win%</th>`;
+  h+=`<th onclick="sT('tbl-sq',0,event)" style="cursor:pointer">#</th>`;
+  h+=`<th onclick="sT('tbl-sq',1,event)" style="cursor:pointer">Squadra / Campionati</th>`;
+  h+=`<th onclick="sT('tbl-sq',2,event)" style="cursor:pointer">Prov.</th>`;
+  h+=`<th onclick="sT('tbl-sq',3,event)" style="cursor:pointer;color:#1565c0;font-weight:800" title="Punti classifica totali">Pt</th>`;
+  h+=`<th onclick="sT('tbl-sq',4,event)" style="cursor:pointer">Gare</th>`;
+  h+=`<th onclick="sT('tbl-sq',5,event)" style="cursor:pointer;color:var(--green)">Vinte</th>`;
+  h+=`<th onclick="sT('tbl-sq',6,event)" style="cursor:pointer;color:var(--red)">Perse</th>`;
+  h+=`<th onclick="sT('tbl-sq',7,event)" style="cursor:pointer">V-Casa</th>`;
+  h+=`<th onclick="sT('tbl-sq',8,event)" style="cursor:pointer">P-Casa</th>`;
+  h+=`<th onclick="sT('tbl-sq',9,event)" style="cursor:pointer">V-Osp</th>`;
+  h+=`<th onclick="sT('tbl-sq',10,event)" style="cursor:pointer">P-Osp</th>`;
+  h+=`<th onclick="sT('tbl-sq',11,event)" style="cursor:pointer">Win%</th>`;
   h+=`</tr></thead><tbody>`;
 
   // Funzione per trovare il nome della squadra con campionato di livello più alto nel gruppo
@@ -3442,10 +3440,10 @@ function renderH2H(){
     <div style="overflow-x:auto">
     <table class="gtbl" id="${tidH}">
       <thead><tr>
-        <th onclick="sT('${tidH}',0)">Data</th>
-        <th onclick="sT('${tidH}',1)">Campionato</th>
-        <th onclick="sT('${tidH}',2)">Girone</th>
-        <th onclick="sT('${tidH}',3)">Fase</th>
+        <th onclick="sT('${tidH}',0,event)">Data</th>
+        <th onclick="sT('${tidH}',1,event)">Campionato</th>
+        <th onclick="sT('${tidH}',2,event)">Girone</th>
+        <th onclick="sT('${tidH}',3,event)">Fase</th>
         <th colspan="3" style="text-align:center">Risultato</th>
         <th>Arbitri</th><th>Campo</th>
       </tr></thead>
@@ -3534,18 +3532,18 @@ function renderGruppi(){
     <button class="btn" style="font-size:.65rem;padding:2px 8px" onclick="sqToggleAll(false)">▲ Contrai tutto</button>
   </p>
   <div style="overflow-x:auto"><table class="rtbl" id="tbl-gruppi"><thead><tr>
-    <th onclick="sT('tbl-gruppi',0)" style="cursor:pointer">#</th>
-    <th onclick="sT('tbl-gruppi',1)" style="cursor:pointer">Squadra / Campionati</th>
-    <th onclick="sT('tbl-gruppi',2)" style="cursor:pointer">Prov.</th>
-    <th onclick="sT('tbl-gruppi',3)" style="color:var(--bl);cursor:pointer">Pt</th>
-    <th onclick="sT('tbl-gruppi',4)" style="cursor:pointer">Gare</th>
-    <th onclick="sT('tbl-gruppi',5)" style="color:var(--green);cursor:pointer">Vinte</th>
-    <th onclick="sT('tbl-gruppi',6)" style="color:var(--red);cursor:pointer">Perse</th>
-    <th onclick="sT('tbl-gruppi',7)" style="cursor:pointer">V-Casa</th>
-    <th onclick="sT('tbl-gruppi',8)" style="cursor:pointer">P-Casa</th>
-    <th onclick="sT('tbl-gruppi',9)" style="cursor:pointer">V-Osp</th>
-    <th onclick="sT('tbl-gruppi',10)" style="cursor:pointer">P-Osp</th>
-    <th onclick="sT('tbl-gruppi',11)" style="cursor:pointer">Win%</th>
+    <th onclick="sT('tbl-gruppi',0,event)" style="cursor:pointer">#</th>
+    <th onclick="sT('tbl-gruppi',1,event)" style="cursor:pointer">Squadra / Campionati</th>
+    <th onclick="sT('tbl-gruppi',2,event)" style="cursor:pointer">Prov.</th>
+    <th onclick="sT('tbl-gruppi',3,event)" style="color:var(--bl);cursor:pointer">Pt</th>
+    <th onclick="sT('tbl-gruppi',4,event)" style="cursor:pointer">Gare</th>
+    <th onclick="sT('tbl-gruppi',5,event)" style="color:var(--green);cursor:pointer">Vinte</th>
+    <th onclick="sT('tbl-gruppi',6,event)" style="color:var(--red);cursor:pointer">Perse</th>
+    <th onclick="sT('tbl-gruppi',7,event)" style="cursor:pointer">V-Casa</th>
+    <th onclick="sT('tbl-gruppi',8,event)" style="cursor:pointer">P-Casa</th>
+    <th onclick="sT('tbl-gruppi',9,event)" style="cursor:pointer">V-Osp</th>
+    <th onclick="sT('tbl-gruppi',10,event)" style="cursor:pointer">P-Osp</th>
+    <th onclick="sT('tbl-gruppi',11,event)" style="cursor:pointer">Win%</th>
     <th>Forma</th>
   </tr></thead><tbody>`;
 
@@ -3843,17 +3841,17 @@ function renderCamp(){
 
   document.getElementById('camp-list').innerHTML=`<p class="il">${camps.length} campionati</p>
   <div style="overflow-x:auto"><table class="rtbl" id="tbl-camp"><thead><tr>
-    <th onclick="sT('tbl-camp',0)">#</th>
-    <th onclick="sT('tbl-camp',1)">Campionato</th>
-    <th onclick="sT('tbl-camp',2)">Cat.</th>
-    <th onclick="sT('tbl-camp',3)">Genere</th>
-    <th onclick="sT('tbl-camp',4)">Livello</th>
+    <th onclick="sT('tbl-camp',0,event)">#</th>
+    <th onclick="sT('tbl-camp',1,event)">Campionato</th>
+    <th onclick="sT('tbl-camp',2,event)">Cat.</th>
+    <th onclick="sT('tbl-camp',3,event)">Genere</th>
+    <th onclick="sT('tbl-camp',4,event)">Livello</th>
     <th>Stato</th>
-    <th onclick="sT('tbl-camp',6)" style="text-align:center">Gare</th>
+    <th onclick="sT('tbl-camp',6,event)" style="text-align:center">Gare</th>
     <th>Distribuzione</th>
-    <th onclick="sT('tbl-camp',8)" style="cursor:pointer">Completam.</th>
-    <th onclick="sT('tbl-camp',9)" style="cursor:pointer">Copertura</th>
-    <th onclick="sT('tbl-camp',10)" style="text-align:center">Squadre</th>
+    <th onclick="sT('tbl-camp',8,event)" style="cursor:pointer">Completam.</th>
+    <th onclick="sT('tbl-camp',9,event)" style="cursor:pointer">Copertura</th>
+    <th onclick="sT('tbl-camp',10,event)" style="text-align:center">Squadre</th>
   </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
@@ -4138,16 +4136,16 @@ function openGareTotali(){
     <div class="il" id="mg-info"></div>
     <div style="overflow-x:auto"><table class="gtbl" id="tbl-mg">
       <thead><tr>
-        <th onclick="sT('tbl-mg',0)" style="cursor:pointer">Data ▾</th>
-        <th onclick="sT('tbl-mg',1)" style="cursor:pointer">N°</th>
-        <th onclick="sT('tbl-mg',2)" style="cursor:pointer">Campionato</th>
-        <th onclick="sT('tbl-mg',3)" style="cursor:pointer">Casa</th>
-        <th onclick="sT('tbl-mg',4)" style="cursor:pointer">Ospite</th>
-        <th onclick="sT('tbl-mg',5)" style="cursor:pointer">Ris.</th>
-        <th onclick="sT('tbl-mg',6)" style="cursor:pointer">PtC</th>
-        <th onclick="sT('tbl-mg',7)" style="cursor:pointer">PtO</th>
-        <th onclick="sT('tbl-mg',8)" style="cursor:pointer">Arbitro 1</th>
-        <th onclick="sT('tbl-mg',9)" style="cursor:pointer">Arbitro 2</th>
+        <th onclick="sT('tbl-mg',0,event)" style="cursor:pointer">Data ▾</th>
+        <th onclick="sT('tbl-mg',1,event)" style="cursor:pointer">N°</th>
+        <th onclick="sT('tbl-mg',2,event)" style="cursor:pointer">Campionato</th>
+        <th onclick="sT('tbl-mg',3,event)" style="cursor:pointer">Casa</th>
+        <th onclick="sT('tbl-mg',4,event)" style="cursor:pointer">Ospite</th>
+        <th onclick="sT('tbl-mg',5,event)" style="cursor:pointer">Ris.</th>
+        <th onclick="sT('tbl-mg',6,event)" style="cursor:pointer">PtC</th>
+        <th onclick="sT('tbl-mg',7,event)" style="cursor:pointer">PtO</th>
+        <th onclick="sT('tbl-mg',8,event)" style="cursor:pointer">Arbitro 1</th>
+        <th onclick="sT('tbl-mg',9,event)" style="cursor:pointer">Arbitro 2</th>
       </tr></thead>
       <tbody id="tbl-mg-body"></tbody>
     </table></div>`;
@@ -4460,10 +4458,10 @@ function openPersona(nome,campFilter){
       </div>
       <div class="il" id="mpar-info"></div>
       <div style="overflow-x:auto"><table class="mtbl" id="tbl-mpar"><thead><tr>
-        <th onclick="sT('tbl-mpar',0)">Data</th><th>Ora</th><th>N°</th>
-        <th onclick="sT('tbl-mpar',2)">Camp.</th><th>Girone</th><th>Fase</th>
-        <th onclick="sT('tbl-mpar',6)">Casa</th><th onclick="sT('tbl-mpar',7)">Ospite</th>
-        <th onclick="sT('tbl-mpar',8)">Ris.</th><th>Ruolo</th><th>Prov.</th><th>Colleghi</th>
+        <th onclick="sT('tbl-mpar',0,event)">Data</th><th>Ora</th><th>N°</th>
+        <th onclick="sT('tbl-mpar',2,event)">Camp.</th><th>Girone</th><th>Fase</th>
+        <th onclick="sT('tbl-mpar',6,event)">Casa</th><th onclick="sT('tbl-mpar',7,event)">Ospite</th>
+        <th onclick="sT('tbl-mpar',8,event)">Ris.</th><th>Ruolo</th><th>Prov.</th><th>Colleghi</th>
       </tr></thead><tbody id="tbl-mpar-body"></tbody></table></div>
     </div>
     <div class="mtc hidden" id="mpt-cam"><div style="padding:8px" id="mpt-cam-inner"></div></div>
@@ -4818,9 +4816,9 @@ function openPersona(nome,campFilter){
       </tr>`;
     }).join('');
     document.getElementById('mpt-4').innerHTML=`<table class="gtbl" id="tbl-msq"><thead><tr>
-      <th onclick="sT('tbl-msq',0)">#</th><th onclick="sT('tbl-msq',1)">Squadra</th><th>Prov.</th>
-      <th onclick="sT('tbl-msq',3)">Tot.</th><th onclick="sT('tbl-msq',4)" style="color:#00704a">✅ V</th>
-      <th onclick="sT('tbl-msq',5)" style="color:#c0392b">❌ P</th><th>Categorie</th>
+      <th onclick="sT('tbl-msq',0,event)">#</th><th onclick="sT('tbl-msq',1,event)">Squadra</th><th>Prov.</th>
+      <th onclick="sT('tbl-msq',3,event)">Tot.</th><th onclick="sT('tbl-msq',4,event)" style="color:#00704a">✅ V</th>
+      <th onclick="sT('tbl-msq',5,event)" style="color:#c0392b">❌ P</th><th>Categorie</th>
     </tr></thead><tbody>${sqRows}</tbody></table>`;
   } catch(e){ document.getElementById('mpt-4').innerHTML='<p style="color:red;padding:10px">Errore squadre: '+e.message+'</p>'; }
 
@@ -4983,7 +4981,7 @@ function mkGarePersonaTbl(gare,nome,tid){
       <td>${pvB(cpv(g['Campo']))}</td>
       <td style="max-width:170px;white-space:normal">${coll.join(', ')}</td></tr>`;
   }).join('');
-  return`<table class="mtbl" id="${tid}"><thead><tr><th onclick="sT('${tid}',0)">Data</th><th>Ora</th><th>N°</th><th onclick="sT('${tid}',3)">Campionato</th><th>Girone</th><th>Fase</th><th onclick="sT('${tid}',6)">Casa</th><th onclick="sT('${tid}',7)">Ospite</th><th>Ris.</th><th>Ruolo</th><th>Prov.</th><th>Colleghi</th></tr></thead><tbody>${rows}</tbody></table>`;
+  return`<table class="mtbl" id="${tid}"><thead><tr><th onclick="sT('${tid}',0,event)">Data</th><th>Ora</th><th>N°</th><th onclick="sT('${tid}',3,event)">Campionato</th><th>Girone</th><th>Fase</th><th onclick="sT('${tid}',6,event)">Casa</th><th onclick="sT('${tid}',7,event)">Ospite</th><th>Ris.</th><th>Ruolo</th><th>Prov.</th><th>Colleghi</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 // ── STATISTICHE PER GENERE (Punto 2) ─────────────────────────────────
 function openGenderStats(genere){
@@ -5018,14 +5016,14 @@ function openGenderStats(genere){
       <div class="st" style="margin-bottom:6px;color:${clr}">${icon} ${role} — ${arr.length} persone, ${arr.reduce((s,p)=>s+p.n_gare,0)} gare totali</div>
       <div style="overflow-x:auto"><table class="mtbl" id="${tid}">
         <thead><tr>
-          <th onclick="sT('${tid}',0)">#</th>
-          <th onclick="sT('${tid}',1)">Nome</th>
+          <th onclick="sT('${tid}',0,event)">#</th>
+          <th onclick="sT('${tid}',1,event)">Nome</th>
           <th>Prov.</th>
-          <th onclick="sT('${tid}',3)">Gare</th>
-          <th onclick="sT('${tid}',4)">Arb.</th>
-          <th onclick="sT('${tid}',5)">UDC</th>
-          <th onclick="sT('${tid}',6)">Top Campionato</th>
-          <th onclick="sT('${tid}',7)">Giorni att.</th>
+          <th onclick="sT('${tid}',3,event)">Gare</th>
+          <th onclick="sT('${tid}',4,event)">Arb.</th>
+          <th onclick="sT('${tid}',5,event)">UDC</th>
+          <th onclick="sT('${tid}',6,event)">Top Campionato</th>
+          <th onclick="sT('${tid}',7,event)">Giorni att.</th>
         </tr></thead>
         <tbody>${arr.map((p,i)=>{
           const tc=Object.entries(p.campionati||{}).sort((a,b)=>b[1]-a[1])[0];
@@ -5356,9 +5354,9 @@ function openSquadra(nome,campFilter){
       </div>
       <div style="overflow-x:auto"><table class="rtbl" id="tbl-msg">
         <thead><tr>
-          <th onclick="sT('tbl-msg',0)">Data</th><th onclick="sT('tbl-msg',1)">Campionato</th>
-          <th onclick="sT('tbl-msg',2)">Girone</th><th onclick="sT('tbl-msg',3)">Avversario</th>
-          <th onclick="sT('tbl-msg',4)">Ris.</th><th onclick="sT('tbl-msg',5)">Esito</th>
+          <th onclick="sT('tbl-msg',0,event)">Data</th><th onclick="sT('tbl-msg',1,event)">Campionato</th>
+          <th onclick="sT('tbl-msg',2,event)">Girone</th><th onclick="sT('tbl-msg',3,event)">Avversario</th>
+          <th onclick="sT('tbl-msg',4,event)">Ris.</th><th onclick="sT('tbl-msg',5,event)">Esito</th>
           <th>Ruolo</th><th>Arbitri</th><th>Campo</th>
         </tr></thead><tbody id="tbl-msg-body"></tbody>
       </table></div>
@@ -5571,9 +5569,9 @@ function openArbVsSq(nomeSq,nomeArb){
       </div>
       <div style="overflow-x:auto">
       <table class="mtbl" id="tbl-avs"><thead><tr>
-        <th onclick="sT('tbl-avs',0)">Data</th><th>Campionato</th>
-        <th onclick="sT('tbl-avs',2)">Casa</th><th onclick="sT('tbl-avs',3)">Ospite</th>
-        <th onclick="sT('tbl-avs',4)">Ris.</th><th onclick="sT('tbl-avs',5)">Esito SQ</th><th>Ruolo SQ</th>
+        <th onclick="sT('tbl-avs',0,event)">Data</th><th>Campionato</th>
+        <th onclick="sT('tbl-avs',2,event)">Casa</th><th onclick="sT('tbl-avs',3,event)">Ospite</th>
+        <th onclick="sT('tbl-avs',4,event)">Ris.</th><th onclick="sT('tbl-avs',5,event)">Esito SQ</th><th>Ruolo SQ</th>
       </tr></thead><tbody>${gList.map(g=>{
         const isCasa=g.casa===nomeSq;
         const ris=g.ris?(isCasa?g.ris:g.ris.split('-').reverse().join('-')):'';
@@ -5746,7 +5744,7 @@ function openProvincia(pv){
     </div>
     <div class="mtc hidden" id="mpvt-6">
       <div style="overflow-x:auto"><table class="mtbl" id="tbl-pvgare"><thead><tr>
-        <th onclick="sT('tbl-pvgare',0)">Data</th><th>Campionato</th><th>Casa</th><th>Ospite</th><th>Ris.</th>
+        <th onclick="sT('tbl-pvgare',0,event)">Data</th><th>Campionato</th><th>Casa</th><th>Ospite</th><th>Ris.</th>
       </tr></thead><tbody>${(ps.gare||[]).map(g=>`<tr>
         <td>${g['Data']}</td><td style="font-size:.7rem">${escH(g['Campionato'])}</td>
         <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa'])}')">${escH(g['Squadra Casa'])}</span></td>
@@ -5910,10 +5908,10 @@ function openCampionato(camp){
       <!-- Arbitri top: tabella con provincia, gironi, totale a sinistra -->
       <table class="rtbl" id="tbl-camp-arb" style="width:100%">
         <thead><tr>
-          <th onclick="sT('tbl-camp-arb',0)" style="cursor:pointer">#</th>
-          <th onclick="sT('tbl-camp-arb',1)" style="cursor:pointer">Arbitro</th>
-          <th onclick="sT('tbl-camp-arb',2)" style="cursor:pointer">Prov.</th>
-          <th onclick="sT('tbl-camp-arb',3)" style="cursor:pointer">Tot.</th>
+          <th onclick="sT('tbl-camp-arb',0,event)" style="cursor:pointer">#</th>
+          <th onclick="sT('tbl-camp-arb',1,event)" style="cursor:pointer">Arbitro</th>
+          <th onclick="sT('tbl-camp-arb',2,event)" style="cursor:pointer">Prov.</th>
+          <th onclick="sT('tbl-camp-arb',3,event)" style="cursor:pointer">Tot.</th>
           <th style="min-width:150px">Gironi</th>
         </tr></thead>
         <tbody>
