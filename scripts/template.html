@@ -1681,6 +1681,7 @@ window._sTcols={};
 window._sTfreeze={};
 
 function sT(tid,ci,ev){
+  if(ev&&ev.stopPropagation)ev.stopPropagation();
   const isShift=!!(ev&&ev.shiftKey);
   const tbl=document.getElementById(tid);
   const tbody=tbl?.querySelector('tbody');if(!tbody)return;
