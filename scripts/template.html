@@ -1739,22 +1739,23 @@ function sT(tid,ci,ev){
   [...vis,...hid].forEach(g=>{frag.appendChild(g.m);g.s.forEach(s=>frag.appendChild(s));});
   fixed.forEach(r=>frag.appendChild(r));
   tbody.appendChild(frag);
-  // Rinumera colonna # (td[0]) con posizione corrente
-  let rn=0;
-  [...tbody.querySelectorAll('tr:not([data-avg])')].forEach(tr=>{
-    const isSub=tr.hasAttribute('data-sqgroup')||tr.hasAttribute('data-sqmember')||
-                tr.hasAttribute('data-campgroup')||tr.classList.contains('sq-sub')||
-                tr.classList.contains('camp-sub');
-    if(isSub)return;
-    rn++;
-    const td0=[...tr.children][0];
-    if(td0&&td0.classList.contains('rpos')){
-      td0.setAttribute('data-val',rn);
-      // aggiorna solo nodo testo, non toccare span figli con classi g1/g2/g3
-      let tn=[...td0.childNodes].find(n=>n.nodeType===3);
-      if(tn)tn.textContent=rn;
-      else if(!td0.children.length)td0.textContent=rn;
-    }
+  // Rinumera colonna # dopo che il DOM è stabile
+  requestAnimationFrame(()=>{
+    let rn=0;
+    [...tbody.querySelectorAll('tr:not([data-avg])')].forEach(tr=>{
+      const isSub=tr.hasAttribute('data-sqgroup')||tr.hasAttribute('data-sqmember')||
+                  tr.hasAttribute('data-campgroup')||tr.classList.contains('sq-sub')||
+                  tr.classList.contains('camp-sub');
+      if(isSub)return;
+      rn++;
+      const td0=tr.children[0];
+      if(td0&&td0.classList.contains('rpos')){
+        td0.setAttribute('data-val',rn);
+        const tn=[...td0.childNodes].find(n=>n.nodeType===3);
+        if(tn)tn.textContent=rn;
+        else if(!td0.children.length)td0.textContent=rn;
+      }
+    });
   });
 }
 
