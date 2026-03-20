@@ -1683,9 +1683,10 @@ window._sTfreeze={};
 window._sTlast={};
 function sT(tid,ci,ev){
   if(ev&&ev.stopPropagation)ev.stopPropagation();
-  // Debounce: ignora chiamate duplicate entro 50ms sullo stesso tid
+  // Ignora call spurie: stessa tabella, ci diverso, entro 50ms
   const now=Date.now();
-  if(window._sTlast[tid]&&now-window._sTlast[tid].t<50&&window._sTlast[tid].ci!==ci)return;
+  const last=window._sTlast[tid];
+  if(last&&(now-last.t)<50&&last.ci!==ci)return;
   window._sTlast[tid]={t:now,ci};
   const isShift=!!(ev&&ev.shiftKey);
   const tbl=document.getElementById(tid);
