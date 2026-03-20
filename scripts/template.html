@@ -1675,11 +1675,12 @@ function bCal(giorni,nome){
 
 function mkTbl(rows,cols,tid){return`<table class="mtbl" id="${tid}"><thead><tr>${cols.map((c,i)=>`<th onclick="sT('${tid}',${i})">${c}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;}
 
-// TABLE SORT — v2 (robusto per tabelle con sub-righe)
+// TABLE SORT — v3 (logica identica al widget funzionante)
 window._sTcols={};
-function sT(tid,ci,evOrDefault,_unused){
-  // evOrDefault può essere l'event (passato inline) o defaultAsc (boolean/undefined)
-  const defaultAsc=(typeof evOrDefault==='boolean')?evOrDefault:true;
+// frozenCols per ogni tabella: Map<tableId, Set<colIndex>>
+window._sTfreeze={};
+
+function sT(tid,ci,evOrDefault){
   const isShift=!!(evOrDefault&&evOrDefault.shiftKey);
   const tbl=document.getElementById(tid);
   const tbody=tbl?.querySelector('tbody');if(!tbody)return;
@@ -1688,135 +1689,128 @@ function sT(tid,ci,evOrDefault,_unused){
   const existing=cols.findIndex(c=>c.ci===ci);
   if(isShift){
     if(existing>=0){cols[existing].asc=!cols[existing].asc;}
-    else if(cols.length<3){cols.push({ci,asc:defaultAsc});}
+    else if(cols.length<3){cols.push({ci,asc:true});}
   } else {
     if(existing>=0&&cols.length===1){cols[0].asc=!cols[0].asc;}
-    else{window._sTcols[tid]=[{ci,asc:defaultAsc}];}
+    else{window._sTcols[tid]=[{ci,asc:true}];}
   }
   const activeCols=window._sTcols[tid];
-  // Feedback visivo: aggiorna solo le th della riga intestazione colonne (ultima tr di thead)
+  // Feedback header
   const hdrRow=tbl.querySelector('thead tr:last-child');
-  if(hdrRow){
-    [...hdrRow.querySelectorAll('th')].forEach((th,i)=>{
-      th.classList.remove('sa','sd');
-      const found=activeCols.find(c=>c.ci===i);
-      if(found)th.classList.add(found.asc?'sa':'sd');
-    });
-  }
-  // Separa righe di primo livello (hanno data-val su td[0]) dalle sub-righe
-  // Le sub-righe hanno data-sqgroup o data-sqmember o data-campgroup o class sq-sub/camp-sub
+  if(hdrRow)[...hdrRow.children].forEach((th,i)=>{
+    th.classList.remove('sa','sd');
+    const f=activeCols.find(c=>c.ci===i);
+    if(f)th.classList.add(f.asc?'sa':'sd');
+  });
+  // Separa righe fisse dal resto
   const allRows=[...tbody.children];
-  // Separa righe fisse (media, footer) che non vanno ordinate
   const fixedRows=allRows.filter(tr=>tr.hasAttribute('data-avg'));
-  const sortableRows=allRows.filter(tr=>!tr.hasAttribute('data-avg'));
-  // Raggruppa: ogni riga principale porta con sé le sue sub-righe
-  const groups=[];
-  let cur=null;
-  sortableRows.forEach(tr=>{
+  const sortable=allRows.filter(tr=>!tr.hasAttribute('data-avg'));
+  // Raggruppa principali + sub-righe
+  const groups=[];let cur=null;
+  sortable.forEach(tr=>{
     const isSub=tr.hasAttribute('data-sqgroup')||tr.hasAttribute('data-sqmember')||
                 tr.hasAttribute('data-campgroup')||tr.classList.contains('sq-sub')||
                 tr.classList.contains('camp-sub');
-    if(!isSub){
-      cur={main:tr,subs:[]};
-      groups.push(cur);
-    } else if(cur){
-      cur.subs.push(tr);
-    }
+    if(!isSub){cur={main:tr,subs:[]};groups.push(cur);}
+    else if(cur)cur.subs.push(tr);
   });
-  // Ordina solo le righe principali visibili
   const visible=groups.filter(g=>g.main.style.display!=='none'&&!g.main.classList.contains('hidden'));
   const hidden=groups.filter(g=>g.main.style.display==='none'||g.main.classList.contains('hidden'));
+  // Leggi valore ordinabile: data-val > testo primo span > textContent
   function getVal(tr,colIdx){
-    const td=[...tr.children][colIdx];
-    if(!td)return'';
-    const dv=td.getAttribute('data-val');
-    if(dv!=null&&dv!=='')return dv;
-    // Fallback: leggi il primo span con testo, oppure textContent diretto
-    const span=td.querySelector('span[style],span[class]');
-    if(span&&span.textContent.trim())return span.textContent.trim();
+    const td=[...tr.children][colIdx];if(!td)return'';
+    const dv=td.getAttribute('data-val');if(dv!=null&&dv!=='')return dv;
+    const sp=td.querySelector('span[style],span[class]');
+    if(sp&&sp.textContent.trim())return sp.textContent.trim();
     return td.textContent.trim();
   }
   visible.sort((a,b)=>{
     for(const col of activeCols){
-      const va=getVal(a.main,col.ci);
-      const vb=getVal(b.main,col.ci);
+      const va=getVal(a.main,col.ci),vb=getVal(b.main,col.ci);
       const na=parseFloat(va),nb=parseFloat(vb);
       let cmp=(!isNaN(na)&&!isNaN(nb))?(na-nb):va.localeCompare(vb,'it');
       if(cmp!==0)return col.asc?cmp:-cmp;
     }
     return 0;
   });
-  // Reinserisci: visibili ordinati, poi nascosti, poi righe fisse (media) sempre alla fine
   const frag=document.createDocumentFragment();
   [...visible,...hidden].forEach(g=>{frag.appendChild(g.main);g.subs.forEach(s=>frag.appendChild(s));});
   fixedRows.forEach(r=>frag.appendChild(r));
   tbody.appendChild(frag);
-  // Nota: NON rinumerare la colonna # dopo il sort.
-  // Il data-val originale (posizione iniziale) serve come chiave stabile per il secondo sort.
+  // Aggiorna alternanza colore righe e ricalcola freeze
+  [...tbody.querySelectorAll('tr:not([data-avg])')].forEach((tr,i)=>tr.dataset.bg=i%2);
+  requestAnimationFrame(()=>_rtblApplyFreezeById(tid));
 }
-// sT riceve l'event direttamente dall'onclick inline — no listener capture necessario
 
-// FREEZE COLONNE per rtbl (lucchetto su th)
-function rtblApplyFreeze(tbl){
+// FREEZE — barra separata, position:sticky con background esplicito
+function _rtblApplyFreezeById(tid){
+  const tbl=document.getElementById(tid);if(!tbl)return;
+  const frozen=window._sTfreeze[tid]||new Set();
   const hdrRow=tbl.querySelector('thead tr:last-child');if(!hdrRow)return;
-  const allThs=[...hdrRow.children];
-  // Rimuovi sticky da colonne non bloccate
-  allThs.forEach((th,ci)=>{
-    const locked=th.classList.contains('frz-locked');
-    if(!locked){th.style.position='';th.style.left='';th.style.zIndex='';}
-    tbl.querySelectorAll('tbody tr,tfoot tr').forEach(tr=>{
-      const td=[...tr.children][ci];
-      if(td&&!locked){td.style.position='';td.style.left='';td.style.zIndex='';td.style.background='';}
-    });
+  const ths=[...hdrRow.children];
+  const trs=[...tbl.querySelectorAll('tbody tr,tfoot tr')];
+  // Reset tutto
+  ths.forEach((th,ci)=>{
+    th.style.position='';th.style.left='';th.style.zIndex='';
+    trs.forEach(tr=>{const td=[...tr.children][ci];if(td){td.style.position='';td.style.left='';td.style.zIndex='';td.style.background='';}});
   });
-  // Applica sticky a colonne bloccate con offset cumulativo
+  if(!frozen.size)return;
+  // Applica sticky in ordine con offset cumulativo
   let off=0;
-  allThs.forEach((th,ci)=>{
-    if(!th.classList.contains('frz-locked'))return;
+  ths.forEach((th,ci)=>{
+    if(!frozen.has(ci))return;
     const w=th.offsetWidth||80;
-    th.style.position='sticky';th.style.left=off+'px';th.style.zIndex='6';
-    tbl.querySelectorAll('tbody tr,tfoot tr').forEach(tr=>{
+    th.style.cssText+=`;position:sticky;left:${off}px;z-index:6;background:var(--tbl-hdr);`;
+    trs.forEach(tr=>{
       const td=[...tr.children][ci];if(!td)return;
-      td.style.position='sticky';td.style.left=off+'px';td.style.zIndex='3';
-      const bg=getComputedStyle(tr).backgroundColor;
-      td.style.background=(bg&&bg!=='rgba(0, 0, 0, 0)')?bg:'#fff';
+      const bg=parseInt(tr.dataset.bg||'0')%2===0?'#fff':'var(--tbl-even)';
+      td.style.cssText+=`;position:sticky;left:${off}px;z-index:3;background:${bg};`;
     });
     off+=w;
   });
 }
-// Barra freeze separata dalla tabella — nessun elemento dentro i th
+
 function rtblAddFreezeBtns(tableId){
   const tbl=document.getElementById(tableId);if(!tbl)return;
   const hdrRow=tbl.querySelector('thead tr:last-child');if(!hdrRow)return;
-  // Trova o crea la barra sopra la tabella
+  if(!window._sTfreeze[tableId])window._sTfreeze[tableId]=new Set();
+  const frozen=window._sTfreeze[tableId];
+  // Marca righe con data-bg per alternanza
+  [...tbl.querySelectorAll('tbody tr:not([data-avg])')].forEach((tr,i)=>tr.dataset.bg=i%2);
+  // Trova o crea barra
   const wrapper=tbl.closest('div[style*="overflow"]')||tbl.parentElement;
-  let bar=wrapper.parentElement.querySelector('#rtbl-freeze-bar-'+tableId);
+  const barId='_frzbar_'+tableId;
+  let bar=document.getElementById(barId);
   if(bar)bar.remove();
   bar=document.createElement('div');
-  bar.id='rtbl-freeze-bar-'+tableId;
-  bar.id='rtbl-freeze-bar-'+tableId;
-  bar.style.cssText='display:flex;flex-wrap:wrap;gap:4px;padding:3px 0;margin-bottom:4px;';
+  bar.id=barId;
+  bar.style.cssText='display:flex;flex-wrap:wrap;gap:4px;padding:3px 0 5px;align-items:center;';
   const lbl=document.createElement('span');
-  lbl.style.cssText='font-size:.62rem;color:var(--mu);padding:2px 4px;';
-  lbl.textContent='🔒 Blocca:';
+  lbl.style.cssText='font-size:.62rem;color:var(--mu);margin-right:2px;';
+  lbl.textContent='Blocca colonna:';
   bar.appendChild(lbl);
-  [...hdrRow.querySelectorAll('th')].forEach((th,i)=>{
-    const label=th.textContent.trim().replace(/[⬚🔒📌]/g,'').trim()||('#'+i);
-    if(!label||label.length>12)return; // salta th vuote o troppo lunghe
+  [...hdrRow.children].forEach((th,ci)=>{
+    const label=th.textContent.replace(/[▲▼▶◀]/g,'').trim();
+    if(!label||label.length>14)return;
     const btn=document.createElement('button');
-    btn.style.cssText='font-size:.62rem;padding:1px 7px;border-radius:3px;border:0.5px solid var(--br);background:var(--bl4);color:var(--bl);cursor:pointer;';
+    btn.className='btn';
+    btn.style.cssText='font-size:.62rem;padding:1px 7px;';
     btn.textContent=label;
-    btn.dataset.ci=i;
-    btn.onclick=function(){
-      const isLocked=th.classList.toggle('frz-locked');
-      btn.style.background=isLocked?'#1a3a6b':'var(--bl4)';
-      btn.style.color=isLocked?'#fff':'var(--bl)';
-      btn.style.borderColor=isLocked?'#1a3a6b':'var(--br)';
-      requestAnimationFrame(()=>rtblApplyFreeze(tbl));
+    btn.dataset.ci=ci;
+    const refresh=()=>{
+      btn.style.background=frozen.has(ci)?'var(--bl)':'';
+      btn.style.color=frozen.has(ci)?'#fff':'';
     };
+    btn.onclick=()=>{
+      frozen.has(ci)?frozen.delete(ci):frozen.add(ci);
+      refresh();
+      requestAnimationFrame(()=>_rtblApplyFreezeById(tableId));
+    };
+    refresh();
     bar.appendChild(btn);
   });
-  wrapper.parentElement.insertBefore(bar,wrapper);
+  if(wrapper.parentElement)wrapper.parentElement.insertBefore(bar,wrapper);
 }
 
 // COLOR CUSTOMIZER
