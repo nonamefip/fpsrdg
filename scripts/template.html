@@ -1680,14 +1680,8 @@ function mkTbl(rows,cols,tid){return`<table class="mtbl" id="${tid}"><thead><tr>
 window._sTcols={};
 window._sTfreeze={};
 
-window._sTlast={};
 function sT(tid,ci,ev){
   if(ev&&ev.stopPropagation)ev.stopPropagation();
-  // Ignora call spurie: stessa tabella, ci diverso, entro 50ms
-  const now=Date.now();
-  const last=window._sTlast[tid];
-  if(last&&(now-last.t)<50&&last.ci!==ci)return;
-  window._sTlast[tid]={t:now,ci};
   const isShift=!!(ev&&ev.shiftKey);
   const tbl=document.getElementById(tid);
   const tbody=tbl?.querySelector('tbody');if(!tbody)return;
@@ -1862,7 +1856,7 @@ function renderPersonsTable(cid,persons,opts={}){
   const _campCols=3; // 🏠 🤝 Camp
   const _kmCols=isArb?2:1;
   const _topCols=isArb?1:0;
-  const groupHeaderHtml=isArb?`<tr>
+  const groupHeaderHtml=isArb?`<tr style="pointer-events:none">
     <th colspan="2" style="background:var(--tbl-hdr);border:none;padding:0"></th>
     <th colspan="3" class="th-ana" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">ANAGRAFICA</th>
     <th colspan="${_attCols}" class="th-att" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">ATTIVITÀ SVOLTA</th>
