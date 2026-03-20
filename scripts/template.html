@@ -1743,68 +1743,16 @@ function sT(tid,ci,evOrDefault){
   fixedRows.forEach(r=>frag.appendChild(r));
   tbody.appendChild(frag);
   [...tbody.querySelectorAll('tr:not([data-avg])')].forEach((tr,i)=>tr.dataset.bg=String(i%2));
-  requestAnimationFrame(()=>_rtblApplyFreezeById(tid));
 }
 
 function _rtblApplyFreezeById(tid){
-  const tbl=document.getElementById(tid);if(!tbl)return;
-  const frozen=window._sTfreeze[tid]||new Set();
-  const hdrRow=tbl.querySelector('thead tr:last-child');if(!hdrRow)return;
-  const ths=[...hdrRow.children];
-  const trs=[...tbl.querySelectorAll('tbody tr,tfoot tr')];
-  ths.forEach((th,ci)=>{
-    if(th.classList.contains('freeze-col')||!th.dataset.frzTid)return;
-    delete th.dataset.frzTid;
-    th.style.position='';th.style.left='';th.style.zIndex='';
-    trs.forEach(tr=>{
-      const td=[...tr.children][ci];
-      if(td&&td.dataset.frzTid){delete td.dataset.frzTid;td.style.position='';td.style.left='';td.style.zIndex='';td.style.background='';}
-    });
-  });
-  if(!frozen.size)return;
-  // Offset parte dopo le freeze-col CSS esistenti
-  const lastFc=hdrRow.querySelector('.freeze-col:last-of-type,.freeze-2');
-  let off=lastFc?(lastFc.offsetLeft+lastFc.offsetWidth):0;
-  for(let ci=0;ci<ths.length;ci++){
-    if(!frozen.has(ci)||ths[ci].classList.contains('freeze-col'))continue;
-    const th=ths[ci];
-    const w=th.offsetWidth||80;
-    th.dataset.frzTid=tid;th.style.position='sticky';th.style.left=off+'px';th.style.zIndex='7';
-    trs.forEach((tr)=>{
-      const td=[...tr.children][ci];if(!td)return;
-      td.dataset.frzTid=tid;td.style.position='sticky';td.style.left=off+'px';td.style.zIndex='4';
-      td.style.background=parseInt(tr.dataset.bg||'0')%2===0?'#fff':'var(--tbl-even)';
-    });
-    off+=w;
-  }
+  // Freeze disabilitato temporaneamente — solo sort attivo
 }
 
 function rtblAddFreezeBtns(tableId){
+  // Freeze disabilitato temporaneamente — solo sort attivo
   const tbl=document.getElementById(tableId);if(!tbl)return;
-  const hdrRow=tbl.querySelector('thead tr:last-child');if(!hdrRow)return;
-  if(!window._sTfreeze[tableId])window._sTfreeze[tableId]=new Set();
-  const frozen=window._sTfreeze[tableId];
   [...tbl.querySelectorAll('tbody tr:not([data-avg])')].forEach((tr,i)=>tr.dataset.bg=String(i%2));
-  const wrapper=tbl.closest('div[style*="overflow"]')||tbl.parentElement;
-  const barId='_frzbar_'+tableId;
-  let bar=document.getElementById(barId);if(bar)bar.remove();
-  bar=document.createElement('div');bar.id=barId;
-  bar.style.cssText='display:flex;flex-wrap:wrap;gap:4px;padding:3px 0 5px;align-items:center;';
-  const lbl=document.createElement('span');
-  lbl.style.cssText='font-size:.62rem;color:var(--mu);margin-right:2px;';
-  lbl.textContent='Blocca colonna:';bar.appendChild(lbl);
-  [...hdrRow.children].forEach((th,ci)=>{
-    if(th.classList.contains('freeze-col'))return;
-    const label=th.textContent.replace(/[▲▼▶◀↑↓]/g,'').trim();
-    if(!label||label.length>14)return;
-    const btn=document.createElement('button');
-    btn.className='btn';btn.style.cssText='font-size:.62rem;padding:1px 7px;';
-    btn.textContent=label;
-    const upd=()=>{btn.style.background=frozen.has(ci)?'var(--bl)':'';btn.style.color=frozen.has(ci)?'#fff':'';};
-    btn.onclick=()=>{frozen.has(ci)?frozen.delete(ci):frozen.add(ci);upd();requestAnimationFrame(()=>_rtblApplyFreezeById(tableId));};
-    upd();bar.appendChild(btn);
-  });
-  if(wrapper.parentElement)wrapper.parentElement.insertBefore(bar,wrapper);
 }
 
 // COLOR CUSTOMIZER
