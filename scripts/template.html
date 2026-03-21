@@ -1444,7 +1444,7 @@ Argomenti: /c "cd C:\percorso\cartella && python fip_scraper_v5.py && python gen
 </div></div>
 
 <!-- MODAL CAMPO -->
-<div class="mo" id="mo-campo"><div class="mbox" style="max-width:min(96vw,900px);min-width:380px;min-height:400px;resize:both;overflow:hidden;display:flex;flex-direction:column">
+<div class="mo" id="mo-campo"><div class="mbox" style="width:min(98vw,1400px);min-width:480px;min-height:480px;max-height:min(94vh,900px);resize:both;overflow:hidden;display:flex;flex-direction:column">
   <div class="mhd"><span>🏟</span><h3 id="mca-title">Campo</h3><button onclick="closeMo('mo-campo')">✕</button></div>
   <div class="mbody" id="mca-body" style="overflow-y:auto;flex:1"></div>
 </div></div>
@@ -8390,7 +8390,15 @@ function openCampoModal(campo){
       openMo('mo-campo');return;
     }
   }
+  const _pvCampo=c.prov||cpv(campo)||'';
+  const _pvClrCampo=PC[_pvCampo]||'';
   document.getElementById('mca-title').textContent=c.nome_breve||campo;
+  if(_pvCampo&&_pvClrCampo){
+    const _pvSpan=document.createElement('span');
+    _pvSpan.style.cssText='background:'+_pvClrCampo+';color:#fff;border-radius:3px;padding:1px 7px;font-size:.75rem;font-weight:700;margin-left:8px;vertical-align:middle';
+    _pvSpan.textContent=_pvCampo;
+    document.getElementById('mca-title').appendChild(_pvSpan);
+  }
   const sqCasa=c.sq_casa||c.squadre_casa||[];
   const sqOspiti=c.sq_ospiti||[];
   const gare=(D.gare||[]).filter(function(g){
@@ -8432,12 +8440,12 @@ function openCampoModal(campo){
     <div class="card">
       <div class="card-title">📅 Tutte le gare (${gare.length}) — da settembre a fine stagione</div>
       <div style="overflow-x:auto"><table class="gtbl" style="width:100%">
-        <thead><tr><th>#</th><th>Data</th><th>Campionato</th><th>Casa</th><th>Ris.</th><th>Ospite</th><th>Arbitro</th></tr></thead>
+        <thead><tr><th style="width:28px">#</th><th style="width:54px">Ora</th><th style="width:80px">Data</th><th>Campionato</th><th>Casa</th><th style="width:68px">Ris.</th><th>Ospite</th><th>Arbitro</th></tr></thead>
         <tbody id="mca-tbl-body">${(()=>{
           const today=new Date().toISOString().split('T')[0];
           const sorted=[...gare,(D.gare_future||[]).filter(g2=>{const cv=g2['Campo']||'';return cv===campo||(c.varianti||[]).indexOf(cv)>=0;})].flat()
             .filter((g2,i,arr)=>arr.findIndex(x=>(x['Numero Gara']||x['Squadra Casa']+x['Data'])===(g2['Numero Gara']||g2['Squadra Casa']+g2['Data']))===i)
-            .sort((a,b)=>a['Data'].localeCompare(b['Data']));
+            .sort((a,b)=>{const da=(a['Data']||'')+(a['Ora']||a['ora']||'');const db=(b['Data']||'')+(b['Ora']||b['ora']||'');return da.localeCompare(db);});
           let rn=0,html='',todayDone=false;
           sorted.forEach(g2=>{
             rn++;
@@ -8445,7 +8453,7 @@ function openCampoModal(campo){
             const isFuture=g2['Data']>today&&!g2['Risultato'];
             const a1c=pns(g2['Arbitro 1']||''),a2c=pns(g2['Arbitro 2']||'');
             if((isToday||isFuture)&&!todayDone){
-              html+='<tr class="mca-sep"><td colspan="7" style="background:#1a3060;color:#fff;font-size:.65rem;font-weight:700;padding:4px 8px">▶ Oggi — '+today.split('-').reverse().join('/')+'</td></tr>';
+              html+='<tr class="mca-sep"><td colspan="8" style="background:#1a3060;color:#fff;font-size:.65rem;font-weight:700;padding:4px 8px">▶ Oggi — '+today.split('-').reverse().join('/')+'</td></tr>';
               todayDone=true;
             }
             const bg=isToday?'background:#fffbeb':isFuture?'background:#fafbff':'';
@@ -8456,12 +8464,13 @@ function openCampoModal(campo){
             const _a1=pns(g2['Arbitro 1']||''),_a2=pns(g2['Arbitro 2']||'');
             html+='<tr data-mca-camp="'+escH(g2['Campionato']||'')+'" data-mca-arb="'+escH(_a1)+'" data-mca-casa="'+escH(g2['Squadra Casa']||'')+'" data-mca-osp="'+escH(g2['Squadra Ospite']||'')+'" style="'+bg+';'+bl+';cursor:pointer" onclick="openGara(\''+esc(g2['Numero Gara']||'')+'\')">'+
               '<td class="mca-rn" style="text-align:center;color:var(--mu2);font-size:.68rem">'+rn+'</td>'+
-              '<td style="font-size:.68rem">'+escH(g2['Data']||'').split('-').reverse().join('/')+'</td>'+
+              '<td style="font-size:.68rem;white-space:nowrap;color:var(--mu)">'+escH(g2['Ora']||g2['ora']||'—')+'</td>'+
+              '<td style="font-size:.68rem;white-space:nowrap">'+escH(g2['Data']||'').split('-').reverse().join('/')+'</td>'+
               '<td><span style="background:'+campColor(g2['Campionato']||'')+';color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem">'+escH(g2['Campionato']||'')+'</span></td>'+
-              '<td style="font-weight:500;font-size:.72rem"><span class="rn rn-sq" onclick="event.stopPropagation();openSquadra(\''+esc(g2['Squadra Casa']||'')+'\')">'+escH(g2['Squadra Casa']||'')+'</span></td>'+
+              '<td style="font-weight:500;font-size:.72rem"><span class="rn rn-sq" onclick="event.stopPropagation();openSquadra(\''+esc(g2['Squadra Casa']||'')+'\')">'+escH(g2['Squadra Casa']||'')+'</span>'+_gPv(SQ[g2['Squadra Casa']]&&SQ[g2['Squadra Casa']].prov||'',true)+'</td>'+
               '<td style="text-align:center">'+risBadge+'</td>'+
-              '<td style="font-size:.72rem"><span class="rn rn-sq" onclick="event.stopPropagation();openSquadra(\''+esc(g2['Squadra Ospite']||'')+'\')">'+escH(g2['Squadra Ospite']||'')+'</span></td>'+
-              '<td style="font-size:.68rem">'+(_a1?escH(_a1)+(a1c?'':'')+(_a2?' / '+escH(_a2):''):'<span style="color:var(--mu2)">—</span>')+'</td>'+
+              '<td style="font-size:.72rem"><span class="rn rn-sq" onclick="event.stopPropagation();openSquadra(\''+esc(g2['Squadra Ospite']||'')+'\')">'+escH(g2['Squadra Ospite']||'')+'</span>'+_gPv(SQ[g2['Squadra Ospite']]&&SQ[g2['Squadra Ospite']].prov||'',true)+'</td>'+
+              '<td style="font-size:.68rem">'+(_a1?'<span class="rn rn-Arbitro" data-n="'+escH(_a1)+'" onclick="event.stopPropagation();openPersona(this.dataset.n)">'+escH(_a1)+'</span>'+_gPv(P[_a1]&&P[_a1].provincia||'',true)+(_a2?' / <span class="rn rn-Arbitro" data-n="'+escH(_a2)+'" onclick="event.stopPropagation();openPersona(this.dataset.n)">'+escH(_a2)+'</span>'+_gPv(P[_a2]&&P[_a2].provincia||'',true):''):'<span style="color:var(--mu2)">—</span>')+'</td>'+
               '</tr>';
           });
           return html;
