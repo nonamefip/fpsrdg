@@ -2860,19 +2860,27 @@ function openGiornoModal(ds){
       const campi=[...new Set(allDayG.map(g=>g['Campo']||'').filter(Boolean))];
       const conRis=allDayG.filter(g=>g['Risultato']).length;
 
-      // KPI cliccabili — filtrano la tabella sotto
+      // KPI + barra filtri categoria
+      const _gmFcatHtml=(type,label)=>`<span class="gm-fcat" id="gm-fc-${type}" onclick="gmToggleGrp('${type}')" style="display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--tbl-bdr,#dde3f0);border-radius:7px;padding:5px 13px;font-size:.72rem;font-weight:600;cursor:pointer;background:var(--tbl-bg,#fff);color:var(--txt,#1a2340);transition:border-color .12s;margin-bottom:2px">${label} <span class="gm-fc-arr" style="font-size:9px;transition:transform .2s;display:inline-block;opacity:.6">▼</span></span>`;
       bodyHtml=`
-        <div class="scs" style="margin-bottom:12px" id="gm-kpi">
+        <div class="scs" style="margin-bottom:10px" id="gm-kpi">
           <div class="sc" style="cursor:pointer" onclick="gmFilter('')" title="Tutte le gare"><div class="sv" id="gm-kpi-tot">${allDayG.length}</div><div class="sl">Gare</div></div>
           <div class="sc" style="cursor:pointer" onclick="gmFilter('risultato')" title="Con risultato"><div class="sv">${conRis}</div><div class="sl">Con risultato</div></div>
-          <div class="sc" style="cursor:pointer" onclick="gmFilter('arbitri')" title="Arbitri presenti"><div class="sv">${nArbs.size}</div><div class="sl">Arbitri</div></div>
-          <div class="sc" style="cursor:pointer" onclick="gmFilter('campi')" title="Campi diversi"><div class="sv">${campi.length}</div><div class="sl">Campi</div></div>
+          <div class="sc" style="cursor:pointer" onclick="gmFilter('arbitri')" title="Con arbitri"><div class="sv">${nArbs.size}</div><div class="sl">Arbitri</div></div>
+          <div class="sc"><div class="sv">${campi.length}</div><div class="sl">Campi</div></div>
           <div class="sc"><div class="sv">${campsSet.length}</div><div class="sl">Campionati</div></div>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px" id="gm-cats">
-          ${campsSet.map(c=>`<span style="background:${campColor(c)};color:#fff;border-radius:4px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="gmFilterCamp('${esc(c)}')" title="Filtra per ${escH(c)}">${escH(c)}</span>`).join('')}
-          <span style="background:#999;color:#fff;border-radius:4px;padding:2px 8px;font-size:.68rem;cursor:pointer" onclick="gmFilter('')">✕ Tutti</span>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:4px" id="gm-fcat-bar">
+          ${_gmFcatHtml('camp','Campionati')}
+          ${_gmFcatHtml('prov','Province')}
+          ${_gmFcatHtml('arb','Arbitri')}
+          ${_gmFcatHtml('campo','Campi')}
+          <button id="gm-reset-all-btn" onclick="gmResetAll()" style="display:none;align-items:center;gap:4px;border:1.5px solid #c0392b;border-radius:7px;padding:5px 11px;font-size:.7rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">✕ Azzera tutto</button>
         </div>
+        <div class="gm-pp" id="gm-pp-camp" style="max-height:0;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-camp">${campsSet.map(c=>`<span class="gm-pill" data-gm-pill="camp" data-gm-val="${escH(c)}" style="border:none;border-radius:5px;padding:3px 10px;font-size:.65rem;font-weight:600;cursor:pointer;color:#fff;background:${campColor(c)};transition:opacity .12s" onclick="gmTogglePill(this,'camp','${esc(c)}')">${escH(c)}</span>`).join('')}<button onclick="gmResetGrp('camp')" style="background:none;border:0.5px solid var(--tbl-bdr,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button></div></div>
+        <div class="gm-pp" id="gm-pp-prov" style="max-height:0;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-prov"></div></div>
+        <div class="gm-pp" id="gm-pp-arb" style="max-height:0;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-arb"></div></div>
+        <div class="gm-pp" id="gm-pp-campo" style="max-height:0;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-campo"></div></div>
         <div style="overflow-x:auto" id="gm-tbl-wrap">`;
 
       // Tabella con ORA e colonne ordinabili
@@ -2927,29 +2935,10 @@ function openGiornoModal(ds){
       <div style="font-size:.65rem;color:var(--mu);padding:5px 2px" id="gm-tbl-footer"></div>
       </div>`;
 
-      // Filtri pill per province, arbitri, campi
+      // Pill province, arbitri, campi — popolate dopo render modal
       const allProvs=[...new Set(allDayG.map(g=>cpv(g['Campo']||'')).filter(Boolean))].sort();
       const allArbs=[...new Set(allDayG.flatMap(g=>['Arbitro 1','Arbitro 2'].map(f=>pns(g[f]||'')).filter(Boolean)))].sort();
       const allCampi=[...new Set(allDayG.map(g=>(g['Campo']||'').split(',')[0].trim()).filter(Boolean))].sort();
-      const mkGmPills=(items,colorFn,filterFn,label)=>{
-        if(!items.length)return'';
-        return'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;align-items:center">'
-          +'<span style="font-size:.6rem;color:var(--mu);margin-right:2px">'+label+':</span>'
-          +items.map(item=>`<span style="background:${colorFn(item)};color:#fff;border-radius:10px;padding:1px 8px;font-size:.65rem;font-weight:600;cursor:pointer;transition:opacity .15s" onclick="gmTogglePill(this,'${filterFn}','${esc(item)}')">${escH(item)}</span>`).join('')
-          +'<span style="background:#999;color:#fff;border-radius:10px;padding:1px 8px;font-size:.65rem;cursor:pointer" onclick="gmResetPills(\''+filterFn+'\')" title="Mostra tutti">✕</span>'
-          +'</div>';
-      };
-      // inserisci pill PRIMA della tabella
-      const pillHtml=mkGmPills(allProvs,p=>PC[p]||'#888','prov','Provincia')
-        +mkGmPills(allArbs,()=>'#2c3e6b','arb','Arbitro')
-        +mkGmPills(allCampi,()=>'#3d4d6b','campo','Campo');
-      if(pillHtml){
-        // Insert pills before table wrapper
-        const tblWrapTag='<div style="overflow-x:auto" id="gm-tbl-wrap">';
-        const idx=bodyHtml.indexOf(tblWrapTag);
-        if(idx>=0) bodyHtml=bodyHtml.slice(0,idx)+'<div id="gm-pills-wrap" style="margin-bottom:8px">'+pillHtml+'</div>'+bodyHtml.slice(idx);
-        else bodyHtml='<div id="gm-pills-wrap" style="margin-bottom:8px">'+pillHtml+'</div>'+bodyHtml;
-      }
 
       // Provvedimenti
       const provvGiorno=allDayG.filter(g=>g['Provvedimenti']&&g['Provvedimenti'].trim&&g['Provvedimenti'].trim());
@@ -2997,52 +2986,88 @@ function openGiornoModal(ds){
 
     setTimeout(()=>makeTableSortable(modal),50);
 
-    // Funzioni filtro giornata
-    window.gmFilter=function(tipo){
-      const rows=modal.querySelectorAll('#tbl-giorno-body tr');
-      rows.forEach(r=>{
-        if(!tipo)r.style.display='';
-        else if(tipo==='risultato')r.style.display=r.dataset.risultato?'':'none';
-        else if(tipo==='arbitri')r.style.display=r.dataset.arb?'':'none';
-        else if(tipo==='campi')r.style.display='';
-      });
+    // ── Sistema filtri pill multi-select ──────────────────────────────────────
+    const _gmS={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set()};
+    (()=>{
+      const _mkP=(cid,type,items,colorFn)=>{
+        const w=modal.querySelector('#'+cid);if(!w)return;
+        items.forEach(v=>{
+          const s=document.createElement('span');
+          s.style.cssText='border:none;border-radius:5px;padding:3px 10px;font-size:.65rem;font-weight:600;cursor:pointer;color:#fff;background:'+colorFn(v)+';transition:opacity .12s;margin:2px';
+          s.dataset.gmPill=type;s.dataset.gmVal=v;s.textContent=v;
+          s.onclick=()=>window.gmTogglePill(s,type,v);
+          w.appendChild(s);
+        });
+        const rst=document.createElement('button');
+        rst.textContent='✕ Tutti';
+        rst.style.cssText='background:none;border:0.5px solid var(--tbl-bdr,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer;margin:2px';
+        rst.onclick=()=>window.gmResetGrp(type);
+        w.appendChild(rst);
+      };
+      _mkP('gm-pills-prov','prov',allProvs,p=>PC[p]||'#888');
+      _mkP('gm-pills-arb','arb',allArbs,()=>'#2c3e6b');
+      _mkP('gm-pills-campo','campo',allCampi,()=>'#3d4d6b');
+    })();
+
+    window.gmToggleGrp=function(type){
+      const pp=modal.querySelector('#gm-pp-'+type);
+      const fc=modal.querySelector('#gm-fc-'+type);
+      if(!pp||!fc)return;
+      const opening=!pp.style.maxHeight||pp.style.maxHeight==='0px';
+      pp.style.maxHeight=opening?'200px':'0px';
+      pp.style.opacity=opening?'1':'0';
+      fc.style.borderColor=opening?'#1a3060':'';
+      fc.style.color=opening?'#1a3060':'';
+      const arr=fc.querySelector('.gm-fc-arr');
+      if(arr)arr.style.transform=opening?'rotate(180deg)':'';
     };
-    window.gmFilterCamp=function(camp){
+
+    window.gmTogglePill=function(btn,type,val){
+      const s=_gmS[type];
+      if(s.has(val))s.delete(val);else s.add(val);
+      modal.querySelectorAll('[data-gm-pill="'+type+'"]').forEach(p=>{
+        p.style.opacity=(s.size===0||s.has(p.dataset.gmVal))?'1':'.2';
+        p.style.boxShadow=s.has(p.dataset.gmVal)?'0 0 0 2px rgba(0,0,0,.25),0 0 0 4px rgba(255,255,255,.6)':'';
+      });
+      const fc=modal.querySelector('#gm-fc-'+type);
+      if(fc){
+        const ob=fc.querySelector('.gm-cnt');if(ob)ob.remove();
+        if(s.size>0){
+          const b=document.createElement('span');b.className='gm-cnt';
+          b.style.cssText='background:#1a3060;color:#fff;border-radius:10px;padding:1px 6px;font-size:.6rem;font-weight:700';
+          b.textContent=s.size;
+          const arr=fc.querySelector('.gm-fc-arr');fc.insertBefore(b,arr);
+          fc.style.borderColor='#1a3060';fc.style.color='#1a3060';
+        } else {fc.style.borderColor='';fc.style.color='';}
+      }
+      const rab=modal.querySelector('#gm-reset-all-btn');
+      if(rab)rab.style.display=Object.values(_gmS).some(x=>x.size>0)?'inline-flex':'none';
+      gmApplyPillFilters();
+    };
+    window.gmResetGrp=function(type){
+      _gmS[type].clear();
+      modal.querySelectorAll('[data-gm-pill="'+type+'"]').forEach(p=>{p.style.opacity='1';p.style.boxShadow='';});
+      const fc=modal.querySelector('#gm-fc-'+type);
+      if(fc){const ob=fc.querySelector('.gm-cnt');if(ob)ob.remove();fc.style.borderColor='';fc.style.color='';}
+      const rab=modal.querySelector('#gm-reset-all-btn');
+      if(rab)rab.style.display=Object.values(_gmS).some(x=>x.size>0)?'inline-flex':'none';
+      gmApplyPillFilters();
+    };
+    window.gmResetAll=function(){['camp','prov','arb','campo'].forEach(t=>window.gmResetGrp(t));};
+    window.gmFilter=function(tipo){
+      if(!tipo){window.gmResetAll();return;}
       const rows=modal.querySelectorAll('#tbl-giorno-body tr');
-      rows.forEach(r=>r.style.display=(r.dataset.camp===camp||!camp)?'':'none');
+      if(tipo==='risultato')rows.forEach(r=>r.style.display=r.dataset.risultato?'':'none');
+      else if(tipo==='arbitri')rows.forEach(r=>r.style.display=r.dataset.arb?'':'none');
       gmRenumber();
     };
-    // Pill filters per province, arbitri, campi
-    window._gmHidden={prov:new Set(),arb:new Set(),campo:new Set()};
-    window.gmTogglePill=function(btn,type,val){
-      if(window._gmHidden[type]&&window._gmHidden[type].has(val)){
-        window._gmHidden[type].delete(val);btn.style.opacity='1';
-      } else {
-        if(!window._gmHidden[type])window._gmHidden[type]=new Set();
-        window._gmHidden[type].add(val);btn.style.opacity='.22';
-      }
-      gmApplyPillFilters();
-    };
-    window.gmResetPills=function(type){
-      if(window._gmHidden[type])window._gmHidden[type].clear();
-      // reset opacity di tutte le pill di quel tipo
-      const rows=modal.querySelectorAll('#tbl-giorno-body tr');
-      rows.forEach(r=>r.style.display='');
-      gmApplyPillFilters();
-      // reset visivo pill
-      modal.querySelectorAll('[onclick*="gmTogglePill"]').forEach(p=>{
-        if(p.getAttribute('onclick').includes("'"+type+"'"))p.style.opacity='1';
-      });
-    };
     function gmApplyPillFilters(){
-      const rows=modal.querySelectorAll('#tbl-giorno-body tr');
-      rows.forEach(r=>{
-        const campo=(r.dataset.campo||'').split(',')[0].trim();
-        const arb=r.dataset.arb1||'';
-        const prov=r.dataset.prov||'';
-        const hide=(window._gmHidden.campo&&window._gmHidden.campo.has(campo))||
-                   (window._gmHidden.arb&&window._gmHidden.arb.has(arb))||
-                   (window._gmHidden.prov&&window._gmHidden.prov.has(prov));
+      modal.querySelectorAll('#tbl-giorno-body tr').forEach(r=>{
+        const hide=
+          (_gmS.camp.size>0&&!_gmS.camp.has(r.dataset.camp||''))||
+          (_gmS.prov.size>0&&!_gmS.prov.has(r.dataset.prov||''))||
+          (_gmS.arb.size>0&&!_gmS.arb.has(r.dataset.arb1||''))||
+          (_gmS.campo.size>0&&!_gmS.campo.has((r.dataset.campo||'').split(',')[0].trim()));
         r.style.display=hide?'none':'';
       });
       gmRenumber();
@@ -8401,13 +8426,15 @@ function openCampoModal(campo){
         ${(CAMP_DATA[cc]||{}).is_femminile?'<span style="color:#e84393;font-size:.65rem">👩</span>':''}
       </div>`).join('')}
     </div>
+    <div id="mca-pill-bar" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px"></div>
+    <div id="mca-pp-camp" style="max-height:0;overflow:hidden;transition:max-height .25s,opacity .2s;opacity:0;margin-bottom:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:4px 0" id="mca-pills-camp"></div></div>
+    <div id="mca-pp-arb" style="max-height:0;overflow:hidden;transition:max-height .25s,opacity .2s;opacity:0;margin-bottom:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:4px 0" id="mca-pills-arb"></div></div>
     <div class="card">
       <div class="card-title">📅 Tutte le gare (${gare.length}) — da settembre a fine stagione</div>
       <div style="overflow-x:auto"><table class="gtbl" style="width:100%">
-        <thead><tr><th>#</th><th>Data</th><th>Campionato</th><th>Casa</th><th>Ris.</th><th>Ospite</th></tr></thead>
-        <tbody>${(()=>{
+        <thead><tr><th>#</th><th>Data</th><th>Campionato</th><th>Casa</th><th>Ris.</th><th>Ospite</th><th>Arbitro</th></tr></thead>
+        <tbody id="mca-tbl-body">${(()=>{
           const today=new Date().toISOString().split('T')[0];
-          // Ordina dal più vecchio al più nuovo
           const sorted=[...gare,(D.gare_future||[]).filter(g2=>{const cv=g2['Campo']||'';return cv===campo||(c.varianti||[]).indexOf(cv)>=0;})].flat()
             .filter((g2,i,arr)=>arr.findIndex(x=>(x['Numero Gara']||x['Squadra Casa']+x['Data'])===(g2['Numero Gara']||g2['Squadra Casa']+g2['Data']))===i)
             .sort((a,b)=>a['Data'].localeCompare(b['Data']));
@@ -8416,8 +8443,9 @@ function openCampoModal(campo){
             rn++;
             const isToday=g2['Data']===today;
             const isFuture=g2['Data']>today&&!g2['Risultato'];
-            if(isToday&&!todayDone){
-              html+='<tr><td colspan="6" style="background:#e6f1fb;color:#0c447c;font-size:.65rem;font-weight:700;padding:4px 8px;border-left:3px solid #185FA5">📅 Oggi — '+today.split('-').reverse().join('/')+'</td></tr>';
+            const a1c=pns(g2['Arbitro 1']||''),a2c=pns(g2['Arbitro 2']||'');
+            if((isToday||isFuture)&&!todayDone){
+              html+='<tr class="mca-sep"><td colspan="7" style="background:#1a3060;color:#fff;font-size:.65rem;font-weight:700;padding:4px 8px">▶ Oggi — '+today.split('-').reverse().join('/')+'</td></tr>';
               todayDone=true;
             }
             const bg=isToday?'background:#fffbeb':isFuture?'background:#fafbff':'';
@@ -8425,19 +8453,90 @@ function openCampoModal(campo){
             const r=g2['Risultato']||'';
             let risBadge='<span style="color:var(--mu2);font-size:.68rem">—</span>';
             if(r){const[a,b]=r.split('-').map(Number);if(a>b)risBadge='<span style="background:#eaf3de;color:#27500A;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.75rem">'+r+'</span>';else if(b>a)risBadge='<span style="background:#fcebeb;color:#791F1F;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.75rem">'+r+'</span>';else risBadge='<span style="font-weight:700;font-size:.75rem">'+r+'</span>';}
-            html+='<tr style="'+bg+';'+bl+';cursor:pointer" onclick="openGara(\''+esc(g2['Numero Gara']||'')+'\')">'+
-              '<td style="text-align:center;color:var(--mu2);font-size:.68rem">'+rn+'</td>'+
+            const _a1=pns(g2['Arbitro 1']||''),_a2=pns(g2['Arbitro 2']||'');
+            html+='<tr data-mca-camp="'+escH(g2['Campionato']||'')+'" data-mca-arb="'+escH(_a1)+'" style="'+bg+';'+bl+';cursor:pointer" onclick="openGara(\''+esc(g2['Numero Gara']||'')+'\')">'+
+              '<td class="mca-rn" style="text-align:center;color:var(--mu2);font-size:.68rem">'+rn+'</td>'+
               '<td style="font-size:.68rem">'+escH(g2['Data']||'').split('-').reverse().join('/')+'</td>'+
               '<td><span style="background:'+campColor(g2['Campionato']||'')+';color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem">'+escH(g2['Campionato']||'')+'</span></td>'+
               '<td style="font-weight:500;font-size:.72rem"><span class="rn rn-sq" onclick="event.stopPropagation();openSquadra(\''+esc(g2['Squadra Casa']||'')+'\')">'+escH(g2['Squadra Casa']||'')+'</span></td>'+
               '<td style="text-align:center">'+risBadge+'</td>'+
               '<td style="font-size:.72rem"><span class="rn rn-sq" onclick="event.stopPropagation();openSquadra(\''+esc(g2['Squadra Ospite']||'')+'\')">'+escH(g2['Squadra Ospite']||'')+'</span></td>'+
+              '<td style="font-size:.68rem">'+(_a1?escH(_a1)+(a1c?'':'')+(_a2?' / '+escH(_a2):''):'<span style="color:var(--mu2)">—</span>')+'</td>'+
               '</tr>';
           });
           return html;
         })()}</tbody>
       </table></div>
-    </div>`;  openMo('mo-campo');
+    </div>`;
+  // Wire up pill filters for campo modal
+  openMo('mo-campo');
+  setTimeout(()=>{
+    // Scroll to today separator
+    const sep=document.querySelector('#mo-campo .mca-sep');
+    if(sep)sep.scrollIntoView({block:'center',behavior:'smooth'});
+    // Build pill bars
+    const _mcaS={camp:new Set(),arb:new Set()};
+    const _allGareCampo=[...document.querySelectorAll('#mca-tbl-body tr[data-mca-camp]')];
+    const _mcaCamps=[...new Set(_allGareCampo.map(r=>r.dataset.mcaCamp).filter(Boolean))];
+    const _mcaArbs=[...new Set(_allGareCampo.map(r=>r.dataset.mcaArb).filter(Boolean))].sort();
+    const pillBar=document.getElementById('mca-pill-bar');
+    if(!pillBar)return;
+    const _fcBtn=(type,label)=>{
+      const b=document.createElement('span');
+      b.id='mca-fc-'+type;
+      b.style.cssText='display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--tbl-bdr,#dde3f0);border-radius:7px;padding:4px 12px;font-size:.7rem;font-weight:600;cursor:pointer;background:var(--tbl-bg,#fff);color:var(--txt,#1a2340);transition:border-color .12s';
+      b.innerHTML=label+' <span class="mca-arr" style="font-size:9px;transition:transform .2s;opacity:.6">▼</span>';
+      b.onclick=()=>{
+        const pp=document.getElementById('mca-pp-'+type);
+        const isOpen=pp.style.maxHeight&&pp.style.maxHeight!=='0px';
+        pp.style.maxHeight=isOpen?'0':'150px';
+        pp.style.opacity=isOpen?'0':'1';
+        b.style.borderColor=isOpen?'':'#1a3060';b.style.color=isOpen?'':'#1a3060';
+        b.querySelector('.mca-arr').style.transform=isOpen?'':'rotate(180deg)';
+      };
+      pillBar.appendChild(b);
+    };
+    if(_mcaCamps.length>1)_fcBtn('camp','Campionati');
+    if(_mcaArbs.length>0)_fcBtn('arb','Arbitri');
+    // Reset btn
+    const rstAll=document.createElement('button');
+    rstAll.id='mca-reset-all';rstAll.textContent='✕ Azzera tutto';
+    rstAll.style.cssText='display:none;align-items:center;border:1.5px solid #c0392b;border-radius:7px;padding:4px 10px;font-size:.68rem;font-weight:600;cursor:pointer;background:none;color:#c0392b';
+    pillBar.appendChild(rstAll);
+    const _mcaMkPills=(containerId,type,items,colorFn)=>{
+      const w=document.getElementById(containerId);if(!w)return;
+      items.forEach(v=>{
+        const s=document.createElement('span');
+        s.style.cssText='border:none;border-radius:5px;padding:2px 9px;font-size:.65rem;font-weight:600;cursor:pointer;color:#fff;background:'+colorFn(v)+';transition:opacity .12s;margin:1px';
+        s.dataset.mcaType=type;s.dataset.mcaVal=v;s.textContent=v;
+        s.onclick=()=>{
+          if(_mcaS[type].has(v))_mcaS[type].delete(v);else _mcaS[type].add(v);
+          w.querySelectorAll('[data-mca-type="'+type+'"]').forEach(p=>{
+            p.style.opacity=(_mcaS[type].size===0||_mcaS[type].has(p.dataset.mcaVal))?'1':'.2';
+            p.style.boxShadow=_mcaS[type].has(p.dataset.mcaVal)?'0 0 0 2px rgba(0,0,0,.2),0 0 0 4px rgba(255,255,255,.6)':'';
+          });
+          const fc=document.getElementById('mca-fc-'+type);
+          if(fc){const ob=fc.querySelector('.mca-cnt');if(ob)ob.remove();if(_mcaS[type].size>0){const b=document.createElement('span');b.className='mca-cnt';b.style.cssText='background:#1a3060;color:#fff;border-radius:10px;padding:1px 5px;font-size:.58rem;font-weight:700';b.textContent=_mcaS[type].size;fc.insertBefore(b,fc.querySelector('.mca-arr'));fc.style.borderColor='#1a3060';fc.style.color='#1a3060';}else{fc.style.borderColor='';fc.style.color='';}}
+          rstAll.style.display=Object.values(_mcaS).some(x=>x.size>0)?'inline-flex':'none';
+          // apply filter
+          let n=0;
+          _allGareCampo.forEach(r=>{
+            const hide=(_mcaS.camp.size>0&&!_mcaS.camp.has(r.dataset.mcaCamp||''))||(_mcaS.arb.size>0&&!_mcaS.arb.has(r.dataset.mcaArb||''));
+            r.style.display=hide?'none':'';
+            if(!hide){n++;const rn=r.querySelector('.mca-rn');if(rn)rn.textContent=n;}
+          });
+        };
+        w.appendChild(s);
+      });
+      const rst=document.createElement('button');rst.textContent='✕ Tutti';
+      rst.style.cssText='background:none;border:0.5px solid var(--tbl-bdr,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 7px;font-size:.63rem;cursor:pointer;margin:1px';
+      rst.onclick=()=>{_mcaS[type].clear();w.querySelectorAll('[data-mca-type="'+type+'"]').forEach(p=>{p.style.opacity='1';p.style.boxShadow='';});const fc=document.getElementById('mca-fc-'+type);if(fc){const ob=fc.querySelector('.mca-cnt');if(ob)ob.remove();fc.style.borderColor='';fc.style.color='';}rstAll.style.display=Object.values(_mcaS).some(x=>x.size>0)?'inline-flex':'none';_allGareCampo.forEach((r,i)=>{r.style.display='';r.querySelector('.mca-rn').textContent=i+1;});};
+      w.appendChild(rst);
+    };
+    _mcaMkPills('mca-pills-camp','camp',_mcaCamps,cc=>campColor(cc));
+    _mcaMkPills('mca-pills-arb','arb',_mcaArbs,()=>'#2c3e6b');
+    rstAll.onclick=()=>{['camp','arb'].forEach(t=>{_mcaS[t].clear();const pp=document.getElementById('mca-pp-'+t);if(pp){pp.querySelectorAll('[data-mca-type]').forEach(p=>{p.style.opacity='1';p.style.boxShadow='';});}const fc=document.getElementById('mca-fc-'+t);if(fc){const ob=fc.querySelector('.mca-cnt');if(ob)ob.remove();fc.style.borderColor='';fc.style.color='';}});rstAll.style.display='none';_allGareCampo.forEach((r,i)=>{r.style.display='';r.querySelector('.mca-rn').textContent=i+1;});};
+  },80);
   }catch(err){
     document.getElementById('mca-title').textContent='Errore';
     document.getElementById('mca-body').innerHTML='<div style="padding:16px;color:red"><b>Errore:</b> '+escH(err.message)+'</div>';
