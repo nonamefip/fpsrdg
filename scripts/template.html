@@ -150,6 +150,8 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 .mca-si{font-size:8px;opacity:.7;margin-left:2px}
 .mca-rsz{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent;}
 .mca-rsz:hover{background:rgba(255,255,255,.3);}
+#mca-tbl-body .pv-badge,#mca-tbl-body [style*="border-radius:3px"][style*="font-weight:8"]{font-size:9.5px!important;padding:1px 5px!important;}
+#mo-campo .ng-pill{font-family:'Courier New',monospace;font-size:.72rem;background:#1a3060;color:#b5d4f4;border-radius:5px;padding:2px 7px;letter-spacing:.5px;border:none;font-weight:600;}
 .gare-kpi-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
 .g-fcat{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--br,#dde3f0);border-radius:7px;padding:5px 13px;font-size:.72rem;font-weight:600;cursor:pointer;background:var(--bg,#fff);color:var(--txt,#1a2340);transition:border-color .12s;user-select:none;margin-bottom:2px}
 .g-fcat:hover{border-color:var(--bl2,#378add)}
@@ -2900,12 +2902,14 @@ function openGiornoModal(ds){
           ${_gmFcatHtml('prov','Province')}
           ${_gmFcatHtml('arb','Arbitri')}
           ${_gmFcatHtml('campo','Campi')}
+          ${_gmFcatHtml('citta','Città')}
           <button id="gm-reset-all-btn" onclick="gmResetAll()" style="display:none;align-items:center;gap:4px;border:1.5px solid #c0392b;border-radius:7px;padding:5px 11px;font-size:.7rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">✕ Azzera tutto</button>
         </div>
         <div class="gm-pp" id="gm-pp-camp" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-camp">${campsSet.map(c=>`<span class="gm-pill" data-gm-pill="camp" data-gm-val="${escH(c)}" style="border:none;border-radius:5px;padding:3px 10px;font-size:.65rem;font-weight:600;cursor:pointer;color:#fff;background:${campColor(c)};transition:opacity .12s" onclick="gmTogglePill(this,'camp','${esc(c)}')">${escH(c)}</span>`).join('')}<button onclick="gmResetGrp('camp')" style="background:none;border:0.5px solid var(--tbl-bdr,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button></div></div>
         <div class="gm-pp" id="gm-pp-prov" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-prov"></div></div>
         <div class="gm-pp" id="gm-pp-arb" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-arb"></div></div>
         <div class="gm-pp" id="gm-pp-campo" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-campo"></div></div>
+        <div class="gm-pp" id="gm-pp-citta" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-citta"></div></div>
         <div style="overflow-x:auto" id="gm-tbl-wrap">`;
 
       // Tabella con ORA e colonne ordinabili
@@ -2922,8 +2926,8 @@ function openGiornoModal(ds){
         const campName=g['Campionato']||'';
         const pvCampo=cpv(campo);
         const pvClr=pvCampo&&PC[pvCampo]?PC[pvCampo]:'transparent';
-        return`<tr data-camp="${escH(campName)}" data-risultato="${g['Risultato']?'1':''}" data-arb="${nArb>0?'1':''}" data-arb1="${escH(a1)}" data-prov="${pvCampo||''}" data-campo="${escH(campo)}" style="border-left:3px solid ${pvClr}">
-          <td class="gm-rnum" style="text-align:center;font-size:.7rem;color:var(--mu2)"></td>
+        return`<tr data-camp="${escH(campName)}" data-risultato="${g['Risultato']?'1':''}" data-arb="${nArb>0?'1':''}" data-arb1="${escH(a1)}" data-prov="${pvCampo||''}" data-campo="${escH(campo)}" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()} style="border-left:3px solid ${pvClr}">
+          <td class="gm-rnum" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()} style="text-align:center;font-size:.7rem;color:var(--mu2)"></td>
           <td style="font-size:.7rem;text-align:center;color:var(--mu);white-space:nowrap">${ora||'–'}</td>
           <td style="font-size:.65rem;text-align:center;color:var(--mu2);font-family:monospace">${escH(g['Numero Gara']||'')}</td>
           <td style="font-size:.7rem"><span style="background:${campColor(campName)};color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(campName)}')">${escH(campName)}</span></td>
@@ -3016,7 +3020,7 @@ function openGiornoModal(ds){
 
     // ── Sistema filtri pill multi-select ──────────────────────────────────────
     // Reset _gmS for this new modal instance
-    _gmS={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set()};
+    _gmS={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),citta:new Set()};
     const allProvs=[...new Set(allDayG.map(g=>cpv(g['Campo']||'')).filter(Boolean))].sort();
     const allArbs=[...new Set(allDayG.flatMap(g=>['Arbitro 1','Arbitro 2'].map(f=>pns(g[f]||'')).filter(Boolean)))].sort();
     const allCampi=[...new Set(allDayG.map(g=>(g['Campo']||'').split(',')[0].trim()).filter(Boolean))].sort();
@@ -3096,7 +3100,7 @@ function gmResetGrp(type){
   if(rab)rab.style.display=Object.values(_gmS).some(x=>x.size>0)?'inline-flex':'none';
   gmApplyPillFilters();
 }
-function gmResetAll(){['camp','prov','arb','campo'].forEach(t=>gmResetGrp(t));}
+function gmResetAll(){['camp','prov','arb','campo','citta'].forEach(t=>gmResetGrp(t));}
 function gmFilter(tipo){
   if(!tipo){gmResetAll();return;}
   const mo=document.getElementById('dyn-mo-giorno');if(!mo)return;
@@ -3112,7 +3116,8 @@ function gmApplyPillFilters(){
       (_gmS.camp.size>0&&!_gmS.camp.has(r.dataset.camp||''))||
       (_gmS.prov.size>0&&!_gmS.prov.has(r.dataset.prov||''))||
       (_gmS.arb.size>0&&!_gmS.arb.has(r.dataset.arb1||''))||
-      (_gmS.campo.size>0&&!_gmS.campo.has((r.dataset.campo||'').split(',')[0].trim()));
+      (_gmS.campo.size>0&&!_gmS.campo.has((r.dataset.campo||'').split(',')[0].trim()))||
+      (_gmS.citta&&_gmS.citta.size>0&&!_gmS.citta.has(r.dataset.citta||''));
     r.style.display=hide?'none':'';
   });
   gmRenumber();
@@ -3966,7 +3971,7 @@ function renderCamp(){
 
 var _gKpiOn={camp:false,arb:false,campi:false};
 // Pill filter state for giorno modal (module-level for hoisted functions)
-var _gmS={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set()};
+var _gmS={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),citta:new Set()};
 var _gFiltCamp=new Set(),_gFiltArb=new Set(),_gFiltCampo=new Set();
 var _gHidden=new Set(),_gFrozen=new Set();
 var _gSortCol=null,_gSortAsc=true;
@@ -8580,13 +8585,25 @@ function openCampoModal(campo){
           const sorted=[...gare,(D.gare_future||[]).filter(g2=>{const cv=g2['Campo']||'';return cv===campo||(c.varianti||[]).indexOf(cv)>=0;})].flat()
             .filter((g2,i,arr)=>arr.findIndex(x=>(x['Numero Gara']||x['Squadra Casa']+x['Data'])===(g2['Numero Gara']||g2['Squadra Casa']+g2['Data']))===i)
             .sort((a,b)=>{const da=(a['Data']||'')+(a['Ora']||a['ora']||'');const db=(b['Data']||'')+(b['Ora']||b['ora']||'');return da.localeCompare(db);});
-          let rn=0,html='',todayDone=false;
+          let rn=0,html='',todayDone=false,pastCount=0;
+          // Count past rows first
+          sorted.forEach(g2=>{if(g2['Data']<today)pastCount++;});
+          const hasPast=pastCount>0;
+          if(hasPast){
+            html+='<tr class="mca-past-toggle" onclick="mcaTogglePast(this)" style="cursor:pointer;background:var(--tbl-row-even,#f6f8ff)"><td colspan="12" style="font-size:.68rem;color:var(--mu,#6b7a99);padding:5px 10px;font-weight:600">▶ Gare precedenti ('+pastCount+') — clicca per espandere</td></tr>';
+            html+='<tbody id="mca-past-rows" style="display:none">';
+          }
           sorted.forEach(g2=>{
             rn++;
             const isToday=g2['Data']===today;
             const isFuture=g2['Data']>today&&!g2['Risultato'];
+            const isPast=g2['Data']<today;
             const a1c=pns(g2['Arbitro 1']||''),a2c=pns(g2['Arbitro 2']||'');
-            if((isToday||isFuture)&&!todayDone){
+            if(hasPast&&(isToday||isFuture)&&!todayDone){
+              html+='</tbody>';
+              html+='<tr class="mca-sep"><td colspan="12" style="background:#1a3060;color:#fff;font-size:.65rem;font-weight:700;padding:4px 8px">▶ Oggi — '+today.split('-').reverse().join('/')+'</td></tr>';
+              todayDone=true;
+            } else if(!hasPast&&(isToday||isFuture)&&!todayDone){
               html+='<tr class="mca-sep"><td colspan="12" style="background:#1a3060;color:#fff;font-size:.65rem;font-weight:700;padding:4px 8px">▶ Oggi — '+today.split('-').reverse().join('/')+'</td></tr>';
               todayDone=true;
             }
@@ -8611,8 +8628,8 @@ function openCampoModal(campo){
               '<td style="text-align:center">'+risBadge+'</td>'+
               '<td style="font-size:.72rem"><span class="rn rn-sq" onclick="event.stopPropagation();openSquadra(\''+esc(g2['Squadra Ospite']||'')+'\')">'+escH(g2['Squadra Ospite']||'')+'</span></td>'+
               '<td style="text-align:center">'+_gPv(_pvO,false)+'</td>'+
-              '<td style="font-size:.68rem">'+(_a1?'<span class="rn rn-Arbitro" data-n="'+escH(_a1)+'" onclick="event.stopPropagation();openPersona(this.dataset.n)">'+escH(_a1)+'</span>'+_gPv(_pva1,true):'<span style="color:var(--mu2)">—</span>')+'</td>'+
-              '<td style="font-size:.68rem">'+(_a2?'<span class="rn rn-Arbitro" data-n="'+escH(_a2)+'" onclick="event.stopPropagation();openPersona(this.dataset.n)">'+escH(_a2)+'</span>'+_gPv(_pva2,true):'<span style="color:var(--mu2)">—</span>')+'</td>'+
+              '<td style="font-size:.68rem">'+(_a1?'<span class="rn rn-Arbitro" data-n="'+escH(_a1)+'" onclick="event.stopPropagation();openPersona(this.dataset.n)">'+escH(_a1)+'</span>'+_gPv(_pva1,false):'<span style="color:var(--mu2)">—</span>')+'</td>'+
+              '<td style="font-size:.68rem">'+(_a2?'<span class="rn rn-Arbitro" data-n="'+escH(_a2)+'" onclick="event.stopPropagation();openPersona(this.dataset.n)">'+escH(_a2)+'</span>'+_gPv(_pva2,false):'<span style="color:var(--mu2)">—</span>')+'</td>'+
               '</tr>';
           });
           return html;
@@ -8765,6 +8782,13 @@ function mcaStartResize(e,handle){
   function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);}
   document.addEventListener('mousemove',onMove);
   document.addEventListener('mouseup',onUp);
+}
+function mcaTogglePast(btn){
+  const tbody=document.getElementById('mca-past-rows');
+  if(!tbody)return;
+  const open=tbody.style.display==='none'||!tbody.style.display;
+  tbody.style.display=open?'':'none';
+  btn.querySelector('td').textContent=(open?'▼ Gare precedenti':'▶ Gare precedenti')+btn.querySelector('td').textContent.replace(/^[▼▶]\s*/,'').replace(/^Gare precedenti/,'');
 }
 function mcaToggleSq(type){
   const list=document.getElementById('mca-sq-'+type);
