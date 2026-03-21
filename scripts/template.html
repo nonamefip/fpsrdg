@@ -160,7 +160,7 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 .g-fcat.open .g-fcat-arr{transform:rotate(180deg)}
 .g-fcat .g-cnt{background:#1a3060;color:#fff;border-radius:10px;padding:1px 6px;font-size:.58rem;font-weight:700}
 .g-pp{max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0;margin-bottom:0}
-.g-pp.open{max-height:160px;opacity:1;margin-bottom:5px}
+.g-pp.open{max-height:220px;overflow-y:auto;opacity:1;margin-bottom:5px}
 .g-pill{border:none;border-radius:5px;padding:2px 9px;font-size:.65rem;font-weight:600;cursor:pointer;color:#fff;transition:opacity .12s;margin:1px}
 .g-pill.dim{opacity:.2}
 .g-pill.sel{box-shadow:0 0 0 2px rgba(0,0,50,.2),0 0 0 4px rgba(255,255,255,.6)}
@@ -1153,11 +1153,11 @@ tr.loss-row td{background:#fdecea!important;}
     <span class="g-fcat" id="gfc-sq" onclick="gFcatToggle('sq')">Squadre <span class="g-fcat-arr">&#9660;</span></span>
     <button id="g-rst-all" onclick="gResetAll()" style="display:none;align-items:center;border:1.5px solid #c0392b;border-radius:7px;padding:4px 10px;font-size:.68rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">&#10005; Azzera tutto</button>
   </div>
-  <div class="g-pp" id="g-pp-camp"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-camp"></div></div>
-  <div class="g-pp" id="g-pp-prov"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-prov"></div></div>
-  <div class="g-pp" id="g-pp-arb"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-arb"></div></div>
-  <div class="g-pp" id="g-pp-campo"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-campo"></div></div>
-  <div class="g-pp" id="g-pp-sq"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-sq"></div></div>
+  <div class="g-pp" id="g-pp-camp"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca campionato..." oninput="gPillSearch(this,'camp')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-camp"></div></div>
+  <div class="g-pp" id="g-pp-prov"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca provincia..." oninput="gPillSearch(this,'prov')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-prov"></div></div>
+  <div class="g-pp" id="g-pp-arb"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca arbitro..." oninput="gPillSearch(this,'arb')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-arb"></div></div>
+  <div class="g-pp" id="g-pp-campo"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca campo..." oninput="gPillSearch(this,'campo')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-campo"></div></div>
+  <div class="g-pp" id="g-pp-sq"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca squadra..." oninput="gPillSearch(this,'sq')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-sq"></div></div>
   <div class="gare-chips" id="g-chips" style="display:none"></div>
   <div class="gare-restore" id="g-restore"></div>
   <div style="overflow-x:auto">
@@ -4073,6 +4073,16 @@ function gFcatToggle(type){
   if(arr)arr.style.transform=opening?'rotate(180deg)':'';
   // Rebuild pills on first open
   if(opening)_gBuildPillBars();
+}
+function gPillSearch(inp,type){
+  var q=inp.value.toLowerCase();
+  document.querySelectorAll('[data-gp="'+type+'"]').forEach(function(p){
+    if(!q||p.dataset.gpv.toLowerCase().includes(q)){
+      p.style.display='';
+    } else {
+      p.style.display='none';
+    }
+  });
 }
 function gTogglePill(type,val){
   var s=_gSEL[type];
