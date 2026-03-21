@@ -2926,10 +2926,10 @@ function openGiornoModal(ds){
         const campName=g['Campionato']||'';
         const pvCampo=cpv(campo);
         const pvClr=pvCampo&&PC[pvCampo]?PC[pvCampo]:'transparent';
-        return`<tr data-camp="${escH(campName)}" data-risultato="${g['Risultato']?'1':''}" data-arb="${nArb>0?'1':''}" data-arb1="${escH(a1)}" data-prov="${pvCampo||''}" data-campo="${escH(campo)}" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()}" style="border-left:3px solid ${pvClr}">
+        return`<tr data-camp="${escH(campName)}" data-risultato="${g['Risultato']?'1':''}" data-arb="${nArb>0?'1':''}" data-arb1="${escH(a1)}" data-prov="${pvCampo||''}" data-campo="${escH(campo)}" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()}" onclick="const _n=this.getAttribute('data-ng');if(_n)openGara(_n)" data-ng="${(g['Numero Gara']||'')}" style="cursor:pointer;border-left:3px solid ${pvClr}">
           <td class="gm-rnum" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()}" style="text-align:center;font-size:.7rem;color:var(--mu2)"></td>
           <td style="font-size:.7rem;text-align:center;color:var(--mu);white-space:nowrap">${ora||'–'}</td>
-          <td style="font-size:.65rem;text-align:center;color:var(--mu2);font-family:monospace">${escH(g['Numero Gara']||'')}</td>
+          <td style="text-align:center" onclick="event.stopPropagation();openGara('${(g['Numero Gara']||'')}')"><span class="ng-pill" style="cursor:pointer">${escH(g['Numero Gara']||'')}</span></td>
           <td style="font-size:.7rem"><span style="background:${campColor(campName)};color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(campName)}')">${escH(campName)}</span></td>
           <td style="text-align:center">${pvCampo?`<span style="background:${pvClr};color:#fff;border-radius:3px;padding:0 5px;font-size:.65rem;font-weight:700">${pvCampo}</span>`:''}</td>
           <td style="font-size:.68rem;color:var(--mu2)">${escH(g['Girone']||'')}</td>
