@@ -1444,9 +1444,9 @@ Argomenti: /c "cd C:\percorso\cartella && python fip_scraper_v5.py && python gen
 </div></div>
 
 <!-- MODAL CAMPO -->
-<div class="mo" id="mo-campo"><div class="mbox" style="max-width:750px">
+<div class="mo" id="mo-campo"><div class="mbox" style="max-width:min(96vw,900px);min-width:380px;min-height:400px;resize:both;overflow:hidden;display:flex;flex-direction:column">
   <div class="mhd"><span>🏟</span><h3 id="mca-title">Campo</h3><button onclick="closeMo('mo-campo')">✕</button></div>
-  <div class="mbody" id="mca-body"></div>
+  <div class="mbody" id="mca-body" style="overflow-y:auto;flex:1"></div>
 </div></div>
 
 <!-- MODAL GIORNATA -->
@@ -2877,10 +2877,10 @@ function openGiornoModal(ds){
           ${_gmFcatHtml('campo','Campi')}
           <button id="gm-reset-all-btn" onclick="gmResetAll()" style="display:none;align-items:center;gap:4px;border:1.5px solid #c0392b;border-radius:7px;padding:5px 11px;font-size:.7rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">✕ Azzera tutto</button>
         </div>
-        <div class="gm-pp" id="gm-pp-camp" style="max-height:0;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-camp">${campsSet.map(c=>`<span class="gm-pill" data-gm-pill="camp" data-gm-val="${escH(c)}" style="border:none;border-radius:5px;padding:3px 10px;font-size:.65rem;font-weight:600;cursor:pointer;color:#fff;background:${campColor(c)};transition:opacity .12s" onclick="gmTogglePill(this,'camp','${esc(c)}')">${escH(c)}</span>`).join('')}<button onclick="gmResetGrp('camp')" style="background:none;border:0.5px solid var(--tbl-bdr,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button></div></div>
-        <div class="gm-pp" id="gm-pp-prov" style="max-height:0;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-prov"></div></div>
-        <div class="gm-pp" id="gm-pp-arb" style="max-height:0;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-arb"></div></div>
-        <div class="gm-pp" id="gm-pp-campo" style="max-height:0;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-campo"></div></div>
+        <div class="gm-pp" id="gm-pp-camp" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-camp">${campsSet.map(c=>`<span class="gm-pill" data-gm-pill="camp" data-gm-val="${escH(c)}" style="border:none;border-radius:5px;padding:3px 10px;font-size:.65rem;font-weight:600;cursor:pointer;color:#fff;background:${campColor(c)};transition:opacity .12s" onclick="gmTogglePill(this,'camp','${esc(c)}')">${escH(c)}</span>`).join('')}<button onclick="gmResetGrp('camp')" style="background:none;border:0.5px solid var(--tbl-bdr,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button></div></div>
+        <div class="gm-pp" id="gm-pp-prov" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-prov"></div></div>
+        <div class="gm-pp" id="gm-pp-arb" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-arb"></div></div>
+        <div class="gm-pp" id="gm-pp-campo" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-campo"></div></div>
         <div style="overflow-x:auto" id="gm-tbl-wrap">`;
 
       // Tabella con ORA e colonne ordinabili
@@ -3013,7 +3013,7 @@ function openGiornoModal(ds){
       const pp=modal.querySelector('#gm-pp-'+type);
       const fc=modal.querySelector('#gm-fc-'+type);
       if(!pp||!fc)return;
-      const opening=!pp.style.maxHeight||pp.style.maxHeight==='0px';
+      const opening=!pp.style.maxHeight||pp.style.maxHeight==='0px'||pp.style.maxHeight==='0';
       pp.style.maxHeight=opening?'200px':'0px';
       pp.style.opacity=opening?'1':'0';
       fc.style.borderColor=opening?'#1a3060':'';
@@ -8405,30 +8405,30 @@ function openCampoModal(campo){
       <div class="sc"><div class="sv">${sqCasa.length}</div><div class="sl">Sq. di casa</div></div>
       <div class="sc"><div class="sv">${sqOspiti.length}</div><div class="sl">Sq. ospitate</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-      <div class="card">
-        <div class="card-title">🏠 Squadre di casa (${sqCasa.length})</div>
-        ${sqCasa.length
-          ?sqCasa.map(sq=>`<div style="margin:3px 0"><span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></div>`).join('')
-          :`<span style="color:#9aa3b8;font-size:.78rem">Nessuna</span>`}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div id="mca-tog-casa" onclick="mcaToggleSq('casa')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:6px 10px;border:0.5px solid var(--br,#dde3f0);border-radius:7px;background:var(--bg2,#f6f8ff);user-select:none">
+          <span style="font-size:.74rem;font-weight:600">🏠 Squadre di casa (${sqCasa.length})</span>
+          <span id="mca-arr-casa" style="font-size:9px;color:var(--mu,#6b7a99);transition:transform .2s">▼</span>
+        </div>
+        <div id="mca-sq-casa" style="display:none;padding:4px 4px 6px;border:0.5px solid var(--br,#dde3f0);border-top:none;border-radius:0 0 7px 7px">
+          ${sqCasa.length?sqCasa.map(sq=>`<div onclick="mcaFilterSq('${esc(sq)}')" style="padding:3px 8px;font-size:.72rem;cursor:pointer;border-radius:4px;color:var(--bl,#1a5fa8);">${escH(sq)}</div>`).join(''):'<span style="padding:4px 8px;font-size:.7rem;color:#9aa3b8;display:block">Nessuna</span>'}
+        </div>
       </div>
-      <div class="card">
-        <div class="card-title">✈️ Squadre ospitate (${sqOspiti.length})</div>
-        ${sqOspiti.length
-          ?sqOspiti.map(sq=>`<div style="margin:3px 0"><span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></div>`).join('')
-          :`<span style="color:#9aa3b8;font-size:.78rem">Nessuna</span>`}
+      <div>
+        <div id="mca-tog-osp" onclick="mcaToggleSq('osp')" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:6px 10px;border:0.5px solid var(--br,#dde3f0);border-radius:7px;background:var(--bg2,#f6f8ff);user-select:none">
+          <span style="font-size:.74rem;font-weight:600">✈️ Squadre ospitate (${sqOspiti.length})</span>
+          <span id="mca-arr-osp" style="font-size:9px;color:var(--mu,#6b7a99);transition:transform .2s">▼</span>
+        </div>
+        <div id="mca-sq-osp" style="display:none;padding:4px 4px 6px;border:0.5px solid var(--br,#dde3f0);border-top:none;border-radius:0 0 7px 7px;max-height:160px;overflow-y:auto">
+          ${sqOspiti.length?sqOspiti.map(sq=>`<div onclick="mcaFilterSq('${esc(sq)}')" style="padding:3px 8px;font-size:.72rem;cursor:pointer;border-radius:4px;color:var(--bl,#1a5fa8)">${escH(sq)}</div>`).join(''):'<span style="padding:4px 8px;font-size:.7rem;color:#9aa3b8;display:block">Nessuna</span>'}
+        </div>
       </div>
     </div>
-    <div class="card" style="margin-bottom:10px">
-      <div class="card-title">🏆 Campionati ospitati</div>
-      ${(c.campionati||[]).map(cc=>`<div style="font-size:.74rem;display:flex;justify-content:space-between;margin:2px 0">
-        <span onclick="openCampionato('${esc(cc)}')" style="cursor:pointer;color:var(--bl)">${escH(cc)}</span>
-        ${(CAMP_DATA[cc]||{}).is_femminile?'<span style="color:#e84393;font-size:.65rem">👩</span>':''}
-      </div>`).join('')}
-    </div>
+
     <div id="mca-pill-bar" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px"></div>
-    <div id="mca-pp-camp" style="max-height:0;overflow:hidden;transition:max-height .25s,opacity .2s;opacity:0;margin-bottom:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:4px 0" id="mca-pills-camp"></div></div>
-    <div id="mca-pp-arb" style="max-height:0;overflow:hidden;transition:max-height .25s,opacity .2s;opacity:0;margin-bottom:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:4px 0" id="mca-pills-arb"></div></div>
+    <div id="mca-pp-camp" style="max-height:0px;overflow:hidden;transition:max-height .25s,opacity .2s;opacity:0;margin-bottom:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:4px 0" id="mca-pills-camp"></div></div>
+    <div id="mca-pp-arb" style="max-height:0px;overflow:hidden;transition:max-height .25s,opacity .2s;opacity:0;margin-bottom:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:4px 0" id="mca-pills-arb"></div></div>
     <div class="card">
       <div class="card-title">📅 Tutte le gare (${gare.length}) — da settembre a fine stagione</div>
       <div style="overflow-x:auto"><table class="gtbl" style="width:100%">
@@ -8454,7 +8454,7 @@ function openCampoModal(campo){
             let risBadge='<span style="color:var(--mu2);font-size:.68rem">—</span>';
             if(r){const[a,b]=r.split('-').map(Number);if(a>b)risBadge='<span style="background:#eaf3de;color:#27500A;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.75rem">'+r+'</span>';else if(b>a)risBadge='<span style="background:#fcebeb;color:#791F1F;border-radius:4px;padding:1px 6px;font-weight:700;font-size:.75rem">'+r+'</span>';else risBadge='<span style="font-weight:700;font-size:.75rem">'+r+'</span>';}
             const _a1=pns(g2['Arbitro 1']||''),_a2=pns(g2['Arbitro 2']||'');
-            html+='<tr data-mca-camp="'+escH(g2['Campionato']||'')+'" data-mca-arb="'+escH(_a1)+'" style="'+bg+';'+bl+';cursor:pointer" onclick="openGara(\''+esc(g2['Numero Gara']||'')+'\')">'+
+            html+='<tr data-mca-camp="'+escH(g2['Campionato']||'')+'" data-mca-arb="'+escH(_a1)+'" data-mca-casa="'+escH(g2['Squadra Casa']||'')+'" data-mca-osp="'+escH(g2['Squadra Ospite']||'')+'" style="'+bg+';'+bl+';cursor:pointer" onclick="openGara(\''+esc(g2['Numero Gara']||'')+'\')">'+
               '<td class="mca-rn" style="text-align:center;color:var(--mu2);font-size:.68rem">'+rn+'</td>'+
               '<td style="font-size:.68rem">'+escH(g2['Data']||'').split('-').reverse().join('/')+'</td>'+
               '<td><span style="background:'+campColor(g2['Campionato']||'')+';color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem">'+escH(g2['Campionato']||'')+'</span></td>'+
@@ -8488,8 +8488,8 @@ function openCampoModal(campo){
       b.innerHTML=label+' <span class="mca-arr" style="font-size:9px;transition:transform .2s;opacity:.6">▼</span>';
       b.onclick=()=>{
         const pp=document.getElementById('mca-pp-'+type);
-        const isOpen=pp.style.maxHeight&&pp.style.maxHeight!=='0px';
-        pp.style.maxHeight=isOpen?'0':'150px';
+        const isOpen=pp.style.maxHeight&&pp.style.maxHeight!=='0px'&&pp.style.maxHeight!=='0';
+        pp.style.maxHeight=isOpen?'0px':'150px';
         pp.style.opacity=isOpen?'0':'1';
         b.style.borderColor=isOpen?'':'#1a3060';b.style.color=isOpen?'':'#1a3060';
         b.querySelector('.mca-arr').style.transform=isOpen?'':'rotate(180deg)';
@@ -8559,6 +8559,43 @@ showPage=function(id){
 
 // ── PROSSIME GARE ──────────────────────────────────────────────────────
 const CAMP_ORDER={'Serie A':1,'Serie B':2,'Serie C':3,'Divisione Regionale 1':4,'Divisione Regionale 2':5};
+function mcaToggleSq(type){
+  const list=document.getElementById('mca-sq-'+type);
+  const arr=document.getElementById('mca-arr-'+type);
+  if(!list)return;
+  const open=list.style.display==='none'||!list.style.display;
+  list.style.display=open?'block':'none';
+  if(arr)arr.style.transform=open?'rotate(180deg)':'';
+}
+function mcaFilterSq(sq){
+  // Filter the campo gare table to show only this squad, add back button
+  const rows=document.querySelectorAll('#mca-tbl-body tr[data-mca-camp]');
+  let n=0;
+  rows.forEach(r=>{
+    const hide=r.dataset.mcaCasa!==sq&&r.dataset.mcaOsp!==sq;
+    r.style.display=hide?'none':'';
+    if(!hide){n++;const rn=r.querySelector('.mca-rn');if(rn)rn.textContent=n;}
+  });
+  const footer=document.getElementById('mca-footer');
+  if(footer)footer.textContent=n+' gare per '+sq;
+  // Show back button
+  let bb=document.getElementById('mca-back-btn');
+  if(!bb){
+    bb=document.createElement('button');
+    bb.id='mca-back-btn';
+    bb.style.cssText='border:1.5px solid #0984e3;border-radius:7px;padding:4px 10px;font-size:.68rem;font-weight:600;cursor:pointer;background:none;color:#0984e3;margin-left:8px';
+    bb.textContent='← Tutte le gare';
+    bb.onclick=()=>{
+      rows.forEach((r,i)=>{r.style.display='';const rn=r.querySelector('.mca-rn');if(rn)rn.textContent=i+1;});
+      if(footer)footer.textContent=rows.length+' gare';
+      bb.remove();
+    };
+    const pb=document.getElementById('mca-pill-bar');
+    if(pb)pb.appendChild(bb);
+  }
+}
+
+
 function campSort(a){ const m=CAMP_META[a]||{}; const sk=m.sort_key||[99,0,'']; return sk[0]*1000+(sk[1]||0); }
 
 function renderFutureGames(){
