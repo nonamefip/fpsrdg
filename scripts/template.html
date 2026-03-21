@@ -146,8 +146,19 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 .tl-legend{display:flex;gap:8px;font-size:.6rem;color:var(--mu);margin-left:auto;flex-wrap:wrap;align-items:center;}
 .tl-ldot{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:2px;vertical-align:middle;}
 .tl-info{font-size:.63rem;color:var(--mu);margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.ng-pill{display:inline-block;background:#e6f1fb;border-radius:5px;padding:2px 8px;font-size:.7rem;font-weight:500;color:#185fa5;}
+.ng-pill{display:inline-block;font-family:'Courier New',Courier,monospace;font-size:.65rem;letter-spacing:.5px;background:var(--tbl-row-even,#f6f8ff);border:0.5px solid var(--tbl-border,#dde3f0);border-radius:4px;padding:1px 5px;color:var(--mu,#6b7a99);cursor:pointer;}
 .gare-kpi-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.g-fcat{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--br,#dde3f0);border-radius:7px;padding:5px 13px;font-size:.72rem;font-weight:600;cursor:pointer;background:var(--bg,#fff);color:var(--txt,#1a2340);transition:border-color .12s;user-select:none;margin-bottom:2px}
+.g-fcat:hover{border-color:var(--bl2,#378add)}
+.g-fcat.open{border-color:#1a3060;color:#1a3060}
+.g-fcat-arr{font-size:9px;transition:transform .2s;opacity:.6;display:inline-block}
+.g-fcat.open .g-fcat-arr{transform:rotate(180deg)}
+.g-fcat .g-cnt{background:#1a3060;color:#fff;border-radius:10px;padding:1px 6px;font-size:.58rem;font-weight:700}
+.g-pp{max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0;margin-bottom:0}
+.g-pp.open{max-height:160px;opacity:1;margin-bottom:5px}
+.g-pill{border:none;border-radius:5px;padding:2px 9px;font-size:.65rem;font-weight:600;cursor:pointer;color:#fff;transition:opacity .12s;margin:1px}
+.g-pill.dim{opacity:.2}
+.g-pill.sel{box-shadow:0 0 0 2px rgba(0,0,50,.2),0 0 0 4px rgba(255,255,255,.6)}
 .gare-kpi{border:1.5px solid var(--br);border-radius:8px;padding:5px 12px;text-align:center;cursor:pointer;min-width:66px;transition:all .15s;user-select:none;background:#fff;}
 .gare-kpi:hover{border-color:var(--bl2);}
 .gare-kpi.on{background:var(--bl);border-color:var(--bl);}
@@ -1122,14 +1133,25 @@ tr.loss-row td{background:#fdecea!important;}
     <button class="btn b-go" onclick="exportCSV()">⬇ CSV</button>
   </div>
   <div class="gare-kpi-bar" id="g-kpis">
-    <div class="gare-kpi" id="gkpi-camp" onclick="gKpiToggle('camp')"><div class="gkv" id="g-kpi-camp">--</div><div class="gkl">Campionati</div></div>
-    <div class="gare-kpi" id="gkpi-arb" onclick="gKpiToggle('arb')"><div class="gkv" id="g-kpi-arb">--</div><div class="gkl">Arbitri</div></div>
-    <div class="gare-kpi" id="gkpi-campi" onclick="gKpiToggle('campi')"><div class="gkv" id="g-kpi-campi">--</div><div class="gkl">Campi</div></div>
     <div class="gare-kpi" style="cursor:default"><div class="gkv" id="g-info">--</div><div class="gkl">Gare</div></div>
     <div class="gare-kpi" style="cursor:default"><div class="gkv" id="g-kpi-res">--</div><div class="gkl">Con risultato</div></div>
+    <div class="gare-kpi" style="cursor:default"><div class="gkv" id="g-kpi-arb">--</div><div class="gkl">Arbitri</div></div>
+    <div class="gare-kpi" style="cursor:default"><div class="gkv" id="g-kpi-campi">--</div><div class="gkl">Campi</div></div>
+    <div class="gare-kpi" style="cursor:default"><div class="gkv" id="g-kpi-camp">--</div><div class="gkl">Campionati</div></div>
     <button style="padding:5px 12px;border-radius:8px;border:1.5px solid #1d9e75;background:#e1f5ee;color:#0f6e56;font-size:.68rem;font-weight:500;cursor:pointer;margin-left:auto" onclick="exportCSV()">&#8595; CSV</button>
   </div>
-  <div class="gare-chips" id="g-chips"></div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:3px" id="g-fcat-bar">
+    <span class="g-fcat" id="gfc-camp" onclick="gFcatToggle('camp')">Campionati <span class="g-fcat-arr">&#9660;</span></span>
+    <span class="g-fcat" id="gfc-prov" onclick="gFcatToggle('prov')">Province <span class="g-fcat-arr">&#9660;</span></span>
+    <span class="g-fcat" id="gfc-arb" onclick="gFcatToggle('arb')">Arbitri <span class="g-fcat-arr">&#9660;</span></span>
+    <span class="g-fcat" id="gfc-campo" onclick="gFcatToggle('campo')">Campi <span class="g-fcat-arr">&#9660;</span></span>
+    <button id="g-rst-all" onclick="gResetAll()" style="display:none;align-items:center;border:1.5px solid #c0392b;border-radius:7px;padding:4px 10px;font-size:.68rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">&#10005; Azzera tutto</button>
+  </div>
+  <div class="g-pp" id="g-pp-camp"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-camp"></div></div>
+  <div class="g-pp" id="g-pp-prov"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-prov"></div></div>
+  <div class="g-pp" id="g-pp-arb"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-arb"></div></div>
+  <div class="g-pp" id="g-pp-campo"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-campo"></div></div>
+  <div class="gare-chips" id="g-chips" style="display:none"></div>
   <div class="gare-restore" id="g-restore"></div>
   <div style="overflow-x:auto">
     <div class="gtbl-wrap" id="gtbl-wrap">
@@ -3936,8 +3958,10 @@ var _gCOLS=[
   {id:'camp', label:'Campionato', w:170},
   {id:'cpv',  label:'Prov.',      w:50},
   {id:'gir',  label:'Girone',     w:130},
-  {id:'casa', label:'Casa',       w:160},
-  {id:'osp',  label:'Ospite',     w:160},
+  {id:'pvcasa',label:'Prov.C',    w:50},
+  {id:'casa', label:'Casa',       w:155},
+  {id:'osp',  label:'Ospite',     w:155},
+  {id:'pvosp',label:'Prov.O',     w:50},
   {id:'ptc',  label:'PtC',        w:38},
   {id:'pto',  label:'PtO',        w:38},
   {id:'stato',label:'Stato',      w:80},
@@ -3968,8 +3992,10 @@ function _gCellVal(col,g,ri){
   if(k==='camp'){var cc=campColor(g['Campionato']||'');var eck=(g['Campionato']||'').replace(/'/g,"\\'");return'<span style="background:'+cc+';color:#fff;border-radius:4px;padding:2px 6px;font-size:.65rem;font-weight:500;cursor:pointer;white-space:nowrap" onclick="openCampionato(\''+eck+'\')">' + escH(g['Campionato']||'')+'</span>';}
   if(k==='cpv') return _gPv(cpvF,false);
   if(k==='gir') return'<span style="font-size:.68rem;color:var(--mu)">'+escH(g['Girone']||'')+'</span>';
+  if(k==='pvcasa'){var pvca=SQ[g['Squadra Casa']]&&SQ[g['Squadra Casa']].prov||cpv(g['Campo']||'');return _gPv(pvca,false);}
   if(k==='casa') return _gSqCell(g['Squadra Casa']||'');
   if(k==='osp')  return _gSqCell(g['Squadra Ospite']||'');
+  if(k==='pvosp'){var pvos=SQ[g['Squadra Ospite']]&&SQ[g['Squadra Ospite']].prov||'';return _gPv(pvos,false);}
   if(k==='ptc') return'<b>'+escH(g['Punti Casa']||'')+'</b>';
   if(k==='pto') return'<b>'+escH(g['Punti Ospite']||'')+'</b>';
   if(k==='stato') return'<span style="font-size:.65rem">'+escH(g['Stato Gara']||'')+'</span>';
@@ -3981,7 +4007,7 @@ function _gCellVal(col,g,ri){
   if(k==='s24') return _gUdcCell(g['24 Secondi']);
   if(k==='are') return _gUdcCell(g['Addetto Referto']);
   if(k==='oss') return _gOssCell(g['Osservatore']);
-  if(k==='campo'){var pv2=cpvF;var hi2=_gFiltCampo.has(g['Campo']||'');return'<div style="display:flex;align-items:center;gap:4px;'+(hi2?'background:#e6f1fb;border-radius:3px;padding:1px 4px':'')+'">'+_gPv(pv2,true)+'<span style="font-size:.65rem;color:var(--mu)">'+escH((g['Campo']||'').split(',')[0])+'</span></div>';}
+  if(k==='campo'){var pv2=cpvF;var hi2=_gFiltCampo.has(g['Campo']||'');var ecampo=(g['Campo']||'').replace(/'/g,"\\'");return'<div style="display:flex;align-items:center;gap:4px;'+(hi2?'background:#e6f1fb;border-radius:3px;padding:1px 4px':'')+'">'+_gPv(pv2,true)+'<span class="rn" style="font-size:.65rem;color:var(--mu);cursor:pointer" onclick="event.stopPropagation();openCampoModal(\''+ecampo+'\')" title="Apri scheda campo">'+escH((g['Campo']||'').split(',')[0])+'</span></div>';}
   return'';
 }
 function _gGetVis(){
@@ -3989,6 +4015,11 @@ function _gGetVis(){
     if(_gFiltCamp.size>0&&!_gFiltCamp.has(g['Campionato']))return false;
     if(_gFiltArb.size>0){var a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');if(!_gFiltArb.has(a1)&&!_gFiltArb.has(a2))return false;}
     if(_gFiltCampo.size>0&&!_gFiltCampo.has(g['Campo']||''))return false;
+    // New pill filters
+    if(_gSEL.camp.size>0&&!_gSEL.camp.has(g['Campionato']||''))return false;
+    if(_gSEL.prov.size>0){var pvC=SQ[g['Squadra Casa']]&&SQ[g['Squadra Casa']].prov||'';var pvO=SQ[g['Squadra Ospite']]&&SQ[g['Squadra Ospite']].prov||'';if(!_gSEL.prov.has(pvC)&&!_gSEL.prov.has(pvO))return false;}
+    if(_gSEL.arb.size>0){var a1b=pns(g['Arbitro 1']||''),a2b=pns(g['Arbitro 2']||'');if(!_gSEL.arb.has(a1b)&&!_gSEL.arb.has(a2b))return false;}
+    if(_gSEL.campo.size>0&&!_gSEL.campo.has((g['Campo']||'').split(',')[0].trim()))return false;
     return true;
   });
 }
@@ -3997,6 +4028,66 @@ function gKpiToggle(key){
   if(!_gKpiOn[key]){if(key==='camp')_gFiltCamp.clear();if(key==='arb')_gFiltArb.clear();if(key==='campi')_gFiltCampo.clear();}
   var el=document.getElementById('gkpi-'+key);if(el)el.classList.toggle('on',_gKpiOn[key]);
   _gRenderChips();_gRenderTable();
+}
+// ── Nuovo sistema pill filter multi-select ──────────────────────────────
+var _gSEL={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set()};
+function gFcatToggle(type){
+  var pp=document.getElementById('g-pp-'+type);
+  var fc=document.getElementById('gfc-'+type);
+  if(!pp||!fc)return;
+  var opening=!pp.classList.contains('open');
+  pp.classList.toggle('open',opening);
+  fc.classList.toggle('open',opening);
+  var arr=fc.querySelector('.g-fcat-arr');
+  if(arr)arr.style.transform=opening?'rotate(180deg)':'';
+}
+function gTogglePill(type,val){
+  var s=_gSEL[type];
+  if(s.has(val))s.delete(val);else s.add(val);
+  document.querySelectorAll('[data-gp="'+type+'"]').forEach(function(p){
+    p.classList.toggle('dim',s.size>0&&!s.has(p.dataset.gpv));
+    p.classList.toggle('sel',s.has(p.dataset.gpv));
+  });
+  var fc=document.getElementById('gfc-'+type);
+  if(fc){var ob=fc.querySelector('.g-cnt');if(ob)ob.remove();
+    if(s.size>0){var b=document.createElement('span');b.className='g-cnt';b.textContent=s.size;fc.insertBefore(b,fc.querySelector('.g-fcat-arr'));fc.style.borderColor='#1a3060';fc.style.color='#1a3060';}
+    else{fc.style.borderColor='';fc.style.color='';}}
+  var rab=document.getElementById('g-rst-all');
+  if(rab)rab.style.display=Object.values(_gSEL).some(function(x){return x.size>0;})?'inline-flex':'none';
+  _gRenderTable();
+}
+function gResetGrp(type){
+  _gSEL[type].clear();
+  document.querySelectorAll('[data-gp="'+type+'"]').forEach(function(p){p.classList.remove('dim','sel');});
+  var fc=document.getElementById('gfc-'+type);
+  if(fc){var ob=fc.querySelector('.g-cnt');if(ob)ob.remove();fc.style.borderColor='';fc.style.color='';}
+  var rab=document.getElementById('g-rst-all');
+  if(rab)rab.style.display=Object.values(_gSEL).some(function(x){return x.size>0;})?'inline-flex':'none';
+  _gRenderTable();
+}
+function gResetAll(){['camp','prov','arb','campo'].forEach(function(t){gResetGrp(t);});}
+function _gBuildPillBars(){
+  var visRows=_gf||[];
+  var camps=[...new Set(visRows.map(function(g){return g['Campionato']||'';}))].filter(Boolean);
+  var provs=[...new Set(visRows.flatMap(function(g){return[SQ[g['Squadra Casa']]&&SQ[g['Squadra Casa']].prov||'',SQ[g['Squadra Ospite']]&&SQ[g['Squadra Ospite']].prov||''];}))].filter(Boolean).sort();
+  var arbs=[...new Set(visRows.flatMap(function(g){return[pns(g['Arbitro 1']||''),pns(g['Arbitro 2']||'')];}))].filter(Boolean).sort();
+  var campi=[...new Set(visRows.map(function(g){return(g['Campo']||'').split(',')[0].trim();}))].filter(Boolean).sort();
+  function mkPills(cid,type,items,colorFn){
+    var w=document.getElementById(cid);if(!w||w.dataset.built)return;w.dataset.built='1';
+    items.forEach(function(v){
+      var s=document.createElement('span');s.className='g-pill';s.dataset.gp=type;s.dataset.gpv=v;
+      s.style.background=colorFn(v);s.textContent=v;
+      s.onclick=function(){gTogglePill(type,v);};
+      w.appendChild(s);
+    });
+    var rst=document.createElement('button');rst.textContent='✕ Tutti';
+    rst.style.cssText='background:none;border:0.5px solid var(--br,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 7px;font-size:.63rem;cursor:pointer;margin:1px';
+    rst.onclick=function(){gResetGrp(type);};w.appendChild(rst);
+  }
+  mkPills('g-pills-camp','camp',camps,function(c){return campColor(c)||'#888';});
+  mkPills('g-pills-prov','prov',provs,function(p){return PC[p]||'#888';});
+  mkPills('g-pills-arb','arb',arbs,function(){return'#2c3e6b';});
+  mkPills('g-pills-campo','campo',campi,function(c){var pv=cpv(c)||'';return PC[pv]||'#3d4d6b';});
 }
 function _gRenderChips(){
   var el=document.getElementById('g-chips');if(!el)return;
@@ -4048,8 +4139,10 @@ function _gRenderTable(){
     else if(col==='ora')va=a['Ora']||'',vb=b['Ora']||'';
     else if(col==='camp')va=a['Campionato']||'',vb=b['Campionato']||'';
     else if(col==='narb')return _gSortAsc?((pns(a['Arbitro 1']||'')?1:0)+(pns(a['Arbitro 2']||'')?1:0))-((pns(b['Arbitro 1']||'')?1:0)+(pns(b['Arbitro 2']||'')?1:0)):((pns(b['Arbitro 1']||'')?1:0)+(pns(b['Arbitro 2']||'')?1:0))-((pns(a['Arbitro 1']||'')?1:0)+(pns(a['Arbitro 2']||'')?1:0));
+    else if(col==='pvcasa'){va=SQ[a['Squadra Casa']]&&SQ[a['Squadra Casa']].prov||'';vb=SQ[b['Squadra Casa']]&&SQ[b['Squadra Casa']].prov||'';}
     else if(col==='casa')va=a['Squadra Casa']||'',vb=b['Squadra Casa']||'';
     else if(col==='osp')va=a['Squadra Ospite']||'',vb=b['Squadra Ospite']||'';
+    else if(col==='pvosp'){va=SQ[a['Squadra Ospite']]&&SQ[a['Squadra Ospite']].prov||'';vb=SQ[b['Squadra Ospite']]&&SQ[b['Squadra Ospite']].prov||'';}
     return _gSortAsc?va.localeCompare(vb,'it'):vb.localeCompare(va,'it');
   });}
   var html='';
@@ -4060,7 +4153,7 @@ function _gRenderTable(){
         var gNum=(g['Numero Gara']||'');
     var pvCampo=cpv(g['Campo']||'');
     var pvClrBorder=pvCampo&&PC[pvCampo]?PC[pvCampo]:'transparent';
-    html+='<tr class="'+rCls+'" data-gnum="'+gNum+'" style="cursor:pointer;border-left:3px solid '+pvClrBorder+'">';
+    html+='<tr class="'+rCls+'" data-gnum="'+gNum+'" style="cursor:pointer;border-left:3px solid '+pvClrBorder+'" onclick="openGara(\''+gNum.replace(/\'/g,"\\'")+'\')">  ';
     vis.forEach(function(col){
       var isFrz=_gFrozen.has(col.id);
       var frzSt=isFrz?'position:sticky;left:'+frzOff[col.id]+'px;z-index:4;':'';
@@ -4092,7 +4185,7 @@ function _gRenderTable(){
   var ki=document.getElementById('g-info');if(ki)ki.textContent=visRows.length;
   var kr=document.getElementById('g-kpi-res');if(kr)kr.textContent=visRows.filter(function(g){return g['Risultato'];}).length;
 }
-function _gRenderAll(){_gRenderChips();_gRenderRestore();_gRenderTable();}
+function _gRenderAll(){_gRenderChips();_gRenderRestore();_gRenderTable();_gBuildPillBars();}
 function _gDoSort(cid){if(_gSortCol===cid)_gSortAsc=!_gSortAsc;else{_gSortCol=cid;_gSortAsc=true;}_gRenderTable();}
 function _gOpenCtx(e,cid){
   e.stopPropagation();_gCtxCol=cid;
