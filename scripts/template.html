@@ -2957,10 +2957,7 @@ function openGiornoModal(ds){
       <div style="font-size:.65rem;color:var(--mu);padding:5px 2px" id="gm-tbl-footer"></div>
       </div>`;
 
-      // Pill province, arbitri, campi — popolate dopo render modal
-      const allProvs=[...new Set(allDayG.map(g=>cpv(g['Campo']||'')).filter(Boolean))].sort();
-      const allArbs=[...new Set(allDayG.flatMap(g=>['Arbitro 1','Arbitro 2'].map(f=>pns(g[f]||'')).filter(Boolean)))].sort();
-      const allCampi=[...new Set(allDayG.map(g=>(g['Campo']||'').split(',')[0].trim()).filter(Boolean))].sort();
+      // Pill province, arbitri, campi dichiarate qui per scope
 
       // Provvedimenti
       const provvGiorno=allDayG.filter(g=>g['Provvedimenti']&&g['Provvedimenti'].trim&&g['Provvedimenti'].trim());
@@ -3009,7 +3006,11 @@ function openGiornoModal(ds){
     setTimeout(()=>makeTableSortable(modal),50);
 
     // ── Sistema filtri pill multi-select ──────────────────────────────────────
-    const _gmS={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set()};
+    // Reset _gmS for this new modal instance
+    _gmS={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set()};
+    const allProvs=[...new Set(allDayG.map(g=>cpv(g['Campo']||'')).filter(Boolean))].sort();
+    const allArbs=[...new Set(allDayG.flatMap(g=>['Arbitro 1','Arbitro 2'].map(f=>pns(g[f]||'')).filter(Boolean)))].sort();
+    const allCampi=[...new Set(allDayG.map(g=>(g['Campo']||'').split(',')[0].trim()).filter(Boolean))].sort();
     (()=>{
       const _mkP=(cid,type,items,colorFn)=>{
         const w=modal.querySelector('#'+cid);if(!w)return;
@@ -3031,76 +3032,6 @@ function openGiornoModal(ds){
       _mkP('gm-pills-campo','campo',allCampi,()=>'#3d4d6b');
     })();
 
-    window.gmToggleGrp=function(type){
-      const pp=modal.querySelector('#gm-pp-'+type);
-      const fc=modal.querySelector('#gm-fc-'+type);
-      if(!pp||!fc)return;
-      const opening=!pp.style.maxHeight||pp.style.maxHeight==='0px'||pp.style.maxHeight==='0';
-      pp.style.maxHeight=opening?'200px':'0px';
-      pp.style.opacity=opening?'1':'0';
-      fc.style.borderColor=opening?'#1a3060':'';
-      fc.style.color=opening?'#1a3060':'';
-      const arr=fc.querySelector('.gm-fc-arr');
-      if(arr)arr.style.transform=opening?'rotate(180deg)':'';
-    };
-
-    window.gmTogglePill=function(btn,type,val){
-      const s=_gmS[type];
-      if(s.has(val))s.delete(val);else s.add(val);
-      modal.querySelectorAll('[data-gm-pill="'+type+'"]').forEach(p=>{
-        p.style.opacity=(s.size===0||s.has(p.dataset.gmVal))?'1':'.2';
-        p.style.boxShadow=s.has(p.dataset.gmVal)?'0 0 0 2px rgba(0,0,0,.25),0 0 0 4px rgba(255,255,255,.6)':'';
-      });
-      const fc=modal.querySelector('#gm-fc-'+type);
-      if(fc){
-        const ob=fc.querySelector('.gm-cnt');if(ob)ob.remove();
-        if(s.size>0){
-          const b=document.createElement('span');b.className='gm-cnt';
-          b.style.cssText='background:#1a3060;color:#fff;border-radius:10px;padding:1px 6px;font-size:.6rem;font-weight:700';
-          b.textContent=s.size;
-          const arr=fc.querySelector('.gm-fc-arr');fc.insertBefore(b,arr);
-          fc.style.borderColor='#1a3060';fc.style.color='#1a3060';
-        } else {fc.style.borderColor='';fc.style.color='';}
-      }
-      const rab=modal.querySelector('#gm-reset-all-btn');
-      if(rab)rab.style.display=Object.values(_gmS).some(x=>x.size>0)?'inline-flex':'none';
-      gmApplyPillFilters();
-    };
-    window.gmResetGrp=function(type){
-      _gmS[type].clear();
-      modal.querySelectorAll('[data-gm-pill="'+type+'"]').forEach(p=>{p.style.opacity='1';p.style.boxShadow='';});
-      const fc=modal.querySelector('#gm-fc-'+type);
-      if(fc){const ob=fc.querySelector('.gm-cnt');if(ob)ob.remove();fc.style.borderColor='';fc.style.color='';}
-      const rab=modal.querySelector('#gm-reset-all-btn');
-      if(rab)rab.style.display=Object.values(_gmS).some(x=>x.size>0)?'inline-flex':'none';
-      gmApplyPillFilters();
-    };
-    window.gmResetAll=function(){['camp','prov','arb','campo'].forEach(t=>window.gmResetGrp(t));};
-    window.gmFilter=function(tipo){
-      if(!tipo){window.gmResetAll();return;}
-      const rows=modal.querySelectorAll('#tbl-giorno-body tr');
-      if(tipo==='risultato')rows.forEach(r=>r.style.display=r.dataset.risultato?'':'none');
-      else if(tipo==='arbitri')rows.forEach(r=>r.style.display=r.dataset.arb?'':'none');
-      gmRenumber();
-    };
-    function gmApplyPillFilters(){
-      modal.querySelectorAll('#tbl-giorno-body tr').forEach(r=>{
-        const hide=
-          (_gmS.camp.size>0&&!_gmS.camp.has(r.dataset.camp||''))||
-          (_gmS.prov.size>0&&!_gmS.prov.has(r.dataset.prov||''))||
-          (_gmS.arb.size>0&&!_gmS.arb.has(r.dataset.arb1||''))||
-          (_gmS.campo.size>0&&!_gmS.campo.has((r.dataset.campo||'').split(',')[0].trim()));
-        r.style.display=hide?'none':'';
-      });
-      gmRenumber();
-    }
-    function gmRenumber(){
-      let n=0;
-      const rows=modal.querySelectorAll('#tbl-giorno-body tr:not([style*="none"])');
-      rows.forEach(r=>{n++;const td=r.querySelector('.gm-rnum');if(td)td.textContent=n;});
-      const footer=modal.querySelector('#gm-tbl-footer');
-      if(footer)footer.textContent=n+' gare visibili';
-    }
     // Numera subito le righe al primo caricamento
     setTimeout(gmRenumber,50);
 
@@ -3108,6 +3039,85 @@ function openGiornoModal(ds){
     console.error('openGiornoModal error:',err);
   }
 }
+
+// ── Funzioni globali modal giornata (devono essere in scope globale) ──────────
+function gmToggleGrp(type){
+  const mo=document.getElementById('dyn-mo-giorno');
+  const pp=mo?mo.querySelector('#gm-pp-'+type):null;
+  const fc=mo?mo.querySelector('#gm-fc-'+type):null;
+  if(!pp||!fc)return;
+  const opening=!pp.style.maxHeight||pp.style.maxHeight==='0px'||pp.style.maxHeight==='0';
+  pp.style.maxHeight=opening?'200px':'0px';
+  pp.style.opacity=opening?'1':'0';
+  fc.style.borderColor=opening?'#1a3060':'';
+  fc.style.color=opening?'#1a3060':'';
+  const arr=fc.querySelector('.gm-fc-arr');
+  if(arr)arr.style.transform=opening?'rotate(180deg)':'';
+}
+function gmTogglePill(btn,type,val){
+  const s=_gmS[type];
+  if(s.has(val))s.delete(val);else s.add(val);
+  const mo=document.getElementById('dyn-mo-giorno');if(!mo)return;
+  mo.querySelectorAll('[data-gm-pill="'+type+'"]').forEach(p=>{
+    p.style.opacity=(s.size===0||s.has(p.dataset.gmVal))?'1':'.2';
+    p.style.boxShadow=s.has(p.dataset.gmVal)?'0 0 0 2px rgba(0,0,0,.25),0 0 0 4px rgba(255,255,255,.6)':'';
+  });
+  const fc=mo.querySelector('#gm-fc-'+type);
+  if(fc){
+    const ob=fc.querySelector('.gm-cnt');if(ob)ob.remove();
+    if(s.size>0){
+      const b=document.createElement('span');b.className='gm-cnt';
+      b.style.cssText='background:#1a3060;color:#fff;border-radius:10px;padding:1px 6px;font-size:.6rem;font-weight:700';
+      b.textContent=s.size;
+      const arr=fc.querySelector('.gm-fc-arr');fc.insertBefore(b,arr);
+      fc.style.borderColor='#1a3060';fc.style.color='#1a3060';
+    } else {fc.style.borderColor='';fc.style.color='';}
+  }
+  const rab=mo.querySelector('#gm-reset-all-btn');
+  if(rab)rab.style.display=Object.values(_gmS).some(x=>x.size>0)?'inline-flex':'none';
+  gmApplyPillFilters();
+}
+function gmResetGrp(type){
+  _gmS[type].clear();
+  const mo=document.getElementById('dyn-mo-giorno');if(!mo)return;
+  mo.querySelectorAll('[data-gm-pill="'+type+'"]').forEach(p=>{p.style.opacity='1';p.style.boxShadow='';});
+  const fc=mo.querySelector('#gm-fc-'+type);
+  if(fc){const ob=fc.querySelector('.gm-cnt');if(ob)ob.remove();fc.style.borderColor='';fc.style.color='';}
+  const rab=mo.querySelector('#gm-reset-all-btn');
+  if(rab)rab.style.display=Object.values(_gmS).some(x=>x.size>0)?'inline-flex':'none';
+  gmApplyPillFilters();
+}
+function gmResetAll(){['camp','prov','arb','campo'].forEach(t=>gmResetGrp(t));}
+function gmFilter(tipo){
+  if(!tipo){gmResetAll();return;}
+  const mo=document.getElementById('dyn-mo-giorno');if(!mo)return;
+  const rows=mo.querySelectorAll('#tbl-giorno-body tr');
+  if(tipo==='risultato')rows.forEach(r=>r.style.display=r.dataset.risultato?'':'none');
+  else if(tipo==='arbitri')rows.forEach(r=>r.style.display=r.dataset.arb?'':'none');
+  gmRenumber();
+}
+function gmApplyPillFilters(){
+  const mo=document.getElementById('dyn-mo-giorno');if(!mo)return;
+  mo.querySelectorAll('#tbl-giorno-body tr').forEach(r=>{
+    const hide=
+      (_gmS.camp.size>0&&!_gmS.camp.has(r.dataset.camp||''))||
+      (_gmS.prov.size>0&&!_gmS.prov.has(r.dataset.prov||''))||
+      (_gmS.arb.size>0&&!_gmS.arb.has(r.dataset.arb1||''))||
+      (_gmS.campo.size>0&&!_gmS.campo.has((r.dataset.campo||'').split(',')[0].trim()));
+    r.style.display=hide?'none':'';
+  });
+  gmRenumber();
+}
+function gmRenumber(){
+  const mo=document.getElementById('dyn-mo-giorno');if(!mo)return;
+  let n=0;
+  mo.querySelectorAll('#tbl-giorno-body tr:not([style*="none"])').forEach(r=>{
+    n++;const td=r.querySelector('.gm-rnum');if(td)td.textContent=n;
+  });
+  const footer=mo.querySelector('#gm-tbl-footer');
+  if(footer)footer.textContent=n+' gare visibili';
+}
+
 
 function expandMese(mese){
   const det=document.getElementById('mesi-detail');
@@ -3946,6 +3956,8 @@ function renderCamp(){
 }
 
 var _gKpiOn={camp:false,arb:false,campi:false};
+// Pill filter state for giorno modal (module-level for hoisted functions)
+var _gmS={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set()};
 var _gFiltCamp=new Set(),_gFiltArb=new Set(),_gFiltCampo=new Set();
 var _gHidden=new Set(),_gFrozen=new Set();
 var _gSortCol=null,_gSortAsc=true;
@@ -3992,10 +4004,10 @@ function _gCellVal(col,g,ri){
   if(k==='camp'){var cc=campColor(g['Campionato']||'');var eck=(g['Campionato']||'').replace(/'/g,"\\'");return'<span style="background:'+cc+';color:#fff;border-radius:4px;padding:2px 6px;font-size:.65rem;font-weight:500;cursor:pointer;white-space:nowrap" onclick="event.stopPropagation();openCampionato(\''+eck+'\')">' + escH(g['Campionato']||'')+'</span>';}
   if(k==='cpv') return _gPv(cpvF,false);
   if(k==='gir') return'<span style="font-size:.68rem;color:var(--mu)">'+escH(g['Girone']||'')+'</span>';
-  if(k==='pvcasa'){var sqC=SQ[g['Squadra Casa']]||{};var pvca=sqC.prov||sqC.provincia||cpv(g['Campo']||'');return _gPv(pvca,false);}
+  if(k==='pvcasa'){var _sqC=SQ[g['Squadra Casa']];var pvca=(_sqC&&(_sqC.prov||_sqC.provincia))||'';return _gPv(pvca,false);}
   if(k==='casa') return _gSqCell(g['Squadra Casa']||'');
   if(k==='osp')  return _gSqCell(g['Squadra Ospite']||'');
-  if(k==='pvosp'){var sqO=SQ[g['Squadra Ospite']]||{};var pvos=sqO.prov||sqO.provincia||'';return _gPv(pvos,false);}
+  if(k==='pvosp'){var _sqO=SQ[g['Squadra Ospite']];var pvos=(_sqO&&(_sqO.prov||_sqO.provincia))||'';return _gPv(pvos,false);}
   if(k==='ptc') return'<b>'+escH(g['Punti Casa']||'')+'</b>';
   if(k==='pto') return'<b>'+escH(g['Punti Ospite']||'')+'</b>';
   if(k==='stato') return'<span style="font-size:.65rem">'+escH(g['Stato Gara']||'')+'</span>';
@@ -4071,7 +4083,7 @@ function gResetAll(){['camp','prov','arb','campo'].forEach(function(t){gResetGrp
 function _gBuildPillBars(){
   var allRows=GARE||[];
   var camps=[...new Set(allRows.map(function(g){return g['Campionato']||'';}))].filter(Boolean).sort(function(a,b){return(typeof livelloC==='function'?livelloC(b)-livelloC(a):0)||a.localeCompare(b,'it');});
-  var provs=[...new Set(allRows.flatMap(function(g){var pvC=(SQ[g['Squadra Casa']]&&(SQ[g['Squadra Casa']].prov||SQ[g['Squadra Casa']].provincia))||'';var pvO=(SQ[g['Squadra Ospite']]&&(SQ[g['Squadra Ospite']].prov||SQ[g['Squadra Ospite']].provincia))||'';return[pvC,pvO];}))].filter(Boolean).sort();
+  var provs=[...new Set(allRows.flatMap(function(g){var sqc=SQ[g['Squadra Casa']];var sqo=SQ[g['Squadra Ospite']];var pvC=(sqc&&(sqc.prov||sqc.provincia))||'';var pvO=(sqo&&(sqo.prov||sqo.provincia))||'';return[pvC,pvO];}))].filter(Boolean).sort();
   var arbs=[...new Set(allRows.flatMap(function(g){return[pns(g['Arbitro 1']||''),pns(g['Arbitro 2']||'')];}))].filter(Boolean).sort();
   var campi=[...new Set(allRows.map(function(g){return(g['Campo']||'').split(',')[0].trim();}))].filter(Boolean).sort();
   function mkPills(cid,type,items,colorFn){
