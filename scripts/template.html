@@ -6956,21 +6956,14 @@ function openGara(numGara){
 
   // ── Tab: Percorso (gare stagione nel campionato) ───────────────────────────
   function buildPercorso(sq){
-    // Tutte le gare della stagione in quel campionato — raggruppate per fase/girone
     const gSq=gareStoriche.filter(x=>x['Campionato']===camp&&(x['Squadra Casa']===sq||x['Squadra Ospite']===sq))
       .sort((a,b)=>a['Data'].localeCompare(b['Data']));
-    // Raggruppa per Fase/Girone
     const faseMap={};
-    gSq.forEach(x=>{
-      const k=x['Fase']||x['Girone']||'Girone';
-      if(!faseMap[k])faseMap[k]=[];
-      faseMap[k].push(x);
-    });
+    gSq.forEach(x=>{const k=x['Fase']||x['Girone']||'Girone';if(!faseMap[k])faseMap[k]=[];faseMap[k].push(x);});
     const fasi=Object.keys(faseMap);
     let h='';
     fasi.forEach((fase,fi)=>{
       const gs=faseMap[fase];
-      // Calcola stats per questa fase
       let v=0,hV=0,hG=0,aV=0,aG=0,totPf=0,totPs=0;
       gs.forEach(x=>{
         const isCasa=x['Squadra Casa']===sq;
@@ -6982,62 +6975,68 @@ function openGara(numGara){
         if(isCasa){hG++;if(win)hV++;}else{aG++;if(win)aV++;}
       });
       const diffTot=totPf-totPs;
+      const diffLbl=diffTot>=0?`<span style="color:#27500a;font-weight:500">+${diffTot} a favore</span>`:`<span style="color:#791f1f;font-weight:500">${diffTot} a sfavore</span>`;
       h+=`<div style="padding:4px 10px;font-size:10px;font-weight:600;color:var(--mu);background:var(--bl4,#f0f5ff);border-bottom:0.5px solid var(--br);border-top:${fi>0?'1.5px solid var(--br)':'none'}">${escH(fase)}</div>`;
       h+=`<div style="display:flex;gap:0;border-bottom:0.5px solid var(--br)">`;
-      h+=[['G:'+gs.length,'Gare'],['V:'+v+'/'+gs.length,'Win%: '+(gs.length?Math.round(v/gs.length*100)+'%':'—')],['H:'+hV+'/'+hG,'🏠 casa'],['A:'+aV+'/'+aG,'✈ trasferta'],[(diffTot>=0?'+':'')+diffTot,'Diff.tot']]
-        .map(([v2,l])=>`<div style="flex:1;text-align:center;padding:5px 2px;border-right:0.5px solid var(--br)"><div style="font-size:13px;font-weight:500;color:${v2.startsWith('V:')||(diffTot>0&&l==='Diff.tot')?'#27500a':diffTot<0&&l==='Diff.tot'?'#791f1f':'inherit'}">${v2.split(':')[1]||v2}</div><div style="font-size:9px;color:var(--mu)">${l}</div></div>`).join('');
+      h+=[
+        ['G:'+gs.length,'Gare'],
+        [(gs.length?Math.round(v/gs.length*100)+'%':'—'),'Win%'],
+        [hV+'/'+hG,'🏠 Casa'],
+        [aV+'/'+aG,'✈ Trasf.'],
+        [diffLbl,'Diff.tot']
+      ].map(([v2,l])=>`<div style="flex:1;text-align:center;padding:5px 2px;border-right:0.5px solid var(--br)"><div style="font-size:12px;font-weight:500">${v2}</div><div style="font-size:9px;color:var(--mu)">${l}</div></div>`).join('');
       h+='</div>';
-      h+=`<div style="max-height:180px;overflow-y:auto">`;
+      h+=`<div style="max-height:200px;overflow-y:auto">`;
       let rn=0;
       gs.forEach(x=>{
         rn++;
         const isCasa=x['Squadra Casa']===sq;
         const opp=isCasa?x['Squadra Ospite']:x['Squadra Casa'];
         const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;
-        const win=isCasa?pc>po:po>pc;
+        const sqWin=isCasa?pc>po:po>pc; // sq vince?
+        const oppWin=!sqWin&&x['Risultato'];
+        // Punteggio: se sq in casa -> pc-po; se sq ospite -> po-pc
+        const ptSq=isCasa?pc:po, ptOpp=isCasa?po:pc;
         const curr=x['Numero Gara']===numGara;
         const homeBadge=isCasa?`<span style="background:#e6f1fb;color:#0c447c;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700;flex-shrink:0">🏠</span>`:`<span style="background:#fff3cd;color:#854f0b;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700;flex-shrink:0">✈</span>`;
-        h+=`<div style="${rowStyle};${curr?'background:#fffbe6;border-left:3px solid #BA7517;':''}">`;
-        h+=`<span style="font-size:9.5px;color:var(--mu2);min-width:16px;text-align:center">${rn}</span>`;
-        h+=ngPill(x['Numero Gara'],curr);
-        h+=`<span style="font-size:9.5px;color:var(--mu2);flex-shrink:0">${(x['Data']||'').slice(5).replace('-','/')}</span>`;
-        h+=homeBadge;
-        h+=sqName(isCasa?sq:opp,true)+sqName(isCasa?opp:sq,false);
-        h+=res(x);
+        // Casa sempre a sinistra, ospite a destra
+        const leftSq = isCasa ? sq : opp;
+        const rightSq = isCasa ? opp : sq;
+        const leftWin = isCasa ? sqWin : oppWin;
+        const rightWin = isCasa ? oppWin : sqWin;
+        const leftStyle=leftWin?'font-weight:600;color:#27500a':x['Risultato']?'color:#791f1f':'';
+        const rightStyle=rightWin?'font-weight:600;color:#27500a;text-align:right':x['Risultato']?'color:#791f1f;text-align:right':'text-align:right';
+        const resBg=sqWin?'background:#eaf3de;color:#27500a':x['Risultato']?'background:#fcebeb;color:#791f1f':'color:var(--mu2)';
+        h+=`<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:4px 10px;border-bottom:0.5px solid var(--br);gap:6px;${curr?'background:#fffbe6;border-left:3px solid #BA7517;':''}">`;
+        h+=`<div style="display:flex;align-items:center;gap:4px">${ngPill(x['Numero Gara'],curr)}<span style="font-size:9px;color:var(--mu2)">${(x['Data']||'').slice(5).replace('-','/')}</span>${homeBadge}<span style="${leftStyle};font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(leftSq===sq?sq:opp)}</span></div>`;
+        h+=`<div style="text-align:center;flex-shrink:0"><span style="${resBg};border-radius:3px;padding:1px 5px;font-weight:600;font-size:10.5px">${x['Risultato']||'–'}</span></div>`;
+        h+=`<div style="${rightStyle};font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(rightSq===sq?sq:opp)}</div>`;
         h+='</div>';
       });
-      // Future per questa fase
+      // Gare future in questa fase
       getProssime(sq).filter(x=>(x['Fase']||x['Girone']||'Girone')===fase&&x['Data']>=g['Data']&&x['Numero Gara']!==numGara).forEach(x=>{
         rn++;
         const isCasa=x['Squadra Casa']===sq;
-        const opp=isCasa?x['Squadra Ospite']:x['Squadra Casa'];
+        const opp2=isCasa?x['Squadra Ospite']:x['Squadra Casa'];
         const homeBadge=isCasa?`<span style="background:#e6f1fb;color:#0c447c;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700;flex-shrink:0">🏠</span>`:`<span style="background:#fff3cd;color:#854f0b;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700;flex-shrink:0">✈</span>`;
-        h+=`<div style="${rowStyle};font-style:italic;color:var(--mu)">`;
-        h+=`<span style="font-size:9.5px;color:var(--mu2);min-width:16px;text-align:center">${rn}</span>`;
-        h+=ngPill(x['Numero Gara'],false);
-        h+=`<span style="font-size:9.5px;color:var(--mu2);flex-shrink:0">${(x['Data']||'').slice(5).replace('-','/')}</span>`;
-        h+=homeBadge;
-        h+=sqName(isCasa?sq:opp,true)+sqName(isCasa?opp:sq,false);
-        h+=res(x);
+        h+=`<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:4px 10px;border-bottom:0.5px solid var(--br);gap:6px;font-style:italic;color:var(--mu)">`;
+        h+=`<div style="display:flex;align-items:center;gap:4px">${ngPill(x['Numero Gara'],false)}<span style="font-size:9px;color:var(--mu2)">${(x['Data']||'').slice(5).replace('-','/')}</span>${homeBadge}<span style="font-size:11px">${escH(isCasa?sq:opp2)}</span></div>`;
+        h+=`<div style="text-align:center;flex-shrink:0"><span style="color:var(--mu2);font-size:10px">–</span></div>`;
+        h+=`<div style="text-align:right;font-size:11px">${escH(isCasa?opp2:sq)}</div>`;
         h+='</div>';
       });
       h+='</div>';
     });
-    // Gara corrente se non ancora in gSq
     if(!gSq.find(x=>x['Numero Gara']===numGara)){
       const isCasa=g['Squadra Casa']===sq;
       const opp=isCasa?osp:casa;
       const faseCorrente=g['Fase']||g['Girone']||girone;
+      if(!faseMap[faseCorrente]) h+=`<div style="padding:4px 10px;font-size:10px;font-weight:600;color:var(--mu);background:var(--bl4,#f0f5ff);border-bottom:0.5px solid var(--br);border-top:1.5px solid var(--br)">${escH(faseCorrente)}</div>`;
       const homeBadge=isCasa?`<span style="background:#e6f1fb;color:#0c447c;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700;flex-shrink:0">🏠</span>`:`<span style="background:#fff3cd;color:#854f0b;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700;flex-shrink:0">✈</span>`;
-      if(!faseMap[faseCorrente]){
-        h+=`<div style="padding:4px 10px;font-size:10px;font-weight:600;color:var(--mu);background:var(--bl4,#f0f5ff);border-bottom:0.5px solid var(--br);border-top:1.5px solid var(--br)">${escH(faseCorrente)}</div>`;
-      }
-      h+=`<div style="${rowStyle};background:#fffbe6;border-left:3px solid #BA7517">`;
-      h+=ngPill(numGara,true);
-      h+=`<span style="font-size:9.5px;color:#854f0b;flex-shrink:0">${(g['Data']||'').slice(5).replace('-','/')}</span>`;
-      h+=homeBadge;
-      h+=sqName(isCasa?sq:opp,true)+sqName(isCasa?opp:sq,false);
-      h+=`<span style="font-size:9.5px;color:#854f0b;flex-shrink:0">◀ oggi</span>`;
+      h+=`<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:4px 10px;gap:6px;background:#fffbe6;border-left:3px solid #BA7517">`;
+      h+=`<div style="display:flex;align-items:center;gap:4px">${ngPill(numGara,true)}<span style="font-size:9px;color:#854f0b">${(g['Data']||'').slice(5).replace('-','/')}</span>${homeBadge}<span style="font-size:11px;color:#854f0b;font-weight:500">${escH(isCasa?sq:opp)}</span></div>`;
+      h+=`<div style="text-align:center;flex-shrink:0"><span style="color:#854f0b;font-size:10px">◀</span></div>`;
+      h+=`<div style="text-align:right;font-size:11px;color:#854f0b">${escH(isCasa?opp:sq)}</div>`;
       h+='</div>';
     }
     return h;
@@ -7045,14 +7044,15 @@ function openGara(numGara){
 
   // ── Tab: Classifica ────────────────────────────────────────────────────────
   function buildClassifica(){
+    // Classifica fase corrente
     let h='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
-    h+='<tr style="background:#1a3060;color:#fff"><th style="padding:5px 8px;font-weight:500;text-align:left">#</th><th style="text-align:left;padding:5px 8px">Squadra</th><th style="padding:5px 4px;text-align:center">G</th><th style="padding:5px 4px;text-align:center">V</th><th style="padding:5px 4px;text-align:center">S</th><th style="padding:5px 4px;text-align:right">Pts</th><th style="padding:5px 4px;text-align:right">+/-</th><th style="padding:5px 4px;text-align:center" title="Casa V/G">🏠</th><th style="padding:5px 4px;text-align:center" title="Trasferta V/G">✈</th></tr>';
+    h+='<tr style="background:#1a3060;color:#fff"><th style="padding:5px 8px;text-align:left">#</th><th style="text-align:left;padding:5px 8px">Squadra</th><th style="padding:5px 4px;text-align:center">G</th><th style="padding:5px 4px;text-align:center">V</th><th style="padding:5px 4px;text-align:center">S</th><th style="padding:5px 4px;text-align:right">Pts</th><th style="padding:5px 4px;text-align:right">+/-</th><th style="padding:5px 4px;text-align:center">🏠</th><th style="padding:5px 4px;text-align:center">✈</th></tr>';
+    const _clsLeader=clsRows.length?clsRows[0].v*2:0;
     clsRows.forEach((r,i)=>{
       const isCasa=r.sq===casa,isOsp=r.sq===osp;
       const bg=isCasa?'background:#e6f1fb':isOsp?'background:#eaf3de':'';
       const tc=isCasa?'color:#0c447c':isOsp?'color:#27500a':'';
-      const pts=r.v*2;  // sconfitte=0
-      const leader=clsRows[0]?clsRows[0].v*2:0;
+      const pts=r.v*2,delta=pts-_clsLeader;
       h+=`<tr style="${bg};border-bottom:0.5px solid var(--br)">`;
       h+=`<td style="padding:4px 8px;font-weight:500;${tc}">${i+1}</td>`;
       h+=`<td style="padding:4px 8px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${tc};${isCasa||isOsp?'font-weight:500':''}">${escH(r.sq)}${isCasa?' ◀':isOsp?' ◁':''}</td>`;
@@ -7060,27 +7060,65 @@ function openGara(numGara){
       h+=`<td style="padding:4px;text-align:center;color:#27500a">${r.v}</td>`;
       h+=`<td style="padding:4px;text-align:center;color:#791f1f">${r.s}</td>`;
       h+=`<td style="padding:4px;text-align:right;font-weight:700;${tc}">${pts}</td>`;
-      h+=`<td style="padding:4px;text-align:right;font-size:9.5px;color:var(--mu)">${pts===leader?'—':pts-leader}</td>`;
+      h+=`<td style="padding:4px;text-align:right;font-size:9.5px;color:var(--mu)">${pts===_clsLeader?'—':delta}</td>`;
       h+=`<td style="padding:4px;text-align:center;font-size:10px">${r.hV}/${r.hG}</td>`;
       h+=`<td style="padding:4px;text-align:center;font-size:10px">${r.aV}/${r.aG}</td>`;
       h+='</tr>';
     });
     h+='</table></div>';
-    // Gare mancanti del girone
+    // Gare mancanti
     const gironeIncomplete=allGirone.filter(x=>!x['Risultato']).sort((a,b)=>a['Data'].localeCompare(b['Data']));
     if(gironeIncomplete.length){
       h+=`<div style="${sepStyle}">Gare ancora da disputare (${gironeIncomplete.length})</div>`;
-      h+='<div style="max-height:180px;overflow-y:auto">';
+      h+='<div style="max-height:160px;overflow-y:auto">';
       gironeIncomplete.forEach(x=>{
         const curr=x['Numero Gara']===numGara;
         h+=`<div style="${rowStyle};${curr?'background:#fffbe6;border-left:3px solid #BA7517;':'font-style:italic;color:var(--mu)'}">`;
         h+=ngPill(x['Numero Gara'],curr);
         h+=`<span style="font-size:9.5px;color:var(--mu2);flex-shrink:0">${(x['Data']||'').slice(5).replace('-','/')} ${x['Ora']||''}</span>`;
-        h+=sqName(x['Squadra Casa'],false)+`<span style="font-size:9px;color:var(--mu2);flex-shrink:0">vs</span>`+sqName(x['Squadra Ospite'],false);
+        h+=sqName(x['Squadra Casa'],false)+`<span style="font-size:9px;color:var(--mu2)">vs</span>`+sqName(x['Squadra Ospite'],false);
         h+='</div>';
       });
       h+='</div>';
     }
+    // Fasi precedenti dello stesso campionato
+    const fasiPrec=[...new Set((D.gare||[]).filter(x=>x['Campionato']===camp&&x['Risultato']).map(x=>x['Fase']||x['Girone']||''))].filter(f=>f&&f!==(g['Fase']||g['Girone']||girone));
+    fasiPrec.forEach(fase=>{
+      const gareFase=(D.gare||[]).filter(x=>x['Campionato']===camp&&(x['Fase']||x['Girone']||'')===fase&&x['Risultato']);
+      if(!gareFase.length)return;
+      const sqsFase=[...new Set(gareFase.flatMap(x=>[x['Squadra Casa'],x['Squadra Ospite']]))];
+      const clsFase={};
+      sqsFase.forEach(s=>{clsFase[s]={v:0,s:0,pf:0,ps:0};});
+      gareFase.forEach(x=>{
+        const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;
+        if(!clsFase[x['Squadra Casa']])clsFase[x['Squadra Casa']]={v:0,s:0,pf:0,ps:0};
+        if(!clsFase[x['Squadra Ospite']])clsFase[x['Squadra Ospite']]={v:0,s:0,pf:0,ps:0};
+        if(pc>po){clsFase[x['Squadra Casa']].v++;clsFase[x['Squadra Ospite']].s++;}
+        else{clsFase[x['Squadra Ospite']].v++;clsFase[x['Squadra Casa']].s++;}
+        clsFase[x['Squadra Casa']].pf+=pc;clsFase[x['Squadra Casa']].ps+=po;
+        clsFase[x['Squadra Ospite']].pf+=po;clsFase[x['Squadra Ospite']].ps+=pc;
+      });
+      const rankFase=Object.entries(clsFase).sort((a,b)=>(b[1].v*2-a[1].v*2)||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps)));
+      const uid='cls-prev-'+fase.replace(/\s/g,'_');
+      h+=`<div style="padding:5px 10px;font-size:10.5px;font-weight:600;color:var(--mu);background:var(--bl4,#f0f5ff);border-top:1.5px solid var(--br);cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="const d=document.getElementById('${uid}');d.style.display=d.style.display==='none'?'block':'none'">`;
+      h+=`<span>▶ Fase precedente: ${escH(fase)}</span><span style="font-size:9px;opacity:.7">clicca per espandere</span></div>`;
+      h+=`<div id="${uid}" style="display:none"><table style="width:100%;border-collapse:collapse;font-size:11px;opacity:.9">`;
+      h+=`<tr style="background:#444441;color:#fff"><th style="padding:4px 8px;text-align:left">#</th><th style="text-align:left;padding:4px 8px">Squadra</th><th style="padding:4px;text-align:center">G</th><th style="padding:4px;text-align:center">V</th><th style="padding:4px;text-align:center">S</th><th style="padding:4px;text-align:right">Pts</th><th style="padding:4px;text-align:right">+/-</th></tr>`;
+      const ldrFase=rankFase.length?rankFase[0][1].v*2:0;
+      rankFase.forEach(([sq,r],i)=>{
+        const isCasa2=sq===casa,isOsp2=sq===osp;
+        const bg2=isCasa2?'background:#e6f1fb':isOsp2?'background:#eaf3de':'';
+        const tc2=isCasa2?'color:#0c447c':isOsp2?'color:#27500a':'';
+        const pts2=r.v*2;
+        h+=`<tr style="${bg2};border-bottom:0.5px solid var(--br)">`;
+        h+=`<td style="padding:4px 8px;${tc2}">${i+1}</td>`;
+        h+=`<td style="padding:4px 8px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${tc2};${isCasa2||isOsp2?'font-weight:500':''}">${escH(sq)}${isCasa2?' ◀':isOsp2?' ◁':''}</td>`;
+        h+=`<td style="padding:4px;text-align:center;color:var(--mu)">${r.v+r.s}</td><td style="padding:4px;text-align:center;color:#27500a">${r.v}</td><td style="padding:4px;text-align:center;color:#791f1f">${r.s}</td>`;
+        h+=`<td style="padding:4px;text-align:right;font-weight:700;${tc2}">${pts2}</td><td style="padding:4px;text-align:right;font-size:9.5px;color:var(--mu)">${pts2===ldrFase?'—':pts2-ldrFase}</td>`;
+        h+='</tr>';
+      });
+      h+='</table></div>';
+    });
     return h;
   }
 
@@ -7162,66 +7200,71 @@ function openGara(numGara){
   }
 
   // ── Tab: Arbitri ──────────────────────────────────────────────────────────
+  function buildCoppiaArb(a1,a2){
+    // Gare dove entrambi hanno arbitrato (stesso numero gara)
+    const gareA1=new Set((D.gare||[]).filter(x=>pns(x['Arbitro 1']||'')===a1||pns(x['Arbitro 2']||'')===a1).map(x=>x['Numero Gara']));
+    const gareInsieme=(D.gare||[]).filter(x=>x['Risultato']&&gareA1.has(x['Numero Gara'])&&(pns(x['Arbitro 1']||'')===a2||pns(x['Arbitro 2']||'')===a2)).sort((a,b)=>b['Data'].localeCompare(a['Data']));
+    if(!gareInsieme.length)return`<span style="color:var(--mu)">Coppia ${escH(a1)} + ${escH(a2)}: mai arbitrato insieme questa stagione</span>`;
+    // Ruoli
+    let sameRoles=true;
+    gareInsieme.forEach(x=>{if(pns(x['Arbitro 1']||'')!==a1||pns(x['Arbitro 2']||'')!==a2)sameRoles=false;});
+    const roleStr=sameRoles?`sempre: ${escH(a1)} = 1° arb., ${escH(a2)} = 2° arb.`:'ruoli alternati';
+    return`<span style="font-weight:500">Coppia ${escH(a1)} + ${escH(a2)}:</span> <span style="background:#e6f1fb;color:#0c447c;border-radius:3px;padding:1px 7px;font-size:10px;font-weight:600">${gareInsieme.length} gare insieme</span> <span style="font-size:9.5px;color:var(--mu)">${roleStr}</span>`;
+  }
   function buildArbPanel(arb,ap){
     if(!arb)return'<div style="padding:20px;text-align:center;color:var(--mu)">Nessun arbitro designato</div>';
     const pvA=P[arb]&&P[arb].provincia||'';
-    // Solo gare di questo campionato con queste squadre
+    // Gare di questo campionato con la squadra di casa
     const gareCasa=(D.gare||[]).filter(x=>
       (pns(x['Arbitro 1']||'')===arb||pns(x['Arbitro 2']||'')===arb)&&
       x['Risultato']&&x['Campionato']===camp&&
       (x['Squadra Casa']===casa||x['Squadra Ospite']===casa)
-    ).sort((a,b)=>b['Data'].localeCompare(a['Data'])).slice(0,10);
+    ).sort((a,b)=>b['Data'].localeCompare(a['Data'])).slice(0,12);
     const gareOsp=(D.gare||[]).filter(x=>
       (pns(x['Arbitro 1']||'')===arb||pns(x['Arbitro 2']||'')===arb)&&
       x['Risultato']&&x['Campionato']===camp&&
       (x['Squadra Casa']===osp||x['Squadra Ospite']===osp)
-    ).sort((a,b)=>b['Data'].localeCompare(a['Data'])).slice(0,10);
-    const vCasa=gareCasa.filter(x=>{const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;return x['Squadra Casa']===casa?pc>po:po>pc;}).length;
-    const vOsp=gareOsp.filter(x=>{const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;return x['Squadra Casa']===osp?pc>po:po>pc;}).length;
+    ).sort((a,b)=>b['Data'].localeCompare(a['Data'])).slice(0,12);
+    // W/L stats
+    function wl(gare, sq){
+      let v=0,s=0;
+      gare.forEach(x=>{const isCasa=x['Squadra Casa']===sq;const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;if(isCasa?pc>po:po>pc)v++;else s++;});
+      return {v,s};
+    }
+    const wlCasa=wl(gareCasa,casa), wlOsp=wl(gareOsp,osp);
     let h=`<div style="padding:7px 12px;font-size:11px;font-weight:500;display:flex;align-items:center;gap:6px;border-bottom:0.5px solid var(--br);color:#fff;background:#085041">🏛 ${escH(arb)} ${pvA&&PC[pvA]?`<span style="background:${PC[pvA]};border-radius:3px;padding:0 5px;font-size:9px">${pvA}</span>`:''}</div>`;
     h+=`<div style="display:flex;gap:0;border-bottom:0.5px solid var(--br)">`;
     h+=[['Tot. stagione',ap.total],['in '+camp.split(' ').slice(0,2).join(' '),ap.inCamp],['con '+escH(casa.split(' ').pop()),gareCasa.length],['con '+escH(osp.split(' ').pop()),gareOsp.length]]
       .map(([l,v])=>`<div style="flex:1;text-align:center;padding:5px 2px;border-right:0.5px solid var(--br)"><div style="font-size:14px;font-weight:500">${v}</div><div style="font-size:9px;color:var(--mu)">${l}</div></div>`).join('');
     h+='</div>';
     h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0">`;
-    // Colonna sinistra: casa
-    h+=`<div style="border-right:0.5px solid var(--br)">`;
-    h+=`<div style="padding:5px 10px;background:#e6f1fb;border-bottom:0.5px solid var(--br);font-size:10.5px;font-weight:500;color:#0c447c">${escH(casa)} — ${gareCasa.length} gare · ${vCasa}V/${gareCasa.length-vCasa}S</div>`;
-    if(gareCasa.length){
-      h+=`<div style="max-height:200px;overflow-y:auto">`;
-      gareCasa.forEach(x=>{
-        const isCasaX=x['Squadra Casa']===casa;
-        const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;
-        const win=isCasaX?pc>po:po>pc;
-        h+=`<div style="${rowStyle}">`;
-        h+=ngPill(x['Numero Gara'],false);
-        h+=`<span style="font-size:9.5px;color:var(--mu2);flex-shrink:0">${(x['Data']||'').slice(5).replace('-','/')}</span>`;
-        h+=`<span style="flex:1;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(x['Squadra Casa'])} – ${escH(x['Squadra Ospite'])}</span>`;
-        h+=`<span style="${win?'background:#eaf3de;color:#27500a':'background:#fcebeb;color:#791f1f'};border-radius:3px;padding:1px 5px;font-weight:600;font-size:10.5px;flex-shrink:0">${x['Risultato']}</span>`;
-        h+='</div>';
-      });
-      h+='</div>';
-    } else h+='<div style="padding:10px;font-size:10.5px;font-style:italic;color:var(--mu)">Nessun precedente</div>';
+    function buildArbList(gare, sq, wlStat, bgCol, txCol) {
+      let col=`<div style="border-right:0.5px solid var(--br)">`;
+      col+=`<div style="padding:5px 10px;background:${bgCol};border-bottom:0.5px solid var(--br);font-size:10.5px;font-weight:500;color:${txCol};display:flex;justify-content:space-between">`;
+      col+=`<span>${escH(sq)}</span><span style="font-size:10px">${wlStat.v}V / ${wlStat.s}S</span></div>`;
+      if(gare.length){
+        col+=`<div style="max-height:220px;overflow-y:auto">`;
+        gare.forEach(x=>{
+          const isCasaX=x['Squadra Casa']===sq;
+          const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;
+          const win=isCasaX?pc>po:po>pc;
+          const isThisGame=x['Numero Gara']===numGara;
+          col+=`<div style="display:flex;align-items:center;padding:4px 10px;border-bottom:0.5px solid var(--br);font-size:11px;gap:5px;${isThisGame?'background:#fffbe6;border-left:3px solid #BA7517;':''}">`;
+          col+=`<span style="font-family:monospace;font-size:9px;${isThisGame?'background:#BA7517':'background:#1a3060'};color:#b5d4f4;border-radius:3px;padding:1px 4px;flex-shrink:0">${escH(x['Numero Gara']||'')}</span>`;
+          col+=`<span style="font-size:9.5px;color:${isThisGame?'#854f0b':'var(--mu2)'};flex-shrink:0">${(x['Data']||'').slice(5).replace('-','/')}${isThisGame?' ◀':''}</span>`;
+          col+=`<span style="flex:1;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(x['Squadra Casa'])} – ${escH(x['Squadra Ospite'])}</span>`;
+          col+=`<span style="${win?'background:#eaf3de;color:#27500a':'background:#fcebeb;color:#791f1f'};border-radius:3px;padding:1px 4px;font-weight:600;font-size:10px;flex-shrink:0">${x['Risultato']||''}</span>`;
+          col+='</div>';
+        });
+        col+='</div>';
+      } else col+=`<div style="padding:10px;font-size:10.5px;font-style:italic;color:var(--mu)">Nessun precedente</div>`;
+      col+='</div>';
+      return col;
+    }
+    h+=buildArbList(gareCasa, casa, wlCasa, '#e6f1fb', '#0c447c');
+    // Rimuovi border-right dall'ultima colonna
+    h+=buildArbList(gareOsp, osp, wlOsp, '#eaf3de', '#27500a').replace('border-right:0.5px solid var(--br)','');
     h+='</div>';
-    // Colonna destra: ospite
-    h+=`<div>`;
-    h+=`<div style="padding:5px 10px;background:#eaf3de;border-bottom:0.5px solid var(--br);font-size:10.5px;font-weight:500;color:#27500a">${escH(osp)} — ${gareOsp.length} gare · ${vOsp}V/${gareOsp.length-vOsp}S</div>`;
-    if(gareOsp.length){
-      h+=`<div style="max-height:200px;overflow-y:auto">`;
-      gareOsp.forEach(x=>{
-        const isCasaX=x['Squadra Casa']===osp;
-        const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;
-        const win=isCasaX?pc>po:po>pc;
-        h+=`<div style="${rowStyle}">`;
-        h+=ngPill(x['Numero Gara'],false);
-        h+=`<span style="font-size:9.5px;color:var(--mu2);flex-shrink:0">${(x['Data']||'').slice(5).replace('-','/')}</span>`;
-        h+=`<span style="flex:1;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(x['Squadra Casa'])} – ${escH(x['Squadra Ospite'])}</span>`;
-        h+=`<span style="${win?'background:#eaf3de;color:#27500a':'background:#fcebeb;color:#791f1f'};border-radius:3px;padding:1px 5px;font-weight:600;font-size:10.5px;flex-shrink:0">${x['Risultato']}</span>`;
-        h+='</div>';
-      });
-      h+='</div>';
-    } else h+='<div style="padding:10px;font-size:10.5px;font-style:italic;color:var(--mu)">Nessun precedente</div>';
-    h+='</div></div>';
     return h;
   }
 
@@ -7303,63 +7346,74 @@ function openGara(numGara){
       h+='</div></div>';
       return h;
     } else {
-      // Fase a gironi: TUTTE le gare divise per giornata
+      // Fase a gironi: layout a CARD per giornata (stile screen 6)
       const tutteGirone=[...allGirone,...(tuttiFuture||[]).filter(x=>
         x['Campionato']===camp&&(x['Girone']===girone||(x['Fase']||'')===(g['Fase']||''))&&
         !allGirone.find(y=>y['Numero Gara']===x['Numero Gara'])
       )].sort((a,b)=>a['Data'].localeCompare(b['Data'])||((a['Ora']||'').localeCompare(b['Ora']||'')));
-      const giocate=tutteGirone.filter(x=>x['Risultato']);
-      const daGiocare=tutteGirone.filter(x=>!x['Risultato']);
-      // Raggruppa per giornata (stessa data o cluster di date ravvicinate)
-      // Usiamo la data come chiave giornata
-      const dateGroups={};
-      tutteGirone.forEach(x=>{
-        const d=x['Data']||'';
-        if(!dateGroups[d])dateGroups[d]=[];
-        dateGroups[d].push(x);
-      });
-      const sortedDates=Object.keys(dateGroups).sort();
+      // Raggruppa per data (giornata)
+      const dateMap={};
+      tutteGirone.forEach(x=>{const d=x['Data']||'';if(!dateMap[d])dateMap[d]=[];dateMap[d].push(x);});
+      const sortedDates=Object.keys(dateMap).sort();
       let ggNum=0;
-      let h=`<div style="font-size:10px;padding:5px 10px;color:var(--mu);border-bottom:0.5px solid var(--br);display:flex;gap:12px">`;
-      h+=`<span>📋 ${escH(girone)}</span><span>✅ ${giocate.length} giocate</span><span>📅 ${daGiocare.length} da disputare</span>`;
-      h+=`<span style="margin-left:auto">🔵 = ICHNOS o BASKET 90 &nbsp;|&nbsp; 🟡 = questa gara</span>`;
+      let h=`<div style="font-size:10px;padding:5px 10px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:0.5px solid var(--br);margin-bottom:6px;color:var(--mu)">`;
+      h+=`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#e6f1fb;border-left:3px solid #185fa5;display:inline-block"></span>gare con ${escH(casa)}</span>`;
+      h+=`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#eaf3de;border-left:3px solid #27500a;display:inline-block"></span>gare con ${escH(osp)}</span>`;
+      h+=`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#fffbe6;border-left:3px solid #BA7517;display:inline-block"></span>questa gara / entrambe</span>`;
       h+='</div>';
-      h+=`<div style="max-height:380px;overflow-y:auto">`;
+      h+=`<div style="max-height:440px;overflow-y:auto">`;
       sortedDates.forEach(d=>{
-        const gare=dateGroups[d];
         ggNum++;
-        const isCoinvolta=gare.some(x=>x['Squadra Casa']===casa||x['Squadra Ospite']===casa||x['Squadra Casa']===osp||x['Squadra Ospite']===osp);
+        const gare=dateMap[d];
         const isCurrGiornata=gare.some(x=>x['Numero Gara']===numGara);
-        const isGiocata=gare[0]&&gare[0]['Risultato'];
-        // Intestazione giornata
-        const gdStyle=isCurrGiornata?'background:#fffbe6;color:#854f0b;border-left:3px solid #BA7517':isCoinvolta?'background:#e6f1fb;color:#0c447c':'';
-        const nCoinv=gare.filter(x=>x['Squadra Casa']===casa||x['Squadra Ospite']===casa||x['Squadra Casa']===osp||x['Squadra Ospite']===osp).length;
-        h+=`<div style="padding:4px 10px;font-size:9.5px;font-weight:600;background:var(--bl4,#f0f5ff);border-bottom:0.5px solid var(--br);display:flex;align-items:center;gap:8px;${gdStyle}">`;
-        h+=`<span>Giornata ${ggNum} — ${d.slice(5).replace('-','/')}</span>`;
-        if(isCurrGiornata)h+=`<span style="color:#854f0b">◀ questa gara</span>`;
-        else if(isCoinvolta)h+=`<span style="color:#185fa5">${nCoinv} gare coinvolte</span>`;
+        const hasGiocate=gare.some(x=>x['Risultato']);
+        const hasProgr=gare.some(x=>!x['Risultato']);
+        const nGiocate=gare.filter(x=>x['Risultato']).length;
+        const stato=nGiocate===gare.length?'✓ Completata':nGiocate===0?'In programma':'Parziale';
+        const hdBg=isCurrGiornata?'#854f0b':'#1e3a6e';
+        // Formatta data
+        const dateFmt=d?d.slice(5).replace('-','/'):'?';
+        h+=`<div style="border:0.5px solid var(--br);border-radius:8px;overflow:hidden;margin-bottom:8px">`;
+        h+=`<div style="padding:6px 12px;background:${hdBg};color:#fff;display:flex;align-items:center;justify-content:space-between">`;
+        h+=`<span style="font-size:12px;font-weight:500">Giornata ${ggNum}${isCurrGiornata?' ◀ questa gara':''}</span>`;
+        h+=`<div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;opacity:.75">${dateFmt}</span><span style="font-size:10px;background:rgba(255,255,255,.2);border-radius:3px;padding:1px 7px">${stato}</span></div>`;
         h+='</div>';
-        // Righe gare
         gare.forEach(x=>{
           const curr=x['Numero Gara']===numGara;
-          const coinv=x['Squadra Casa']===casa||x['Squadra Ospite']===casa||x['Squadra Casa']===osp||x['Squadra Ospite']===osp;
+          const coinvCasa=x['Squadra Casa']===casa||x['Squadra Ospite']===casa;
+          const coinvOsp=x['Squadra Casa']===osp||x['Squadra Ospite']===osp;
+          const both=coinvCasa&&coinvOsp;
           const fut=!x['Risultato'];
-          const bg=curr?'background:#fffbe6;border-left:3px solid #BA7517':coinv?'background:#f0f5ff;border-left:2px solid #b5d4f4':'';
-          h+=`<div style="${rowStyle};${bg};${fut?'font-style:italic;color:var(--mu)':''}">`;
-          h+=ngPill(x['Numero Gara'],curr);
-          h+=`<span style="font-size:9.5px;color:${curr?'#854f0b':'var(--mu2)'};flex-shrink:0">${(x['Ora']||'')}</span>`;
-          h+=sqName(x['Squadra Casa'],x['Squadra Casa']===casa||x['Squadra Casa']===osp);
-          h+=`<span style="font-size:9px;color:var(--mu2);flex-shrink:0">vs</span>`;
-          h+=sqName(x['Squadra Ospite'],x['Squadra Ospite']===casa||x['Squadra Ospite']===osp);
-          if(curr)h+=`<span style="font-size:9.5px;color:#854f0b;font-weight:500;flex-shrink:0">◀</span>`;
-          else h+=res(x);
+          let rowBg='', rowBl='';
+          if(curr||both){rowBg='background:#fffbe6';rowBl='border-left:4px solid #BA7517';}
+          else if(coinvCasa){rowBg='background:#e6f1fb';rowBl='border-left:4px solid #185fa5';}
+          else if(coinvOsp){rowBg='background:#eaf3de';rowBl='border-left:4px solid #27500a';}
+          const pc=parseInt(x['Punti Casa'])||0, po=parseInt(x['Punti Ospite'])||0;
+          const casaWin=x['Risultato']&&pc>po, ospWin=x['Risultato']&&po>pc;
+          const ngStyle=curr?'background:#BA7517;color:#b5d4f4':'background:#1a3060;color:#b5d4f4';
+          h+=`<div style="display:grid;grid-template-columns:1fr 100px 1fr;align-items:center;padding:6px 12px;border-bottom:0.5px solid var(--br);gap:8px;${rowBg};${rowBl};${fut?'font-style:italic;':''}">`;
+          // Sinistra: squadra casa
+          h+=`<div><div style="font-size:11.5px;${casaWin?'font-weight:700;color:#27500a':x['Risultato']?'color:#791f1f':''}">${escH(x['Squadra Casa'])}</div>`;
+          h+=`<div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="font-family:monospace;font-size:9px;${ngStyle};border-radius:3px;padding:1px 4px">${escH(x['Numero Gara']||'')}</span><span style="font-size:9.5px;color:var(--mu2)">${x['Ora']||''}</span></div></div>`;
+          // Centro: punteggio
+          h+=`<div style="text-align:center">`;
+          if(x['Risultato']){
+            h+=`<div style="font-size:16px;font-weight:700;font-family:monospace;white-space:nowrap"><span style="color:${casaWin?'#27500a':'#791f1f'}">${pc}</span><span style="color:var(--mu2);font-size:12px;margin:0 3px">–</span><span style="color:${ospWin?'#27500a':'#791f1f'}">${po}</span></div>`;
+          } else {
+            h+=`<div style="font-size:14px;font-family:monospace;color:var(--mu2)">– –</div>`;
+          }
+          h+='</div>';
+          // Destra: squadra ospite
+          h+=`<div style="text-align:right"><div style="font-size:11.5px;${ospWin?'font-weight:700;color:#27500a':x['Risultato']?'color:#791f1f':''}">${escH(x['Squadra Ospite'])}</div></div>`;
           h+='</div>';
         });
+        h+='</div>';
       });
       h+='</div>';
       return h;
     }
   }
+
 
   // ── Build tabs HTML ────────────────────────────────────────────────────────
   const tabDefs=[
@@ -7394,6 +7448,7 @@ function openGara(numGara){
       `<div style="display:flex;flex-direction:column;gap:8px;padding:8px">`
       +`<div style="border:0.5px solid var(--br);border-radius:8px;overflow:hidden">${buildArbPanel(a1n,ap1)}</div>`
       +(a2n?`<div style="border:0.5px solid var(--br);border-radius:8px;overflow:hidden">${buildArbPanel(a2n,ap2)}</div>`:'')
+      +(a1n&&a2n?`<div style="padding:7px 12px;background:var(--bl4,#f0f5ff);border:0.5px solid var(--br);border-radius:8px;font-size:10.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">${buildCoppiaArb(a1n,a2n)}</div>`:'')
       +`</div>`)
     +panel('campo',false,`<div style="padding:8px"><div style="border:0.5px solid var(--br);border-radius:8px;overflow:hidden">${buildCampo()}</div></div>`)
     +panel('prossime',false,
