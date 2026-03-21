@@ -150,7 +150,7 @@ header{background:linear-gradient(135deg,#0d2048 0%,#1e3a6e 55%,#2456a4 100%);
 .mca-si{font-size:8px;opacity:.7;margin-left:2px}
 .mca-rsz{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent;}
 .mca-rsz:hover{background:rgba(255,255,255,.3);}
-#mca-tbl-body .pv-badge,#mca-tbl-body [style*="border-radius:3px"][style*="font-weight:8"]{font-size:9.5px!important;padding:1px 5px!important;}
+#mo-campo #mca-tbl-body span[style*="background"][style*="border-radius:3px"]{font-size:11px!important;padding:1px 7px!important;min-width:28px;text-align:center;}
 #mo-campo .ng-pill{font-family:'Courier New',monospace;font-size:.72rem;background:#1a3060;color:#b5d4f4;border-radius:5px;padding:2px 7px;letter-spacing:.5px;border:none;font-weight:600;}
 .gare-kpi-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
 .g-fcat{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--br,#dde3f0);border-radius:7px;padding:5px 13px;font-size:.72rem;font-weight:600;cursor:pointer;background:var(--bg,#fff);color:var(--txt,#1a2340);transition:border-color .12s;user-select:none;margin-bottom:2px}
@@ -2926,8 +2926,8 @@ function openGiornoModal(ds){
         const campName=g['Campionato']||'';
         const pvCampo=cpv(campo);
         const pvClr=pvCampo&&PC[pvCampo]?PC[pvCampo]:'transparent';
-        return`<tr data-camp="${escH(campName)}" data-risultato="${g['Risultato']?'1':''}" data-arb="${nArb>0?'1':''}" data-arb1="${escH(a1)}" data-prov="${pvCampo||''}" data-campo="${escH(campo)}" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()} style="border-left:3px solid ${pvClr}">
-          <td class="gm-rnum" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()} style="text-align:center;font-size:.7rem;color:var(--mu2)"></td>
+        return`<tr data-camp="${escH(campName)}" data-risultato="${g['Risultato']?'1':''}" data-arb="${nArb>0?'1':''}" data-arb1="${escH(a1)}" data-prov="${pvCampo||''}" data-campo="${escH(campo)}" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()}" style="border-left:3px solid ${pvClr}">
+          <td class="gm-rnum" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()}" style="text-align:center;font-size:.7rem;color:var(--mu2)"></td>
           <td style="font-size:.7rem;text-align:center;color:var(--mu);white-space:nowrap">${ora||'–'}</td>
           <td style="font-size:.65rem;text-align:center;color:var(--mu2);font-family:monospace">${escH(g['Numero Gara']||'')}</td>
           <td style="font-size:.7rem"><span style="background:${campColor(campName)};color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(campName)}')">${escH(campName)}</span></td>
@@ -2941,7 +2941,7 @@ function openGiornoModal(ds){
           <td style="text-align:center"><b style="color:${arbClr}">${nArb}</b></td>
           <td style="font-size:.68rem">${a1?`<span class="rn rn-Arbitro" data-n="${a1}" onclick="openPersona(this.dataset.n);event.stopPropagation()">${escH(a1)}</span>${genderDot(a1)} ${_gPv(P[a1]&&P[a1].provincia||'',true)}`:''}</td>
           <td style="font-size:.68rem">${a2?`<span class="rn rn-Arbitro" data-n="${a2}" onclick="openPersona(this.dataset.n);event.stopPropagation()">${escH(a2)}</span>${genderDot(a2)} ${_gPv(P[a2]&&P[a2].provincia||'',true)}`:''}</td>
-          <td style="font-size:.68rem;white-space:nowrap">${(()=>{const gps=CAMPO_GPS[campo]||CAMPO_GPS[Object.keys(CAMPO_GPS).find(k=>k.startsWith(campo.split(',')[0]))||'']||null;const city=gps?.city||'';const pv=pvCampo;return city?escH(city)+(pv?` <span style="background:${pvClr};color:#fff;border-radius:2px;padding:0 3px;font-size:.58rem;font-weight:700">${pv}</span>`:''): (pv?`<span style="background:${pvClr};color:#fff;border-radius:2px;padding:0 3px;font-size:.58rem;font-weight:700">${pv}</span>`:'—')})()}</td>
+          <td style="font-size:.68rem;white-space:nowrap">${(()=>{const gps=CAMPO_GPS[campo]||CAMPO_GPS[Object.keys(CAMPO_GPS).find(k=>k.startsWith(campo.split(',')[0]))||'']||null;const city=gps?.city||'';const pv=pvCampo;return (pv?`<span style="background:${pvClr};color:#fff;border-radius:2px;padding:0 3px;font-size:.62rem;font-weight:700;margin-right:3px">${pv}</span>`:'')+( city?escH(city):'—')})()}</td>
           <td style="font-size:.66rem">${campo?`<span style="cursor:pointer;color:var(--bl)" onclick="openCampoModal('${esc(campo)}');event.stopPropagation()">${escH(campo.split(',')[0])}</span>`:''}</td>
         </tr>`;
       }).join('');
@@ -3024,6 +3024,7 @@ function openGiornoModal(ds){
     const allProvs=[...new Set(allDayG.map(g=>cpv(g['Campo']||'')).filter(Boolean))].sort();
     const allArbs=[...new Set(allDayG.flatMap(g=>['Arbitro 1','Arbitro 2'].map(f=>pns(g[f]||'')).filter(Boolean)))].sort();
     const allCampi=[...new Set(allDayG.map(g=>(g['Campo']||'').split(',')[0].trim()).filter(Boolean))].sort();
+    const allCitta=[...new Set(allDayG.map(g=>{const gps=CAMPO_GPS[g['Campo']||''];return gps&&gps.city?gps.city:'';}).filter(Boolean))].sort();
     (()=>{
       const _mkP=(cid,type,items,colorFn)=>{
         const w=modal.querySelector('#'+cid);if(!w)return;
@@ -3043,6 +3044,7 @@ function openGiornoModal(ds){
       _mkP('gm-pills-prov','prov',allProvs,p=>PC[p]||'#888');
       _mkP('gm-pills-arb','arb',allArbs,()=>'#2c3e6b');
       _mkP('gm-pills-campo','campo',allCampi,()=>'#3d4d6b');
+      _mkP('gm-pills-citta','citta',allCitta,()=>'#6d5d9e');
     })();
 
     // Numera subito le righe al primo caricamento
@@ -8572,11 +8574,11 @@ function openCampoModal(campo){
           <th data-mcacol="data" style="width:80px;position:relative" onclick="mcaSort('data')">Data <span class="mca-si" id="mca-si-data">⇅</span><div class="mca-rsz" onmousedown="mcaStartResize(event,this)"></div></th>
           <th data-mcacol="num" style="width:90px;position:relative" onclick="mcaSort('num')">N° Gara <span class="mca-si" id="mca-si-num">⇅</span><div class="mca-rsz" onmousedown="mcaStartResize(event,this)"></div></th>
           <th data-mcacol="camp" style="position:relative" onclick="mcaSort('camp')">Campionato <span class="mca-si" id="mca-si-camp">⇅</span><div class="mca-rsz" onmousedown="mcaStartResize(event,this)"></div></th>
-          <th data-mcacol="pvc" style="width:46px;position:relative" onclick="mcaSort('pvc')">Prov.C <span class="mca-si" id="mca-si-pvc">⇅</span><div class="mca-rsz" onmousedown="mcaStartResize(event,this)"></div></th>
+          <th data-mcacol="pvc" style="width:46px;position:relative" onclick="mcaSort('pvc')">Prov.A <span class="mca-si" id="mca-si-pvc">⇅</span><div class="mca-rsz" onmousedown="mcaStartResize(event,this)"></div></th>
           <th data-mcacol="casa" style="position:relative" onclick="mcaSort('casa')">Casa <span class="mca-si" id="mca-si-casa">⇅</span><div class="mca-rsz" onmousedown="mcaStartResize(event,this)"></div></th>
           <th data-mcacol="ris" style="width:68px;position:relative" onclick="mcaSort('ris')">Ris. <span class="mca-si" id="mca-si-ris">⇅</span><div class="mca-rsz" onmousedown="mcaStartResize(event,this)"></div></th>
           <th data-mcacol="osp" style="position:relative" onclick="mcaSort('osp')">Ospite <span class="mca-si" id="mca-si-osp">⇅</span><div class="mca-rsz" onmousedown="mcaStartResize(event,this)"></div></th>
-          <th data-mcacol="pvo" style="width:46px;position:relative" onclick="mcaSort('pvo')">Prov.O <span class="mca-si" id="mca-si-pvo">⇅</span><div class="mca-rsz" onmousedown="mcaStartResize(event,this)"></div></th>
+          <th data-mcacol="pvo" style="width:46px;position:relative" onclick="mcaSort('pvo')">Prov.B <span class="mca-si" id="mca-si-pvo">⇅</span><div class="mca-rsz" onmousedown="mcaStartResize(event,this)"></div></th>
           <th data-mcacol="a1" style="position:relative" onclick="mcaSort('a1')">Arbitro 1 <span class="mca-si" id="mca-si-a1">⇅</span><div class="mca-rsz" onmousedown="mcaStartResize(event,this)"></div></th>
           <th data-mcacol="a2" style="position:relative" onclick="mcaSort('a2')">Arbitro 2 <span class="mca-si" id="mca-si-a2">⇅</span><div class="mca-rsz" onmousedown="mcaStartResize(event,this)"></div></th>
         </tr></thead>
