@@ -1150,12 +1150,14 @@ tr.loss-row td{background:#fdecea!important;}
     <span class="g-fcat" id="gfc-prov" onclick="gFcatToggle('prov')">Province <span class="g-fcat-arr">&#9660;</span></span>
     <span class="g-fcat" id="gfc-arb" onclick="gFcatToggle('arb')">Arbitri <span class="g-fcat-arr">&#9660;</span></span>
     <span class="g-fcat" id="gfc-campo" onclick="gFcatToggle('campo')">Campi <span class="g-fcat-arr">&#9660;</span></span>
+    <span class="g-fcat" id="gfc-sq" onclick="gFcatToggle('sq')">Squadre <span class="g-fcat-arr">&#9660;</span></span>
     <button id="g-rst-all" onclick="gResetAll()" style="display:none;align-items:center;border:1.5px solid #c0392b;border-radius:7px;padding:4px 10px;font-size:.68rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">&#10005; Azzera tutto</button>
   </div>
   <div class="g-pp" id="g-pp-camp"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-camp"></div></div>
   <div class="g-pp" id="g-pp-prov"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-prov"></div></div>
   <div class="g-pp" id="g-pp-arb"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-arb"></div></div>
   <div class="g-pp" id="g-pp-campo"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-campo"></div></div>
+  <div class="g-pp" id="g-pp-sq"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:5px 2px 3px;align-items:center" id="g-pills-sq"></div></div>
   <div class="gare-chips" id="g-chips" style="display:none"></div>
   <div class="gare-restore" id="g-restore"></div>
   <div style="overflow-x:auto">
@@ -4048,6 +4050,7 @@ function _gGetVis(){
     if(_gSEL.prov.size>0){var pvC=SQ[g['Squadra Casa']]&&SQ[g['Squadra Casa']].prov||'';var pvO=SQ[g['Squadra Ospite']]&&SQ[g['Squadra Ospite']].prov||'';if(!_gSEL.prov.has(pvC)&&!_gSEL.prov.has(pvO))return false;}
     if(_gSEL.arb.size>0){var a1b=pns(g['Arbitro 1']||''),a2b=pns(g['Arbitro 2']||'');if(!_gSEL.arb.has(a1b)&&!_gSEL.arb.has(a2b))return false;}
     if(_gSEL.campo.size>0&&!_gSEL.campo.has((g['Campo']||'').split(',')[0].trim()))return false;
+    if(_gSEL.sq.size>0&&!_gSEL.sq.has(g['Squadra Casa']||'')&&!_gSEL.sq.has(g['Squadra Ospite']||''))return false;
     return true;
   });
 }
@@ -4058,7 +4061,7 @@ function gKpiToggle(key){
   _gRenderChips();_gRenderTable();
 }
 // ── Nuovo sistema pill filter multi-select ──────────────────────────────
-var _gSEL={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set()};
+var _gSEL={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),sq:new Set()};
 function gFcatToggle(type){
   var pp=document.getElementById('g-pp-'+type);
   var fc=document.getElementById('gfc-'+type);
@@ -4095,7 +4098,7 @@ function gResetGrp(type){
   if(rab)rab.style.display=Object.values(_gSEL).some(function(x){return x.size>0;})?'inline-flex':'none';
   _gRenderTable();
 }
-function gResetAll(){['camp','prov','arb','campo'].forEach(function(t){gResetGrp(t);});}
+function gResetAll(){['camp','prov','arb','campo','sq'].forEach(function(t){gResetGrp(t);});}
 function _gBuildPillBars(){
   var allRows=GARE||[];
   var camps=[...new Set(allRows.map(function(g){return g['Campionato']||'';}))].filter(Boolean).sort(function(a,b){return(typeof livelloC==='function'?livelloC(b)-livelloC(a):0)||a.localeCompare(b,'it');});
@@ -4119,10 +4122,12 @@ function _gBuildPillBars(){
     rst.style.cssText='background:none;border:0.5px solid var(--br,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 7px;font-size:.63rem;cursor:pointer;margin:1px';
     rst.onclick=function(){gResetGrp(type);};w.appendChild(rst);
   }
+  var squads=[...new Set(allRows.flatMap(function(g){return[g['Squadra Casa']||'',g['Squadra Ospite']||''];}))].filter(Boolean).sort();
   mkPills('g-pills-camp','camp',camps,function(v){return campColor(v)||'#888';});
   mkPills('g-pills-prov','prov',provs,function(p){return PC[p]||'#888';});
   mkPills('g-pills-arb','arb',arbs,function(){return'#2c3e6b';});
   mkPills('g-pills-campo','campo',campi,function(v){var pv=cpv(v)||'';return PC[pv]||'#3d4d6b';});
+  mkPills('g-pills-sq','sq',squads,function(v){var sq=SQ[v];var pv=sq&&(sq.prov||sq.provincia)||'';return PC[pv]||'#3d4d6b';});
 }
 function _gRenderChips(){
   var el=document.getElementById('g-chips');if(!el)return;
@@ -4387,9 +4392,9 @@ function filterMg(){
     const [pc,po]=(g['Risultato']||'').split('-');
     const casaW=pc&&po&&parseInt(pc)>parseInt(po);
     const ospW=pc&&po&&parseInt(po)>parseInt(pc);
-    return`<tr style="border-left:3px solid ${clr}">
+    return`<tr style="border-left:3px solid ${clr};cursor:pointer" onclick="openGara('${(g['Numero Gara']||'')}')">
       <td style="white-space:nowrap">${g['Data']}</td>
-      <td style="font-size:.68rem;font-family:monospace">${g['Numero Gara']||''}</td>
+      <td style="font-family:monospace"><span class="ng-pill" style="cursor:pointer;font-size:.68rem" onclick="event.stopPropagation();openGara('${(g['Numero Gara']||'')}')">${escH(g['Numero Gara']||'')}</span></td>
       <td><span style="background:${clr};color:#fff;border-radius:3px;padding:1px 5px;font-size:.62rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(g['Campionato'])}')">${escH(g['Campionato'])}</span></td>
       <td><span class="rn rn-sq" style="${casaW?'font-weight:800;color:var(--green)':''}" onclick="openSquadra('${esc(g['Squadra Casa'])}')">${escH(g['Squadra Casa'])}</span></td>
       <td><span class="rn rn-sq" style="${ospW?'font-weight:800;color:var(--green)':''}" onclick="openSquadra('${esc(g['Squadra Ospite'])}')">${escH(g['Squadra Ospite'])}</span></td>
@@ -6998,6 +7003,7 @@ function openGara(numGara){
         // Punteggio: se sq in casa -> pc-po; se sq ospite -> po-pc
         const ptSq=isCasa?pc:po, ptOpp=isCasa?po:pc;
         const curr=x['Numero Gara']===numGara;
+        const isVsOther=(sq===casa&&(x['Squadra Casa']===osp||x['Squadra Ospite']===osp))||(sq===osp&&(x['Squadra Casa']===casa||x['Squadra Ospite']===casa));
         const homeBadge=isCasa?`<span style="background:#e6f1fb;color:#0c447c;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700;flex-shrink:0">🏠</span>`:`<span style="background:#fff3cd;color:#854f0b;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700;flex-shrink:0">✈</span>`;
         // Casa sempre a sinistra, ospite a destra
         const leftSq = isCasa ? sq : opp;
@@ -7007,7 +7013,7 @@ function openGara(numGara){
         const leftStyle=leftWin?'font-weight:600;color:#27500a':x['Risultato']?'color:#791f1f':'';
         const rightStyle=rightWin?'font-weight:600;color:#27500a;text-align:right':x['Risultato']?'color:#791f1f;text-align:right':'text-align:right';
         const resBg=sqWin?'background:#eaf3de;color:#27500a':x['Risultato']?'background:#fcebeb;color:#791f1f':'color:var(--mu2)';
-        h+=`<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:4px 10px;border-bottom:0.5px solid var(--br);gap:6px;${curr?'background:#fffbe6;border-left:3px solid #BA7517;':''}">`;
+        h+=`<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:4px 10px;border-bottom:0.5px solid var(--br);gap:6px;${curr?'background:#fffbe6;border-left:3px solid #BA7517;':isVsOther?'background:#fff8e6;border-left:3px solid #e6a817;':''}">`;
         h+=`<div style="display:flex;align-items:center;gap:4px">${ngPill(x['Numero Gara'],curr)}<span style="font-size:9px;color:var(--mu2)">${(x['Data']||'').slice(5).replace('-','/')}</span>${homeBadge}<span style="${leftStyle};font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(leftSq===sq?sq:opp)}</span></div>`;
         h+=`<div style="text-align:center;flex-shrink:0"><span style="${resBg};border-radius:3px;padding:1px 5px;font-weight:600;font-size:10.5px">${x['Risultato']||'–'}</span></div>`;
         h+=`<div style="${rightStyle};font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(rightSq===sq?sq:opp)}</div>`;
@@ -7069,8 +7075,10 @@ function openGara(numGara){
     // Gare mancanti
     const gironeIncomplete=allGirone.filter(x=>!x['Risultato']).sort((a,b)=>a['Data'].localeCompare(b['Data']));
     if(gironeIncomplete.length){
-      h+=`<div style="${sepStyle}">Gare ancora da disputare (${gironeIncomplete.length})</div>`;
-      h+='<div style="max-height:160px;overflow-y:auto">';
+      const _uid='cls-inc-'+Math.random().toString(36).slice(2,7);
+      h+=`<div style="padding:5px 10px;font-size:10px;font-weight:600;color:var(--mu);background:var(--bl4,#f0f5ff);border-top:1.5px solid var(--br);cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="const d=document.getElementById('${_uid}');d.style.display=d.style.display==='none'?'block':'none';this.querySelector('span.arr').textContent=d.style.display==='none'?'▶':'▼'">`;
+      h+=`<span>Gare ancora da disputare (${gironeIncomplete.length})</span><span class="arr" style="font-size:9px;opacity:.7">▶</span></div>`;
+      h+=`<div id="${_uid}" style="display:none"><div style="max-height:180px;overflow-y:auto">`;
       gironeIncomplete.forEach(x=>{
         const curr=x['Numero Gara']===numGara;
         h+=`<div style="${rowStyle};${curr?'background:#fffbe6;border-left:3px solid #BA7517;':'font-style:italic;color:var(--mu)'}">`;
@@ -7079,7 +7087,7 @@ function openGara(numGara){
         h+=sqName(x['Squadra Casa'],false)+`<span style="font-size:9px;color:var(--mu2)">vs</span>`+sqName(x['Squadra Ospite'],false);
         h+='</div>';
       });
-      h+='</div>';
+      h+='</div></div>';
     }
     // Fasi precedenti dello stesso campionato
     const fasiPrec=[...new Set((D.gare||[]).filter(x=>x['Campionato']===camp&&x['Risultato']).map(x=>x['Fase']||x['Girone']||''))].filter(f=>f&&f!==(g['Fase']||g['Girone']||girone));
@@ -7127,7 +7135,7 @@ function openGara(numGara){
     if(!allGareH2H.length){
       return'<div style="padding:20px;text-align:center;color:var(--mu);font-style:italic">Primo confronto assoluto tra queste squadre</div>';
     }
-    // Stats aggregate
+    // Stats aggregate — prospettiva sempre da "casa" (prima squadra)
     let h2hPfCasa=0,h2hPfOsp=0,h2hCasaHome=0,h2hN=allGareH2H.filter(x=>x['Risultato']).length;
     allGareH2H.filter(x=>x['Risultato']).forEach(x=>{
       const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;
@@ -7139,11 +7147,11 @@ function openGara(numGara){
     const avgO=h2hN?Math.round(h2hPfOsp/h2hN*10)/10:0;
     const diffMedia=Math.round((h2hPfCasa-h2hPfOsp)*10/(h2hN||1))/10;
     const diffTot=h2hPfCasa-h2hPfOsp;
-    // Bilancio
+    const diffTotLbl=diffTot>0?`<span style="color:#27500a;font-weight:500">+${diffTot} a favore di ${escH(casa.split(' ').slice(-1)[0])}</span>`:diffTot<0?`<span style="color:#791f1f;font-weight:500">${diffTot} a sfavore di ${escH(casa.split(' ').slice(-1)[0])}</span>`:`<span style="color:var(--mu)">pari</span>`;
     let h=`<div style="display:flex;align-items:center;padding:12px 16px;border-bottom:0.5px solid var(--br)">`;
-    h+=`<div style="flex:1;text-align:center"><div style="font-weight:500;font-size:12px;color:#185fa5">${escH(casa)}</div><div style="font-size:30px;font-weight:500;color:#27500a;font-family:monospace;line-height:1.1">${h2hVcasa}</div><div style="font-size:10px;color:var(--mu)">vittorie</div></div>`;
+    h+=`<div style="flex:1;text-align:center"><div style="font-weight:500;font-size:12px;color:#185fa5">${escH(casa)}</div><div style="font-size:30px;font-weight:500;color:${h2hVcasa>h2hVosp?'#27500a':'#791f1f'};font-family:monospace;line-height:1.1">${h2hVcasa}</div><div style="font-size:10px;color:var(--mu)">vittorie</div></div>`;
     h+=`<div style="text-align:center;padding:0 16px;color:var(--mu)"><div style="font-size:13px">vs</div><div style="font-size:10px;margin-top:2px">${allGareH2H.length} precedenti</div></div>`;
-    h+=`<div style="flex:1;text-align:center"><div style="font-weight:500;font-size:12px;color:#1d9e75">${escH(osp)}</div><div style="font-size:30px;font-weight:500;color:#791f1f;font-family:monospace;line-height:1.1">${h2hVosp}</div><div style="font-size:10px;color:var(--mu)">vittorie</div></div>`;
+    h+=`<div style="flex:1;text-align:center"><div style="font-weight:500;font-size:12px;color:#1d9e75">${escH(osp)}</div><div style="font-size:30px;font-weight:500;color:${h2hVosp>h2hVcasa?'#27500a':'#791f1f'};font-family:monospace;line-height:1.1">${h2hVosp}</div><div style="font-size:10px;color:var(--mu)">vittorie</div></div>`;
     h+='</div>';
     // Stats aggregate
     h+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;border-bottom:0.5px solid var(--br)">`;
@@ -7151,11 +7159,11 @@ function openGara(numGara){
       [avgC,'media pt '+escH(casa.split(' ').pop()),'#185fa5'],
       [(diffMedia>=0?'+':'')+diffMedia,'diff. media',diffMedia>0?'#27500a':diffMedia<0?'#791f1f':'inherit'],
       [avgO,'media pt '+escH(osp.split(' ').pop()),'#1d9e75'],
-      [(diffTot>=0?'+':'')+diffTot,'diff. totale pt',diffTot>0?'#27500a':diffTot<0?'#791f1f':'inherit'],
+      [diffTotLbl,'diff. totale','inherit'],
       [h2hCasaHome+'/'+(h2hN-h2hCasaHome),'🏠/✈ per '+escH(casa.split(' ').pop()),'inherit']
-    ].map(([v,l,co])=>`<div style="padding:6px 4px;text-align:center;border-right:0.5px solid var(--br)"><div style="font-size:13px;font-weight:500;color:${co}">${v}</div><div style="font-size:9px;color:var(--mu)">${l}</div></div>`).join('');
+    ].map(([v,l,co])=>`<div style="padding:6px 4px;text-align:center;border-right:0.5px solid var(--br)"><div style="font-size:12px;font-weight:500;color:${co}">${v}</div><div style="font-size:9px;color:var(--mu)">${l}</div></div>`).join('');
     h+='</div>';
-    // Lista gare
+    // Lista gare — casa SEMPRE a sinistra (squadra che gioca in casa), ospite SEMPRE a destra
     h+=`<div style="max-height:300px;overflow-y:auto">`;
     let lastKey='';
     allGareH2H.forEach(x=>{
@@ -7165,35 +7173,43 @@ function openGara(numGara){
         h+=`<div style="${sepStyle}">${escH(x['Campionato']||camp)} ${yr}${(x['Girone']||x['Fase'])?'· '+escH(x['Girone']||x['Fase']||''):''}</div>`;
         lastKey=faseKey;
       }
-      const isCasaX=x['Squadra Casa']===casa;
+      // Casa reale sempre a sinistra, ospite reale sempre a destra
+      const sqCasa=x['Squadra Casa'], sqOsp=x['Squadra Ospite'];
       const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;
-      const ptA=isCasaX?pc:po, ptB=isCasaX?po:pc;
-      const winCasa=ptA>ptB;
-      const diff=ptA-ptB;
-      const homeBadge=isCasaX?`<span style="background:#e6f1fb;color:#0c447c;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700;flex-shrink:0">🏠</span>`:`<span style="background:#fff3cd;color:#854f0b;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700;flex-shrink:0">✈</span>`;
+      const casaWin=x['Risultato']&&pc>po, ospWin=x['Risultato']&&po>pc;
+      const diff=pc-po;
+      // Badge casa/trasferta dal punto di vista della "nostra" prima squadra (casa)
+      const isCasaNostra=x['Squadra Casa']===casa;
+      const homeBadge=isCasaNostra?`<span style="background:#e6f1fb;color:#0c447c;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700">🏠</span>`:`<span style="background:#fff3cd;color:#854f0b;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700">✈</span>`;
       h+=`<div style="padding:7px 12px;border-bottom:0.5px solid var(--br)">`;
       h+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">`;
       h+=ngPill(x['Numero Gara'],false);
       h+=`<span style="font-size:9.5px;color:var(--mu2)">${(x['Data']||'').slice(5).replace('-','/')}</span>`;
       h+=homeBadge;
       h+='</div>';
+      // Layout: sqCasa (sinistra) | punteggio | sqOsp (destra)
       h+=`<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px">`;
-      // Sinistra = sempre "casa" (la nostra squadra di riferimento)
-      h+=`<div style="${winCasa?'color:#27500a;font-weight:600':'color:#791f1f'};font-size:11.5px">${escH(casa)}${winCasa?' ✓':''}</div>`;
-      h+=`<div style="text-align:center"><div style="font-size:18px;font-weight:600;font-family:monospace;line-height:1"><span style="color:${winCasa?'#27500a':'#791f1f'}">${ptA}</span><span style="color:var(--mu2);font-size:13px;margin:0 4px">–</span><span style="color:${!winCasa?'#27500a':'#791f1f'}">${ptB}</span></div><div style="font-size:9.5px;color:var(--mu2);margin-top:2px">diff: <span style="color:${diff>0?'#27500a':'#791f1f'};font-weight:600">${diff>0?'+'+diff:diff} ${escH((diff>0?casa:osp).split(' ').pop())}</span></div></div>`;
-      h+=`<div style="${!winCasa?'color:#27500a;font-weight:600':'color:#791f1f'};font-size:11.5px;text-align:right">${!winCasa?' ✓':''}${escH(osp)}</div>`;
+      h+=`<div style="${casaWin?'font-weight:600;color:#27500a':x['Risultato']?'color:#791f1f':''};font-size:11.5px">${escH(sqCasa)}${casaWin?' ✓':''}</div>`;
+      if(x['Risultato']){
+        h+=`<div style="text-align:center"><div style="font-size:18px;font-weight:600;font-family:monospace;line-height:1"><span style="color:${casaWin?'#27500a':'#791f1f'}">${pc}</span><span style="color:var(--mu2);font-size:13px;margin:0 4px">–</span><span style="color:${ospWin?'#27500a':'#791f1f'}">${po}</span></div><div style="font-size:9.5px;color:var(--mu2);margin-top:2px">diff: <span style="color:${diff>0?'#27500a':'#791f1f'};font-weight:600">${diff>0?'+'+diff:diff} ${escH(diff>0?sqCasa:sqOsp)}</span></div></div>`;
+      } else {
+        h+=`<div style="text-align:center"><div style="font-size:18px;font-family:monospace;color:var(--mu2)">– –</div></div>`;
+      }
+      h+=`<div style="${ospWin?'font-weight:600;color:#27500a':x['Risultato']?'color:#791f1f':''};font-size:11.5px;text-align:right">${ospWin?' ✓':''}${escH(sqOsp)}</div>`;
       h+='</div></div>';
     });
     // Gara odierna in fondo
     h+=`<div style="${sepStyle};background:#fffbe6;color:#854f0b;border-left:3px solid #BA7517">▶ Oggi — ${g['Data']?g['Data'].slice(5).replace('-','/'):''}</div>`;
     const isCasaOggi=g['Squadra Casa']===casa;
-    const homeBadgeOggi=isCasaOggi?`<span style="background:#e6f1fb;color:#0c447c;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700;flex-shrink:0">🏠</span>`:`<span style="background:#fff3cd;color:#854f0b;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700;flex-shrink:0">✈</span>`;
+    const homeBadgeOggi=isCasaOggi?`<span style="background:#e6f1fb;color:#0c447c;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700">🏠</span>`:`<span style="background:#fff3cd;color:#854f0b;border-radius:3px;padding:0 4px;font-size:8.5px;font-weight:700">✈</span>`;
     h+=`<div style="padding:7px 12px;background:#fffbe6">`;
     h+=`<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">${ngPill(numGara,true)}<span style="font-size:9.5px;color:#854f0b">${g['Data']||''} ${g['Ora']||''}</span>${homeBadgeOggi}</div>`;
     h+=`<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px">`;
-    h+=`<div style="font-weight:500;font-size:11.5px;color:#854f0b">${escH(casa)}</div>`;
+    // Casa SEMPRE a sinistra anche per gara odierna
+    const casaOggi=g['Squadra Casa'], ospOggi=g['Squadra Ospite'];
+    h+=`<div style="font-weight:500;font-size:11.5px;color:#854f0b">${escH(casaOggi)}</div>`;
     h+=`<div style="text-align:center"><div style="font-size:18px;font-weight:600;font-family:monospace;color:var(--mu2)">– –</div><div style="font-size:9.5px;color:#854f0b;margin-top:2px">in programma</div></div>`;
-    h+=`<div style="text-align:right;font-weight:500;font-size:11.5px;color:#854f0b">${escH(osp)}</div>`;
+    h+=`<div style="text-align:right;font-weight:500;font-size:11.5px;color:#854f0b">${escH(ospOggi)}</div>`;
     h+='</div></div>';
     h+='</div>';
     return h;
@@ -7346,36 +7362,60 @@ function openGara(numGara){
       h+='</div></div>';
       return h;
     } else {
-      // Fase a gironi: layout a CARD per giornata (stile screen 6)
+      // Fase a gironi: layout a CARD per giornata (raggruppate per numero giornata, non data)
       const tutteGirone=[...allGirone,...(tuttiFuture||[]).filter(x=>
         x['Campionato']===camp&&(x['Girone']===girone||(x['Fase']||'')===(g['Fase']||''))&&
         !allGirone.find(y=>y['Numero Gara']===x['Numero Gara'])
       )].sort((a,b)=>a['Data'].localeCompare(b['Data'])||((a['Ora']||'').localeCompare(b['Ora']||'')));
-      // Raggruppa per data (giornata)
-      const dateMap={};
-      tutteGirone.forEach(x=>{const d=x['Data']||'';if(!dateMap[d])dateMap[d]=[];dateMap[d].push(x);});
-      const sortedDates=Object.keys(dateMap).sort();
-      let ggNum=0;
-      let h=`<div style="font-size:10px;padding:5px 10px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:0.5px solid var(--br);margin-bottom:6px;color:var(--mu)">`;
-      h+=`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#e6f1fb;border-left:3px solid #185fa5;display:inline-block"></span>gare con ${escH(casa)}</span>`;
-      h+=`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#eaf3de;border-left:3px solid #27500a;display:inline-block"></span>gare con ${escH(osp)}</span>`;
-      h+=`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#fffbe6;border-left:3px solid #BA7517;display:inline-block"></span>questa gara / entrambe</span>`;
+      // Numero squadre nel girone per calcolare gare per giornata
+      const nSqGirone=[...new Set(tutteGirone.flatMap(x=>[x['Squadra Casa'],x['Squadra Ospite']]))].length;
+      const garePerGiornata=Math.max(1,Math.floor(nSqGirone/2));
+      // Raggruppa per giornata numerica
+      const roundMap={};
+      let roundNum=0, roundCount=0;
+      // Assign round numbers: every garePerGiornata games = 1 giornata
+      // But games in same round share the same date cluster
+      // Better: group by date clusters (games within 2 days of each other = same round)
+      // Sort by date, then group by date proximity
+      const sortedAll=[...tutteGirone].sort((a,b)=>a['Data'].localeCompare(b['Data'])||((a['Ora']||'').localeCompare(b['Ora']||'')));
+      if(sortedAll.length){
+        let curDate=sortedAll[0]['Data'];
+        let curRound=1;
+        sortedAll.forEach(x=>{
+          const d=x['Data']||'';
+          // If date differs by more than 3 days from current round start, new round
+          const diff=Math.abs(new Date(d)-new Date(curDate))/(1000*60*60*24);
+          if(diff>3){curRound++;curDate=d;}
+          if(!roundMap[curRound])roundMap[curRound]=[];
+          roundMap[curRound].push(x);
+        });
+      }
+      const sortedRounds=Object.keys(roundMap).map(Number).sort((a,b)=>a-b);
+      // Detect andata/ritorno split (if total rounds > nSqGirone-1, it's double round-robin)
+      const totalRounds=sortedRounds.length;
+      const andataRounds=Math.ceil(totalRounds/2);
+      let h=`<div style="font-size:10px;padding:5px 10px;display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px;color:var(--mu)">`;
+      h+=`<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#e6f1fb;border-left:3px solid #185fa5;display:inline-block"></span>${escH(casa)}</span>`;
+      h+=`<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#eaf3de;border-left:3px solid #27500a;display:inline-block"></span>${escH(osp)}</span>`;
+      h+=`<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:#fffbe6;border-left:3px solid #BA7517;display:inline-block"></span>questa gara / entrambe</span>`;
       h+='</div>';
-      h+=`<div style="max-height:440px;overflow-y:auto">`;
-      sortedDates.forEach(d=>{
-        ggNum++;
-        const gare=dateMap[d];
-        const isCurrGiornata=gare.some(x=>x['Numero Gara']===numGara);
-        const hasGiocate=gare.some(x=>x['Risultato']);
-        const hasProgr=gare.some(x=>!x['Risultato']);
+      h+=`<div style="max-height:460px;overflow-y:auto">`;
+      sortedRounds.forEach(rn=>{
+        const gare=roundMap[rn];
+        const isCurrRound=gare.some(x=>x['Numero Gara']===numGara);
         const nGiocate=gare.filter(x=>x['Risultato']).length;
         const stato=nGiocate===gare.length?'✓ Completata':nGiocate===0?'In programma':'Parziale';
-        const hdBg=isCurrGiornata?'#854f0b':'#1e3a6e';
-        // Formatta data
-        const dateFmt=d?d.slice(5).replace('-','/'):'?';
+        const isAndata=totalRounds<=nSqGirone-1||rn<=andataRounds;
+        const fase2=totalRounds>nSqGirone-1?(isAndata?'Andata':'Ritorno'):'';
+        const locNum=isAndata?rn:rn-andataRounds;
+        const hdBg=isCurrRound?'#854f0b':'#1e3a6e';
+        // Date range of this round
+        const dates=[...new Set(gare.map(x=>x['Data']||''))].sort();
+        const dateFmt=dates.length===1?dates[0].slice(5).replace('-','/'):dates[0].slice(5).replace('-','/')+' – '+dates[dates.length-1].slice(5).replace('-','/');
         h+=`<div style="border:0.5px solid var(--br);border-radius:8px;overflow:hidden;margin-bottom:8px">`;
         h+=`<div style="padding:6px 12px;background:${hdBg};color:#fff;display:flex;align-items:center;justify-content:space-between">`;
-        h+=`<span style="font-size:12px;font-weight:500">Giornata ${ggNum}${isCurrGiornata?' ◀ questa gara':''}</span>`;
+        const roundLabel=fase2?`${rn} · ${fase2} – Giornata ${locNum}`:`Giornata ${rn}`;
+        h+=`<div><span style="font-size:12px;font-weight:500">${roundLabel}${isCurrRound?' ◀ questa gara':''}</span><div style="font-size:9px;opacity:.7;margin-top:1px">${gare.length} partite</div></div>`;
         h+=`<div style="display:flex;align-items:center;gap:8px"><span style="font-size:10px;opacity:.75">${dateFmt}</span><span style="font-size:10px;background:rgba(255,255,255,.2);border-radius:3px;padding:1px 7px">${stato}</span></div>`;
         h+='</div>';
         gare.forEach(x=>{
@@ -7392,10 +7432,8 @@ function openGara(numGara){
           const casaWin=x['Risultato']&&pc>po, ospWin=x['Risultato']&&po>pc;
           const ngStyle=curr?'background:#BA7517;color:#b5d4f4':'background:#1a3060;color:#b5d4f4';
           h+=`<div style="display:grid;grid-template-columns:1fr 100px 1fr;align-items:center;padding:6px 12px;border-bottom:0.5px solid var(--br);gap:8px;${rowBg};${rowBl};${fut?'font-style:italic;':''}">`;
-          // Sinistra: squadra casa
           h+=`<div><div style="font-size:11.5px;${casaWin?'font-weight:700;color:#27500a':x['Risultato']?'color:#791f1f':''}">${escH(x['Squadra Casa'])}</div>`;
           h+=`<div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="font-family:monospace;font-size:9px;${ngStyle};border-radius:3px;padding:1px 4px">${escH(x['Numero Gara']||'')}</span><span style="font-size:9.5px;color:var(--mu2)">${x['Ora']||''}</span></div></div>`;
-          // Centro: punteggio
           h+=`<div style="text-align:center">`;
           if(x['Risultato']){
             h+=`<div style="font-size:16px;font-weight:700;font-family:monospace;white-space:nowrap"><span style="color:${casaWin?'#27500a':'#791f1f'}">${pc}</span><span style="color:var(--mu2);font-size:12px;margin:0 3px">–</span><span style="color:${ospWin?'#27500a':'#791f1f'}">${po}</span></div>`;
@@ -7403,7 +7441,6 @@ function openGara(numGara){
             h+=`<div style="font-size:14px;font-family:monospace;color:var(--mu2)">– –</div>`;
           }
           h+='</div>';
-          // Destra: squadra ospite
           h+=`<div style="text-align:right"><div style="font-size:11.5px;${ospWin?'font-weight:700;color:#27500a':x['Risultato']?'color:#791f1f':''}">${escH(x['Squadra Ospite'])}</div></div>`;
           h+='</div>';
         });
