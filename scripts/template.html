@@ -5049,16 +5049,7 @@ function openPersona(nome,campFilter){
       })()}`;
   } catch(e){ document.getElementById('mpt-0').innerHTML='<p style="color:red;padding:10px">Errore stats: '+e.message+'</p>'; }
 
-  // Append Cammino into Statistiche (mpt-0) after main content
-  try {
-    const _cam=mkCamminoArbitro(p);
-    const _mpt0=document.getElementById('mpt-0');
-    if(_mpt0&&_cam){
-      const _camDiv=document.createElement('div');
-      _camDiv.innerHTML=_cam;
-      _mpt0.appendChild(_camDiv);
-    }
-  } catch(e){ console.warn('Cammino error:',e); }
+
 
   // Populate panel Cammino safely (keep for backward compat)
   try {
@@ -5135,27 +5126,27 @@ function openPersona(nome,campFilter){
         const catWp=cs.n?Math.round(cs.v/cs.n*100):0;
         const short=cn.replace('Divisione regionale','Div.Reg.').replace('Under ','U').replace(' Maschile',' Mas').replace(' Femminile',' Fem').replace(' Regionale',' Reg.').replace(' Eccellenza',' Ecc.').replace(' Gold',' G.');
         const filterFn=`openSharedSqCamp('${esc(nome)}','${esc(sq)}','${esc(cn)}')`;
-        return`<div style="display:flex;align-items:center;padding:4px 10px;border-top:0.5px solid var(--br);gap:6px;font-size:11px" onclick="${filterFn}" style="cursor:pointer">
-          <span style="background:${clr};color:#fff;border-radius:3px;padding:2px 7px;font-size:9px;font-weight:600;flex-shrink:0;cursor:pointer">${escH(short)}${fem?' ♀':''}</span>
-          <span style="color:var(--bl);font-weight:600;cursor:pointer;text-decoration:underline" onclick="event.stopPropagation();openSharedSqCamp('${esc(nome)}','${esc(sq)}','${esc(cn)}')">${cs.n}</span>
-          <span style="font-size:10px;color:var(--mu)">gare ·</span>
-          <span style="color:#00704a;font-weight:600;font-size:10.5px">${cs.v}V</span>
-          <span style="color:#c0392b;font-size:10.5px">${cs.p}P</span>
-          <span style="font-weight:600;font-size:10.5px;color:${catWp>=50?'#00704a':'#c0392b'}">${catWp}%</span>
-          <div style="flex:1;height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-left:4px">
+        return`<div style="display:flex;align-items:center;padding:3px 10px;border-top:0.5px solid var(--br);gap:5px;font-size:11px;cursor:pointer" onclick="${filterFn}">
+          <span style="background:${clr};color:#fff;border-radius:3px;padding:1px 6px;font-size:9px;font-weight:600;flex-shrink:0">${escH(short)}${fem?' ♀':''}</span>
+          <span style="color:var(--bl);font-weight:600;text-decoration:underline;flex-shrink:0" onclick="event.stopPropagation();openSharedSqCamp('${esc(nome)}','${esc(sq)}','${esc(cn)}')">${cs.n}</span>
+          <span style="color:var(--mu);font-size:10px;flex-shrink:0">g ·</span>
+          <span style="color:#00704a;font-weight:600;flex-shrink:0">${cs.v}V</span>
+          <span style="color:#c0392b;flex-shrink:0">${cs.p}P</span>
+          <span style="font-weight:600;color:${catWp>=50?'#00704a':'#c0392b'};flex-shrink:0">${catWp}%</span>
+          <div style="flex:1;height:5px;background:#eee;border-radius:3px;overflow:hidden">
             <div style="background:${clr};width:${catWp}%;height:100%;border-radius:3px"></div>
           </div>
         </div>`;
       }).join('');
       const rowBg=totV>totP?'#f0fff4':totP>totV?'#fff5f5':'';
-      return`<div style="border:0.5px solid var(--br);border-radius:8px;overflow:hidden;margin-bottom:5px;background:${rowBg}">
-        <div style="display:grid;grid-template-columns:1fr auto;align-items:center;padding:6px 10px;background:var(--bl4,#f0f5ff);cursor:pointer" onclick="openSquadra('${esc(sq)}')">
-          <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:10.5px;color:var(--mu)">${i+1}</span>
-            <span style="font-weight:700;font-size:12px;color:var(--bl);cursor:pointer">${escH(sq)}</span>
+      return`<div style="border:0.5px solid var(--br);border-radius:6px;overflow:hidden;margin-bottom:3px;background:${rowBg}">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 10px;background:var(--bl4,#f0f5ff);cursor:pointer;gap:8px" onclick="openSquadra('${esc(sq)}')">
+          <div style="display:flex;align-items:center;gap:5px;min-width:0">
+            <span style="font-size:10px;color:var(--mu);flex-shrink:0">${i+1}</span>
+            <span style="font-weight:700;font-size:11.5px;color:var(--bl);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(sq)}</span>
             ${pv?pvB(pv):''}
           </div>
-          <span style="display:flex;align-items:center;gap:8px;font-size:11px">
+          <span style="display:flex;align-items:center;gap:6px;font-size:11px;flex-shrink:0">
             <b>${cnt}</b>
             <span style="color:#00704a;font-weight:600">${totV}V</span>
             <span style="color:#c0392b">${totP}P</span>
@@ -5186,14 +5177,7 @@ function openPersona(nome,campFilter){
     document.getElementById('mp-body').appendChild(trendPanel);
   }catch(e){}
 
-  // Append Trend into Statistiche (mpt-0)
-  try {
-    const _mpt0b=document.getElementById('mpt-0');
-    const _trendDiv=document.createElement('div');
-    _trendDiv.style.marginTop='10px';
-    _trendDiv.innerHTML=mkTrendPersona(p,nome);
-    if(_mpt0b)_mpt0b.appendChild(_trendDiv);
-  } catch(e){ console.warn('Trend error:',e); }
+
 
   fgpP(nome);openMo('mo-persona');
 
@@ -5320,23 +5304,30 @@ function mkTrendPersona(p, nome){
   return html;
 }
 
-function mkGarePersonaTbl(gare,nome,tid){
+function mkGarePersonaTbl(gare,nome,tid,sqRef){
   const rows=gare.sort((a,b)=>a['Data'].localeCompare(b['Data'])).map((g,_ri)=>{
     const coll=[];
     ['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].forEach(f=>{
       const v=g[f]||'';const n=pns(v);
       if(n&&n!==nome)coll.push(`<span class="rn rn-${P[n]?.categoria||'Arbitro'}" data-n="${n}" onclick="openPersona(this.dataset.n)" style="font-size:.68rem">${escH(n)}</span>`);
     });
+    const _pc=parseInt(g['Punti Casa'])||0,_po=parseInt(g['Punti Ospite'])||0;
+    const _isCasa=g['Squadra Casa']===sqRef;
+    const _isOsp=g['Squadra Ospite']===sqRef;
+    const _sqWin=sqRef&&g['Risultato']?(_isCasa?_pc>_po:_po>_pc):null;
+    const _casaClr=sqRef&&g['Risultato']?(g['Squadra Casa']===sqRef?(_sqWin?'color:#00704a;font-weight:700':'color:#c0392b;font-weight:700'):''):' ';
+    const _ospClr=sqRef&&g['Risultato']?(g['Squadra Ospite']===sqRef?(_sqWin?'color:#00704a;font-weight:700':'color:#c0392b;font-weight:700'):''):' ';
+    const _ris=g['Risultato']?`<span style="font-weight:700;font-family:monospace;color:${_sqWin===true?'#00704a':_sqWin===false?'#c0392b':'inherit'}">${g['Risultato']}</span>`:'–';
     return`<tr><td style="color:var(--mu);font-size:.68rem;text-align:center">${_ri+1}</td><td>${g['Data']}</td><td>${g['Ora']||''}</td><td style="font-size:.68rem">${g['Numero Gara']||''}</td>
       <td style="font-size:.72rem">${escH(g['Campionato'])}</td><td style="font-size:.7rem">${escH(g['Girone']||'')}</td><td style="font-size:.7rem">${escH(g['Fase']||'')}</td>
-      <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa'])}')">${escH(g['Squadra Casa'])}</span></td>
-      <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite'])}')">${escH(g['Squadra Ospite'])}</span></td>
-      <td style="font-weight:700">${g['Risultato']||''}</td>
+      <td><span class="rn rn-sq" style="${_casaClr}" onclick="openSquadra('${esc(g['Squadra Casa'])}')">${escH(g['Squadra Casa'])}</span></td>
+      <td style="text-align:center;font-weight:700">${_ris}</td>
+      <td><span class="rn rn-sq" style="${_ospClr}" onclick="openSquadra('${esc(g['Squadra Ospite'])}')">${escH(g['Squadra Ospite'])}</span></td>
       <td style="font-size:.68rem">${escH(g['_ruolo']||'')}</td>
       <td>${pvB(cpv(g['Campo']))}</td>
       <td style="max-width:170px;white-space:normal">${coll.join(', ')}</td></tr>`;
   }).join('');
-  return`<table class="mtbl" id="${tid}"><thead><tr><th style="text-align:center;color:var(--mu)">#</th><th onclick="sT('${tid}',0,event)">Data</th><th>Ora</th><th>N°</th><th onclick="sT('${tid}',3,event)">Campionato</th><th>Girone</th><th>Fase</th><th onclick="sT('${tid}',6,event)">Casa</th><th onclick="sT('${tid}',7,event)">Ospite</th><th>Ris.</th><th>Ruolo</th><th>Prov.</th><th>Colleghi</th></tr></thead><tbody>${rows}</tbody></table>`;
+  return`<table class="mtbl" id="${tid}"><thead><tr><th style="text-align:center;color:var(--mu)">#</th><th onclick="sT('${tid}',0,event)">Data</th><th>Ora</th><th>N°</th><th onclick="sT('${tid}',3,event)">Campionato</th><th>Girone</th><th>Fase</th><th onclick="sT('${tid}',6,event)">Casa</th><th style="text-align:center">Ris.</th><th onclick="sT('${tid}',7,event)">Ospite</th><th>Ruolo</th><th>Prov.</th><th>Colleghi</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 // ── STATISTICHE PER GENERE (Punto 2) ─────────────────────────────────
 function openGenderStats(genere){
@@ -5416,7 +5407,7 @@ function openSharedSquadGames(nomeArb, nomeSq){
   if(!mo||!title||!body)return;
   title.innerHTML=`👨‍⚖️ <span style="color:#003087">${escH(nomeArb)}</span> con <span class="rn rn-sq">${escH(nomeSq)}</span>`;
   body.innerHTML=`<div style="padding:6px 0 10px;color:var(--mu);font-size:.8rem">${shared.length} gare con questa squadra</div>`+
-    (shared.length?`<div style="overflow-x:auto">${mkGarePersonaTbl(shared,nomeArb,'tbl-sqarb')}</div>`
+    (shared.length?`<div style="overflow-x:auto">${mkGarePersonaTbl(shared,nomeArb,'tbl-sqarb',nomeSq)}</div>`
     :'<div style="padding:20px;text-align:center;color:var(--mu)">Nessuna gara trovata</div>');
   openMo('mo-persona');
 }
@@ -5446,7 +5437,7 @@ function openSharedSqCamp(nomeArb, nomeSq, nomeCamp){
     <span style="color:#c0392b">${p}P</span>
     <span style="font-weight:600;color:${wp>=50?'#00704a':'#c0392b'}">${wp}%</span>
   </div>`+
-    (shared.length?`<div style="overflow-x:auto">${mkGarePersonaTbl(shared,nomeArb,'tbl-sqcamparb')}</div>`
+    (shared.length?`<div style="overflow-x:auto">${mkGarePersonaTbl(shared,nomeArb,'tbl-sqcamparb',nomeSq)}</div>`
     :'<div style="padding:20px;text-align:center;color:var(--mu)">Nessuna gara trovata</div>');
   openMo('mo-persona');
 }
