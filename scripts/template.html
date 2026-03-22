@@ -2007,7 +2007,21 @@ function renderPersonsTable(cid,persons,opts={}){
     const nCampi=Object.keys(p.campi||{}).length;
     const isDual=(p.categorie||[]).length>1;
     const pvColor=PC[p.provincia]||'var(--bl)';
-    const nFut=(D.gare_future||[]).filter(g=>['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].some(f=>pns(g[f]||'')===p.nome)).length;
+    // nFut = gare future SENZA risultato e non ancora iniziate
+    const _now3=new Date();
+    const _today3=_now3.toISOString().split('T')[0];
+    const _nowMin3=_now3.getHours()*60+_now3.getMinutes();
+    const nFut=(D.gare_future||[]).filter(g=>{
+      if(!['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].some(f=>pns(g[f]||'')===p.nome))return false;
+      if(g['Risultato'])return false; // già con risultato: non è più futura
+      const gd=g['Data']||'';
+      if(gd<_today3)return false; // passata senza risultato: non conta come futura (anomalia)
+      if(gd>_today3)return true;  // domani o dopo: futura
+      // Oggi: futura solo se non ancora iniziata (+30min)
+      const gOra=g['Ora']||'';if(!gOra)return true;
+      const pp2=gOra.split(':');
+      return parseInt(pp2[0]||0)*60+parseInt(pp2[1]||0)+30>_nowMin3;
+    }).length;
     const mkLink=(val,tabIdx,clr='var(--bl)')=>
       `<span style="color:${clr};font-weight:700;cursor:pointer" data-n="${p.nome}" onclick="openPersona(this.dataset.n);setTimeout(()=>{document.querySelectorAll('#mp-body .mt')[${tabIdx}]?.click();},280)">${val}</span>`;
     const km=calcKmArb(p);
