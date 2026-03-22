@@ -1335,11 +1335,16 @@ tr.loss-row td{background:#fdecea!important;}
 <div class="ps" id="page-provvedimenti">
   <div class="st">⚠️ Provvedimenti Disciplinari</div>
   <div class="fb">
-    <div class="fg"><label>Cerca</label><input type="text" id="fpv-q" placeholder="Squadra, testo..." oninput="renderProvvedimenti()"></div>
+    <div class="fg"><label>Cerca</label><input type="text" id="fpv-q" placeholder="Squadra, persona..." oninput="renderProvvedimenti()"></div>
     <div class="fg"><label>Campionato</label><select id="fpv-camp" onchange="renderProvvedimenti()"><option value="">Tutti</option></select></div>
+    <div class="fg"><label>Stato</label><select id="fpv-stato" onchange="renderProvvedimenti()">
+      <option value="">Tutti</option>
+      <option value="attivo">● Attivi</option>
+      <option value="scaduto">Scaduti</option>
+    </select></div>
     <div class="fg"><label>Dal</label><input type="date" id="fpv-d1" onchange="renderProvvedimenti()"></div>
     <div class="fg"><label>Al</label><input type="date" id="fpv-d2" onchange="renderProvvedimenti()"></div>
-    <button class="btn b-gr" onclick="resetF('fpv-q','fpv-camp','fpv-d1','fpv-d2');renderProvvedimenti()">↺</button>
+    <button class="btn b-gr" onclick="resetF('fpv-q','fpv-camp','fpv-d1','fpv-d2');document.getElementById('fpv-stato').value='';renderProvvedimenti()">↺</button>
   </div>
   <div class="il" id="pv-info" style="font-weight:600;margin:6px 0"></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
@@ -1354,14 +1359,12 @@ tr.loss-row td{background:#fdecea!important;}
   </div>
   <div style="overflow-x:auto"><table class="gtbl" id="tbl-provv">
     <thead><tr>
-      <th onclick="sT('tbl-provv',0,event)" style="cursor:pointer">#</th>
+      <th style="text-align:center">#</th>
       <th onclick="sT('tbl-provv',1,event)" style="cursor:pointer">Data ▾</th>
-      <th onclick="sT('tbl-provv',2,event)" style="cursor:pointer">Campionato</th>
-      <th onclick="sT('tbl-provv',3,event)" style="cursor:pointer">Casa</th>
-      <th onclick="sT('tbl-provv',4,event)" style="cursor:pointer">Ospite</th>
-      <th onclick="sT('tbl-provv',5,event)" style="cursor:pointer">Arbitro 1</th>
-      <th onclick="sT('tbl-provv',6,event)" style="cursor:pointer">Arbitro 2</th>
-      <th>Provvedimento</th>
+      <th>Campionato</th>
+      <th>Gara</th>
+      <th>Arbitri</th>
+      <th>Provvedimento / Persona / Motivo</th>
     </tr></thead>
     <tbody id="tbl-provv-body"></tbody>
   </table></div>
@@ -9113,82 +9116,141 @@ function initProvvedimenti(){
   const hdr=document.querySelector('#page-provvedimenti .st');
   if(hdr)hdr.textContent=`⚠️ Provvedimenti Disciplinari (${PROVV.length} trovati)`;
 }
+// Parse a FIP provvedimento text into structured fields
+function parseProvv(testo) {
+  if(!testo) return [];
+  // Split multiple provvedimenti (separated by newlines or semicolons)
+  const righe = testo.split(/\r?\n|;(?=\s*soc\.)/).map(r=>r.trim()).filter(Boolean);
+  return righe.map(r => {
+    const p = { raw: r, societa:'', persona:'', tipo:'', dal:'', al:'', motivo:'', articolo:'' };
+    // Estrai società e persona: "soc. SOCIETA:PERSONA" o "SOCIETA:PERSONA"
+    const socM = r.match(/^(?:soc\.\s*)?([^:]+):([^\s][\w\s']+?)\s+(?:inibit|squalif|ammoniz|diffid|sospen)/i);
+    if(socM){ p.societa=socM[1].trim(); p.persona=socM[2].trim(); }
+    // Tipo provvedimento
+    if(/inibitor/i.test(r)) p.tipo='inibitoria';
+    else if(/squalif/i.test(r)) p.tipo='squalifica';
+    else if(/ammoniz/i.test(r)) p.tipo='ammonizione';
+    else if(/diffid/i.test(r)) p.tipo='diffida';
+    else if(/sospen/i.test(r)) p.tipo='sospensione';
+    else p.tipo='provvedimento';
+    // Date: "dal GG/MM/AAAA al GG/MM/AAAA" oppure "determinata dal..."
+    const dateM = r.match(/dal\s+(\d{1,2}\/\d{2}\/\d{4})\s+al\s+(\d{1,2}\/\d{2}\/\d{4})/i);
+    if(dateM){
+      p.dal = dateM[1].split('/').reverse().join('-');
+      p.al  = dateM[2].split('/').reverse().join('-');
+    }
+    // Articolo: [art. X RG] o art. X/Xa RG
+    const artM = r.match(/\[?art\.?\s*([\d,/\w]+)\s*(?:RG|RS|C\.G\.)?\]?/i);
+    if(artM) p.articolo = artM[1];
+    // Motivo: "per TESTO [art..."
+    const motM = r.match(/\bper\s+(.+?)(?:\s*\[art|\s*$)/i);
+    if(motM) p.motivo = motM[1].trim().slice(0,120);
+    return p;
+  }).filter(p=>p.tipo);
+}
+
 function renderProvvedimenti(){
+  const today = new Date().toISOString().split('T')[0];
   const q=(document.getElementById('fpv-q')?.value||'').toLowerCase();
   const camp=document.getElementById('fpv-camp')?.value||'';
   const d1=document.getElementById('fpv-d1')?.value||'';
   const d2=document.getElementById('fpv-d2')?.value||'';
+  const statoFlt=document.getElementById('fpv-stato')?.value||'';
 
   if(!PROVV||PROVV.length===0){
     const infoEl=document.getElementById('pv-info');
     if(infoEl)infoEl.textContent='0 provvedimenti trovati — i dati potrebbero non essere ancora disponibili';
     const tbody=document.getElementById('tbl-provv-body');
-    if(tbody)tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mu)">📭 Nessun provvedimento disciplinare registrato</td></tr>';
+    if(tbody)tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--mu)">📭 Nessun provvedimento disciplinare registrato</td></tr>';
     return;
   }
 
-  let f=PROVV;
-  if(q)f=f.filter(p=>(p.casa||'').toLowerCase().includes(q)||(p.ospite||'').toLowerCase().includes(q)||(p.testo||'').toLowerCase().includes(q));
-  if(camp)f=f.filter(p=>p.camp===camp);
-  if(d1)f=f.filter(p=>p.data>=d1);
-  if(d2)f=f.filter(p=>p.data<=d2);
+  // Expand PROVV with parsed sub-entries
+  let expanded = [];
+  PROVV.forEach(p=>{
+    const parsed = parseProvv(p.testo);
+    if(parsed.length){
+      parsed.forEach(pp=>expanded.push({...p, parsed:pp}));
+    } else {
+      expanded.push({...p, parsed:{raw:p.testo,tipo:'provvedimento',societa:p.casa||p.ospite,persona:'',dal:'',al:'',motivo:p.testo.slice(0,120),articolo:''}});
+    }
+  });
+
+  let f=expanded;
+  if(q) f=f.filter(p=>(p.casa||'').toLowerCase().includes(q)||(p.ospite||'').toLowerCase().includes(q)||(p.testo||'').toLowerCase().includes(q)||(p.parsed.persona||'').toLowerCase().includes(q));
+  if(camp) f=f.filter(p=>p.camp===camp);
+  if(d1) f=f.filter(p=>p.data>=d1);
+  if(d2) f=f.filter(p=>p.data<=d2);
+  if(statoFlt==='attivo') f=f.filter(p=>p.parsed.al>=today);
+  if(statoFlt==='scaduto') f=f.filter(p=>p.parsed.al&&p.parsed.al<today);
 
   const infoEl=document.getElementById('pv-info');
-  if(infoEl)infoEl.textContent=`${f.length} provvedimenti su ${PROVV.length} totali`;
+  if(infoEl)infoEl.textContent=`${f.length} provvediment${f.length===1?'o':'i'} su ${expanded.length} totali`;
 
-  // Top squadre con barra
+  // Top squadre
   const sqC={};
-  f.forEach(p=>{
-    if(p.casa)sqC[p.casa]=(sqC[p.casa]||0)+1;
-    if(p.ospite)sqC[p.ospite]=(sqC[p.ospite]||0)+1;
-  });
+  f.forEach(p=>{if(p.parsed.societa)sqC[p.parsed.societa]=(sqC[p.parsed.societa]||0)+1;else{if(p.casa)sqC[p.casa]=(sqC[p.casa]||0)+1;}});
   const topSq=Object.entries(sqC).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const maxSq=topSq[0]?.[1]||1;
   const sqEl=document.getElementById('pv-top-sq');
-  if(sqEl)sqEl.innerHTML=topSq.map(([sq,n],i)=>`
-    <div style="margin:3px 0">
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:.74rem;margin-bottom:2px">
-        <span><b style="color:var(--mu2)">${i+1}.</b> <span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></span>
-        <b>${n}</b>
-      </div>
-      <div style="height:5px;background:#fde8e8;border-radius:2px">
+  if(sqEl)sqEl.innerHTML=topSq.length?topSq.map(([sq,n],i)=>`
+    <div style="display:flex;align-items:center;gap:6px;padding:2px 0">
+      <span style="color:var(--mu2);font-size:.7rem;min-width:14px">${i+1}.</span>
+      <span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')" style="flex:1;font-size:.75rem">${escH(sq)}</span>
+      <span style="font-weight:700;font-size:.75rem">${n}</span>
+      <div style="width:60px;height:5px;background:#fde8e8;border-radius:2px;flex-shrink:0">
         <div style="height:100%;width:${Math.round(n/maxSq*100)}%;background:#c0392b;border-radius:2px"></div>
       </div>
-    </div>`).join('');
+    </div>`).join(''):'<span style="color:var(--mu);font-size:.75rem">—</span>';
 
-  // Arbitri coinvolti con barra
+  // Arbitri coinvolti
   const arbC={};
-  f.forEach(p=>{
-    [p.arbitro1,p.arbitro2].forEach(a=>{const n=pns(a||'');if(n)arbC[n]=(arbC[n]||0)+1;});
-  });
+  f.forEach(p=>{[p.arbitro1,p.arbitro2].forEach(a=>{const n=pns(a||'');if(n)arbC[n]=(arbC[n]||0)+1;});});
   const topArb=Object.entries(arbC).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const maxA=topArb[0]?.[1]||1;
   const arbEl=document.getElementById('pv-top-arb');
-  if(arbEl)arbEl.innerHTML=topArb.map(([arb,n],i)=>`
-    <div style="margin:3px 0">
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:.74rem;margin-bottom:2px">
-        <span><b style="color:var(--mu2)">${i+1}.</b> <span class="rn rn-Arbitro" data-n="${arb}">${escH(arb)}</span>${genderDot(arb)}</span>
-        <b>${n}</b>
-      </div>
-      <div style="height:5px;background:#e8eeff;border-radius:2px">
+  if(arbEl)arbEl.innerHTML=topArb.length?topArb.map(([arb,n],i)=>`
+    <div style="display:flex;align-items:center;gap:6px;padding:2px 0">
+      <span style="color:var(--mu2);font-size:.7rem;min-width:14px">${i+1}.</span>
+      <span class="rn rn-Arbitro" data-n="${arb}" onclick="openPersona('${esc(arb)}')" style="flex:1;font-size:.75rem">${escH(arb)}</span>
+      <span style="font-weight:700;font-size:.75rem">${n}</span>
+      <div style="width:60px;height:5px;background:#e8eeff;border-radius:2px;flex-shrink:0">
         <div style="height:100%;width:${Math.round(n/maxA*100)}%;background:var(--bl);border-radius:2px"></div>
       </div>
-    </div>`).join('');
+    </div>`).join(''):'<span style="color:var(--mu);font-size:.75rem">—</span>';
 
-  // Tabella provvedimenti
+  // Tabella
+  const TIPO_CLR={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',provvedimento:'#7f8c8d'};
   const tbody=document.getElementById('tbl-provv-body');
-  if(tbody)tbody.innerHTML=f.map((p,i)=>{
+  if(!tbody)return;
+  tbody.innerHTML=f.map((p,i)=>{
+    const pp=p.parsed;
     const a1n=pns(p.arbitro1||''),a2n=pns(p.arbitro2||'');
     const campClr=campColor(p.camp||'');
-    return`<tr>
-      <td style="color:var(--mu2);font-size:.7rem">${i+1}</td>
-      <td style="white-space:nowrap">${p.data||''}</td>
-      <td><span style="background:${campClr};color:#fff;border-radius:3px;padding:1px 5px;font-size:.62rem;cursor:pointer" onclick="openCampionato('${esc(p.camp||'')}')">${escH(p.camp||'')}</span></td>
-      <td><span class="rn rn-sq" onclick="openSquadra('${esc(p.casa||'')}')">${escH(p.casa||'')}</span></td>
-      <td><span class="rn rn-sq" onclick="openSquadra('${esc(p.ospite||'')}')">${escH(p.ospite||'')}</span></td>
-      <td style="font-size:.7rem">${a1n?`<span class="rn rn-Arbitro" data-n="${a1n}">${escH(a1n)}</span>`:'—'}</td>
-      <td style="font-size:.7rem">${a2n?`<span class="rn rn-Arbitro" data-n="${a2n}">${escH(a2n)}</span>`:''}</td>
-      <td style="color:#c0392b;font-size:.72rem;max-width:300px;white-space:normal">${escH(p.testo||'')}</td>
+    const tipoClr=TIPO_CLR[pp.tipo]||'#888';
+    const isAttivo=pp.al&&pp.al>=today;
+    const isScaduto=pp.al&&pp.al<today;
+    const statoBadge=pp.al?(isAttivo
+      ?`<span style="background:#27ae60;color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;font-weight:700">● ATTIVO</span>`
+      :`<span style="background:#95a5a6;color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem">SCADUTO</span>`):'';
+    const dateRange=pp.dal?`<div style="font-size:.65rem;color:var(--mu);margin-top:2px">dal ${pp.dal.split('-').reverse().join('/')} al ${(pp.al||'').split('-').reverse().join('/')}</div>`:'';
+    const artBadge=pp.articolo?`<span style="font-size:.6rem;color:var(--mu);background:var(--bg2);border-radius:3px;padding:1px 4px;margin-left:4px">art.${pp.articolo}</span>`:'';
+    return`<tr style="${isAttivo?'background:#fff8f0':''}">
+      <td style="color:var(--mu2);font-size:.7rem;text-align:center">${i+1}</td>
+      <td style="white-space:nowrap;font-size:.75rem">${p.data||''}</td>
+      <td><span style="background:${campClr};color:#fff;border-radius:3px;padding:1px 5px;font-size:.62rem;cursor:pointer" onclick="openCampionato('${esc(p.camp||'')}')">${escH((p.camp||'').replace('Divisione regionale','Div.Reg.').replace('Under ','U'))}</span></td>
+      <td style="font-size:.72rem"><span class="rn rn-sq" onclick="openSquadra('${esc(p.casa||'')}')">${escH(p.casa||'')}</span><span style="color:var(--mu);margin:0 3px">–</span><span class="rn rn-sq" onclick="openSquadra('${esc(p.ospite||'')}')">${escH(p.ospite||'')}</span></td>
+      <td style="font-size:.7rem">${a1n?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a1n)}')">${escH(a1n)}</span>`:'—'}${a2n?`<span style="color:var(--mu);margin:0 2px">/</span><span class="rn rn-Arbitro" onclick="openPersona('${esc(a2n)}')">${escH(a2n)}</span>`:''}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+          <span style="background:${tipoClr};color:#fff;border-radius:3px;padding:1px 6px;font-size:.65rem;font-weight:700;text-transform:uppercase">${pp.tipo}</span>
+          ${statoBadge}
+        </div>
+        ${pp.persona?`<div style="font-size:.72rem;font-weight:600;margin-top:2px">${escH(pp.persona)}</div>`:''}
+        ${pp.societa?`<div style="font-size:.68rem;color:var(--mu)">${escH(pp.societa)}</div>`:''}
+        ${pp.motivo?`<div style="font-size:.68rem;color:#c0392b;margin-top:2px;font-style:italic">${escH(pp.motivo)}${artBadge}</div>`:''}
+        ${dateRange}
+      </td>
     </tr>`;
   }).join('');
   setTimeout(()=>makeTableSortable(document.getElementById('page-provvedimenti')),30);
