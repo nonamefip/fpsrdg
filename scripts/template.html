@@ -1541,11 +1541,36 @@ const AG_EXT=(()=>{
   return ext;
 })();
 const CAMP_META=D.camp_meta||{};
-const _CCLR={'Serie A':'#003087','Serie B':'#1a4db3','Serie C':'#3d6fd4',
-  'Div. Reg. 1':'#0984e3','Div. Reg. 2':'#5aacf5','Aquilotti':'#00b894',
-  'Scoiattoli':'#e17055','Gazzelle':'#fdcb6e','Libellule':'#a29bfe',
-  'Esordienti':'#fd79a8','Under 13':'#636e72','Under 14':'#7f8c8d',
-  'Under 15':'#6c5ce7','Under 17':'#00cec9','Under 19':'#2d3436'};
+const _CCLR={
+  'Serie B Femminile':'#003087','Serie B':'#003087','Serie C':'#1a4db3',
+  'Div. Reg. 1':'#0984e3','Div. Reg. 2':'#5aacf5','Divisione regionale 1':'#0984e3','Divisione regionale 2':'#5aacf5',
+  'Under 19 Maschile Gold':'#4a1580','Under 19 Femminile Regionale':'#9b59b6',
+  'Under 17 Maschile Eccellenza':'#c0392b','Under 17 Maschile Gold':'#e17055',
+  'Under 17 Maschile Regionale':'#fab1a0','Under 17 Femminile Regionale':'#fd79a8',
+  'Under 15 Maschile Eccellenza':'#006400','Under 15 Maschile Regionale':'#27ae60','Under 15 Femminile Regionale':'#55efc4',
+  'Under 14 Maschile Regionale':'#00838f','Under 14 Femminile Regionale':'#4dd0e1',
+  'Under 13 Maschile Regionale':'#b8860b','Under 13 Femminile Regionale':'#fdcb6e',
+  'Esordienti Femminile':'#e84393','Trofeo Esordienti':'#fd79a8',
+  'Aquilotti Big':'#d63031','Aquilotti Small':'#e17055',
+  'Scoiattoli Big':'#a29bfe','Scoiattoli Small':'#c0c0c0',
+  'Gazzelle Big':'#f39c12','Gazzelle Small':'#f9ca24',
+  'Libellule Big':'#8e44ad','Serie A':'#003087',
+  'Under 13':'#b8860b','Under 14':'#00838f','Under 15':'#27ae60',
+  'Under 17':'#e17055','Under 19':'#4a1580',
+  'Div. Reg.':'#5aacf5'};
+const _ordFIP=[
+  'Serie B Femminile','Serie C','Divisione regionale 1','Divisione regionale 2',
+  'Under 19 Maschile Gold','Under 19 Femminile Regionale',
+  'Under 17 Maschile Eccellenza','Under 17 Maschile Gold','Under 17 Maschile Regionale','Under 17 Femminile Regionale',
+  'Under 15 Maschile Eccellenza','Under 15 Maschile Regionale','Under 15 Femminile Regionale',
+  'Under 14 Maschile Regionale','Under 14 Femminile Regionale',
+  'Under 13 Maschile Regionale','Under 13 Femminile Regionale',
+  'Esordienti Femminile','Trofeo Esordienti',
+  'Aquilotti Big','Aquilotti Small','Scoiattoli Big','Scoiattoli Small',
+  'Gazzelle Big','Gazzelle Small','Libellule Big'
+];
+function campFipRank(c){const i=_ordFIP.indexOf(c);return i>=0?i:999;}
+function isFemCamp(c){return /femmin/i.test(c)||/serie b/i.test(c)||/esordienti femm/i.test(c);}
 function genderDot(nome){
   const p=P[nome];
   if(!p)return'';
@@ -1645,7 +1670,38 @@ function resetF(...ids){ids.forEach(id=>{const el=document.getElementById(id);if
 function cpv(c){const m=(c||'').match(/\(\s*(\w{2,3})\s*\)\s*$/);return m?m[1].toUpperCase():'';}
 function pns(s){if(!s)return'';const i=s.toLowerCase().lastIndexOf(' di ');return i>0?s.substring(0,i).trim():s;}
 function bBar(val,max,color,px=120){return`<div class="bw"><div class="bar" style="width:${Math.max(2,val/max*px)}px;background:${color}"></div><span style="font-size:.7rem;color:var(--mu)">${val}</span></div>`;}
-function bProg(entries,max,color='var(--bl)'){return`<div class="pgw">${entries.map(([l,v])=>{const col=campColor(l)||color;return`<div class="pgr"><div class="pgl" title="${escH(l)}">${escH(l)}</div><div class="pgo"><div class="pgi" style="width:${v/max*100}%;background:${col}"></div></div><div class="pgv">${v}</div></div>`;}).join('')}</div>`;}
+function bProg(entries,max,color='var(--bl)'){
+  // Sort by FIP order
+  const sorted=[...entries].sort((a,b)=>campFipRank(a[0])-campFipRank(b[0]));
+  const maxV=Math.max(...sorted.map(([,v])=>v),1);
+  const maxH=60;
+  // Boxes
+  let boxes=sorted.map(([l,v])=>{
+    const col=campColor(l)||color;
+    const h=Math.max(18,Math.round(v/maxV*maxH));
+    const fs=h>35?13:h>25?10:8;
+    const lfs=h>35?8:6;
+    const fem=isFemCamp(l);
+    const short=l.replace('Divisione regionale','Div.Reg.').replace('Under ','U').replace(' Maschile',' Mas').replace(' Femminile',' Fem').replace(' Regionale',' Reg.').replace(' Eccellenza',' Ecc.').replace(' Gold',' G.');
+    return`<div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:flex-end;border-radius:5px;padding:4px 6px;color:#fff;font-weight:700;cursor:pointer;margin:2px;min-width:42px;height:${h}px;background:${col};position:relative" title="${escH(l)}: ${v} gare">
+      ${fem?'<span style="position:absolute;top:2px;right:3px;font-size:7px;opacity:.9">♀</span>':''}
+      <div style="font-size:${fs}px">${v}g</div>
+      <div style="font-size:${lfs}px;text-align:center;line-height:1.2;opacity:.9">${escH(short)}</div>
+    </div>`;
+  }).join('');
+  // Bars
+  let bars=sorted.map(([l,v])=>{
+    const col=campColor(l)||color;
+    const w=Math.round(v/maxV*200);
+    const fem=isFemCamp(l);
+    return`<div style="display:flex;align-items:center;gap:8px;padding:2px 0;font-size:11px">
+      <div style="height:9px;border-radius:3px;flex-shrink:0;min-width:3px;width:${w}px;background:${col}"></div>
+      <span style="color:var(--mu)">${escH(l)}${fem?' <span style="color:'+col+';font-size:9px">♀</span>':''}</span>
+      <span style="margin-left:auto;font-weight:${v>=10?600:400};color:${col}">${v}</span>
+    </div>`;
+  }).join('');
+  return`<div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:3px;margin-bottom:8px">${boxes}</div>${bars}`;
+}
 function bCal(giorni,nome){
   if(!giorni)giorni={};
   const FESTIVI_IT=['2025-11-01','2025-12-08','2025-12-25','2025-12-26',
@@ -4459,7 +4515,9 @@ function mkCamminoArbitro(p){
     'Gazzelle':'#ffe082','Libellule':'#ce93d8'
   };
   function getCampColor(cn){
-    // Exact match first
+    // Use global _CCLR first
+    if(_CCLR[cn])return _CCLR[cn];
+    // Exact match in local
     if(_CAT_COLORS[cn])return _CAT_COLORS[cn];
     // Partial match
     var keys=Object.keys(_CAT_COLORS);
@@ -4479,8 +4537,7 @@ function mkCamminoArbitro(p){
     if(cn&&d&&(!campFirstDate[cn]||d<campFirstDate[cn]))campFirstDate[cn]=d;
   });
   var camps=campsRaw.slice().sort(function(a,b){
-    var da=campFirstDate[a[0]]||'9999',db=campFirstDate[b[0]]||'9999';
-    return da.localeCompare(db);
+    return campFipRank(a[0])-campFipRank(b[0]);
   });
 
   var maxG=Math.max.apply(null,camps.map(function(e){return e[1];}));
@@ -4641,7 +4698,7 @@ function openPersona(nome,campFilter){
   document.getElementById('mp-title').innerHTML=`${escH(nome)} &nbsp;${pvB(p.provincia)} ${catB(p.categoria)}${isDual?`<span class="badge" style="background:#ff6b6b;color:#fff;margin-left:6px">⚡ doppio ruolo</span>`:''}${(typeof CODICI_FIP!=='undefined'&&CODICI_FIP[nome])?`<span style='background:#34495e;color:#fff;border-radius:4px;padding:1px 7px;font-size:.68rem;margin-left:6px;font-family:monospace' title='Codice FIP'>🪪 ${CODICI_FIP[nome]}</span>`:''}${nFut>0?`<span style="background:#e17055;color:#fff;border-radius:10px;padding:1px 8px;font-size:.7rem;margin-left:8px">📅 ${nFut} in programma</span>`:''}`;  const allG=p.gare||[];
   const nGiorni=Object.keys(p.giorni||{}).length;
   const maxGday=Math.max(...Object.values(p.giorni||{1:1}));
-  const topCamp=Object.entries(p.campionati||{}).sort((a,b)=>b[1]-a[1]);
+  const topCamp=Object.entries(p.campionati||{}).sort((a,b)=>campFipRank(a[0])-campFipRank(b[0]));
   const colleghi=Object.entries(p.colleghi||{}).sort((a,b)=>{
     // Prima ordina per categoria: Arbitro > UDC > Osservatore > altri
     const catOrder={Arbitro:0,UDC:1,Osservatore:2};
@@ -4746,8 +4803,6 @@ function openPersona(nome,campFilter){
           <div class="dow-chart">${dowBars}</div>
         </div>
       </div>
-      ${bProg(topCamp,allG.length,PC[p.provincia]||'var(--bl)')}
-
       <!-- Km + Copertura + Attività mensile -->
       <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px;margin-top:10px">
         ${km>0?`<div class="card" style="margin-bottom:0">
@@ -4790,6 +4845,12 @@ function openPersona(nome,campFilter){
             </div>`;
           })()}
         </div>
+      </div>
+
+      <!-- Campionati arbitrati — ordine FIP -->
+      <div class="card" style="margin-top:10px">
+        <div class="card-title">🏆 Campionati arbitrati questa stagione — ordine d'importanza FIP &nbsp;<span style="font-weight:400;font-size:.65rem">♀ = femminile</span></div>
+        ${bProg(topCamp,allG.length,PC[p.provincia]||'var(--bl)')}
       </div>
 
       <!-- Squadre arbitrate rendimento -->
@@ -5015,40 +5076,85 @@ function openPersona(nome,campFilter){
 
   // Populate panel Campi safely
   try {
-    document.getElementById('mpt-3').innerHTML=mkTbl(campi.map(([campo,cnt],i)=>{const pvc=cpv(campo);
-      return`<tr><td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td><td style="font-size:.73rem;white-space:normal;max-width:290px">${escH(campo)}</td><td>${pvc?pvB(pvc):''}</td><td data-val="${cnt}"><b>${cnt}</b></td></tr>`;
-    }).join(''),['#','Campo','Prov.','Presenze'],'tbl-mcampi');
+    document.getElementById('mpt-3').innerHTML=`<table class="gtbl" id="tbl-mcampi"><thead><tr>
+      <th>#</th><th>Campo</th><th>Città</th><th>Prov.</th><th style="text-align:right">Presenze</th>
+    </tr></thead><tbody>${campi.map(([campo,cnt],i)=>{
+      const pvc=cpv(campo)||'';
+      const gps=CAMPO_GPS&&CAMPO_GPS[campo];
+      const citta=gps&&gps.city||'';
+      const pvColor=PC[pvc]||'#888';
+      return`<tr>
+        <td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td>
+        <td style="font-size:.73rem;white-space:normal;max-width:250px">${escH(campo)}</td>
+        <td style="font-size:.73rem;color:${pvColor};font-weight:500">${escH(citta)}</td>
+        <td>${pvc?pvB(pvc):''}</td>
+        <td style="text-align:right"><span style="color:var(--bl);font-weight:700;cursor:pointer;text-decoration:underline" onclick="openSharedSquadGames_Campo('${esc(nome)}','${esc(campo)}')">${cnt}</span></td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
   } catch(e){ document.getElementById('mpt-3').innerHTML='<p style="color:red;padding:10px">Errore campi: '+e.message+'</p>'; }
 
   // Populate panel Squadre safely
   try {
-    const sqRows=squadre.map(([sq,cnt],i)=>{
+    const sqBlocks=squadre.map(([sq,cnt],i)=>{
       const sqd=SQ[sq];
       const sqGare=allG.filter(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
       const campStats={};
       sqGare.forEach(g=>{
-        const cn=g['Campionato'];if(!campStats[cn])campStats[cn]={n:0,v:0,p:0};campStats[cn].n++;
-        if(g['Risultato']){const isCasa=g['Squadra Casa']===sq;const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;if(pc>po)campStats[cn].v++;else if(pc<po)campStats[cn].p++;}
+        const cn=g['Campionato'];
+        if(!campStats[cn])campStats[cn]={n:0,v:0,p:0};
+        campStats[cn].n++;
+        if(g['Risultato']){
+          const isCasa=g['Squadra Casa']===sq;
+          const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;
+          const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;
+          if(pc>po)campStats[cn].v++;else campStats[cn].p++;
+        }
       });
-      const clist=Object.entries(campStats).sort((a,b)=>b[1].n-a[1].n);
+      // Sort categories by FIP order
+      const clist=Object.entries(campStats).sort((a,b)=>campFipRank(a[0])-campFipRank(b[0]));
       const totV=clist.reduce((s,[,cs])=>s+cs.v,0);
       const totP=clist.reduce((s,[,cs])=>s+cs.p,0);
-      const badges=clist.map(([cn,cs])=>{const clr=campColor(cn);return`<span style="background:${clr};color:#fff;border-radius:3px;padding:1px 4px;font-size:.59rem;margin:1px;display:inline-block;cursor:pointer" onclick="openCampionato('${esc(cn)}')" title="${escH(cn)}">${escH(cn.split(' ').slice(0,3).join(' '))} <b>${cs.n}</b></span>`;}).join('');
-      return`<tr>
-        <td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td>
-        <td><span class="rn rn-sq" style="font-weight:700" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></td>
-        <td>${sqd?.prov?pvB(sqd.prov):''}</td>
-        <td data-val="${cnt}" style="cursor:pointer;color:#003087;font-weight:700;text-decoration:underline" onclick="openSharedSquadGames('${esc(nome)}','${esc(sq)}')">${cnt}</td>
-        <td data-val="${totV}" style="color:#00704a;font-weight:700">${totV}</td>
-        <td data-val="${totP}" style="color:#c0392b;font-weight:700">${totP}</td>
-        <td style="white-space:normal;max-width:260px">${badges||'—'}</td>
-      </tr>`;
+      const wp=cnt?Math.round(totV/cnt*100):0;
+      const pv=sqd?.prov||sqd?.provincia||'';
+      // Category rows
+      const catRows=clist.map(([cn,cs])=>{
+        const clr=campColor(cn)||'#888';
+        const fem=isFemCamp(cn);
+        const catWp=cs.n?Math.round(cs.v/cs.n*100):0;
+        const short=cn.replace('Divisione regionale','Div.Reg.').replace('Under ','U').replace(' Maschile',' Mas').replace(' Femminile',' Fem').replace(' Regionale',' Reg.').replace(' Eccellenza',' Ecc.').replace(' Gold',' G.');
+        const ngSafe=(g2['Numero Gara']||'').replace(/'/g,"\\'");
+        const filterFn=`openSharedSqCamp('${esc(nome)}','${esc(sq)}','${esc(cn)}')`;
+        return`<div style="display:flex;align-items:center;padding:4px 10px;border-top:0.5px solid var(--br);gap:6px;font-size:11px" onclick="${filterFn}" style="cursor:pointer">
+          <span style="background:${clr};color:#fff;border-radius:3px;padding:2px 7px;font-size:9px;font-weight:600;flex-shrink:0;cursor:pointer">${escH(short)}${fem?' ♀':''}</span>
+          <span style="color:var(--bl);font-weight:600;cursor:pointer;text-decoration:underline" onclick="event.stopPropagation();openSharedSqCamp('${esc(nome)}','${esc(sq)}','${esc(cn)}')">${cs.n}</span>
+          <span style="font-size:10px;color:var(--mu)">gare ·</span>
+          <span style="color:#00704a;font-weight:600;font-size:10.5px">${cs.v}V</span>
+          <span style="color:#c0392b;font-size:10.5px">${cs.p}P</span>
+          <span style="font-weight:600;font-size:10.5px;color:${catWp>=50?'#00704a':'#c0392b'}">${catWp}%</span>
+          <div style="flex:1;height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-left:4px">
+            <div style="background:${clr};width:${catWp}%;height:100%;border-radius:3px"></div>
+          </div>
+        </div>`;
+      }).join('');
+      const rowBg=totV>totP?'#f0fff4':totP>totV?'#fff5f5':'';
+      return`<div style="border:0.5px solid var(--br);border-radius:8px;overflow:hidden;margin-bottom:5px;background:${rowBg}">
+        <div style="display:grid;grid-template-columns:1fr auto;align-items:center;padding:6px 10px;background:var(--bl4,#f0f5ff);cursor:pointer" onclick="openSquadra('${esc(sq)}')">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:10.5px;color:var(--mu)">${i+1}</span>
+            <span style="font-weight:700;font-size:12px;color:var(--bl);cursor:pointer">${escH(sq)}</span>
+            ${pv?pvB(pv):''}
+          </div>
+          <span style="display:flex;align-items:center;gap:8px;font-size:11px">
+            <b>${cnt}</b>
+            <span style="color:#00704a;font-weight:600">${totV}V</span>
+            <span style="color:#c0392b">${totP}P</span>
+            <span style="font-weight:600;color:${wp>=50?'#00704a':'#c0392b'}">${wp}%</span>
+          </span>
+        </div>
+        ${catRows}
+      </div>`;
     }).join('');
-    document.getElementById('mpt-4').innerHTML=`<table class="gtbl" id="tbl-msq"><thead><tr>
-      <th onclick="sT('tbl-msq',0,event)">#</th><th onclick="sT('tbl-msq',1,event)">Squadra</th><th>Prov.</th>
-      <th onclick="sT('tbl-msq',3,event)">Tot.</th><th onclick="sT('tbl-msq',4,event)" style="color:#00704a">✅ V</th>
-      <th onclick="sT('tbl-msq',5,event)" style="color:#c0392b">❌ P</th><th>Categorie</th>
-    </tr></thead><tbody>${sqRows}</tbody></table>`;
+    document.getElementById('mpt-4').innerHTML=`<div style="font-size:10px;padding:5px 10px;color:var(--mu);border-bottom:0.5px solid var(--br);margin-bottom:6px">Clicca la categoria o il numero per vedere le gare arbitrate in quel campionato</div><div style="padding:4px">${sqBlocks}</div>`;
   } catch(e){ document.getElementById('mpt-4').innerHTML='<p style="color:red;padding:10px">Errore squadre: '+e.message+'</p>'; }
 
   // Add trend tab button dynamically
@@ -5195,13 +5301,13 @@ function mkTrendPersona(p, nome){
 }
 
 function mkGarePersonaTbl(gare,nome,tid){
-  const rows=gare.sort((a,b)=>a['Data'].localeCompare(b['Data'])).map(g=>{
+  const rows=gare.sort((a,b)=>a['Data'].localeCompare(b['Data'])).map((g,_ri)=>{
     const coll=[];
     ['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].forEach(f=>{
       const v=g[f]||'';const n=pns(v);
       if(n&&n!==nome)coll.push(`<span class="rn rn-${P[n]?.categoria||'Arbitro'}" data-n="${n}" onclick="openPersona(this.dataset.n)" style="font-size:.68rem">${escH(n)}</span>`);
     });
-    return`<tr><td>${g['Data']}</td><td>${g['Ora']||''}</td><td style="font-size:.68rem">${g['Numero Gara']||''}</td>
+    return`<tr><td style="color:var(--mu);font-size:.68rem;text-align:center">${_ri+1}</td><td>${g['Data']}</td><td>${g['Ora']||''}</td><td style="font-size:.68rem">${g['Numero Gara']||''}</td>
       <td style="font-size:.72rem">${escH(g['Campionato'])}</td><td style="font-size:.7rem">${escH(g['Girone']||'')}</td><td style="font-size:.7rem">${escH(g['Fase']||'')}</td>
       <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa'])}')">${escH(g['Squadra Casa'])}</span></td>
       <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite'])}')">${escH(g['Squadra Ospite'])}</span></td>
@@ -5210,7 +5316,7 @@ function mkGarePersonaTbl(gare,nome,tid){
       <td>${pvB(cpv(g['Campo']))}</td>
       <td style="max-width:170px;white-space:normal">${coll.join(', ')}</td></tr>`;
   }).join('');
-  return`<table class="mtbl" id="${tid}"><thead><tr><th onclick="sT('${tid}',0,event)">Data</th><th>Ora</th><th>N°</th><th onclick="sT('${tid}',3,event)">Campionato</th><th>Girone</th><th>Fase</th><th onclick="sT('${tid}',6,event)">Casa</th><th onclick="sT('${tid}',7,event)">Ospite</th><th>Ris.</th><th>Ruolo</th><th>Prov.</th><th>Colleghi</th></tr></thead><tbody>${rows}</tbody></table>`;
+  return`<table class="mtbl" id="${tid}"><thead><tr><th style="text-align:center;color:var(--mu)">#</th><th onclick="sT('${tid}',0,event)">Data</th><th>Ora</th><th>N°</th><th onclick="sT('${tid}',3,event)">Campionato</th><th>Girone</th><th>Fase</th><th onclick="sT('${tid}',6,event)">Casa</th><th onclick="sT('${tid}',7,event)">Ospite</th><th>Ris.</th><th>Ruolo</th><th>Prov.</th><th>Colleghi</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 // ── STATISTICHE PER GENERE (Punto 2) ─────────────────────────────────
 function openGenderStats(genere){
@@ -5295,6 +5401,53 @@ function openSharedSquadGames(nomeArb, nomeSq){
   openMo('mo-persona');
 }
 
+function openSharedSqCamp(nomeArb, nomeSq, nomeCamp){
+  const allGare=D.gare||[];
+  const shared=allGare.filter(g=>{
+    const inSq=g['Squadra Casa']===nomeSq||g['Squadra Ospite']===nomeSq;
+    const inCamp=!nomeCamp||g['Campionato']===nomeCamp;
+    const fields=['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'];
+    const inArb=fields.some(f=>pns(g[f]||'')===nomeArb);
+    return inSq&&inArb&&inCamp;
+  }).sort((a,b)=>a['Data'].localeCompare(b['Data']));
+  const mo=document.getElementById('mo-persona');
+  const title=document.getElementById('mp-title');
+  const body=document.getElementById('mp-body');
+  if(!mo||!title||!body)return;
+  const campLabel=nomeCamp?` — <span style="background:${campColor(nomeCamp)||'#888'};color:#fff;border-radius:3px;padding:1px 6px;font-size:.7rem">${escH(nomeCamp)}</span>`:'';
+  title.innerHTML=`👨‍⚖️ <span style="color:#003087">${escH(nomeArb)}</span> con <span class="rn rn-sq">${escH(nomeSq)}</span>${campLabel}`;
+  // Stats per questa combo
+  let v=0,p=0;
+  shared.forEach(g=>{if(g['Risultato']){const isCasa=g['Squadra Casa']===nomeSq;const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0,po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;if(pc>po)v++;else p++;}});
+  const wp=shared.length?Math.round(v/shared.length*100):0;
+  body.innerHTML=`<div style="padding:6px 0 10px;display:flex;gap:12px;font-size:.8rem;color:var(--mu)">
+    <span>${shared.length} gare</span>
+    <span style="color:#00704a;font-weight:600">${v}V</span>
+    <span style="color:#c0392b">${p}P</span>
+    <span style="font-weight:600;color:${wp>=50?'#00704a':'#c0392b'}">${wp}%</span>
+  </div>`+
+    (shared.length?`<div style="overflow-x:auto">${mkGarePersonaTbl(shared,nomeArb,'tbl-sqcamparb')}</div>`
+    :'<div style="padding:20px;text-align:center;color:var(--mu)">Nessuna gara trovata</div>');
+  openMo('mo-persona');
+}
+function openSharedSquadGames_Campo(nomeArb, nomeCampo){
+  const allGare=D.gare||[];
+  const shared=allGare.filter(g=>{
+    const inCampo=(g['Campo']||'')=== nomeCampo||(g['Campo']||'').startsWith(nomeCampo);
+    const fields=['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'];
+    const inArb=fields.some(f=>pns(g[f]||'')===nomeArb);
+    return inCampo&&inArb;
+  }).sort((a,b)=>a['Data'].localeCompare(b['Data']));
+  const mo=document.getElementById('mo-persona');
+  const title=document.getElementById('mp-title');
+  const body=document.getElementById('mp-body');
+  if(!mo||!title||!body)return;
+  title.innerHTML=`👨‍⚖️ <span style="color:#003087">${escH(nomeArb)}</span> — gare a <span style="font-style:italic">${escH(nomeCampo.split(',')[0])}</span>`;
+  body.innerHTML=`<div style="padding:6px 0 10px;font-size:.8rem;color:var(--mu)">${shared.length} gare in questo campo</div>`+
+    (shared.length?`<div style="overflow-x:auto">${mkGarePersonaTbl(shared,nomeArb,'tbl-campoarb')}</div>`
+    :'<div style="padding:20px;text-align:center;color:var(--mu)">Nessuna gara trovata</div>');
+  openMo('mo-persona');
+}
 function openSharedGames(nome1, nome2){
   const p1=P[nome1],p2=P[nome2];
   const allGare=D.gare||[];
