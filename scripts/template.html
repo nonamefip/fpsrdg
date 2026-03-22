@@ -5049,7 +5049,18 @@ function openPersona(nome,campFilter){
       })()}`;
   } catch(e){ document.getElementById('mpt-0').innerHTML='<p style="color:red;padding:10px">Errore stats: '+e.message+'</p>'; }
 
-  // Populate panel Cammino safely
+  // Append Cammino into Statistiche (mpt-0) after main content
+  try {
+    const _cam=mkCamminoArbitro(p);
+    const _mpt0=document.getElementById('mpt-0');
+    if(_mpt0&&_cam){
+      const _camDiv=document.createElement('div');
+      _camDiv.innerHTML=_cam;
+      _mpt0.appendChild(_camDiv);
+    }
+  } catch(e){ console.warn('Cammino error:',e); }
+
+  // Populate panel Cammino safely (keep for backward compat)
   try {
     document.getElementById('mpt-cam').innerHTML='<div style="padding:8px">'+mkCamminoArbitro(p)+'</div>';
   } catch(e){ document.getElementById('mpt-cam').innerHTML='<p style="color:red;padding:10px">Errore cammino: '+e.message+'</p>'; }
@@ -5123,7 +5134,6 @@ function openPersona(nome,campFilter){
         const fem=isFemCamp(cn);
         const catWp=cs.n?Math.round(cs.v/cs.n*100):0;
         const short=cn.replace('Divisione regionale','Div.Reg.').replace('Under ','U').replace(' Maschile',' Mas').replace(' Femminile',' Fem').replace(' Regionale',' Reg.').replace(' Eccellenza',' Ecc.').replace(' Gold',' G.');
-        const ngSafe=(g2['Numero Gara']||'').replace(/'/g,"\\'");
         const filterFn=`openSharedSqCamp('${esc(nome)}','${esc(sq)}','${esc(cn)}')`;
         return`<div style="display:flex;align-items:center;padding:4px 10px;border-top:0.5px solid var(--br);gap:6px;font-size:11px" onclick="${filterFn}" style="cursor:pointer">
           <span style="background:${clr};color:#fff;border-radius:3px;padding:2px 7px;font-size:9px;font-weight:600;flex-shrink:0;cursor:pointer">${escH(short)}${fem?' ♀':''}</span>
@@ -5175,6 +5185,15 @@ function openPersona(nome,campFilter){
     trendPanel.innerHTML=mkTrendPersona(p,nome);
     document.getElementById('mp-body').appendChild(trendPanel);
   }catch(e){}
+
+  // Append Trend into Statistiche (mpt-0)
+  try {
+    const _mpt0b=document.getElementById('mpt-0');
+    const _trendDiv=document.createElement('div');
+    _trendDiv.style.marginTop='10px';
+    _trendDiv.innerHTML=mkTrendPersona(p,nome);
+    if(_mpt0b)_mpt0b.appendChild(_trendDiv);
+  } catch(e){ console.warn('Trend error:',e); }
 
   fgpP(nome);openMo('mo-persona');
 
