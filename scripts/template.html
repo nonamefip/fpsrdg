@@ -1337,6 +1337,14 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="fb">
     <div class="fg"><label>Cerca</label><input type="text" id="fpv-q" placeholder="Squadra, persona..." oninput="renderProvvedimenti()"></div>
     <div class="fg"><label>Campionato</label><select id="fpv-camp" onchange="renderProvvedimenti()"><option value="">Tutti</option></select></div>
+    <div class="fg"><label>Provincia</label><select id="fpv-prov" onchange="renderProvvedimenti()">
+      <option value="">Tutte</option>
+      <option value="CA">CA</option><option value="SS">SS</option><option value="NU">NU</option><option value="OR">OR</option><option value="SU">SU</option>
+    </select></div>
+    <div class="fg" style="position:relative"><label>Arbitro coinvolto</label>
+      <input type="text" id="fpv-arb" placeholder="Nome arbitro..." oninput="fpvArbSuggest()" autocomplete="off" onchange="renderProvvedimenti()">
+      <div id="fpv-arb-sug" class="sug-box" style="display:none;top:100%;left:0;right:0;width:auto"></div>
+    </div>
     <div class="fg"><label>Tipo</label><select id="fpv-tipo" onchange="renderProvvedimenti()">
       <option value="">Tutti</option>
       <option value="squalifica">Squalifica</option>
@@ -1352,7 +1360,7 @@ tr.loss-row td{background:#fdecea!important;}
     </select></div>
     <div class="fg"><label>Dal</label><input type="date" id="fpv-d1" onchange="renderProvvedimenti()"></div>
     <div class="fg"><label>Al</label><input type="date" id="fpv-d2" onchange="renderProvvedimenti()"></div>
-    <button class="btn b-gr" onclick="resetF('fpv-q','fpv-camp','fpv-d1','fpv-d2');document.getElementById('fpv-stato').value='';document.getElementById('fpv-tipo').value='';renderProvvedimenti()">↺</button>
+    <button class="btn b-gr" onclick="resetF('fpv-q','fpv-camp','fpv-d1','fpv-d2','fpv-arb');document.getElementById('fpv-stato').value='';document.getElementById('fpv-tipo').value='';document.getElementById('fpv-prov').value='';renderProvvedimenti()">↺</button>
   </div>
   <div class="il" id="pv-info" style="font-weight:600;margin:6px 0"></div>
   <!-- KPI -->
@@ -2023,6 +2031,7 @@ function renderPersonsTable(cid,persons,opts={}){
     <th colspan="${_sqCols}" class="th-sq" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">SQUADRE</th>
     <th colspan="${_kmCols}" class="th-km" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">PERCORRENZA</th>
     <th style="background:var(--tbl-hdr);border:none;padding:0" colspan="${_topCols}"></th>
+    ${isArb?`<th class="th-att" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px;background:#fff3e0;color:#e67e22">PROVV.</th>`:''}
   </tr>`:'';
 
   // Accumulatori per riga media
@@ -2179,6 +2188,11 @@ function renderPersonsTable(cid,persons,opts={}){
         const label=mesi[parseInt(ym.slice(5))]||ym.slice(5);
         return `<td data-val="${cnt}" style="text-align:center;font-size:.72rem"><span style="font-weight:700;color:var(--bl)">${label}</span> <span style="color:var(--mu);font-size:.65rem">${cnt}g</span></td>`;
       })():''}
+      ${isArb?(()=>{
+        const nPv=(PROVV||[]).filter(pv=>[pv.arbitro1,pv.arbitro2].some(a=>pns(a||'')===p.nome)).length;
+        if(!nPv) return '<td data-val="0" style="text-align:center;color:var(--mu2)">—</td>';
+        return `<td data-val="${nPv}" style="text-align:center;background:#fff8f0;cursor:pointer" onclick="showPage('provvedimenti');setTimeout(()=>{const el=document.getElementById('fpv-arb');if(el){el.value='${esc(p.nome)}';renderProvvedimenti();}},100)" title="Vedi provvedimenti gare"><span style="font-weight:700;color:#e67e22">${nPv}</span></td>`;
+      })():''}
     </tr>`;
   }).join('');
 
@@ -2237,7 +2251,8 @@ function renderPersonsTable(cid,persons,opts={}){
     <th class="th-sq" onclick="sT('${tableId}',${16+co+ae},event)" title="Squadre diverse · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Sqd.</th>
     <th class="th-km" onclick="sT('${tableId}',${17+co+ae},true,event)" title="Km stimati · Shift+click per multiplo" style="cursor:pointer">&#128664; Km</th>
     ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true,event)" title="Km medi/gara · Shift+click per multiplo" style="cursor:pointer">Km/g</th>
-    <th onclick="sT('${tableId}',${19+co+ae},event)" title="Mese con più gare · Shift+click per multiplo" style="cursor:pointer">Top mese</th>`:''}
+    <th onclick="sT('${tableId}',${19+co+ae},event)" title="Mese con più gare · Shift+click per multiplo" style="cursor:pointer">Top mese</th>
+    <th onclick="sT('${tableId}',${20+co+ae},event)" title="Gare con provvedimenti · Shift+click per multiplo" style="cursor:pointer;background:#fff3e0;color:#e67e22">⚠️ Provv.</th>`:''}
   </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>
   <div style="font-size:.62rem;color:var(--mu);padding:4px 0;margin-top:2px">💡 <b>Shift+click</b> su un'intestazione per aggiungere un secondo livello di ordinamento</div>`;
 }
@@ -4762,6 +4777,41 @@ function openPersona(nome,campFilter){
 
   let extraTabs='';
   let extraPanels='';
+  // Provvedimenti per questo arbitro
+  const provvArb=(PROVV||[]).filter(pv=>[pv.arbitro1,pv.arbitro2].some(a=>pns(a||'')===nome));
+  const provvTab=provvArb.length?`<button class="mt" onclick="swTabId(this,'mpt-pv')" style="color:#e67e22">⚠️ Provv. (${provvArb.length})</button>`:'';
+  const TIPO_CLR_P={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',provvedimento:'#7f8c8d'};
+  const provvPanel=provvArb.length?`<div class="mtc hidden" id="mpt-pv">
+    <p class="il" style="color:#e67e22;font-weight:600">⚠️ ${provvArb.length} gar${provvArb.length===1?'a':'e'} con provvedimenti in cui hai arbitrato</p>
+    <div style="overflow-x:auto"><table class="mtbl">
+      <thead><tr><th>Data</th><th>Campionato</th><th>Gara</th><th>Provvedimento / Persona / Motivo</th></tr></thead>
+      <tbody>${provvArb.sort((a,b)=>b.data.localeCompare(a.data)).map(pv=>{
+        const parsed=parseProvv(pv.testo);
+        const today2=new Date().toISOString().split('T')[0];
+        return parsed.length?parsed.map(pp=>{
+          const clr=TIPO_CLR_P[pp.tipo]||'#888';
+          const statoBadge=pp.al?(pp.al>=today2?'<span style="background:#27ae60;color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem;font-weight:700;margin-left:4px">● ATTIVO</span>':'<span style="background:#95a5a6;color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem;margin-left:4px">SCADUTO</span>'):'';
+          return `<tr style="cursor:pointer" onclick="openGara('${esc(pv.num||'')}')">
+            <td style="white-space:nowrap;font-size:.72rem">${pv.data}</td>
+            <td><span style="background:${campColor(pv.camp||'')};color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem">${escH((pv.camp||'').replace('Divisione regionale','Div.Reg.').replace('Under ','U'))}</span></td>
+            <td style="font-size:.72rem"><span class="rn rn-sq" onclick="event.stopPropagation();openSquadra('${esc(pv.casa||'')}')">${escH(pv.casa||'')}</span> – <span class="rn rn-sq" onclick="event.stopPropagation();openSquadra('${esc(pv.ospite||'')}')">${escH(pv.ospite||'')}</span></td>
+            <td><span style="background:${clr};color:#fff;border-radius:3px;padding:1px 5px;font-size:.62rem;font-weight:700;text-transform:uppercase">${pp.tipo}</span>${statoBadge}
+              ${pp.persona?`<div style="font-size:.72rem;font-weight:600;margin-top:2px">${escH(pp.persona)}</div>`:''}
+              ${pp.societa?`<div style="font-size:.68rem;color:var(--mu)">${escH(pp.societa)}</div>`:''}
+              ${pp.motivo?`<div style="font-size:.68rem;color:#c0392b;font-style:italic;margin-top:1px">${escH(pp.motivo)}</div>`:''}
+              ${pp.dal?`<div style="font-size:.65rem;color:var(--mu)">dal ${pp.dal.split('-').reverse().join('/')} al ${(pp.al||'').split('-').reverse().join('/')}</div>`:''}
+            </td>
+          </tr>`;
+        }).join(''):`<tr style="cursor:pointer" onclick="openGara('${esc(pv.num||'')}')">
+          <td style="white-space:nowrap;font-size:.72rem">${pv.data}</td>
+          <td><span style="background:${campColor(pv.camp||'')};color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem">${escH((pv.camp||'').replace('Divisione regionale','Div.Reg.').replace('Under ','U'))}</span></td>
+          <td style="font-size:.72rem"><span class="rn rn-sq" onclick="event.stopPropagation();openSquadra('${esc(pv.casa||'')}')">${escH(pv.casa||'')}</span> – <span class="rn rn-sq" onclick="event.stopPropagation();openSquadra('${esc(pv.ospite||'')}')">${escH(pv.ospite||'')}</span></td>
+          <td style="font-size:.72rem;color:var(--mu)">${escH(pv.testo.slice(0,120))}</td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table></div>
+  </div>`:'';
   if(isDual){
     extraTabs+=`<button class="mt" onclick="swTabId(this,'mpt-5')">⚖️ Come Arbitro (${p.n_gare_arbitro})</button>`;
     extraTabs+=`<button class="mt" onclick="swTabId(this,'mpt-6')">🔭 Come Osservatore (${p.n_gare_osservatore})</button>`;
@@ -4783,6 +4833,7 @@ function openPersona(nome,campFilter){
       <button class="mt" onclick="swTabId(this,'mpt-2')">🤝 Colleghi (${colleghi.length})</button>
       <button class="mt" onclick="swTabId(this,'mpt-3')">🏟️ Campi (${campi.length})</button>
       <button class="mt" onclick="swTabId(this,'mpt-4')">🏆 Squadre (${squadre.length})</button>
+      ${provvTab}
       ${extraTabs}
     </div>
     <div class="mtc active" id="mpt-0"></div>
@@ -4804,6 +4855,7 @@ function openPersona(nome,campFilter){
     <div class="mtc hidden" id="mpt-2" id="mpt-2-inner"></div>
     <div class="mtc hidden" id="mpt-3" id="mpt-3-inner"></div>
     <div class="mtc hidden" id="mpt-4" id="mpt-4-inner"></div>
+    ${provvPanel}
     ${extraPanels}`;
 
   // Populate panel 0 (Statistiche) safely
@@ -5699,6 +5751,7 @@ function openSquadra(nome,campFilter){
       <button class="mt" onclick="swTab(this,'mst-')">⚔️ Avversari (${avv.length})</button>
       <button class="mt" onclick="swTab(this,'mst-')">👨‍⚖️ Arbitri (${arb_stats.length})</button>
       <button class="mt" onclick="swTab(this,'mst-')">📋 Campionati (${camps.length})</button>
+      ${(()=>{const np=(PROVV||[]).filter(pv=>{const pp=parseProvv(pv.testo);return pp.some(p=>p.societa&&(p.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(p.societa.toLowerCase())))||pv.casa===nome||pv.ospite===nome;}).length;return np?`<button class="mt" onclick="swTab(this,'mst-')" style="color:#e67e22">⚠️ Provv. (${np})</button>`:'';})()} 
     </div>
     <div class="mtc active" id="mst-0">
       ${s.gruppo!==nome?`<div class="dual-role-notice">👥 Fa parte del gruppo <b>${escH(s.gruppo)}</b></div>`:''}
@@ -5945,6 +5998,44 @@ function openSquadra(nome,campFilter){
         </tr>`;
       }).join(''),['#','Campionato','G','V','Gironi','Livello'],'tbl-mcamp'):'<p class="il">Nessun campionato</p>'}
     </div>`;
+  // Pannello provvedimenti squadra (aggiunto dinamicamente se presenti)
+  const provvSq=(PROVV||[]).filter(pv=>{
+    const pp=parseProvv(pv.testo);
+    return pp.some(p=>p.societa&&(p.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(p.societa.toLowerCase())))||pv.casa===nome||pv.ospite===nome;
+  });
+  if(provvSq.length){
+    const TIPO_CLR_S={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',provvedimento:'#7f8c8d'};
+    const today2=new Date().toISOString().split('T')[0];
+    document.getElementById('ms-body').innerHTML+=`<div class="mtc hidden">
+      <p class="il" style="color:#e67e22;font-weight:600">⚠️ ${provvSq.length} provvediment${provvSq.length===1?'o':'i'} relativi a questa squadra</p>
+      <div style="overflow-x:auto"><table class="mtbl">
+        <thead><tr><th>Data</th><th>Campionato</th><th>Gara</th><th>Provvedimento / Persona / Motivo</th></tr></thead>
+        <tbody>${provvSq.sort((a,b)=>b.data.localeCompare(a.data)).map(pv=>{
+          const parsed=parseProvv(pv.testo);
+          return parsed.length?parsed.map(pp=>{
+            const clr=TIPO_CLR_S[pp.tipo]||'#888';
+            const statoBadge=pp.al?(pp.al>=today2?'<span style="background:#27ae60;color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem;font-weight:700;margin-left:4px">● ATTIVO</span>':'<span style="background:#95a5a6;color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem;margin-left:4px">SCADUTO</span>'):'';
+            return `<tr style="cursor:pointer" onclick="openGara('${esc(pv.num||'')}')">
+              <td style="white-space:nowrap;font-size:.72rem">${pv.data}</td>
+              <td><span style="background:${campColor(pv.camp||'')};color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem">${escH((pv.camp||'').replace('Divisione regionale','Div.Reg.').replace('Under ','U'))}</span></td>
+              <td style="font-size:.72rem"><span class="rn rn-sq" onclick="event.stopPropagation();openSquadra('${esc(pv.casa||'')}')">${escH(pv.casa||'')}</span> – <span class="rn rn-sq" onclick="event.stopPropagation();openSquadra('${esc(pv.ospite||'')}')">${escH(pv.ospite||'')}</span></td>
+              <td><span style="background:${clr};color:#fff;border-radius:3px;padding:1px 5px;font-size:.62rem;font-weight:700;text-transform:uppercase">${pp.tipo}</span>${statoBadge}
+                ${pp.persona?`<div style="font-size:.72rem;font-weight:600;margin-top:2px">${escH(pp.persona)}</div>`:''}
+                ${pp.motivo?`<div style="font-size:.68rem;color:#c0392b;font-style:italic;margin-top:1px">${escH(pp.motivo)}</div>`:''}
+                ${pp.dal?`<div style="font-size:.65rem;color:var(--mu)">dal ${pp.dal.split('-').reverse().join('/')} al ${(pp.al||'').split('-').reverse().join('/')}</div>`:''}
+              </td>
+            </tr>`;
+          }).join(''):`<tr style="cursor:pointer" onclick="openGara('${esc(pv.num||'')}')">
+            <td style="white-space:nowrap;font-size:.72rem">${pv.data}</td>
+            <td><span style="background:${campColor(pv.camp||'')};color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem">${escH((pv.camp||'').replace('Divisione regionale','Div.Reg.').replace('Under ','U'))}</span></td>
+            <td style="font-size:.72rem">${escH(pv.casa||'')} – ${escH(pv.ospite||'')}</td>
+            <td style="font-size:.72rem;color:var(--mu)">${escH(pv.testo.slice(0,120))}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table></div>
+    </div>`;
+  }
   openMo('mo-squadra');
   fgSq(nome);
   if(campFilter){const s2=document.getElementById('msg-camp');if(s2){s2.value=campFilter;fgSq(nome);}}
@@ -9114,6 +9205,17 @@ function renderGlobalStats(){
 }
 
 // ── PROVVEDIMENTI ──
+function fpvArbSuggest(){
+  const q=(document.getElementById('fpv-arb')?.value||'').toLowerCase().trim();
+  const box=document.getElementById('fpv-arb-sug');
+  if(!box)return;
+  if(!q||q.length<2){box.style.display='none';renderProvvedimenti();return;}
+  const arbs=Object.values(P).filter(p=>(p.categoria==='Arbitro'||p.n_gare_arbitro>0)&&p.nome.toLowerCase().includes(q)).slice(0,8);
+  if(!arbs.length){box.style.display='none';renderProvvedimenti();return;}
+  box.style.display='block';
+  box.innerHTML=arbs.map(a=>`<div class="sug-item" onclick="document.getElementById('fpv-arb').value='${esc(a.nome)}';document.getElementById('fpv-arb-sug').style.display='none';renderProvvedimenti()">${escH(a.nome)} <span style="color:#6b7a99;font-size:.68rem">${a.provincia}</span></div>`).join('');
+  renderProvvedimenti();
+}
 function initProvvedimenti(){
   const allGare=[...(D.gare||[]),...(D.gare_future||[])];
   PROVV=allGare.filter(g=>{
@@ -9183,6 +9285,8 @@ function renderProvvedimenti(){
   const d2=document.getElementById('fpv-d2')?.value||'';
   const statoFlt=document.getElementById('fpv-stato')?.value||'';
   const tipoFlt=document.getElementById('fpv-tipo')?.value||'';
+  const provFlt=document.getElementById('fpv-prov')?.value||'';
+  const arbFlt=(document.getElementById('fpv-arb')?.value||'').toLowerCase().trim();
 
   if(!PROVV||PROVV.length===0){
     const infoEl=document.getElementById('pv-info');
@@ -9207,6 +9311,13 @@ function renderProvvedimenti(){
   if(q) f=f.filter(p=>(p.casa||'').toLowerCase().includes(q)||(p.ospite||'').toLowerCase().includes(q)||(p.testo||'').toLowerCase().includes(q)||(p.parsed.persona||'').toLowerCase().includes(q)||(p.parsed.societa||'').toLowerCase().includes(q));
   if(camp) f=f.filter(p=>p.camp===camp);
   if(tipoFlt) f=f.filter(p=>p.parsed.tipo===tipoFlt);
+  if(provFlt){
+    f=f.filter(p=>{
+      const sq=SQ[p.casa]||SQ[p.ospite]||SQ[p.parsed.societa]||{};
+      return sq.prov===provFlt;
+    });
+  }
+  if(arbFlt) f=f.filter(p=>pns(p.arbitro1||'').toLowerCase().includes(arbFlt)||pns(p.arbitro2||'').toLowerCase().includes(arbFlt));
   if(d1) f=f.filter(p=>p.data>=d1);
   if(d2) f=f.filter(p=>p.data<=d2);
   if(statoFlt==='attivo') f=f.filter(p=>p.parsed.al&&p.parsed.al>=today);
@@ -9221,13 +9332,15 @@ function renderProvvedimenti(){
   // KPI
   const kpiEl=document.getElementById('pv-kpi');
   if(kpiEl){
+    const scrollToTbl=()=>document.getElementById('tbl-provv')?.scrollIntoView({behavior:'smooth',block:'start'});
     const kpis=[
-      {v:expanded.length,l:'Totali',c:'var(--color-text-primary,#003087)'},
-      {v:nAttivi,l:'Attivi',c:'#27ae60'},
-      {v:nScaduti,l:'Scaduti',c:'#95a5a6'},
-      {v:[...new Set(expanded.map(p=>p.parsed.persona).filter(Boolean))].length,l:'Persone coinvolte',c:'#e67e22'},
+      {v:expanded.length,l:'Totali',c:'var(--color-text-primary,#003087)',fn:()=>{document.getElementById('fpv-stato').value='';renderProvvedimenti();scrollToTbl();}},
+      {v:nAttivi,l:'Attivi',c:'#27ae60',fn:()=>{document.getElementById('fpv-stato').value='attivo';renderProvvedimenti();scrollToTbl();}},
+      {v:nScaduti,l:'Scaduti',c:'#95a5a6',fn:()=>{document.getElementById('fpv-stato').value='scaduto';renderProvvedimenti();scrollToTbl();}},
+      {v:[...new Set(expanded.map(p=>p.parsed.persona).filter(Boolean))].length,l:'Persone coinvolte',c:'#e67e22',fn:()=>document.getElementById('tbl-persone-provv')?.scrollIntoView({behavior:'smooth',block:'start'})},
     ];
-    kpiEl.innerHTML=kpis.map(k=>`<div class="sc"><div class="sv" style="color:${k.c}">${k.v}</div><div class="sl">${k.l}</div></div>`).join('');
+    kpiEl.innerHTML=kpis.map((k,i)=>`<div class="sc" style="cursor:pointer" onclick="_pvKpi${i}()" title="Clicca per filtrare"><div class="sv" style="color:${k.c}">${k.v}</div><div class="sl">${k.l} ↗</div></div>`).join('');
+    kpis.forEach((k,i)=>{ window[`_pvKpi${i}`]=k.fn; });
   }
 
   // Per tipo
