@@ -5751,7 +5751,7 @@ function openSquadra(nome,campFilter){
       <button class="mt" onclick="swTab(this,'mst-')">⚔️ Avversari (${avv.length})</button>
       <button class="mt" onclick="swTab(this,'mst-')">👨‍⚖️ Arbitri (${arb_stats.length})</button>
       <button class="mt" onclick="swTab(this,'mst-')">📋 Campionati (${camps.length})</button>
-      ${(()=>{const np=(PROVV||[]).filter(pv=>{const pp=parseProvv(pv.testo);return pp.some(p=>p.societa&&(p.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(p.societa.toLowerCase())))||pv.casa===nome||pv.ospite===nome;}).length;return np?`<button class="mt" onclick="swTab(this,'mst-')" style="color:#e67e22">⚠️ Provv. (${np})</button>`:'';})()} 
+      ${(()=>{const np=(PROVV||[]).filter(pv=>{const pp=parseProvv(pv.testo);return pp.some(p=>p.societa&&(p.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(p.societa.toLowerCase())));}).length;return np?`<button class="mt" onclick="swTab(this,'mst-')" style="color:#e67e22">⚠️ Provv. (${np})</button>`:'';})()} 
     </div>
     <div class="mtc active" id="mst-0">
       ${s.gruppo!==nome?`<div class="dual-role-notice">👥 Fa parte del gruppo <b>${escH(s.gruppo)}</b></div>`:''}
@@ -6001,7 +6001,7 @@ function openSquadra(nome,campFilter){
   // Pannello provvedimenti squadra (aggiunto dinamicamente se presenti)
   const provvSq=(PROVV||[]).filter(pv=>{
     const pp=parseProvv(pv.testo);
-    return pp.some(p=>p.societa&&(p.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(p.societa.toLowerCase())))||pv.casa===nome||pv.ospite===nome;
+    return pp.some(p=>p.societa&&(p.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(p.societa.toLowerCase())));
   });
   if(provvSq.length){
     const TIPO_CLR_S={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',provvedimento:'#7f8c8d'};
@@ -6011,7 +6011,7 @@ function openSquadra(nome,campFilter){
       <div style="overflow-x:auto"><table class="mtbl">
         <thead><tr><th>Data</th><th>Campionato</th><th>Gara</th><th>Provvedimento / Persona / Motivo</th></tr></thead>
         <tbody>${provvSq.sort((a,b)=>b.data.localeCompare(a.data)).map(pv=>{
-          const parsed=parseProvv(pv.testo);
+          const parsed=parseProvv(pv.testo).filter(pp=>pp.societa&&(pp.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(pp.societa.toLowerCase())));
           return parsed.length?parsed.map(pp=>{
             const clr=TIPO_CLR_S[pp.tipo]||'#888';
             const statoBadge=pp.al?(pp.al>=today2?'<span style="background:#27ae60;color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem;font-weight:700;margin-left:4px">● ATTIVO</span>':'<span style="background:#95a5a6;color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem;margin-left:4px">SCADUTO</span>'):'';
@@ -9305,21 +9305,36 @@ function renderProvvedimenti(){
 
   // Expand PROVV with parsed sub-entries
   let expanded = [];
+  const _seenKeys = new Set(); // deduplicazione per numero gara + testo raw
   PROVV.forEach(p=>{
     const parsed = parseProvv(p.testo);
     if(parsed.length){
       parsed.forEach(pp=>{
-        // Se società non estratta, usa casa o ospite come fallback
-        if(!pp.societa) pp.societa = p.casa||p.ospite||'';
+        // Chiave univoca: numero gara + raw del singolo provvedimento
+        const deduKey = (p.num||p.data||'') + '|' + pp.raw;
+        if(_seenKeys.has(deduKey)) return;
+        _seenKeys.add(deduKey);
+        // NON usare casa/ospite come fallback generico: lascia vuoto se non trovato
+        // (verrà mostrato come "—" ma non attribuirà erroneamente il provv all'altra squadra)
         expanded.push({...p, parsed:pp});
       });
     } else {
-      expanded.push({...p, parsed:{raw:p.testo,tipo:'provvedimento',societa:p.casa||p.ospite,persona:'',dal:'',al:'',motivo:p.testo.slice(0,120),articolo:''}});
+      const deduKey = (p.num||p.data||'') + '|' + p.testo;
+      if(!_seenKeys.has(deduKey)){
+        _seenKeys.add(deduKey);
+        expanded.push({...p, parsed:{raw:p.testo,tipo:'provvedimento',societa:'',persona:'',dal:'',al:'',motivo:p.testo.slice(0,120),articolo:''}});
+      }
     }
   });
 
   let f=expanded;
-  if(q) f=f.filter(p=>(p.casa||'').toLowerCase().includes(q)||(p.ospite||'').toLowerCase().includes(q)||(p.testo||'').toLowerCase().includes(q)||(p.parsed.persona||'').toLowerCase().includes(q)||(p.parsed.societa||'').toLowerCase().includes(q));
+  if(q) f=f.filter(p=>
+    (p.parsed.societa||'').toLowerCase().includes(q)||
+    (p.parsed.persona||'').toLowerCase().includes(q)||
+    (p.testo||'').toLowerCase().includes(q)||
+    // fallback: se società non estratta, cerca anche in casa/ospite
+    (!p.parsed.societa&&((p.casa||'').toLowerCase().includes(q)||(p.ospite||'').toLowerCase().includes(q)))
+  );
   if(camp) f=f.filter(p=>p.camp===camp);
   if(tipoFlt) f=f.filter(p=>p.parsed.tipo===tipoFlt);
   if(provFlt){
