@@ -50,7 +50,8 @@ def parse_ref(ref_text):
 def get_info(match_div, label_text):
     for info in match_div.find_all("div", class_="info"):
         lbl = info.find("div", class_="label")
-        val = info.find("div", class_="value")
+        # Cerca qualsiasi tag con classe "value" (div, p, span, ecc.)
+        val = info.find(class_="value")
         if lbl and val and label_text.lower() in lbl.get_text().lower():
             v = clean(val.get_text())
             if v.lower() in ('', 'designazione in attesa di conferma.', 'n/d'):
