@@ -4780,13 +4780,13 @@ function openPersona(nome,campFilter){
   // Provvedimenti per questo arbitro
   const provvArb=(PROVV||[]).filter(pv=>[pv.arbitro1,pv.arbitro2].some(a=>pns(a||'')===nome));
   const provvTab=provvArb.length?`<button class="mt" onclick="swTabId(this,'mpt-pv')" style="color:#e67e22">⚠️ Provv. (${provvArb.length})</button>`:'';
-  const TIPO_CLR_P={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',provvedimento:'#7f8c8d'};
+  const TIPO_CLR_P={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',deplorazione:'#16a085',provvedimento:'#7f8c8d'};
   const provvPanel=provvArb.length?`<div class="mtc hidden" id="mpt-pv">
     <p class="il" style="color:#e67e22;font-weight:600">⚠️ ${provvArb.length} gar${provvArb.length===1?'a':'e'} con provvedimenti in cui hai arbitrato</p>
     <div style="overflow-x:auto"><table class="mtbl">
       <thead><tr><th>Data</th><th>Campionato</th><th>Gara</th><th>Provvedimento / Persona / Motivo</th></tr></thead>
       <tbody>${provvArb.sort((a,b)=>b.data.localeCompare(a.data)).map(pv=>{
-        const parsed=parseProvv(pv.testo);
+        const parsed=parseProvv(pv.testo, pv.casa, pv.ospite);
         const today2=new Date().toISOString().split('T')[0];
         return parsed.length?parsed.map(pp=>{
           const clr=TIPO_CLR_P[pp.tipo]||'#888';
@@ -5751,7 +5751,7 @@ function openSquadra(nome,campFilter){
       <button class="mt" onclick="swTab(this,'mst-')">⚔️ Avversari (${avv.length})</button>
       <button class="mt" onclick="swTab(this,'mst-')">👨‍⚖️ Arbitri (${arb_stats.length})</button>
       <button class="mt" onclick="swTab(this,'mst-')">📋 Campionati (${camps.length})</button>
-      ${(()=>{const np=(PROVV||[]).filter(pv=>{const pp=parseProvv(pv.testo);return pp.some(p=>p.societa&&(p.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(p.societa.toLowerCase())));}).length;return np?`<button class="mt" onclick="swTab(this,'mst-')" style="color:#e67e22">⚠️ Provv. (${np})</button>`:'';})()} 
+      ${(()=>{const np=(PROVV||[]).filter(pv=>{const pp=parseProvv(pv.testo, pv.casa, pv.ospite);return pp.some(p=>p.societa&&(p.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(p.societa.toLowerCase())));}).length;return np?`<button class="mt" onclick="swTab(this,'mst-')" style="color:#e67e22">⚠️ Provv. (${np})</button>`:'';})()} 
     </div>
     <div class="mtc active" id="mst-0">
       ${s.gruppo!==nome?`<div class="dual-role-notice">👥 Fa parte del gruppo <b>${escH(s.gruppo)}</b></div>`:''}
@@ -6000,18 +6000,18 @@ function openSquadra(nome,campFilter){
     </div>`;
   // Pannello provvedimenti squadra (aggiunto dinamicamente se presenti)
   const provvSq=(PROVV||[]).filter(pv=>{
-    const pp=parseProvv(pv.testo);
+    const pp=parseProvv(pv.testo, pv.casa, pv.ospite);
     return pp.some(p=>p.societa&&(p.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(p.societa.toLowerCase())));
   });
   if(provvSq.length){
-    const TIPO_CLR_S={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',provvedimento:'#7f8c8d'};
+    const TIPO_CLR_S={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',deplorazione:'#16a085',provvedimento:'#7f8c8d'};
     const today2=new Date().toISOString().split('T')[0];
     document.getElementById('ms-body').innerHTML+=`<div class="mtc hidden">
       <p class="il" style="color:#e67e22;font-weight:600">⚠️ ${provvSq.length} provvediment${provvSq.length===1?'o':'i'} relativi a questa squadra</p>
       <div style="overflow-x:auto"><table class="mtbl">
         <thead><tr><th>Data</th><th>Campionato</th><th>Gara</th><th>Provvedimento / Persona / Motivo</th></tr></thead>
         <tbody>${provvSq.sort((a,b)=>b.data.localeCompare(a.data)).map(pv=>{
-          const parsed=parseProvv(pv.testo).filter(pp=>pp.societa&&(pp.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(pp.societa.toLowerCase())));
+          const parsed=parseProvv(pv.testo, pv.casa, pv.ospite).filter(pp=>pp.societa&&(pp.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(pp.societa.toLowerCase())));
           return parsed.length?parsed.map(pp=>{
             const clr=TIPO_CLR_S[pp.tipo]||'#888';
             const statoBadge=pp.al?(pp.al>=today2?'<span style="background:#27ae60;color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem;font-weight:700;margin-left:4px">● ATTIVO</span>':'<span style="background:#95a5a6;color:#fff;border-radius:3px;padding:1px 4px;font-size:.6rem;margin-left:4px">SCADUTO</span>'):'';
@@ -9218,9 +9218,16 @@ function fpvArbSuggest(){
 }
 function initProvvedimenti(){
   const allGare=[...(D.gare||[]),...(D.gare_future||[])];
+  const _rawSeen=new Set();
   PROVV=allGare.filter(g=>{
     const t=g['Provvedimenti']||g['provvedimenti']||'';
     return typeof t==='string'?t.trim().length>0:false;
+  }).filter(g=>{
+    // Dedup a monte: stessa gara + stesso testo
+    const k=(g['Numero Gara']||g['Data']||'')+'|'+(g['Provvedimenti']||'').trim();
+    if(_rawSeen.has(k))return false;
+    _rawSeen.add(k);
+    return true;
   }).map(g=>({
     data:g['Data']||'',
     camp:g['Campionato']||'',
@@ -9245,29 +9252,85 @@ function initProvvedimenti(){
   if(hdr)hdr.textContent=`⚠️ Provvedimenti Disciplinari (${PROVV.length} trovati)`;
 }
 // Parse a FIP provvedimento text into structured fields
-function parseProvv(testo) {
+function parseProvv(testo, casaGara, ospiteGara) {
   if(!testo) return [];
-  // Split su newline o punto-e-virgola prima di "soc."
-  const righe = testo.split(/\r?\n|;(?=\s*soc\.)/i).map(r=>r.trim()).filter(Boolean);
-  // Deduplica righe identiche (il sito FIP a volte duplica le righe)
+  // Rimuove prefisso "soc. " iniziale globale se presente
+  const testoClean = testo.replace(/^soc\.\s*/i,'');
+  // Split su newline
+  const righe = testoClean.split(/\r?\n/).map(r=>r.trim()).filter(Boolean);
+  // Deduplica righe identiche
   const righeUniche = [...new Set(righe)];
+
+  // Helper: normalizza nome società rimuovendo prefissi legali FIP
+  function normSoc(s){
+    return s.replace(/^(?:soc\.\s*)?(?:a\.?s\.?d\.?\s*|a\.?d\.?\s*|s\.?s\.?d\.?\s*|pol\.\s*|a\.s\.c\.\s*|s\.r\.l\.?\s*|srl\s*|spa\s*)/gi,'').trim();
+  }
+
+  // Helper: dato nome società FIP, trova la squadra reale (casa o ospite) più simile
+  function matchSquadra(socFip){
+    if(!socFip||(!casaGara&&!ospiteGara)) return socFip||'';
+    const sn=normSoc(socFip).toLowerCase();
+    // Prende parole significative (>3 chars) del nome FIP
+    const words=sn.split(/\s+/).filter(w=>w.length>3);
+    if(!words.length) return socFip;
+    const candidates=[casaGara,ospiteGara].filter(Boolean);
+    // Calcola quante parole matchano per ogni candidato
+    const scores=candidates.map(c=>{
+      const cl=c.toLowerCase();
+      const matches=words.filter(w=>cl.includes(w)).length;
+      return{c,matches};
+    });
+    scores.sort((a,b)=>b.matches-a.matches);
+    // Usa il match solo se almeno 1 parola corrisponde
+    if(scores[0]&&scores[0].matches>0) return scores[0].c;
+    return normSoc(socFip); // fallback: nome pulito FIP
+  }
+
   return righeUniche.map(r => {
     const p = { raw: r, societa:'', persona:'', tipo:'', dal:'', al:'', motivo:'', articolo:'' };
-    // Estrai società e persona: "soc. SOCIETA:PERSONA tipo..." oppure "SOCIETA:PERSONA tipo..."
-    const socM = r.match(/^(?:soc\.\s*)?([^:]+):([^\s][\w\s']+?)\s+(?:inibit|squalif|ammoniz|diffid|sospen)/i);
-    if(socM){ p.societa=socM[1].trim(); p.persona=socM[2].trim(); }
-    else {
-      // Ammonizioni/provvedimenti alla società senza persona: "soc. SOCIETA ammoniz..."
-      const socSoloM = r.match(/^(?:soc\.\s*)([^,;]+?)\s+(?:ammoniz|squalif|inibit|diffid|sospen|provved)/i);
-      if(socSoloM) p.societa = socSoloM[1].trim();
+
+    // Formato: "soc. SOCIETA:COSA tipo..." oppure "SOCIETA:COSA tipo..."
+    const colonM = r.match(/^(?:soc\.\s*)?([^:]+):(.+)/i);
+    if(colonM){
+      const socRaw = colonM[1].trim();
+      const resto  = colonM[2].trim();
+      // Controlla se dopo ":" c'è direttamente un tipo provvedimento (es. "Ammonizione per...")
+      const tipoImmediato = /^(?:ammoniz|squalif|inibit|diffid|sospen|deplorazi|deploraz|provved)/i.test(resto);
+      if(tipoImmediato){
+        // Nessuna persona, solo società
+        p.societa = matchSquadra(socRaw);
+        p.persona = '';
+      } else {
+        // Estrai persona: tutto prima del primo verbo/tipo
+        const personaM = resto.match(/^([A-ZÀÈÌÒÙÁÉÍÓÚ][^a-z]{2,40}?)\s+(?:inibit|squalif|ammoniz|diffid|sospen|deplorazi|deploraz)/i);
+        if(personaM){
+          p.persona = personaM[1].trim();
+          p.societa = matchSquadra(socRaw);
+        } else {
+          // Prova match generico NOME COGNOME (tutto maiuscolo prima del tipo)
+          const tuttoMaius = resto.match(/^([A-ZÀÈÌÒÙÁÉÍÓÚ][A-ZÀÈÌÒÙÁÉÍÓÚ\s']{2,40}?)\s+(?:inibit|squalif|ammoniz|diffid|sospen|deplorazi|deploraz|per\s)/i);
+          if(tuttoMaius){
+            p.persona = tuttoMaius[1].trim();
+            p.societa = matchSquadra(socRaw);
+          } else {
+            p.societa = matchSquadra(socRaw);
+          }
+        }
+      }
+    } else {
+      // Nessun ":" — testo libero, cerca società tra casa/ospite
+      p.societa = '';
     }
+
     // Tipo provvedimento
     if(/inibitor/i.test(r)) p.tipo='inibitoria';
     else if(/squalif/i.test(r)) p.tipo='squalifica';
     else if(/ammoniz/i.test(r)) p.tipo='ammonizione';
     else if(/diffid/i.test(r)) p.tipo='diffida';
     else if(/sospen/i.test(r)) p.tipo='sospensione';
+    else if(/deplorazi|deploraz/i.test(r)) p.tipo='deplorazione';
     else p.tipo='provvedimento';
+
     // Date: "dal GG/MM/AAAA al GG/MM/AAAA"
     const dateM = r.match(/dal\s+(\d{1,2}\/\d{2}\/\d{4})\s+al\s+(\d{1,2}\/\d{2}\/\d{4})/i);
     if(dateM){
@@ -9275,11 +9338,11 @@ function parseProvv(testo) {
       p.al  = dateM[2].split('/').reverse().join('-');
     }
     // Articolo
-    const artM = r.match(/\[?art\.?\s*([\d,/\w]+)\s*(?:RG|RS|C\.G\.)?\]?/i);
+    const artM = r.match(/\[?art\.?\s*([\d,/\w]+)\s*(?:RG|RS|RGI|C\.G\.)?\]?/i);
     if(artM) p.articolo = artM[1];
     // Motivo
     const motM = r.match(/\bper\s+(.+?)(?:\s*\[art|\s*$)/i);
-    if(motM) p.motivo = motM[1].trim().slice(0,120);
+    if(motM) p.motivo = motM[1].trim().slice(0,150);
     return p;
   }).filter(p=>p.tipo);
 }
@@ -9307,7 +9370,7 @@ function renderProvvedimenti(){
   let expanded = [];
   const _seenKeys = new Set(); // deduplicazione per numero gara + testo raw
   PROVV.forEach(p=>{
-    const parsed = parseProvv(p.testo);
+    const parsed = parseProvv(p.testo, p.casa, p.ospite);
     if(parsed.length){
       parsed.forEach(pp=>{
         // Chiave univoca: numero gara + raw del singolo provvedimento
@@ -9370,7 +9433,7 @@ function renderProvvedimenti(){
   }
 
   // Per tipo
-  const TIPO_CLR={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',provvedimento:'#7f8c8d'};
+  const TIPO_CLR={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',deplorazione:'#16a085',provvedimento:'#7f8c8d'};
   const tipoC={};
   f.forEach(p=>{const t=p.parsed.tipo||'provvedimento';tipoC[t]=(tipoC[t]||0)+1;});
   const tipoOrd=['squalifica','ammonizione','inibitoria','diffida','sospensione','provvedimento'];
