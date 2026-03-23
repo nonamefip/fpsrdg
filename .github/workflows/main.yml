@@ -1,0 +1,75 @@
+name: Aggiorna Dashboard FIP Sardegna
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/template.html'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Modalità scraper'
+        required: false
+        default: 'normal'
+        type: choice
+        options:
+          - normal          # aggiornamento giornaliero (default)
+          - full-refresh    # riscarica tutto dall'inizio
+          - reprovv         # solo fase 2: riscarica gare senza provvedimenti
+  schedule:
+    - cron: '30 2 * * *'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache dipendenze Python
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Installa dipendenze
+        run: pip install -r requirements.txt
+
+      - name: Scarica dati FIP (normale)
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.mode == 'normal' }}
+        run: python scripts/fip_scraper.py --refresh-days 7
+
+      - name: Scarica dati FIP (full-refresh)
+        if: ${{ inputs.mode == 'full-refresh' }}
+        run: python scripts/fip_scraper.py --full-refresh
+
+      - name: Scarica dati FIP (reprovv – solo provvedimenti mancanti)
+        if: ${{ inputs.mode == 'reprovv' }}
+        run: python scripts/fip_scraper.py --reprovv
+
+      - name: Genera dati JSON
+        run: python scripts/gen_data.py
+
+      - name: Genera dashboard HTML
+        run: python scripts/build.py
+
+      - name: Deploy su GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          publish_branch: gh-pages
