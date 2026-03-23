@@ -9239,7 +9239,12 @@ function initProvvedimenti(){
     num:g['Numero Gara']||''
   }));
   if(D.provvedimenti&&Array.isArray(D.provvedimenti)&&D.provvedimenti.length){
-    D.provvedimenti.forEach(p=>{PROVV.push(p);});
+    D.provvedimenti.forEach(p=>{
+      const k=(p.num||p.data||'')+'|'+(p.testo||'').trim();
+      if(_rawSeen.has(k))return;
+      _rawSeen.add(k);
+      PROVV.push(p);
+    });
   }
   PROVV.sort((a,b)=>(a.data||'').localeCompare(b.data||''));
   const sel=document.getElementById('fpv-camp');
