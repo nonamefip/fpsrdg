@@ -9247,13 +9247,20 @@ function initProvvedimenti(){
 // Parse a FIP provvedimento text into structured fields
 function parseProvv(testo) {
   if(!testo) return [];
-  // Split multiple provvedimenti (separated by newlines or semicolons)
-  const righe = testo.split(/\r?\n|;(?=\s*soc\.)/).map(r=>r.trim()).filter(Boolean);
-  return righe.map(r => {
+  // Split su newline o punto-e-virgola prima di "soc."
+  const righe = testo.split(/\r?\n|;(?=\s*soc\.)/i).map(r=>r.trim()).filter(Boolean);
+  // Deduplica righe identiche (il sito FIP a volte duplica le righe)
+  const righeUniche = [...new Set(righe)];
+  return righeUniche.map(r => {
     const p = { raw: r, societa:'', persona:'', tipo:'', dal:'', al:'', motivo:'', articolo:'' };
-    // Estrai società e persona: "soc. SOCIETA:PERSONA" o "SOCIETA:PERSONA"
+    // Estrai società e persona: "soc. SOCIETA:PERSONA tipo..." oppure "SOCIETA:PERSONA tipo..."
     const socM = r.match(/^(?:soc\.\s*)?([^:]+):([^\s][\w\s']+?)\s+(?:inibit|squalif|ammoniz|diffid|sospen)/i);
     if(socM){ p.societa=socM[1].trim(); p.persona=socM[2].trim(); }
+    else {
+      // Ammonizioni/provvedimenti alla società senza persona: "soc. SOCIETA ammoniz..."
+      const socSoloM = r.match(/^(?:soc\.\s*)([^,;]+?)\s+(?:ammoniz|squalif|inibit|diffid|sospen|provved)/i);
+      if(socSoloM) p.societa = socSoloM[1].trim();
+    }
     // Tipo provvedimento
     if(/inibitor/i.test(r)) p.tipo='inibitoria';
     else if(/squalif/i.test(r)) p.tipo='squalifica';
@@ -9261,16 +9268,16 @@ function parseProvv(testo) {
     else if(/diffid/i.test(r)) p.tipo='diffida';
     else if(/sospen/i.test(r)) p.tipo='sospensione';
     else p.tipo='provvedimento';
-    // Date: "dal GG/MM/AAAA al GG/MM/AAAA" oppure "determinata dal..."
+    // Date: "dal GG/MM/AAAA al GG/MM/AAAA"
     const dateM = r.match(/dal\s+(\d{1,2}\/\d{2}\/\d{4})\s+al\s+(\d{1,2}\/\d{2}\/\d{4})/i);
     if(dateM){
       p.dal = dateM[1].split('/').reverse().join('-');
       p.al  = dateM[2].split('/').reverse().join('-');
     }
-    // Articolo: [art. X RG] o art. X/Xa RG
+    // Articolo
     const artM = r.match(/\[?art\.?\s*([\d,/\w]+)\s*(?:RG|RS|C\.G\.)?\]?/i);
     if(artM) p.articolo = artM[1];
-    // Motivo: "per TESTO [art..."
+    // Motivo
     const motM = r.match(/\bper\s+(.+?)(?:\s*\[art|\s*$)/i);
     if(motM) p.motivo = motM[1].trim().slice(0,120);
     return p;
@@ -9301,7 +9308,11 @@ function renderProvvedimenti(){
   PROVV.forEach(p=>{
     const parsed = parseProvv(p.testo);
     if(parsed.length){
-      parsed.forEach(pp=>expanded.push({...p, parsed:pp}));
+      parsed.forEach(pp=>{
+        // Se società non estratta, usa casa o ospite come fallback
+        if(!pp.societa) pp.societa = p.casa||p.ospite||'';
+        expanded.push({...p, parsed:pp});
+      });
     } else {
       expanded.push({...p, parsed:{raw:p.testo,tipo:'provvedimento',societa:p.casa||p.ospite,persona:'',dal:'',al:'',motivo:p.testo.slice(0,120),articolo:''}});
     }
@@ -9351,12 +9362,13 @@ function renderProvvedimenti(){
   const maxTipo=Math.max(...Object.values(tipoC),1);
   const tipoEl=document.getElementById('pv-per-tipo');
   if(tipoEl)tipoEl.innerHTML=tipoOrd.filter(t=>tipoC[t]).map(t=>`
-    <div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--br,#eee)">
+    <div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--br,#eee);cursor:pointer"
+      onclick="document.getElementById('fpv-tipo').value='${t}';renderProvvedimenti();document.getElementById('tbl-provv')?.scrollIntoView({behavior:'smooth',block:'start'})" title="Filtra per ${t}">
       <span style="background:${TIPO_CLR[t]};color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;font-weight:700;text-transform:uppercase;min-width:72px;text-align:center">${t}</span>
       <div style="flex:1;height:5px;background:var(--bg2,#f0f0f0);border-radius:2px">
         <div style="height:100%;width:${Math.round(tipoC[t]/maxTipo*100)}%;background:${TIPO_CLR[t]};border-radius:2px"></div>
       </div>
-      <span style="font-weight:700;font-size:.75rem;min-width:20px;text-align:right">${tipoC[t]}</span>
+      <span style="font-weight:700;font-size:.75rem;min-width:20px;text-align:right;color:${TIPO_CLR[t]}">${tipoC[t]} ↗</span>
     </div>`).join('')||'<span style="color:var(--mu);font-size:.75rem">—</span>';
 
   // Squadre — classifica completa
@@ -9369,7 +9381,8 @@ function renderProvvedimenti(){
     <div style="display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid var(--br,#eee)">
       <span style="color:var(--mu2);font-size:.7rem;min-width:18px">${i+1}.</span>
       <span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')" style="flex:1;font-size:.73rem">${escH(sq)}</span>
-      <span style="font-weight:700;font-size:.75rem">${n}</span>
+      <span style="font-weight:700;font-size:.75rem;cursor:pointer;color:#c0392b" title="Filtra per questa squadra"
+        onclick="document.getElementById('fpv-q').value='${esc(sq)}';renderProvvedimenti();document.getElementById('tbl-provv')?.scrollIntoView({behavior:'smooth',block:'start'})">${n} ↗</span>
       <div style="width:50px;height:4px;background:#fde8e8;border-radius:2px;flex-shrink:0">
         <div style="height:100%;width:${Math.round(n/maxSq*100)}%;background:#c0392b;border-radius:2px"></div>
       </div>
@@ -9385,7 +9398,8 @@ function renderProvvedimenti(){
     <div style="display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid var(--br,#eee)">
       <span style="color:var(--mu2);font-size:.7rem;min-width:18px">${i+1}.</span>
       <span class="rn rn-Arbitro" data-n="${arb}" onclick="openPersona('${esc(arb)}')" style="flex:1;font-size:.73rem">${escH(arb)}</span>
-      <span style="font-weight:700;font-size:.75rem">${n}</span>
+      <span style="font-weight:700;font-size:.75rem;cursor:pointer;color:var(--bl,#003087)" title="Filtra per questo arbitro"
+        onclick="document.getElementById('fpv-arb').value='${esc(arb)}';renderProvvedimenti();document.getElementById('tbl-provv')?.scrollIntoView({behavior:'smooth',block:'start'})">${n} ↗</span>
       <div style="width:50px;height:4px;background:#e8eeff;border-radius:2px;flex-shrink:0">
         <div style="height:100%;width:${Math.round(n/maxA*100)}%;background:var(--bl,#003087);border-radius:2px"></div>
       </div>
