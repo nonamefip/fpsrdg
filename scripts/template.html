@@ -9311,13 +9311,13 @@ function parseProvv(testo, casaGara, ospiteGara) {
         p.persona = '';
       } else {
         // Estrai persona: tutto prima del primo verbo/tipo
-        const personaM = resto.match(/^([A-ZÀÈÌÒÙÁÉÍÓÚ][^a-z]{2,40}?)\s+(?:inibit|squalif|ammoniz|diffid|sospen|deplorazi|deploraz)/i);
+        const personaM = resto.match(/^([A-ZÀÈÌÒÙÁÉÍÓÚ][^a-z]{2,40}?)\s+(?:inibiz|inibit|squalif|ammoniz|diffid|sospen|deplorazi|deploraz)/i);
         if(personaM){
           p.persona = personaM[1].trim();
           p.societa = matchSquadra(socRaw);
         } else {
           // Prova match generico NOME COGNOME (tutto maiuscolo prima del tipo)
-          const tuttoMaius = resto.match(/^([A-ZÀÈÌÒÙÁÉÍÓÚ][A-ZÀÈÌÒÙÁÉÍÓÚ\s']{2,40}?)\s+(?:inibit|squalif|ammoniz|diffid|sospen|deplorazi|deploraz|per\s)/i);
+          const tuttoMaius = resto.match(/^([A-ZÀÈÌÒÙÁÉÍÓÚ][A-ZÀÈÌÒÙÁÉÍÓÚ\s']{2,40}?)\s+(?:inibiz|inibit|squalif|ammoniz|diffid|sospen|deplorazi|deploraz|per\s)/i);
           if(tuttoMaius){
             p.persona = tuttoMaius[1].trim();
             p.societa = matchSquadra(socRaw);
