@@ -203,6 +203,13 @@ def fase1(session, args, existing, key_to_idx):
                 continue
             if key in key_to_idx:
                 if da in refresh_days_set or args.full_refresh:
+                    # Preserva campi già valorizzati che la lista-per-data non restituisce
+                    old_rec = existing[key_to_idx[key]]
+                    for pf in ["Provvedimenti", "Arbitro 1", "Arbitro 2", "Arbitro 3",
+                               "Segnapunti", "Cronometrista", "24 Secondi",
+                               "Addetto Referto", "Osservatore"]:
+                        if not (r.get(pf) or "").strip() and (old_rec.get(pf) or "").strip():
+                            r[pf] = old_rec[pf]
                     existing[key_to_idx[key]] = r
                     aggiornati += 1; updated += 1
             else:
@@ -270,68 +277,55 @@ def fase2(session, args, existing, key_to_idx):
         print("[Fase 2] ✅ Nessuna gara da verificare.")
         return 0
 
-    # Raggruppa i candidati per data — una sola richiesta per giorno
-    # (FIP restituisce i provvedimenti solo nella risposta per data, non per numero_gara)
-    from collections import defaultdict
-    date_to_idxs = defaultdict(list)
-    for idx in candidates:
-        da = existing[idx].get("Data", "")
-        if da:
-            date_to_idxs[da].append(idx)
-
-    dates_sorted = sorted(date_to_idxs.keys())
-    print(f"[Fase 2] Giorni da ri-scaricare: {len(dates_sorted)}")
-
     aggiornati = 0
     trovati    = 0
     empty      = 0
 
-    for i, da in enumerate(dates_sorted, 1):
-        resp = fetch_by_date(session, da)
+    for i, idx in enumerate(candidates, 1):
+        g      = existing[idx]
+        num    = g.get("Numero Gara", "")
+        if not num:
+            print(f"  [{i}/{len(candidates)}] SKIP (nessun numero gara)")
+            continue
+
+        resp = fetch_by_numero(session, num)
         if resp is None:
-            print(f"\n  [{i}/{len(dates_sorted)}] {da} FALLITO")
+            print(f"\n  [{i}/{len(candidates)}] {num} FALLITO")
             empty = 0; continue
 
         rows = parse_page(resp.text)
-        if rows is None:
-            print(f"\n  [{i}/{len(dates_sorted)}] {da} ⚠️ troppi risultati")
+        if not rows:
+            print(f"  [{i}/{len(candidates)}] {num} → nessun risultato HTML")
             empty = 0; continue
 
-        # Mappa numero_gara → riga scaricata
-        rows_map = {r.get("Numero Gara", ""): r for r in rows if r.get("Numero Gara")}
+        # La risposta dovrebbe contenere solo quella gara
+        match = next((r for r in rows if r.get("Numero Gara") == num), rows[0] if rows else None)
+        if not match:
+            continue
 
-        nuovi_provv = 0
-        for idx in date_to_idxs[da]:
-            g   = existing[idx]
-            num = g.get("Numero Gara", "")
-            if not num or num not in rows_map:
-                continue
+        provv = (match.get("Provvedimenti") or "").strip()
+        aggiornati += 1
 
-            match = rows_map[num]
-            provv = (match.get("Provvedimenti") or "").strip()
-            aggiornati += 1
+        # Aggiorna sempre i campi che potrebbero essere stati integrati da FIP
+        for field in ["Provvedimenti", "Arbitro 1", "Arbitro 2", "Arbitro 3",
+                      "Segnapunti", "Cronometrista", "24 Secondi",
+                      "Addetto Referto", "Osservatore", "Campo"]:
+            nuovo = (match.get(field) or "").strip()
+            if nuovo:
+                existing[idx][field] = nuovo
 
-            # Aggiorna tutti i campi che FIP potrebbe aver integrato dopo
-            for field in ["Provvedimenti", "Arbitro 1", "Arbitro 2", "Arbitro 3",
-                          "Segnapunti", "Cronometrista", "24 Secondi",
-                          "Addetto Referto", "Osservatore", "Campo"]:
-                nuovo = (match.get(field) or "").strip()
-                if nuovo:
-                    existing[idx][field] = nuovo
-
-            if provv:
-                trovati += 1
-                nuovi_provv += 1
-
-        if nuovi_provv > 0:
-            if empty > 0: print()
-            print(f"  [{i}/{len(dates_sorted)}] {da} ✅ {nuovi_provv} provvedimenti trovati")
+        if provv:
+            trovati += 1
+            if empty > 0:
+                print()
+            print(f"  [{i}/{len(candidates)}] {num} ({g.get('Data','')}) ✅ PROVV: {provv[:80]}")
             empty = 0
         else:
             print("·", end="", flush=True)
             empty += 1
 
-        time.sleep(random.uniform(0.8, 1.5))
+        # Pausa più breve in fase 2 (richieste mirate, non bulk)
+        time.sleep(random.uniform(0.5, 1.2))
 
     if empty > 0:
         print()
