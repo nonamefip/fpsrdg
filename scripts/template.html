@@ -4783,7 +4783,7 @@ function openPersona(nome,campFilter){
   // Provvedimenti per questo arbitro
   const provvArb=(PROVV||[]).filter(pv=>[pv.arbitro1,pv.arbitro2].some(a=>pns(a||'')===nome));
   const provvTab=provvArb.length?`<button class="mt" onclick="swTabId(this,'mpt-pv')" style="color:#e67e22">⚠️ Provv. (${provvArb.length})</button>`:'';
-  const TIPO_CLR_P={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',deplorazione:'#16a085',ammenda:'#8e5ea2',squalifica campo:'#c0392b',provvedimento:'#7f8c8d'};
+  const TIPO_CLR_P={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',deplorazione:'#16a085',ammenda:'#8e5ea2','squalifica campo':'#c0392b',provvedimento:'#7f8c8d'};
   const provvPanel=provvArb.length?`<div class="mtc hidden" id="mpt-pv">
     <p class="il" style="color:#e67e22;font-weight:600">⚠️ ${provvArb.length} gar${provvArb.length===1?'a':'e'} con provvedimenti in cui hai arbitrato</p>
     <div style="overflow-x:auto"><table class="mtbl">
@@ -6007,7 +6007,7 @@ function openSquadra(nome,campFilter){
     return pp.some(p=>p.societa&&(p.societa.toLowerCase().includes(nome.toLowerCase())||nome.toLowerCase().includes(p.societa.toLowerCase())));
   });
   if(provvSq.length){
-    const TIPO_CLR_S={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',deplorazione:'#16a085',ammenda:'#8e5ea2',squalifica campo:'#c0392b',provvedimento:'#7f8c8d'};
+    const TIPO_CLR_S={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',deplorazione:'#16a085',ammenda:'#8e5ea2','squalifica campo':'#c0392b',provvedimento:'#7f8c8d'};
     const today2=new Date().toISOString().split('T')[0];
     document.getElementById('ms-body').innerHTML+=`<div class="mtc hidden">
       <p class="il" style="color:#e67e22;font-weight:600">⚠️ ${provvSq.length} provvediment${provvSq.length===1?'o':'i'} relativi a questa squadra</p>
@@ -9444,7 +9444,7 @@ function renderProvvedimenti(){
   }
 
   // Per tipo
-  const TIPO_CLR={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',deplorazione:'#16a085',ammenda:'#8e5ea2',squalifica campo:'#c0392b',provvedimento:'#7f8c8d'};
+  const TIPO_CLR={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',deplorazione:'#16a085',ammenda:'#8e5ea2','squalifica campo':'#c0392b',provvedimento:'#7f8c8d'};
   const tipoC={};
   f.forEach(p=>{const t=p.parsed.tipo||'provvedimento';tipoC[t]=(tipoC[t]||0)+1;});
   const tipoOrd=['squalifica','squalifica campo','ammonizione','ammenda','inibitoria','deplorazione','diffida','sospensione','provvedimento'];
