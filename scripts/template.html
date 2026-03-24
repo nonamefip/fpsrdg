@@ -7236,7 +7236,7 @@ function openGara(numGara){
   // H2H storico (tutte le stagioni, non solo la corrente)
   const allGareH2H=(D.gare||[]).filter(x=>
     ((x['Squadra Casa']===casa&&x['Squadra Ospite']===osp)||(x['Squadra Casa']===osp&&x['Squadra Ospite']===casa))
-    &&x['Risultato']&&x['Numero Gara']!==numGara
+    &&x['Risultato']&&x['Numero Gara']!==numGara&&x['Campionato']===camp
   ).sort((a,b)=>b['Data'].localeCompare(a['Data']));
   const h2hVcasa=allGareH2H.filter(x=>{const pc=parseInt(x['Punti Casa'])||0,po=parseInt(x['Punti Ospite'])||0;return x['Squadra Casa']===casa?pc>po:po>pc;}).length;
   const h2hVosp=allGareH2H.length-h2hVcasa;
