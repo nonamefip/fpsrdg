@@ -51,7 +51,7 @@ jobs:
 
       - name: Scarica dati FIP (normale)
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.mode == 'normal' }}
-        run: python scripts/fip_scraper.py --refresh-days 7
+        run: python scripts/fip_scraper.py --refresh-days 21
 
       - name: Scarica dati FIP (full-refresh)
         if: ${{ inputs.mode == 'full-refresh' }}
