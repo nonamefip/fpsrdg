@@ -9221,15 +9221,15 @@ function fpvArbSuggest(){
 }
 function initProvvedimenti(){
   const allGare=[...(D.gare||[]),...(D.gare_future||[])];
-  const _numSeen=new Set();
+  const _rawSeen=new Set();
   PROVV=allGare.filter(g=>{
     const t=g['Provvedimenti']||g['provvedimenti']||'';
     return typeof t==='string'?t.trim().length>0:false;
   }).filter(g=>{
-    // Dedup per numero gara (chiave primaria)
-    const k=g['Numero Gara']||(g['Data']+g['Squadra Casa']+g['Squadra Ospite']);
-    if(_numSeen.has(k))return false;
-    _numSeen.add(k);
+    // Dedup a monte: stessa gara + stesso testo
+    const k=(g['Numero Gara']||g['Data']||'')+'|'+(g['Provvedimenti']||'').trim();
+    if(_rawSeen.has(k))return false;
+    _rawSeen.add(k);
     return true;
   }).map(g=>({
     data:g['Data']||'',
@@ -9243,10 +9243,9 @@ function initProvvedimenti(){
   }));
   if(D.provvedimenti&&Array.isArray(D.provvedimenti)&&D.provvedimenti.length){
     D.provvedimenti.forEach(p=>{
-      // Salta se il numero gara è già presente (evita duplicati tra D.gare e D.provvedimenti)
-      const k=p.num||(p.data+(p.casa||'')+(p.ospite||''));
-      if(_numSeen.has(k))return;
-      _numSeen.add(k);
+      const k=(p.num||p.data||'')+'|'+(p.testo||'').trim();
+      if(_rawSeen.has(k))return;
+      _rawSeen.add(k);
       PROVV.push(p);
     });
   }
