@@ -4926,8 +4926,8 @@ function openPersona(nome,campFilter){
           <div class="dow-chart">${dowBars}</div>
         </div>
       </div>
-      <!-- Km + Copertura + Attività mensile -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px;margin-top:10px">
+      <!-- Km + Copertura (Attività mensile è nel Trend sotto) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
         ${km>0?`<div class="card" style="margin-bottom:0">
           <div class="card-title">🚗 Km stimati stagione</div>
           <div style="font-size:1.6rem;font-weight:900;color:var(--bl)">${km.toLocaleString('it')}</div>
@@ -4943,29 +4943,6 @@ function openPersona(nome,campFilter){
               <div style="height:8px;background:var(--green);width:${pctDopp}%;border-radius:4px"></div>
             </div>
             <div style="font-size:.68rem;color:var(--mu);margin-top:4px">${pctDopp}% in coppia</div>`;
-          })()}
-        </div>
-        <div class="card" style="margin-bottom:0">
-          <div class="card-title">📊 Attività mensile</div>
-          ${(()=>{
-            const mesiCount={};
-            allG.forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)mesiCount[m]=(mesiCount[m]||0)+1;});
-            const mesi=Object.keys(mesiCount).sort();
-            if(!mesi.length)return'<p style="color:var(--mu);font-size:.75rem">Nessun dato</p>';
-            const maxM=Math.max(...Object.values(mesiCount),1);
-            const mesiL=['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-            return`<div style="display:flex;align-items:flex-end;gap:6px;height:60px">
-              ${mesi.map(m=>{
-                const cnt=mesiCount[m];
-                const barH=Math.max(4,Math.round(cnt/maxM*52));
-                const label=mesiL[parseInt(m.slice(5))]||m.slice(5);
-                return`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
-                  <span style="font-size:.6rem;font-weight:700;color:var(--bl)">${cnt}</span>
-                  <div style="width:100%;height:${barH}px;background:var(--bl2);border-radius:2px 2px 0 0"></div>
-                  <span style="font-size:.55rem;color:var(--mu2)">${label}</span>
-                </div>`;
-              }).join('')}
-            </div>`;
           })()}
         </div>
       </div>
@@ -5132,11 +5109,10 @@ function openPersona(nome,campFilter){
 
         return`<div style="margin-top:12px">
           <div style="font-size:.8rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Calendario presenze</div>
-          <!-- Tab switcher -->
+          <!-- Tab switcher: solo A e B -->
           <div style="display:flex;gap:4px;margin-bottom:8px">
-            <button id="${uid}_btnA" onclick="calSwitch('${uid}','A')" style="font-size:.65rem;padding:2px 8px;border:1px solid var(--br);border-radius:4px;background:var(--bl);color:#fff;cursor:pointer">A — Heatmap</button>
-            <button id="${uid}_btnB" onclick="calSwitch('${uid}','B')" style="font-size:.65rem;padding:2px 8px;border:1px solid var(--br);border-radius:4px;background:var(--bg);color:var(--bl);cursor:pointer">B — Strip</button>
-            <button id="${uid}_btnC" onclick="calSwitch('${uid}','C')" style="font-size:.65rem;padding:2px 8px;border:1px solid var(--br);border-radius:4px;background:var(--bg);color:var(--bl);cursor:pointer">C — Barre</button>
+            <button id="${uid}_btnA" onclick="calSwitch('${uid}','A')" style="font-size:.65rem;padding:2px 10px;border:1px solid var(--bl);border-radius:4px;background:var(--bl);color:#fff;cursor:pointer;font-weight:500">A — Heatmap</button>
+            <button id="${uid}_btnB" onclick="calSwitch('${uid}','B')" style="font-size:.65rem;padding:2px 10px;border:1px solid var(--br);border-radius:4px;background:var(--bg);color:var(--bl);cursor:pointer">B — Strip</button>
           </div>
           <!-- Legenda -->
           <div id="${uid}_leg" style="font-size:.6rem;color:var(--mu);margin-bottom:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -5150,7 +5126,6 @@ function openPersona(nome,campFilter){
           <!-- Pannelli -->
           <div id="${uid}_A" style="overflow-x:auto"><div style="display:flex;flex-wrap:wrap;gap:8px">${calA}</div></div>
           <div id="${uid}_B" style="display:none;overflow-x:auto">${calB}</div>
-          <div id="${uid}_C" style="display:none">${calC}</div>
         </div>`;
       })()}
 
@@ -5813,7 +5788,6 @@ function fgpP(nome){
   let gare=(p.gare||[]).filter(g=>{
     if(camp&&g['Campionato']!==camp)return false;
     if(d1&&g['Data']<d1)return false;
-    // Mostra solo gare già disputate (con risultato o passate di 30min)
     if(g['Risultato'])return true;
     const gd=g['Data']||'';
     if(gd<_today2)return true;
@@ -5821,24 +5795,49 @@ function fgpP(nome){
     const gOra=g['Ora']||'';if(!gOra)return false;
     const pp=gOra.split(':');
     return parseInt(pp[0]||0)*60+parseInt(pp[1]||0)+30<=_nowMin2;
-  }).sort((a,b)=>a['Data'].localeCompare(b['Data']));
+  }).sort((a,b)=>(b['Data']||'').localeCompare(a['Data']||''));
   const info=document.getElementById('mpar-info');
   if(info)info.textContent=`${gare.length} gare`;
   const tbody=document.getElementById('tbl-mpar-body');
-  if(tbody)tbody.innerHTML=gare.map((g,_ri)=>{
+  if(!tbody)return;
+  // Fix header too
+  const thead=tbody.closest('table')?.querySelector('thead tr');
+  if(thead){
+    const ths=['#','Data','Ora','N°','Campionato','Girone','Casa','Ospite','Ris.','Ruolo','Prov.','Città','Colleghi'];
+    thead.innerHTML=ths.map((t,i)=>`<th onclick="sT('tbl-mpar',${i},event)" style="cursor:pointer;position:relative">${t}<span class="rsz" onmousedown="event.stopPropagation();_gStartResizeTh(event,this)"></span></th>`).join('');
+  }
+  tbody.innerHTML=gare.map((g,_ri)=>{
     const coll=[];
     ['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].forEach(f=>{
       const v=g[f]||'';const n=pns(v);
       if(n&&n!==nome)coll.push(`<span class="rn rn-${P[n]?.categoria||'Arbitro'}" data-n="${n}" onclick="openPersona(this.dataset.n)" style="font-size:.68rem">${escH(n)}</span>`);
     });
-    return`<tr><td style="color:var(--mu);text-align:center;font-size:.68rem;padding:4px 6px">${_ri+1}</td><td>${g['Data']}</td><td>${g['Ora']||''}</td><td style="font-size:.68rem">${g['Numero Gara']||''}</td>
-      <td style="font-size:.72rem">${escH(g['Campionato'])}</td><td style="font-size:.7rem">${escH(g['Girone']||'')}</td><td style="font-size:.7rem">${escH(g['Fase']||'')}</td>
-      <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa'])}')">${escH(g['Squadra Casa'])}</span></td>
-      <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite'])}')">${escH(g['Squadra Ospite'])}</span></td>
-      <td style="font-weight:700">${g['Risultato']||''}</td>
-      <td style="font-size:.68rem">${escH(g['_ruolo']||'')}</td>
-      <td>${pvB(cpv(g['Campo']))}</td>
-      <td style="max-width:170px;white-space:normal">${coll.join(', ')}</td></tr>`;
+    const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+    const haRis=!!g['Risultato'];
+    const casaWins=haRis&&pc>po, ospWins=haRis&&po>pc;
+    const casaClr=haRis?(casaWins?'color:#00704a;font-weight:700':'color:#c0392b'):'';
+    const ospClr=haRis?(ospWins?'color:#00704a;font-weight:700':'color:#c0392b'):'';
+    const campClr=campColor(g['Campionato'])||'#555';
+    const campBadge=`<span style="background:${campClr};color:#fff;border-radius:3px;padding:1px 6px;font-size:.6rem;font-weight:600;white-space:nowrap;cursor:pointer" onclick="openCampionato('${esc(g['Campionato']||'')}');event.stopPropagation()">${escH(g['Campionato']||'')}</span>`;
+    const ris=haRis?`<span style="font-weight:700;font-family:monospace;font-size:.82rem">${g['Risultato']}</span>`:`<span style="color:var(--mu);font-size:.68rem">Prog.</span>`;
+    const pvCampo=cpv(g['Campo']||'');
+    const gps=typeof CAMPO_GPS!=='undefined'&&CAMPO_GPS&&CAMPO_GPS[g['Campo']||''];
+    const citta=gps&&gps.city||'';
+    const isFut=!haRis&&(g['Data']||'')>=_today2;
+    return`<tr style="${isFut?'background:#fffbf0':''}">
+      <td style="color:var(--mu);text-align:center;font-size:.65rem">${_ri+1}</td>
+      <td style="font-size:.7rem;white-space:nowrap">${g['Data']||''}</td>
+      <td style="font-size:.7rem">${g['Ora']||''}</td>
+      <td style="font-size:.65rem;font-family:monospace">${g['Numero Gara']||''}</td>
+      <td>${campBadge}</td>
+      <td style="font-size:.68rem;color:var(--mu)">${escH(g['Girone']||'')}</td>
+      <td><span class="rn rn-sq" style="${casaClr}" onclick="openSquadra('${esc(g['Squadra Casa']||'')}');event.stopPropagation()">${escH(g['Squadra Casa']||'')}</span></td>
+      <td><span class="rn rn-sq" style="${ospClr}" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}');event.stopPropagation()">${escH(g['Squadra Ospite']||'')}</span></td>
+      <td style="text-align:center">${ris}</td>
+      <td style="font-size:.65rem;color:var(--mu)">${escH(g['_ruolo']||'')}</td>
+      <td>${pvCampo?pvB(pvCampo):''}</td>
+      <td style="font-size:.68rem;color:var(--mu)">${escH(citta)}</td>
+      <td style="max-width:140px;white-space:normal">${coll.join(', ')}</td></tr>`;
   }).join('');
 }
 
@@ -8814,11 +8813,11 @@ function copToggleAll(val){
 
 // Calendario presenze — switch tra versioni A/B/C
 function calSwitch(uid,ver){
-  ['A','B','C'].forEach(v=>{
+  ['A','B'].forEach(v=>{
     const panel=document.getElementById(uid+'_'+v);
     const btn=document.getElementById(uid+'_btn'+v);
     if(panel) panel.style.display=v===ver?'block':'none';
-    if(btn){btn.style.background=v===ver?'var(--bl)':'var(--bg)';btn.style.color=v===ver?'#fff':'var(--bl)';}
+    if(btn){btn.style.background=v===ver?'var(--bl)':'var(--bg)';btn.style.color=v===ver?'#fff':'var(--bl)';btn.style.borderColor=v===ver?'var(--bl)':'var(--br)';btn.style.fontWeight=v===ver?'500':'400';}
   });
 }
 function copToggle(c){
