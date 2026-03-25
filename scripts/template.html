@@ -1181,14 +1181,14 @@ tr.loss-row td{background:#fdecea!important;}
 <!-- MODALS -->
 <div class="mo" id="mo-persona"><div class="mbox" id="mo-persona-box">
   <div class="mhd" id="mo-ph"><span id="mp-icon" style="font-size:1.1rem"></span><h3 id="mp-title">–</h3>
-  <button class="mbtn" onclick="printMo('mo-persona')">🖨</button><button class="mbtn" onclick="toggleMoFullscreen('mo-persona')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-persona')">✕</button></div>
+  <button id="back-btn-mo-persona" class="mbtn" onclick="_navBack()" style="display:none;font-size:.7rem;padding:2px 8px">← Indietro</button><button class="mbtn" onclick="printMo('mo-persona')">🖨</button><button class="mbtn" onclick="toggleMoFullscreen('mo-persona')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="_navClear();closeMo('mo-persona')">✕</button></div>
   <div class="mbody" id="mp-body"></div>
   <div class="mfoot"><button class="btn b-go" onclick="printMo('mo-persona')">🖨 Stampa</button><button class="btn b-gr" onclick="closeMo('mo-persona')">Chiudi</button></div>
 </div></div>
 
 <div class="mo" id="mo-squadra"><div class="mbox" id="mo-squadra-box">
   <div class="mhd" id="mo-sh"><span style="font-size:1.1rem">🏆</span><h3 id="ms-title">–</h3>
-  <button class="mbtn" onclick="printMo('mo-squadra')">🖨</button><button class="mbtn" onclick="toggleMoFullscreen('mo-squadra')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-squadra')">✕</button></div>
+  <button id="back-btn-mo-squadra" class="mbtn" onclick="_navBack()" style="display:none;font-size:.7rem;padding:2px 8px">← Indietro</button><button class="mbtn" onclick="printMo('mo-squadra')">🖨</button><button class="mbtn" onclick="toggleMoFullscreen('mo-squadra')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="_navClear();closeMo('mo-squadra')">✕</button></div>
   <div class="mbody" id="ms-body"></div>
   <div class="mfoot"><button class="btn b-go" onclick="printMo('mo-squadra')">🖨 Stampa</button><button class="btn b-gr" onclick="closeMo('mo-squadra')">Chiudi</button></div>
 </div></div>
@@ -4764,6 +4764,18 @@ function mkCamminoArbitro(p){
   return html;
 }
 
+// ── NAVIGAZIONE BACK ─────────────────────────────────────────
+const _navStack=[];
+function _navPush(fn){_navStack.push(fn);}
+function _navBack(){if(_navStack.length>1){_navStack.pop();_navStack[_navStack.length-1]();}}
+function _navClear(){_navStack.length=0;}
+function _updateBackBtn(){
+  ['mo-persona','mo-squadra','mo-camp','mo-prov'].forEach(id=>{
+    const btn=document.getElementById('back-btn-'+id);
+    if(btn)btn.style.display=_navStack.length>1?'inline-flex':'none';
+  });
+}
+
 function openPersona(nome,campFilter){
   // Decodifica HTML entities se necessario (per nomi con apostrofo da data-nome)
   if(nome && nome.includes('&')){
@@ -4772,6 +4784,7 @@ function openPersona(nome,campFilter){
     nome=tmp.value;
   }
   const p=P[nome];if(!p)return;
+  _navPush(()=>openPersona(nome,campFilter));_updateBackBtn();
   const isDual=(p.categorie||[]).length>1;
   const icon=p.categoria==='Arbitro'?'👨‍⚖️':p.categoria==='UDC'?'📋':'🔭';
   document.getElementById('mp-icon').textContent=icon;
@@ -4857,10 +4870,16 @@ function openPersona(nome,campFilter){
         <div class="fg"><label>Campionato</label><select id="mpar-camp" onchange="fgpP('${esc(nome)}')"><option value="">Tutti</option>${CAMPS.map(c=>`<option>${escH(c)}</option>`).join('')}</select></div>
         <div class="fg"><label>Squadra</label><input type="text" id="mpar-sq" placeholder="Cerca squadra..." oninput="fgpP('${esc(nome)}')"></div>
         <div class="fg"><label>Città</label><input type="text" id="mpar-citta" placeholder="Cerca città..." oninput="fgpP('${esc(nome)}')"></div>
+        <div class="fg"><label>Provincia</label><select id="mpar-prov" onchange="fgpP('${esc(nome)}')"><option value="">Tutte</option>${['CA','SS','NU','OR','SU','OT','OG','VS','CI'].map(pv=>`<option>${pv}</option>`).join('')}</select></div>
         <div class="fg"><label>Dal</label><input type="date" id="mpar-d1" onchange="fgpP('${esc(nome)}')"></div>
-        <button class="btn b-gr" onclick="resetF('mpar-camp','mpar-d1');document.getElementById('mpar-sq').value='';document.getElementById('mpar-citta').value='';fgpP('${esc(nome)}')">↺</button>
+        <button class="btn b-gr" onclick="resetF('mpar-camp','mpar-d1');document.getElementById('mpar-sq').value='';document.getElementById('mpar-citta').value='';document.getElementById('mpar-prov').value='';fgpP('${esc(nome)}')">↺</button>
       </div>
       <div class="il" id="mpar-info"></div>
+      <!-- Cammino stagione istogrammi -->
+      <div id="mpar-cammino" style="padding:6px 8px 2px;display:none">
+        <div style="font-size:.7rem;font-weight:700;color:var(--mu);margin-bottom:4px">📈 Cammino stagione — clicca mese per filtrare</div>
+        <div id="mpar-cammino-bars" style="display:flex;align-items:flex-end;gap:3px;flex-wrap:wrap"></div>
+      </div>
       <div style="overflow-x:auto"><table class="mtbl" id="tbl-mpar"><thead><tr>
         <th style="text-align:center;color:var(--mu)">#</th><th onclick="sT('tbl-mpar',0,event)">Data</th><th>Ora</th><th>N°</th>
         <th onclick="sT('tbl-mpar',2,event)">Camp.</th><th>Girone</th><th>Fase</th>
@@ -4884,6 +4903,18 @@ function openPersona(nome,campFilter){
       const pos=vals.findIndex(v=>v<=val)+1;
       return pos>0?pos:allArbs.length;
     }
+    // Calcola metriche dinamiche per rank
+    const _nGiorni=Object.keys(p.giorni||{}).length;
+    const _nCamp=Object.keys(p.campionati||{}).length;
+    const _nColl=Object.keys(p.colleghi||{}).length;
+    const _nCampi=Object.keys(p.campi||{}).length;
+    const _km=calcKmArb(p);
+    // Override rankOf per metriche calcolate
+    function rankOfDyn(val,arr){
+      const sorted=arr.slice().sort((a,b)=>b-a);
+      const pos=sorted.findIndex(v=>v<=val)+1;
+      return pos>0?pos:sorted.length;
+    }
     function rankBadge(val,key){
       const tot=allArbs.length;if(!tot)return'';
       const pos=rankOf(val,key);
@@ -4906,7 +4937,7 @@ function openPersona(nome,campFilter){
         <div class="dow-bar" style="height:${Math.max(3,Math.round(cnt/maxDow*40))}px;background:${isMax?'var(--gold)':'var(--bl3)'}"></div>
         <div class="dow-lbl">${d}</div></div>`;
     }).join('');
-    const formaDots=forma.map(g=>`<span class="forma-dot fd-V" title="${g.c||''} ${g.d||''}"></span>`).join('');
+    const formaDots=forma.map(g=>{const res=g.res||'?';const clr=res==='V'?'var(--green)':res==='P'?'var(--red)':'#aaa';return`<span style="display:inline-block;width:11px;height:11px;border-radius:2px;font-size:7px;line-height:11px;text-align:center;color:#fff;font-weight:600;background:${clr};margin:0 1px" title="${g.c||''} ${g.d||''}">${res}</span>`;}).join('');
     const km=calcKmArb(p);
     const kmGara=km>0&&(p.n_gare_arbitro||allG.length)>0?Math.round(km/(p.n_gare_arbitro||allG.length)):0;
     document.getElementById('mpt-0').innerHTML=`
@@ -4917,18 +4948,18 @@ function openPersona(nome,campFilter){
         ${p.n_gare_arbitro?`<div class="sc"><div class="sv" style="color:#e17055">${p.n_singolo||0}</div>${rankBadge(p.n_singolo||0,'n_singolo')}<div class="sl">In singolo</div></div>`:''}
         ${p.n_gare_udc?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()"><div class="sv">${p.n_gare_udc}</div><div class="sl">Come UDC ↗</div></div>`:''}
         ${p.n_gare_osservatore?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()"><div class="sv">${p.n_gare_osservatore}</div><div class="sl">Come Oss. ↗</div></div>`:''}
-        <div class="sc"><div class="sv">${nGiorni}</div><div class="sl">Giorni</div></div>
+        <div class="sc"><div class="sv">${nGiorni}</div>${rankBadge(nGiorni,'n_giorni'||0)}<div class="sl">Giorni</div></div>
         <div class="sc gold"><div class="sv">${(allG.length/Math.max(nGiorni,1)).toFixed(1)}</div><div class="sl">Media/g</div></div>
         <div class="sc"><div class="sv">${maxGday}</div><div class="sl">Max/g</div></div>
-        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[2]?.click()" title="Vedi cammino"><div class="sv">${topCamp.length}</div><div class="sl">Campionati ↗</div></div>
-        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[3]?.click()" title="Vedi colleghi"><div class="sv">${colleghi.length}</div><div class="sl">Colleghi ↗</div></div>
-        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[4]?.click()" title="Vedi campi"><div class="sv">${campi.length}</div><div class="sl">Campi ↗</div></div>
-        ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div><div class="sl">Km stimati</div></div>`:''}
+        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[2]?.click()" title="Vedi cammino"><div class="sv">${topCamp.length}</div>${rankBadge(topCamp.length,'n_campionati'||0)}<div class="sl">Campionati ↗</div></div>
+        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[3]?.click()" title="Vedi colleghi"><div class="sv">${colleghi.length}</div>${rankBadge(colleghi.length,'n_colleghi'||0)}<div class="sl">Colleghi ↗</div></div>
+        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[4]?.click()" title="Vedi campi"><div class="sv">${campi.length}</div>${rankBadge(campi.length,'n_campi'||0)}<div class="sl">Campi ↗</div></div>
+        ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div>${rankBadge(km,'km_stimati'||0)}<div class="sl">Km stimati</div></div>`:''}
         ${kmGara>0?`<div class="sc"><div class="sv">${kmGara}</div><div class="sl">Km/gara</div></div>`:''}
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-        ${streakCur>=3||streakMax>=5?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
-          <div class="card-title">🔥 Streak <span style="font-size:.6rem;font-weight:400;color:var(--mu)">(gare consecutive senza pausa)</span></div>
+        ${streakCur>=2||streakMax>=3?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
+          <div class="card-title">🔥 Streak <span style="font-size:.6rem;font-weight:400;color:var(--mu)">(gare arbitrate senza interruzione di 2+ giorni)</span></div>
           <div><span class="streak-badge">🔥 ${streakCur} di fila</span></div>
           <div style="font-size:.68rem;color:var(--mu);margin-top:4px">Record stagionale: <b>${streakMax}</b></div>
         </div>`:''}
@@ -5190,7 +5221,7 @@ function openPersona(nome,campFilter){
           <span style="font-size:.65rem;font-weight:600;color:var(--bl)">${n}</span>
         </div>`;
       }).join('');
-      return`<tr>
+      return`<tr style="vertical-align:top">
         <td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td>
         <td><span class="rn rn-${cp?.categoria||'Arbitro'}" data-n="${cn}" onclick="openPersona(this.dataset.n)">${escH(cn)}</span></td>
         <td>${cp?catB(cp.categoria):''}</td>
@@ -5206,21 +5237,53 @@ function openPersona(nome,campFilter){
 
   // Populate panel Campi safely
   try {
-    document.getElementById('mpt-3').innerHTML=`<table class="gtbl" id="tbl-mcampi"><thead><tr>
+    const campiAllData=campi.map(([campo,cnt],i)=>{
+      const pvc=cpv(campo)||'';
+      const gps=CAMPO_GPS&&CAMPO_GPS[campo];
+      const citta=gps&&gps.city||'';
+      return{campo,cnt,pvc,citta,i};
+    });
+    function renderCampiTbl(filtCitta,filtProv){
+      const rows=campiAllData.filter(x=>{
+        if(filtCitta&&!x.citta.toLowerCase().includes(filtCitta))return false;
+        if(filtProv&&x.pvc.toLowerCase()!==filtProv.toLowerCase())return false;
+        return true;
+      });
+      return rows.map(({campo,cnt,pvc,citta},ri)=>{
+        const pvColor=PC[pvc]||'#888';
+        return`<tr>
+          <td data-val="${ri+1}" class="rpos">${ri+1}</td>
+          <td style="font-size:.73rem;white-space:normal;max-width:250px">${escH(campo)}</td>
+          <td style="font-size:.73rem;color:${pvColor};font-weight:500">${escH(citta)}</td>
+          <td>${pvc?pvB(pvc):''}</td>
+          <td style="text-align:right"><span style="color:var(--bl);font-weight:700;cursor:pointer;text-decoration:underline" onclick="openSharedSquadGames_Campo('${esc(nome)}','${esc(campo)}')">${cnt}</span></td>
+        </tr>`;
+      }).join('');
+    }
+    const allProvCampi=[...new Set(campiAllData.map(x=>x.pvc).filter(Boolean))].sort();
+    document.getElementById('mpt-3').innerHTML=`
+      <div class="fb" style="padding:6px 8px;gap:8px">
+        <div class="fg"><label>Città</label><input type="text" id="mcampi-citta" placeholder="Cerca città..." oninput="document.getElementById('tbl-mcampi-body').innerHTML=renderCampiTbl(this.value.toLowerCase().trim(),document.getElementById('mcampi-prov')?.value||'')"></div>
+        <div class="fg"><label>Provincia</label><select id="mcampi-prov" onchange="document.getElementById('tbl-mcampi-body').innerHTML=renderCampiTbl(document.getElementById('mcampi-citta')?.value.toLowerCase().trim()||'',this.value)"><option value="">Tutte</option>${allProvCampi.map(pv=>`<option>${pv}</option>`).join('')}</select></div>
+        <button class="btn b-gr" onclick="document.getElementById('mcampi-citta').value='';document.getElementById('mcampi-prov').value='';document.getElementById('tbl-mcampi-body').innerHTML=renderCampiTbl('','')">↺</button>
+      </div>
+      <table class="gtbl" id="tbl-mcampi"><thead><tr>
       <th>#</th><th>Campo</th><th>Città</th><th>Prov.</th><th style="text-align:right">Presenze</th>
-    </tr></thead><tbody>${campi.map(([campo,cnt],i)=>{
+    </tr></thead><tbody id="tbl-mcampi-body">${renderCampiTbl('','')}</tbody></table>`;
+    // dummy per compatibilità
+    if(false){campi.map(([campo,cnt],i)=>{
       const pvc=cpv(campo)||'';
       const gps=CAMPO_GPS&&CAMPO_GPS[campo];
       const citta=gps&&gps.city||'';
       const pvColor=PC[pvc]||'#888';
-      return`<tr>
+      return`<tr style="vertical-align:top">
         <td data-val="${i+1}" class="rpos ${i<3?'g'+(i+1):''}">${i+1}</td>
         <td style="font-size:.73rem;white-space:normal;max-width:250px">${escH(campo)}</td>
         <td style="font-size:.73rem;color:${pvColor};font-weight:500">${escH(citta)}</td>
         <td>${pvc?pvB(pvc):''}</td>
         <td style="text-align:right"><span style="color:var(--bl);font-weight:700;cursor:pointer;text-decoration:underline" onclick="openSharedSquadGames_Campo('${esc(nome)}','${esc(campo)}')">${cnt}</span></td>
       </tr>`;
-    }).join('')}</tbody></table>`;
+    });}
   } catch(e){ document.getElementById('mpt-3').innerHTML='<p style="color:red;padding:10px">Errore campi: '+e.message+'</p>'; }
 
   // Populate panel Squadre safely
@@ -5815,10 +5878,47 @@ function fgpP(nome){
       const citta=(gps&&gps.city||'').toLowerCase();
       if(!citta.includes(cittaFilter))return false;
     }
+    const provFilter=(document.getElementById('mpar-prov')?.value||'').toUpperCase().trim();
+    if(provFilter){
+      const gpv=cpv(g['Campo']||'');
+      if(gpv!==provFilter)return false;
+    }
     return true;
   }).sort((a,b)=>(a['Data']||'').localeCompare(b['Data']||''));
   const info=document.getElementById('mpar-info');
   if(info)info.textContent=`${gare.length} gare`;
+  // Cammino istogrammi mensili
+  try{
+    const camminoDiv=document.getElementById('mpar-cammino');
+    const camminoBars=document.getElementById('mpar-cammino-bars');
+    if(camminoDiv&&camminoBars){
+      const allGareP=(p.gare||[]);
+      if(allGareP.length>0){
+        camminoDiv.style.display='block';
+        const perMese={};
+        allGareP.forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)perMese[m]=(perMese[m]||0)+1;});
+        const mesi=Object.keys(perMese).sort();
+        const maxM=Math.max(...Object.values(perMese),1);
+        const mesiL={'01':'Gen','02':'Feb','03':'Mar','04':'Apr','05':'Mag','06':'Giu','07':'Lug','08':'Ago','09':'Set','10':'Ott','11':'Nov','12':'Dic'};
+        let selMese='';
+        camminoBars.innerHTML=mesi.map(m=>{
+          const v=perMese[m];
+          const h=Math.max(16,Math.round(v/maxM*60));
+          const lbl=mesiL[m.slice(5)]||m.slice(5);
+          return`<div style="display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;min-width:32px" onclick="
+            const d1=document.getElementById('mpar-d1');
+            const selM='${m}';
+            if(d1.dataset.meseSel===selM){d1.value='';d1.dataset.meseSel='';this.querySelector('div:first-child').style.opacity='1';}
+            else{d1.value=selM+'-01';d1.dataset.meseSel=selM;document.querySelectorAll('#mpar-cammino-bars>div').forEach(x=>x.querySelector('div:first-child').style.opacity='.4');this.querySelector('div:first-child').style.opacity='1';}
+            fgpP('${esc(nome)}')">
+            <div style="background:var(--bl);border-radius:3px 3px 0 0;width:24px;height:${h}px;transition:opacity .2s"></div>
+            <div style="font-size:.58rem;color:var(--mu);margin-top:2px;font-weight:600">${lbl}</div>
+            <div style="font-size:.62rem;color:var(--bl);font-weight:700">${v}</div>
+          </div>`;
+        }).join('');
+      }
+    }
+  }catch(e){}
   const tbody=document.getElementById('tbl-mpar-body');
   if(!tbody)return;
   // Fix header too
@@ -5865,6 +5965,7 @@ function fgpP(nome){
 // MODAL SQUADRA
 function openSquadra(nome,campFilter){
   const s=SQ[nome];if(!s)return;
+  _navPush(()=>openSquadra(nome,campFilter));_updateBackBtn();
   document.getElementById('ms-title').innerHTML=`${escH(nome)} ${pvB(s.prov)}`;
   const gare=s.gare.slice().sort((a,b)=>a['Data'].localeCompare(b['Data']));
   const avv=Object.entries(s.avversari||{}).sort((a,b)=>b[1]-a[1]);
