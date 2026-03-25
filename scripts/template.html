@@ -4855,8 +4855,10 @@ function openPersona(nome,campFilter){
     <div class="mtc hidden" id="mpt-1">
       <div class="fb" style="padding:6px 8px">
         <div class="fg"><label>Campionato</label><select id="mpar-camp" onchange="fgpP('${esc(nome)}')"><option value="">Tutti</option>${CAMPS.map(c=>`<option>${escH(c)}</option>`).join('')}</select></div>
+        <div class="fg"><label>Squadra</label><input type="text" id="mpar-sq" placeholder="Cerca squadra..." oninput="fgpP('${esc(nome)}')"></div>
+        <div class="fg"><label>Città</label><input type="text" id="mpar-citta" placeholder="Cerca città..." oninput="fgpP('${esc(nome)}')"></div>
         <div class="fg"><label>Dal</label><input type="date" id="mpar-d1" onchange="fgpP('${esc(nome)}')"></div>
-        <button class="btn b-gr" onclick="resetF('mpar-camp','mpar-d1');fgpP('${esc(nome)}')">↺</button>
+        <button class="btn b-gr" onclick="resetF('mpar-camp','mpar-d1');document.getElementById('mpar-sq').value='';document.getElementById('mpar-citta').value='';fgpP('${esc(nome)}')">↺</button>
       </div>
       <div class="il" id="mpar-info"></div>
       <div style="overflow-x:auto"><table class="mtbl" id="tbl-mpar"><thead><tr>
@@ -4875,6 +4877,19 @@ function openPersona(nome,campFilter){
 
   // Populate panel 0 (Statistiche) safely
   try {
+    // Calcola posizioni in classifica tra tutti gli arbitri
+    const allArbs=Object.values(P).filter(x=>x.categoria==='Arbitro'&&x.n_gare_arbitro>0);
+    function rankOf(val,key){
+      const vals=allArbs.map(x=>x[key]||0).sort((a,b)=>b-a);
+      const pos=vals.findIndex(v=>v<=val)+1;
+      return pos>0?pos:allArbs.length;
+    }
+    function rankBadge(val,key){
+      const tot=allArbs.length;if(!tot)return'';
+      const pos=rankOf(val,key);
+      const clr=pos===1?'#f1c40f':pos<=3?'#e67e22':pos<=Math.ceil(tot*0.1)?'#27ae60':'var(--mu)';
+      return`<div style="font-size:.52rem;color:${clr};font-weight:700;line-height:1;margin-top:1px">#${pos}/${tot}</div>`;
+    }
     const streakCur=p.streak_cur||0,streakMax=p.streak_max||0;
     const forma=(p.forma_recente||[]).slice(-8);
     // Giorno settimana: mostra Lun→Dom (domenica in fondo, non separata)
@@ -4897,9 +4912,9 @@ function openPersona(nome,campFilter){
     document.getElementById('mpt-0').innerHTML=`
       ${isDual?`<div class="dual-role-notice">⚡ Ruolo doppio: ${(p.categorie||[]).join(' + ')}. Usa le tab dedicate.</div>`:''}
       <div class="scs">
-        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()" title="Vedi tutte le gare"><div class="sv">${allG.length}</div><div class="sl">Gare totali ↗</div></div>
-        ${p.n_gare_arbitro?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()" title="Vedi gare come arbitro"><div class="sv">${p.n_gare_arbitro}</div><div class="sl">Come Arbitro ↗</div></div>`:''}
-        ${p.n_gare_arbitro?`<div class="sc"><div class="sv" style="color:#e17055">${p.n_singolo||0}</div><div class="sl">In singolo</div></div>`:''}
+        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()" title="Vedi tutte le gare"><div class="sv">${allG.length}</div>${rankBadge(allG.length,'n_gare')}<div class="sl">Gare totali ↗</div></div>
+        ${p.n_gare_arbitro?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()" title="Vedi gare come arbitro"><div class="sv">${p.n_gare_arbitro}</div>${rankBadge(p.n_gare_arbitro,'n_gare_arbitro')}<div class="sl">Come Arbitro ↗</div></div>`:''}
+        ${p.n_gare_arbitro?`<div class="sc"><div class="sv" style="color:#e17055">${p.n_singolo||0}</div>${rankBadge(p.n_singolo||0,'n_singolo')}<div class="sl">In singolo</div></div>`:''}
         ${p.n_gare_udc?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()"><div class="sv">${p.n_gare_udc}</div><div class="sl">Come UDC ↗</div></div>`:''}
         ${p.n_gare_osservatore?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()"><div class="sv">${p.n_gare_osservatore}</div><div class="sl">Come Oss. ↗</div></div>`:''}
         <div class="sc"><div class="sv">${nGiorni}</div><div class="sl">Giorni</div></div>
@@ -4973,7 +4988,7 @@ function openPersona(nome,campFilter){
             <th style="text-align:center">Win%</th>
             <th style="min-width:120px">Barra</th>
           </tr></thead><tbody>
-          ${squadre.slice(0,20).map(([sq,cnt])=>{
+          ${squadre.map(([sq,cnt])=>{
             const sqd=SQ[sq];
             const sqGare=allG.filter(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
             let v=0,per=0;
@@ -5785,17 +5800,23 @@ function fgpP(nome){
   const _now2=new Date();
   const _today2=_now2.toISOString().split('T')[0];
   const _nowMin2=_now2.getHours()*60+_now2.getMinutes();
+  const sqFilter=(document.getElementById('mpar-sq')?.value||'').toLowerCase().trim();
+  const cittaFilter=(document.getElementById('mpar-citta')?.value||'').toLowerCase().trim();
   let gare=(p.gare||[]).filter(g=>{
     if(camp&&g['Campionato']!==camp)return false;
     if(d1&&g['Data']<d1)return false;
-    if(g['Risultato'])return true;
-    const gd=g['Data']||'';
-    if(gd<_today2)return true;
-    if(gd>_today2)return false;
-    const gOra=g['Ora']||'';if(!gOra)return false;
-    const pp=gOra.split(':');
-    return parseInt(pp[0]||0)*60+parseInt(pp[1]||0)+30<=_nowMin2;
-  }).sort((a,b)=>(b['Data']||'').localeCompare(a['Data']||''));
+    if(sqFilter){
+      const casa=(g['Squadra Casa']||'').toLowerCase();
+      const osp=(g['Squadra Ospite']||'').toLowerCase();
+      if(!casa.includes(sqFilter)&&!osp.includes(sqFilter))return false;
+    }
+    if(cittaFilter){
+      const gps=typeof CAMPO_GPS!=='undefined'&&CAMPO_GPS&&CAMPO_GPS[g['Campo']||''];
+      const citta=(gps&&gps.city||'').toLowerCase();
+      if(!citta.includes(cittaFilter))return false;
+    }
+    return true;
+  }).sort((a,b)=>(a['Data']||'').localeCompare(b['Data']||''));
   const info=document.getElementById('mpar-info');
   if(info)info.textContent=`${gare.length} gare`;
   const tbody=document.getElementById('tbl-mpar-body');
