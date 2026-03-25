@@ -99,13 +99,13 @@ def fetch(session, da):
               "nome_squadra":"","codice_campo":"","codice_arbitro":"","cognome_arbitro":""}
     for attempt in range(1, MAX_RETRIES+1):
         try:
-            resp = session.get(BASE_URL, params=params, timeout=20)
+            resp = session.get(BASE_URL, params=params, timeout=10)
             if resp.status_code==200: return resp
             elif resp.status_code==429:
                 t = int(resp.headers.get("Retry-After",20)); print(f"\n[429] attendo {t}s"); time.sleep(t)
             else: print(f"\n[HTTP {resp.status_code}] t.{attempt}")
         except Exception as e: print(f"\n[ERR] {e} t.{attempt}")
-        if attempt<MAX_RETRIES: time.sleep(random.uniform(2,5)*attempt)
+        if attempt<MAX_RETRIES: time.sleep(random.uniform(1,3)*attempt)
     return None
 
 def main():
@@ -199,6 +199,7 @@ def main():
             empty=0
         else:
             print(".", end="", flush=True); empty+=1
+        if i % 10 == 0: print(f" [{i}/{len(days_to_fetch)}] {da}", flush=True); empty=0
         time.sleep(random.uniform(0.8,1.8))
     
     if empty>0: print()
