@@ -3184,7 +3184,6 @@ function openGiornoModal(ds){
     if(old)old.remove();
 
     // Calcola giorno precedente e successivo con gare
-    const perG=(typeof GS!=='undefined'?GS.per_giorno:D.global_stats?.per_giorno)||{};
     const allDays=Object.keys(perG).sort();
     const curIdx=allDays.indexOf(ds);
     const prevDs=curIdx>0?allDays[curIdx-1]:null;
