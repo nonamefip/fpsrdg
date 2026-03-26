@@ -797,10 +797,12 @@ if os.path.exists(NATIONAL_CACHE):
 else:
     print("Cache nazionale non trovata — sezione nazionale vuota")
 
-# 4. Arbitri non sardi in RSA (calcolato sempre dai dati RSA)
+# 4. Arbitri non sardi che arbitrano IN SARDEGNA
+# Cerca sia nei dati RSA che nella cache nazionale (gare nazionali in Sardegna)
 arb_non_sardi = {}
-for g in RAW_ALL:
-    for field in ['Arbitro 1','Arbitro 2']:
+gare_in_sardegna = list(RAW_ALL) + nazionale.get('gare_nazionali_in_sardegna', [])
+for g in gare_in_sardegna:
+    for field in ['Arbitro 1','Arbitro 2','Arbitro 3']:
         val = g.get(field,'')
         if not val: continue
         pp = parse_person(val)
@@ -809,12 +811,17 @@ for g in RAW_ALL:
             nome = pp['nome']
             if nome not in arb_non_sardi:
                 arb_non_sardi[nome] = {'nome':nome,'provincia':pp['provincia'],
-                                       'citta':pp.get('citta',''),'n_gare':0,'campionati':{}}
+                                       'citta':pp.get('citta',''),'n_gare':0,'campionati':{},'gare':[]}
             arb_non_sardi[nome]['n_gare'] += 1
             camp = g.get('Campionato','')
             arb_non_sardi[nome]['campionati'][camp] = arb_non_sardi[nome]['campionati'].get(camp,0)+1
+            arb_non_sardi[nome]['gare'].append({
+                'd':g.get('Data',''),'c':camp,'h':g.get('Squadra Casa',''),
+                'a':g.get('Squadra Ospite',''),'campo':g.get('Campo',''),
+                'r':g.get('Risultato',''),'num':g.get('Numero Gara',''),'ruolo':field
+            })
 nazionale['arbitri_non_sardi_in_rsa'] = sorted(arb_non_sardi.values(), key=lambda x:-x['n_gare'])
-print(f"Arbitri non sardi in RSA: {len(nazionale['arbitri_non_sardi_in_rsa'])}")
+print(f"Arbitri non sardi in Sardegna: {len(nazionale['arbitri_non_sardi_in_rsa'])}")
 
 D['nazionale'] = nazionale
 
