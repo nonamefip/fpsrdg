@@ -579,7 +579,8 @@ def serialize_persons():
         all_gare=sorted(p['gare_arbitro']+p['gare_udc']+p['gare_osservatore'],key=lambda x:x['Data'])
         out[pid]={
             'nome':p['nome'],'provincia':p['provincia'],'citta':p['citta'],
-            'categoria':p['categoria'],'categorie':list(p['categorie']),'ruoli':sorted(p['ruoli']),
+            'categoria':p['categoria'],'ruolo':p['categoria'],  # alias per compatibilità template
+            'categorie':list(p['categorie']),'ruoli':sorted(p['ruoli']),
             'genere':p.get('genere','?'),
             'n_gare':gare_tot,'n_gare_arbitro':len(p['gare_arbitro']),
             'n_gare_udc':len(p['gare_udc']),'n_gare_osservatore':len(p['gare_osservatore']),
@@ -694,6 +695,128 @@ D={
     'campionati':all_camp_names,'province':province_out,
     'camp_stats':camp_stats,'provvedimenti':provvedimenti_list,
 }
+
+# ══════════════════════════════════════════════════════════════
+# DATI NAZIONALI (da fip_national_cache.json se esiste)
+# ══════════════════════════════════════════════════════════════
+import os
+
+PROV_SARDE = {'CA','SS','NU','OR','SU','CI','OG','OT','VS','NU'}
+
+nazionale = {
+    'arbitri_fuori_sardegna': [],
+    'gare_nazionali_in_sardegna': [],
+    'squadre_sarde_fuori': [],
+    'arbitri_non_sardi_in_rsa': [],
+}
+
+def campo_in_sardegna(campo):
+    if not campo: return False
+    m = re.search(r'\((\w{2,3})\)', campo)
+    if m: return m.group(1).upper() in PROV_SARDE
+    return any(p in campo.upper() for p in ['CAGLIARI','SASSARI','NUORO','ORISTANO','CARBONIA','IGLESIAS','OLBIA','SASSARI','TEMPIO'])
+
+def campo_fuori_sardegna(campo):
+    return bool(campo) and not campo_in_sardegna(campo)
+
+def persona_sarda(s):
+    if not s: return False
+    m = re.search(r'\((\w{2,3})\)', s)
+    return bool(m) and m.group(1).upper() in PROV_SARDE
+
+NATIONAL_CACHE = 'cache/fip_national_cache.json'
+if os.path.exists(NATIONAL_CACHE):
+    with open(NATIONAL_CACHE, encoding='utf-8') as f:
+        nat_raw = json.load(f)
+    print(f"Cache nazionale: {len(nat_raw)} gare trovate")
+    rsa_nums = {g.get('Numero Gara','') for g in RAW_ALL if g.get('Numero Gara')}
+
+    # 1. Gare nazionali giocate in Sardegna
+    for g in nat_raw:
+        if g.get('Numero Gara','') in rsa_nums: continue
+        if campo_in_sardegna(g.get('Campo','')):
+            nazionale['gare_nazionali_in_sardegna'].append(g)
+
+    # 2. Arbitri/UDC/osservatori sardi fuori Sardegna
+    arb_fuori = {}
+    for g in nat_raw:
+        if g.get('Numero Gara','') in rsa_nums: continue
+        if not campo_fuori_sardegna(g.get('Campo','')): continue
+        for field in ['Arbitro 1','Arbitro 2','Arbitro 3','Segnapunti','Cronometrista','24 Secondi','Osservatore']:
+            val = g.get(field,'')
+            if not persona_sarda(val): continue
+            pp = parse_person(val)
+            if not pp: continue
+            nome = pp['nome']
+            if nome not in arb_fuori:
+                arb_fuori[nome] = {'nome':nome,'provincia':pp['provincia'],'citta':pp.get('citta',''),
+                                   'ruolo':field,'n_gare':0,'campionati':{},'gare':[]}
+            arb_fuori[nome]['n_gare'] += 1
+            camp = g.get('Campionato','')
+            arb_fuori[nome]['campionati'][camp] = arb_fuori[nome]['campionati'].get(camp,0)+1
+            arb_fuori[nome]['gare'].append({
+                'd':g.get('Data',''),'c':camp,'h':g.get('Squadra Casa',''),
+                'a':g.get('Squadra Ospite',''),'campo':g.get('Campo',''),
+                'r':g.get('Risultato',''),'num':g.get('Numero Gara',''),'ruolo':field
+            })
+    nazionale['arbitri_fuori_sardegna'] = sorted(arb_fuori.values(), key=lambda x:-x['n_gare'])
+
+    # 3. Squadre sarde fuori Sardegna
+    sq_fuori = {}
+    sarde_nomi = set(squads.keys())
+    for g in nat_raw:
+        if g.get('Numero Gara','') in rsa_nums: continue
+        if not campo_fuori_sardegna(g.get('Campo','')): continue
+        for role, sq_name in [('casa',g.get('Squadra Casa','')),('ospite',g.get('Squadra Ospite',''))]:
+            if not sq_name: continue
+            matched = None
+            sq_up = sq_name.upper()
+            for sq_sarda in sarde_nomi:
+                sq_s_up = sq_sarda.upper()
+                if sq_s_up in sq_up or sq_up in sq_s_up:
+                    matched = sq_sarda; break
+                words_sarda = set(sq_s_up.split()) - {'ASD','SSD','BASKET','PALLACANESTRO','A','B','C','DIL','POL'}
+                words_nat = set(sq_up.split()) - {'ASD','SSD','BASKET','PALLACANESTRO','A','B','C','DIL','POL'}
+                if len(words_sarda) >= 2 and len(words_sarda & words_nat) >= 2:
+                    matched = sq_sarda; break
+            if matched:
+                if matched not in sq_fuori:
+                    sq_fuori[matched] = {'nome':matched,'n_gare':0,'campionati':{},'gare':[]}
+                sq_fuori[matched]['n_gare'] += 1
+                camp = g.get('Campionato','')
+                sq_fuori[matched]['campionati'][camp] = sq_fuori[matched]['campionati'].get(camp,0)+1
+                sq_fuori[matched]['gare'].append({
+                    'd':g.get('Data',''),'c':camp,'h':g.get('Squadra Casa',''),
+                    'a':g.get('Squadra Ospite',''),'campo':g.get('Campo',''),
+                    'r':g.get('Risultato',''),'num':g.get('Numero Gara',''),'ruolo':role
+                })
+    nazionale['squadre_sarde_fuori'] = sorted(sq_fuori.values(), key=lambda x:-x['n_gare'])
+    print(f"Nazionale: {len(nazionale['gare_nazionali_in_sardegna'])} gare naz. in Sardegna, "
+          f"{len(nazionale['arbitri_fuori_sardegna'])} arb. sardi fuori, "
+          f"{len(nazionale['squadre_sarde_fuori'])} squadre sarde fuori")
+else:
+    print("Cache nazionale non trovata — sezione nazionale vuota")
+
+# 4. Arbitri non sardi in RSA (calcolato sempre dai dati RSA)
+arb_non_sardi = {}
+for g in RAW_ALL:
+    for field in ['Arbitro 1','Arbitro 2']:
+        val = g.get(field,'')
+        if not val: continue
+        pp = parse_person(val)
+        if not pp: continue
+        if pp['provincia'].upper() not in PROV_SARDE:
+            nome = pp['nome']
+            if nome not in arb_non_sardi:
+                arb_non_sardi[nome] = {'nome':nome,'provincia':pp['provincia'],
+                                       'citta':pp.get('citta',''),'n_gare':0,'campionati':{}}
+            arb_non_sardi[nome]['n_gare'] += 1
+            camp = g.get('Campionato','')
+            arb_non_sardi[nome]['campionati'][camp] = arb_non_sardi[nome]['campionati'].get(camp,0)+1
+nazionale['arbitri_non_sardi_in_rsa'] = sorted(arb_non_sardi.values(), key=lambda x:-x['n_gare'])
+print(f"Arbitri non sardi in RSA: {len(nazionale['arbitri_non_sardi_in_rsa'])}")
+
+D['nazionale'] = nazionale
 
 with open('cache/data_v5_new.json','w',encoding='utf-8') as f:
     json.dump(D,f,ensure_ascii=False,separators=(',',':'))
