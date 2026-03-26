@@ -15,7 +15,8 @@ on:
         options:
           - normal          # aggiornamento giornaliero (default)
           - full-refresh    # riscarica tutto dall'inizio
-          - reprovv         # solo fase 2: riscarica gare senza provvedimenti
+          - national        # scarica gare nazionali (arbitri/squadre sarde)
+          - national-full   # scarica gare nazionali da zero
   schedule:
     - cron: '30 2 * * *'
 permissions:
@@ -43,15 +44,27 @@ jobs:
             ${{ runner.os }}-pip-
       - name: Installa dipendenze
         run: pip install -r requirements.txt
-      - name: Scarica dati FIP (normale)
+
+      # ── Scraper RSA ──
+      - name: Scarica dati FIP RSA (normale)
         if: ${{ github.event_name != 'workflow_dispatch' || inputs.mode == 'normal' }}
         run: python scripts/fip_scraper.py --refresh-days 21
-      - name: Scarica dati FIP (full-refresh)
+      - name: Scarica dati FIP RSA (full-refresh)
         if: ${{ inputs.mode == 'full-refresh' }}
         run: python scripts/fip_scraper.py --full-refresh
-      - name: Scarica dati FIP (reprovv – solo provvedimenti mancanti)
-        if: ${{ inputs.mode == 'reprovv' }}
-        run: python scripts/fip_scraper.py --reprovv
+
+      # ── Scraper Nazionale ──
+      - name: Scarica dati nazionali (normale)
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.mode == 'normal' }}
+        run: python scripts/fip_national_scraper.py
+      - name: Scarica dati nazionali (full)
+        if: ${{ inputs.mode == 'national' }}
+        run: python scripts/fip_national_scraper.py
+      - name: Scarica dati nazionali (full-refresh)
+        if: ${{ inputs.mode == 'national-full' }}
+        run: python scripts/fip_national_scraper.py --full-refresh
+
+      # ── Build ──
       - name: Genera dati JSON
         run: python scripts/gen_data.py
       - name: Genera dashboard HTML
