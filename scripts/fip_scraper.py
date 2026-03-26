@@ -226,12 +226,18 @@ def main():
             print(f"\n[Fase 2 - ALL] Controllo provvedimenti su TUTTE le gare: {len(to_check)} senza provvedimento")
         else:
             cutoff=(date.today()-timedelta(days=args.refresh_days)).isoformat()
-            to_check=[g for g in existing
+            candidates=[g for g in existing
                       if g.get('Data','')>=cutoff
                       and not (g.get('Provvedimenti') or '').strip()
                       and g.get('Numero Gara')]
+            # Limita a max 100 gare per run normale (le più recenti)
+            # Usa --all-provv per controllare tutte
+            to_check=sorted(candidates, key=lambda g: g.get('Data',''), reverse=True)[:100]
+            if len(candidates)>100:
+                print(f"\n[Fase 2] {len(candidates)} gare senza provvedimento — controllo le 100 più recenti (usa --all-provv per tutte)")
+            else:
+                print(f"\n[Fase 2] Controllo provvedimenti: {len(to_check)} gare senza provvedimento")
         if to_check:
-            print(f"\n[Fase 2] Controllo provvedimenti: {len(to_check)} gare recenti senza provvedimento")
             provv_added=0
             for i,g in enumerate(to_check,1):
                 num=g['Numero Gara']
