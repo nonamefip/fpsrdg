@@ -117,6 +117,8 @@ def main():
         help='Scarica da questa data (YYYY-MM-DD). Override DATE_START.')
     parser.add_argument('--full-refresh', action='store_true',
         help='Ri-scarica TUTTO dal DATE_START (lento ma completo)')
+    parser.add_argument('--all-provv', action='store_true',
+        help='Fase 2 su TUTTE le gare senza provvedimento (usa dopo full-refresh)')
     parser.add_argument('--future-days', type=int, default=14,
         help='Scarica anche i prossimi N giorni (gare programmate). Default: 14')
     args = parser.parse_args()
@@ -213,13 +215,21 @@ def main():
     if added>0:
         print("\n▶ Per aggiornare il dashboard esegui: python build_dashboard.py")
 
-    # ── FASE 2: Verifica provvedimenti per gare recenti senza provvedimento ──
-    if not args.full_refresh:
-        cutoff=(date.today()-timedelta(days=args.refresh_days)).isoformat()
-        to_check=[g for g in existing
-                  if g.get('Data','')>=cutoff
-                  and not (g.get('Provvedimenti') or '').strip()
-                  and g.get('Numero Gara')]
+    # ── FASE 2: Verifica provvedimenti ──
+    # Modalità: --all-provv o normale (ultimi N giorni). Sempre saltata se --full-refresh senza --all-provv
+    run_fase2 = args.all_provv or (not args.full_refresh)
+    if run_fase2:
+        if args.all_provv:
+            to_check=[g for g in existing
+                      if not (g.get('Provvedimenti') or '').strip()
+                      and g.get('Numero Gara')]
+            print(f"\n[Fase 2 - ALL] Controllo provvedimenti su TUTTE le gare: {len(to_check)} senza provvedimento")
+        else:
+            cutoff=(date.today()-timedelta(days=args.refresh_days)).isoformat()
+            to_check=[g for g in existing
+                      if g.get('Data','')>=cutoff
+                      and not (g.get('Provvedimenti') or '').strip()
+                      and g.get('Numero Gara')]
         if to_check:
             print(f"\n[Fase 2] Controllo provvedimenti: {len(to_check)} gare recenti senza provvedimento")
             provv_added=0
