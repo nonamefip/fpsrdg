@@ -2575,20 +2575,54 @@ function renderHomePv(){
   var PV_NOMI={CA:'Cagliari',SS:'Sassari',SU:'Sud Sardegna',NU:'Nuoro',OR:'Oristano'};
   var allGare=D.gare||[];
   var pvList=Object.keys(PV_NOMI).map(function(pv){return{pv:pv,nome:PV_NOMI[pv],v:PV[pv]||{n_gare:0,arbitri_residenti:[],udc_residenti:[],oss_residenti:[],sq_residenti:[],sq_ospiti:[]}};}).sort(function(a,b){return(b.v.n_gare||0)-(a.v.n_gare||0);});
-  var maxG=pvList.length?pvList[0].v.n_gare||1:1;var totG=pvList.reduce(function(s,p){return s+(p.v.n_gare||0);},0);
 
-  // Totali generali
+  // Calcola provincia di una persona dal suo testo (es. "ROSSI MARIO di SASSARI (SS)")
+  function pvOfPerson(txt){
+    if(!txt)return null;
+    var m=txt.match(/\(([A-Z]{2})\)\s*$/);
+    return m?m[1]:null;
+  }
+
+  // Per ogni provincia calcola: gare nel campo, designazioni arbitri/UDC/oss uscenti
   var totDoppio=0,totSingolo=0,totConAss=0,totConOss=0;
+  var totDesArb=0,totDesUdc=0,totDesOss=0;
   pvList.forEach(function(p){
-    var clr=PC[p.pv]||'#888';var pv=p.pv;
-    var gPv=allGare.filter(function(g){var cf=(typeof CAMPI!=='undefined'&&CAMPI&&CAMPI[g['Campo']])||{};return cf.prov===pv;});
+    var pv=p.pv;
+    // Gare nel campo (giocate in questa provincia)
+    var gPv=allGare.filter(function(g){
+      var cf=(typeof CAMPI!=='undefined'&&CAMPI&&CAMPI[g['Campo']])||{};
+      // fallback: prova dalla città del campo
+      if(cf.prov) return cf.prov===pv;
+      // fallback2: cerca la sigla provincia nel testo del campo
+      var re=new RegExp('\\b'+pv+'\\b');
+      return re.test(g['Campo']||'');
+    });
     p.gPv=gPv;
     p.doppio=gPv.filter(function(g){return pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'');}).length;
     p.singolo=gPv.filter(function(g){return pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||'');}).length;
     p.conAss=gPv.filter(function(g){return pns(g['Segnapunti']||'')||pns(g['Cronometrista']||'')||pns(g['24 Secondi']||'');}).length;
     p.conOss=gPv.filter(function(g){return pns(g['Osservatore']||'');}).length;
     totDoppio+=p.doppio;totSingolo+=p.singolo;totConAss+=p.conAss;totConOss+=p.conOss;
+
+    // Designazioni uscenti: arbitri/UDC/osservatori residenti in questa provincia designati in qualsiasi gara
+    var desArb=0,desUdc=0,desOss=0;
+    allGare.forEach(function(g){
+      var a1pv=pvOfPerson(g['Arbitro 1']);
+      var a2pv=pvOfPerson(g['Arbitro 2']);
+      var a3pv=pvOfPerson(g['Arbitro 3']);
+      if(a1pv===pv||a2pv===pv||a3pv===pv) desArb++;
+      var u1=pvOfPerson(g['Segnapunti']),u2=pvOfPerson(g['Cronometrista']),u3=pvOfPerson(g['24 Secondi']),u4=pvOfPerson(g['Addetto Referto']);
+      if(u1===pv||u2===pv||u3===pv||u4===pv) desUdc++;
+      var o=pvOfPerson(g['Osservatore']);
+      if(o===pv) desOss++;
+    });
+    p.desArb=desArb;p.desUdc=desUdc;p.desOss=desOss;
+    totDesArb+=desArb;totDesUdc+=desUdc;totDesOss+=desOss;
   });
+
+  var maxG=pvList.length?pvList.reduce(function(m,p){return Math.max(m,p.v.n_gare||0);},0)||1:1;
+  var totG=pvList.reduce(function(s,p){return s+(p.v.n_gare||0);},0);
+  var totGare=allGare.length;
 
   // Grid province
   var html='<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:14px">';
@@ -2598,51 +2632,63 @@ function renderHomePv(){
     var barPct=Math.round((p.v.n_gare||0)/maxG*100);var pct=totG?Math.round((p.v.n_gare||0)/totG*100):0;
     var dopPct=p.v.n_gare?Math.round(p.doppio/p.v.n_gare*100):0;
     var dopClr=dopPct>=70?'var(--green)':dopPct>=40?'var(--gold)':'var(--red)';
-    var ossPct=p.v.n_gare?Math.round(p.conOss/p.v.n_gare*100):0;
-    html+='<div style="background:var(--bg);border:2px solid '+clr+'22;border-top:3px solid '+clr+';border-radius:8px;padding:8px 10px;cursor:pointer" onclick="openProvincia(\''+p.pv+'\')">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1px"><span style="font-size:.9rem;font-weight:900;color:'+clr+'">'+p.pv+'</span><span style="font-size:.58rem;color:var(--mu)">'+pct+'%</span></div>'
-      +'<div style="font-size:.58rem;color:var(--mu);margin-bottom:3px">'+p.nome+'</div>'
-      +'<div style="font-size:1.2rem;font-weight:900;color:'+clr+';line-height:1">'+(p.v.n_gare||0)+'</div>'
-      +'<div style="font-size:.52rem;color:var(--mu);margin-bottom:4px">gare nel campo</div>'
-      +'<div style="height:3px;background:#eef1fa;border-radius:2px;margin-bottom:6px;overflow:hidden"><div style="height:3px;background:'+clr+';border-radius:2px;width:'+barPct+'%"></div></div>'
-      // Persone residenti
-      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:2px;text-align:center;margin-bottom:5px">'
-      +'<div style="background:var(--bg2);border-radius:4px;padding:3px 2px"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+nArb+'</div><div style="font-size:.5rem;color:var(--mu)">Arb.</div></div>'
-      +'<div style="background:var(--bg2);border-radius:4px;padding:3px 2px"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+nUdc+'</div><div style="font-size:.5rem;color:var(--mu)">UDC</div></div>'
-      +'<div style="background:var(--bg2);border-radius:4px;padding:3px 2px"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+nOss+'</div><div style="font-size:.5rem;color:var(--mu)">Oss.</div></div>'
-      +'<div style="background:var(--bg2);border-radius:4px;padding:3px 2px"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+nSq+'</div><div style="font-size:.5rem;color:var(--mu)">Sq.</div></div>'
-      +'</div>'
-      // Copertura arbitrale
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;text-align:center;margin-bottom:4px">'
-      +'<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con 2 arbitri"><div style="font-size:.75rem;font-weight:800;color:var(--green)">'+p.doppio+'</div><div style="font-size:.5rem;color:var(--mu)">2 arb. ⚖️⚖️</div></div>'
-      +'<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con 1 arbitro"><div style="font-size:.75rem;font-weight:800;color:var(--gold)">'+p.singolo+'</div><div style="font-size:.5rem;color:var(--mu)">1 arb. ⚖️</div></div>'
-      +'</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;text-align:center;margin-bottom:4px">'
-      +'<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con assistenti (segnapunti/crono/24s)"><div style="font-size:.75rem;font-weight:800;color:var(--bl)">'+p.conAss+'</div><div style="font-size:.5rem;color:var(--mu)">Con ass.</div></div>'
-      +'<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con osservatore"><div style="font-size:.75rem;font-weight:800;color:#8e44ad">'+p.conOss+'</div><div style="font-size:.5rem;color:var(--mu)">Con oss.</div></div>'
-      +'</div>'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--br);padding-top:4px">'
-      +'<span style="font-size:.55rem;color:var(--mu)">Dop. arb.</span>'
-      +'<span style="font-size:.68rem;font-weight:800;color:'+dopClr+'">'+dopPct+'%</span></div></div>';
+    var desArbPct=totDesArb?Math.round(p.desArb/totDesArb*100):0;
+    html+='<div style="background:var(--bg);border:2px solid '+clr+'22;border-top:3px solid '+clr+';border-radius:8px;padding:8px 10px;cursor:pointer" onclick="openProvincia(\''+p.pv+'\')">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1px"><span style="font-size:.9rem;font-weight:900;color:'+clr+'">'+p.pv+'</span><span style="font-size:.58rem;color:var(--mu)">'+pct+'% gare</span></div>'+
+      '<div style="font-size:.58rem;color:var(--mu);margin-bottom:3px">'+p.nome+'</div>'+
+      '<div style="font-size:1.2rem;font-weight:900;color:'+clr+';line-height:1">'+(p.v.n_gare||0)+'</div>'+
+      '<div style="font-size:.52rem;color:var(--mu);margin-bottom:4px">gare nel campo</div>'+
+      '<div style="height:3px;background:#eef1fa;border-radius:2px;margin-bottom:6px;overflow:hidden"><div style="height:3px;background:'+clr+';border-radius:2px;width:'+barPct+'%"></div></div>'+
+      // Residenti
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:2px;text-align:center;margin-bottom:5px">'+
+      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+nArb+'</div><div style="font-size:.5rem;color:var(--mu)">Arb.</div></div>'+
+      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+nUdc+'</div><div style="font-size:.5rem;color:var(--mu)">UDC</div></div>'+
+      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+nOss+'</div><div style="font-size:.5rem;color:var(--mu)">Oss.</div></div>'+
+      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+nSq+'</div><div style="font-size:.5rem;color:var(--mu)">Sq.</div></div>'+
+      '</div>'+
+      // Separatore
+      '<div style="font-size:.5rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;border-top:1px solid var(--br);padding-top:4px;margin-bottom:3px">Gare nel campo</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;text-align:center;margin-bottom:2px">'+
+      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con 2 arbitri"><div style="font-size:.75rem;font-weight:800;color:var(--green)">'+p.doppio+'</div><div style="font-size:.5rem;color:var(--mu)">2 arb. ⚖️⚖️</div></div>'+
+      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con 1 arbitro"><div style="font-size:.75rem;font-weight:800;color:var(--gold)">'+p.singolo+'</div><div style="font-size:.5rem;color:var(--mu)">1 arb. ⚖️</div></div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;text-align:center;margin-bottom:5px">'+
+      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con assistenti (segnapunti/crono/24s)"><div style="font-size:.75rem;font-weight:800;color:var(--bl)">'+p.conAss+'</div><div style="font-size:.5rem;color:var(--mu)">Con ass.</div></div>'+
+      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con osservatore"><div style="font-size:.75rem;font-weight:800;color:#8e44ad">'+p.conOss+'</div><div style="font-size:.5rem;color:var(--mu)">Con oss.</div></div>'+
+      '</div>'+
+      // Designazioni uscenti
+      '<div style="font-size:.5rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;border-top:1px solid var(--br);padding-top:4px;margin-bottom:3px">Designazioni uscenti</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;text-align:center;margin-bottom:4px">'+
+      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare arbitrate da residenti di questa provincia"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+p.desArb+'</div><div style="font-size:.5rem;color:var(--mu)">Arb. ⚖️</div></div>'+
+      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con UDC residenti di questa provincia"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+p.desUdc+'</div><div style="font-size:.5rem;color:var(--mu)">UDC 📋</div></div>'+
+      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare osservate da residenti di questa provincia"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+p.desOss+'</div><div style="font-size:.5rem;color:var(--mu)">Oss. 👁</div></div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--br);padding-top:4px">'+
+      '<span style="font-size:.55rem;color:var(--mu)">Dop. arb.</span>'+
+      '<span style="font-size:.68rem;font-weight:800;color:'+dopClr+'">'+dopPct+'%</span></div></div>';
   });
   html+='</div>';
 
   // Riga totali generali
-  var totGare=allGare.length;
   var totDopPct=totGare?Math.round(totDoppio/totGare*100):0;
   var totSingPct=totGare?Math.round(totSingolo/totGare*100):0;
   var totAssPct=totGare?Math.round(totConAss/totGare*100):0;
   var totOssPct=totGare?Math.round(totConOss/totGare*100):0;
-  html+='<div style="background:var(--bg2);border-radius:8px;padding:8px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">'
-    +'<div><div style="font-size:.6rem;color:var(--mu);margin-bottom:2px;font-weight:600">TOTALE — 2 arbitri</div>'
-    +'<div style="font-size:1rem;font-weight:900;color:var(--green)">'+totDoppio+' <span style="font-size:.65rem;font-weight:600;color:var(--mu)">gare ('+totDopPct+'%)</span></div></div>'
-    +'<div><div style="font-size:.6rem;color:var(--mu);margin-bottom:2px;font-weight:600">TOTALE — 1 arbitro</div>'
-    +'<div style="font-size:1rem;font-weight:900;color:var(--gold)">'+totSingolo+' <span style="font-size:.65rem;font-weight:600;color:var(--mu)">gare ('+totSingPct+'%)</span></div></div>'
-    +'<div><div style="font-size:.6rem;color:var(--mu);margin-bottom:2px;font-weight:600">TOTALE — Con assistenti</div>'
-    +'<div style="font-size:1rem;font-weight:900;color:var(--bl)">'+totConAss+' <span style="font-size:.65rem;font-weight:600;color:var(--mu)">gare ('+totAssPct+'%)</span></div></div>'
-    +'<div><div style="font-size:.6rem;color:var(--mu);margin-bottom:2px;font-weight:600">TOTALE — Con osservatore</div>'
-    +'<div style="font-size:1rem;font-weight:900;color:#8e44ad">'+totConOss+' <span style="font-size:.65rem;font-weight:600;color:var(--mu)">gare ('+totOssPct+'%)</span></div></div>'
-    +'</div>';
+  html+='<div style="background:var(--bg2);border-radius:8px;padding:8px 12px;margin-bottom:8px">'+
+    '<div style="font-size:.6rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Totali Sardegna — Gare nel campo</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">'+
+    '<div><div style="font-size:.6rem;color:var(--mu);margin-bottom:2px;font-weight:600">2 arbitri</div><div style="font-size:1rem;font-weight:900;color:var(--green)">'+totDoppio+' <span style="font-size:.65rem;font-weight:600;color:var(--mu)">gare ('+totDopPct+'%)</span></div></div>'+
+    '<div><div style="font-size:.6rem;color:var(--mu);margin-bottom:2px;font-weight:600">1 arbitro</div><div style="font-size:1rem;font-weight:900;color:var(--gold)">'+totSingolo+' <span style="font-size:.65rem;font-weight:600;color:var(--mu)">gare ('+totSingPct+'%)</span></div></div>'+
+    '<div><div style="font-size:.6rem;color:var(--mu);margin-bottom:2px;font-weight:600">Con assistenti</div><div style="font-size:1rem;font-weight:900;color:var(--bl)">'+totConAss+' <span style="font-size:.65rem;font-weight:600;color:var(--mu)">gare ('+totAssPct+'%)</span></div></div>'+
+    '<div><div style="font-size:.6rem;color:var(--mu);margin-bottom:2px;font-weight:600">Con osservatore</div><div style="font-size:1rem;font-weight:900;color:#8e44ad">'+totConOss+' <span style="font-size:.65rem;font-weight:600;color:var(--mu)">gare ('+totOssPct+'%)</span></div></div>'+
+    '</div></div>'+
+    '<div style="background:var(--bg2);border-radius:8px;padding:8px 12px">'+
+    '<div style="font-size:.6rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Totali Sardegna — Designazioni uscenti</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">'+
+    '<div><div style="font-size:.6rem;color:var(--mu);margin-bottom:2px;font-weight:600">Arbitri ⚖️</div><div style="font-size:1rem;font-weight:900;color:var(--bl)">'+totDesArb+' <span style="font-size:.65rem;font-weight:600;color:var(--mu)">designazioni</span></div></div>'+
+    '<div><div style="font-size:.6rem;color:var(--mu);margin-bottom:2px;font-weight:600">UDC 📋</div><div style="font-size:1rem;font-weight:900;color:var(--bl)">'+totDesUdc+' <span style="font-size:.65rem;font-weight:600;color:var(--mu)">designazioni</span></div></div>'+
+    '<div><div style="font-size:.6rem;color:var(--mu);margin-bottom:2px;font-weight:600">Osservatori 👁</div><div style="font-size:1rem;font-weight:900;color:#8e44ad">'+totDesOss+' <span style="font-size:.65rem;font-weight:600;color:var(--mu)">designazioni</span></div></div>'+
+    '</div></div>';
 
   el.innerHTML=html;
 }
