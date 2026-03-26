@@ -2224,7 +2224,11 @@ function renderPersonsTable(cid,persons,opts={}){
         const nPv=(PROVV||[]).filter(pv=>[pv.arbitro1,pv.arbitro2].some(a=>pns(a||'')===p.nome)).length;
         if(!nPv) return '<td data-val="0" style="text-align:center;color:var(--mu2)">—</td>';
         return `<td data-val="${nPv}" style="text-align:center;background:#fff8f0;cursor:pointer" onclick="showPage('provvedimenti');setTimeout(()=>{const el=document.getElementById('fpv-arb');if(el){el.value='${esc(p.nome)}';renderProvvedimenti();}},100)" title="Vedi provvedimenti gare"><span style="font-weight:700;color:#e67e22">${nPv}</span></td>`;
-      })():''}\n      ${isArb?(()=>{\n        if(!nGareNaz) return '<td data-val="0" style="text-align:center;color:var(--mu2)">—</td>';\n        return `<td data-val="${nGareNaz}" style="text-align:center;background:#fdecea;cursor:pointer" onclick="setNazTab('fuori',document.getElementById('naz-tab-fuori'));showPage('nazionale')" title="Vedi gare nazionali"><span style="font-weight:700;color:#c0392b">🇮🇹 ${nGareNaz}</span></td>`;\n      })():''}
+      })():''}
+      ${isArb?(()=>{
+        if(!nGareNaz) return '<td data-val="0" style="text-align:center;color:var(--mu2)">—</td>';
+        return `<td data-val="${nGareNaz}" style="text-align:center;background:#fdecea;cursor:pointer" onclick="setNazTab('fuori',document.getElementById('naz-tab-fuori'));showPage('nazionale')" title="Vedi gare nazionali"><span style="font-weight:700;color:#c0392b">🇮🇹 ${nGareNaz}</span></td>`;
+      })():''}
     </tr>`;
   }).join('');
 
