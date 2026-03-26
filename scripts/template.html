@@ -714,6 +714,7 @@ tr.loss-row td{background:#fdecea!important;}
       <button onclick="showPage('copertura')">🔎 Copertura</button>
       <button onclick="showPage('provvedimenti')">⚠️ Provvedimenti</button>
       <button onclick="showPage('gruppi')">🔗 Raggruppamenti</button>
+      <button onclick="showPage('nazionale')">🇮🇹 Nazionale</button>
       <div class="dd-divider"></div>
       <button onclick="showPage('campi')">🏟 Campi</button>
       <button onclick="showPage('mappa')">🗺 Mappa</button>
@@ -750,6 +751,7 @@ tr.loss-row td{background:#fdecea!important;}
   <button class="qn-btn" onclick="showPage('copertura')">🔎 Copertura</button>
   <button class="qn-btn" onclick="showPage('gruppi')">🔗 Gruppi</button>
   <button class="qn-btn" onclick="showPage('provvedimenti')">⚠️ Provvedimenti</button>
+  <button class="qn-btn" onclick="showPage('nazionale')">🇮🇹 Nazionale</button>
 </div>
 <div class="main">
 
@@ -1470,6 +1472,27 @@ tr.loss-row td{background:#fdecea!important;}
 </div>
 
 <!-- AGGIORNAMENTO -->
+<div class="ps" id="page-nazionale">
+  <div class="st">🇮🇹 Attività Nazionale</div>
+
+  <!-- KPI bar -->
+  <div id="naz-kpi-bar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px"></div>
+
+  <!-- Tab bar -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="naz-tabs">
+    <button class="nav-btn active" id="naz-tab-fuori" onclick="setNazTab('fuori',this)">👨‍⚖️ Arbitri sardi fuori Sardegna</button>
+    <button class="nav-btn" id="naz-tab-entranti" onclick="setNazTab('entranti',this)">🔽 Arbitri da fuori in RSA</button>
+    <button class="nav-btn" id="naz-tab-gare" onclick="setNazTab('gare',this)">🏟 Gare naz. in Sardegna</button>
+    <button class="nav-btn" id="naz-tab-squadre" onclick="setNazTab('squadre',this)">🏆 Squadre sarde fuori</button>
+  </div>
+
+  <!-- Pannelli -->
+  <div id="naz-panel-fuori"></div>
+  <div id="naz-panel-entranti" style="display:none"></div>
+  <div id="naz-panel-gare" style="display:none"></div>
+  <div id="naz-panel-squadre" style="display:none"></div>
+</div>
+
 <div class="ps" id="page-aggiornamento">
   <div class="st">⚙️ Come Aggiornare</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -1679,7 +1702,7 @@ function showPage(id){
     'gare':'gare','prossime':'gare','classifica':'gare','campionati':'gare',
     'h2h':'h2h','h2h-arb':'h2h',
     'province':'territorio',
-    'resoconto':'analisi','copertura':'analisi','provvedimenti':'analisi','campi':'analisi','mappa':'analisi'
+    'resoconto':'analisi','copertura':'analisi','provvedimenti':'analisi','campi':'analisi','mappa':'analisi','nazionale':'analisi'
   };
   const grp=_grpMap[id];
   if(grp){const gb=document.getElementById('navgrp-'+grp);if(gb)gb.classList.add('active');}
@@ -1694,6 +1717,7 @@ function showPage(id){
   if(id==='prossime'){renderProssime();}
   if(id==='province'){renderProvCards();}
   if(id==='campi'){renderCampi();}
+  if(id==='nazionale'){initNazionale();}
 }
 
 // HELPERS
@@ -2035,11 +2059,11 @@ function renderPersonsTable(cid,persons,opts={}){
     <th colspan="${_sqCols}" class="th-sq" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">SQUADRE</th>
     <th colspan="${_kmCols}" class="th-km" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">PERCORRENZA</th>
     <th style="background:var(--tbl-hdr);border:none;padding:0" colspan="${_topCols}"></th>
-    ${isArb?`<th class="th-att" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px;background:#fff3e0;color:#e67e22">PROVV.</th>`:''}
+    ${isArb?`<th class="th-att" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px;background:#fff3e0;color:#e67e22">PROVV.</th><th style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px;background:#fdecea;color:#c0392b">NAZ.</th>`:''}
   </tr>`:'';
 
   // Accumulatori per riga media
-  let sumTot=0,sumArb=0,sumUdc=0,sumGg=0,sumCamp=0,sumSing=0,sumDopp=0,sumKm=0,sumFare=0,n=persons.length||1;
+  let sumTot=0,sumArb=0,sumUdc=0,sumGg=0,sumCamp=0,sumSing=0,sumDopp=0,sumKm=0,sumFare=0,sumNaz=0,n=persons.length||1;
 
   const _maxKmGara=isArb?Math.max(...persons.map(p=>{const km=calcKmArb(p);const _t=new Date(),_td=_t.toISOString().split('T')[0],_tm=_t.getHours()*60+_t.getMinutes();const ng=(p.gare_arbitro||[]).filter(g=>{const gd=g.d||g['Data']||'';if(gd<_td)return true;if(gd>_td)return false;const gOra=g.o||g['Ora']||'';if(!gOra)return true;const pp=gOra.split(':');return parseInt(pp[0]||0)*60+parseInt(pp[1]||0)+30<=_tm;}).length;return ng>0?Math.round(km/ng):0;}),1):1;
   const rows=persons.map((p,i)=>{
@@ -2107,11 +2131,15 @@ function renderPersonsTable(cid,persons,opts={}){
       return gd>=today&&gd<=d7&&['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto'].some(f=>(g[f]||'').toLowerCase().includes(p.nome.toLowerCase()));
     });
     const fip=CODICI_FIP[p.nome]||'';
+    // Gare nazionali
+    const _nazArb=(D.nazionale?.arbitri_fuori_sardegna||[]).find(a=>a.nome===p.nome);
+    const nGareNaz=_nazArb?(_nazArb.n_gare||0):0;
+    const nazBadge=nGareNaz>0?`<span title="Arbitra anche in campionati nazionali" style="font-size:.58rem;background:#c0392b;color:#fff;border-radius:3px;padding:0 4px;margin-left:3px;font-weight:700">🇮🇹${nGareNaz}</span>`:'';
 
     // Accumula per media
     sumTot+=nGareOggi; sumArb+=nGareArbOggiDisp; sumUdc+=nGareUdcOggi;
     sumGg+=nG; sumCamp+=nCamp; sumSing+=p.n_singolo||0;
-    sumDopp+=nGareArbOggiDisp-(p.n_singolo||0); sumKm+=km; sumFare+=nFut;
+    sumDopp+=nGareArbOggiDisp-(p.n_singolo||0); sumKm+=km; sumFare+=nFut; sumNaz+=nGareNaz;
 
     // Badge attività
     const ld=_lastDay[p.nome]||999;
@@ -2147,7 +2175,7 @@ function renderPersonsTable(cid,persons,opts={}){
           <span class="act-dot ${actCls}" title="${actTip}"></span>
           <span style="font-weight:700;cursor:pointer;color:${pvColor}" data-n="${p.nome}"
             onclick="event.stopPropagation();openPersona(this.dataset.n)">${escH(p.nome)}</span>
-          ${sexDot}${dualHtml}
+          ${sexDot}${dualHtml}${nazBadge}
           ${hasImminente?`<span style="font-size:.58rem;background:#b45309;color:#fff;border-radius:3px;padding:0 4px;margin-left:3px">7gg</span>`:''}
         </div>
       </td>
@@ -2196,7 +2224,7 @@ function renderPersonsTable(cid,persons,opts={}){
         const nPv=(PROVV||[]).filter(pv=>[pv.arbitro1,pv.arbitro2].some(a=>pns(a||'')===p.nome)).length;
         if(!nPv) return '<td data-val="0" style="text-align:center;color:var(--mu2)">—</td>';
         return `<td data-val="${nPv}" style="text-align:center;background:#fff8f0;cursor:pointer" onclick="showPage('provvedimenti');setTimeout(()=>{const el=document.getElementById('fpv-arb');if(el){el.value='${esc(p.nome)}';renderProvvedimenti();}},100)" title="Vedi provvedimenti gare"><span style="font-weight:700;color:#e67e22">${nPv}</span></td>`;
-      })():''}
+      })():''}\n      ${isArb?(()=>{\n        if(!nGareNaz) return '<td data-val="0" style="text-align:center;color:var(--mu2)">—</td>';\n        return `<td data-val="${nGareNaz}" style="text-align:center;background:#fdecea;cursor:pointer" onclick="setNazTab('fuori',document.getElementById('naz-tab-fuori'));showPage('nazionale')" title="Vedi gare nazionali"><span style="font-weight:700;color:#c0392b">🇮🇹 ${nGareNaz}</span></td>`;\n      })():''}
     </tr>`;
   }).join('');
 
@@ -2220,6 +2248,7 @@ function renderPersonsTable(cid,persons,opts={}){
     <td class="td-km" style="text-align:right;color:#B0BEC5">${Math.round(sumKm/n).toLocaleString('it')}</td>
     <td class="td-km" style="text-align:right;color:#B0BEC5">${sumTot>0?Math.round(sumKm/sumTot):'—'}</td>
     <td style="background:var(--tbl-hdr);"></td>
+    <td style="text-align:center;background:#fdecea;color:#e88;font-weight:700">${sumNaz||'—'}</td>
   </tr>`:'';
 
   document.getElementById(cid).innerHTML=`<p class="il">${persons.length} persone</p>
@@ -2256,7 +2285,8 @@ function renderPersonsTable(cid,persons,opts={}){
     <th class="th-km" onclick="sT('${tableId}',${17+co+ae},true,event)" title="Km stimati · Shift+click per multiplo" style="cursor:pointer">&#128664; Km</th>
     ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true,event)" title="Km medi/gara · Shift+click per multiplo" style="cursor:pointer">Km/g</th>
     <th onclick="sT('${tableId}',${19+co+ae},event)" title="Mese con più gare · Shift+click per multiplo" style="cursor:pointer">Top mese</th>
-    <th onclick="sT('${tableId}',${20+co+ae},event)" title="Gare con provvedimenti · Shift+click per multiplo" style="cursor:pointer;background:#fff3e0;color:#e67e22">⚠️ Provv.</th>`:''}
+    <th onclick="sT('${tableId}',${20+co+ae},event)" title="Gare con provvedimenti · Shift+click per multiplo" style="cursor:pointer;background:#fff3e0;color:#e67e22">⚠️ Provv.</th>
+    <th onclick="sT('${tableId}',${21+co+ae},event)" title="Gare in campionati nazionali · Shift+click per multiplo" style="cursor:pointer;background:#fdecea;color:#c0392b">🇮🇹 Naz.</th>`:''}
   </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>
   <div style="font-size:.62rem;color:var(--mu);padding:4px 0;margin-top:2px">💡 <b>Shift+click</b> su un'intestazione per aggiungere un secondo livello di ordinamento</div>`;
 }
@@ -11509,6 +11539,293 @@ function campCalView(id,view){
   if(vc){vc.style.background=view==='classic'?'#e6f1fb':'#fff';vc.style.color=view==='classic'?'#0c447c':'var(--mu)';vc.style.borderColor=view==='classic'?'#185fa5':'var(--br)';}
   if(vg){vg.style.background=view==='grid'?'#e6f1fb':'#fff';vg.style.color=view==='grid'?'#0c447c':'var(--mu)';vg.style.borderColor=view==='grid'?'#185fa5':'var(--br)';}
 }
+
+// ── SEZIONE NAZIONALE ──────────────────────────────────────────────
+let _nazInit=false;
+function initNazionale(){
+  if(_nazInit)return;
+  _nazInit=true;
+  const n=D.nazionale||{};
+  // KPI bar
+  const kpiBar=document.getElementById('naz-kpi-bar');
+  if(kpiBar){
+    const arb=n.arbitri_fuori_sardegna||[];
+    const entr=n.arbitri_non_sardi_in_rsa||[];
+    const gareIn=n.gare_nazionali_in_sardegna||[];
+    const sq=n.squadre_sarde_fuori||[];
+    const totGareFuori=arb.reduce((s,a)=>s+(a.n_gare||0),0);
+    const kpis=[
+      {v:arb.length,l:'Arbitri sardi fuori',c:'#c0392b'},
+      {v:totGareFuori,l:'Gare fuori Sardegna',c:'#e74c3c'},
+      {v:entr.length,l:'Arbitri da fuori in RSA',c:'#2980b9'},
+      {v:gareIn.length,l:'Gare naz. in Sardegna',c:'#27ae60'},
+      {v:sq.length,l:'Squadre sarde fuori',c:'#8e44ad'}
+    ];
+    kpiBar.innerHTML=kpis.map(k=>`<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:10px 18px;text-align:center;min-width:120px">
+      <div style="font-size:1.6rem;font-weight:800;color:${k.c}">${k.v}</div>
+      <div style="font-size:.7rem;color:#666;margin-top:2px">${k.l}</div>
+    </div>`).join('');
+  }
+  setNazTab('fuori',document.getElementById('naz-tab-fuori'));
+}
+
+let _nazCurTab='fuori';
+function setNazTab(tab,btn){
+  _nazCurTab=tab;
+  document.querySelectorAll('#naz-tabs .nav-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  ['fuori','entranti','gare','squadre'].forEach(t=>{
+    const p=document.getElementById('naz-panel-'+t);
+    if(p)p.style.display=t===tab?'':'none';
+  });
+  const n=D.nazionale||{};
+  if(tab==='fuori') renderNazFuori(n.arbitri_fuori_sardegna||[]);
+  if(tab==='entranti') renderNazEntranti(n.arbitri_non_sardi_in_rsa||[]);
+  if(tab==='gare') renderNazGare(n.gare_nazionali_in_sardegna||[]);
+  if(tab==='squadre') renderNazSquadre(n.squadre_sarde_fuori||[]);
+}
+
+function _nazRuoloBadge(ruolo){
+  const m={'Arbitro 1':'#c0392b','Arbitro 2':'#e74c3c','Segnapunti':'#2980b9','Cronometrista':'#16a085','24 Secondi':'#8e44ad','Osservatore':'#d35400','Addetto Referto':'#7f8c8d'};
+  const col=m[ruolo]||'#555';
+  return `<span style="background:${col};color:#fff;font-size:.6rem;border-radius:3px;padding:1px 6px;font-weight:700">${ruolo||'?'}</span>`;
+}
+
+function renderNazFuori(arb){
+  const el=document.getElementById('naz-panel-fuori');
+  if(!el)return;
+  if(!arb.length){el.innerHTML='<p class="il">Nessun dato disponibile — lancia il workflow national per popolare questa sezione.</p>';return;}
+
+  // Raggruppa per ruolo
+  const perRuolo={};
+  arb.forEach(a=>{
+    (a.ruoli||['?']).forEach(r=>{perRuolo[r]=(perRuolo[r]||0)+(a.n_gare||0);});
+  });
+
+  // KPI ruoli
+  const ruoliHtml=Object.entries(perRuolo).sort((a,b)=>b[1]-a[1]).map(([r,n])=>
+    `<span style="display:inline-block;margin:2px 4px">${_nazRuoloBadge(r)} <b>${n}</b> gare</span>`
+  ).join('');
+
+  let html=`<div style="background:#fff5f5;border:1px solid #fdd;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:.8rem">
+    <b>Distribuzione per ruolo:</b> ${ruoliHtml}
+  </div>`;
+
+  // Tabella arbitri
+  html+=`<div style="overflow-x:auto"><table class="rtbl" id="tbl-naz-fuori">
+    <thead><tr>
+      <th style="cursor:pointer" onclick="sT('tbl-naz-fuori',0,event)">#</th>
+      <th style="cursor:pointer" onclick="sT('tbl-naz-fuori',1,event)">Nome</th>
+      <th style="cursor:pointer" onclick="sT('tbl-naz-fuori',2,event)">Prov.</th>
+      <th style="cursor:pointer" onclick="sT('tbl-naz-fuori',3,event)">Ruoli</th>
+      <th style="cursor:pointer" onclick="sT('tbl-naz-fuori',4,event)" title="Gare nazionali totali">Gare Naz.</th>
+      <th style="cursor:pointer" onclick="sT('tbl-naz-fuori',5,event)">Campionati</th>
+      <th style="cursor:pointer" onclick="sT('tbl-naz-fuori',6,event)">Ultima gara</th>
+      <th>Dettaglio</th>
+    </tr></thead><tbody>
+    ${arb.sort((a,b)=>(b.n_gare||0)-(a.n_gare||0)).map((a,i)=>{
+      const pv=(a.provincia||'');
+      const pvCol=PC[pv]||'var(--bl)';
+      const ruoliStr=(a.ruoli||[]).map(_nazRuoloBadge).join(' ');
+      const camps=Object.keys(a.campionati||{});
+      const campStr=camps.slice(0,3).map(c=>`<span style="font-size:.6rem;color:#555;display:inline-block;margin:1px 2px;background:#f0f0f0;border-radius:3px;padding:1px 5px">${escH(c.replace('COMITATO REGIONALE ','').replace('COMITATO NAZIONALE ',''))}</span>`).join('')+(camps.length>3?`<span style="font-size:.6rem;color:var(--mu)">+${camps.length-3}</span>`:'');
+      const gare=a.gare||[];
+      const lastG=gare.map(g=>g.data||g.d||'').filter(Boolean).sort().pop()||'';
+      const rowId='naz-arb-'+i;
+      return `<tr>
+        <td data-val="${i+1}" style="text-align:center">${i+1}</td>
+        <td data-val="${escH(a.nome)}" style="font-weight:700;color:${pvCol};cursor:pointer" onclick="openPersona('${esc(a.nome)}')">${escH(a.nome)}</td>
+        <td data-val="${pv}">${pvB(pv)}</td>
+        <td>${ruoliStr}</td>
+        <td data-val="${a.n_gare||0}" style="text-align:center;font-weight:800;color:#c0392b;font-size:1.1rem">${a.n_gare||0}</td>
+        <td style="font-size:.68rem">${campStr}</td>
+        <td data-val="${lastG}" style="font-size:.72rem;color:var(--mu)">${lastG}</td>
+        <td style="text-align:center"><button style="font-size:.7rem;padding:2px 8px;background:#c0392b;color:#fff;border:none;border-radius:4px;cursor:pointer" onclick="toggleNazDetail('${rowId}')">▼ Gare</button></td>
+      </tr>
+      <tr id="${rowId}-detail" style="display:none;background:#fafafa">
+        <td colspan="8" style="padding:8px 14px">
+          ${_nazGareDetail(gare)}
+        </td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+
+  el.innerHTML=html;
+  setTimeout(()=>makeTableSortable(document.getElementById('tbl-naz-fuori')),30);
+}
+
+function toggleNazDetail(rowId){
+  const d=document.getElementById(rowId+'-detail');
+  if(d)d.style.display=d.style.display==='none'?'':'none';
+}
+
+function _nazGareDetail(gare){
+  if(!gare||!gare.length) return '<em style="color:var(--mu);font-size:.72rem">Nessuna gara</em>';
+  return `<div style="overflow-x:auto"><table style="width:100%;font-size:.7rem;border-collapse:collapse">
+    <thead><tr style="background:#f0f0f0">
+      <th style="padding:3px 6px">Data</th><th style="padding:3px 6px">Campionato</th>
+      <th style="padding:3px 6px">Casa</th><th style="padding:3px 6px">Ospite</th>
+      <th style="padding:3px 6px">Risultato</th><th style="padding:3px 6px">Campo</th>
+      <th style="padding:3px 6px">Ruolo</th><th style="padding:3px 6px">N° Gara</th>
+    </tr></thead><tbody>
+    ${gare.sort((a,b)=>(b.data||b.d||'').localeCompare(a.data||a.d||'')).map(g=>{
+      const campo=(g.campo||g['Campo']||'').replace(/^.*\d{5}\s+/,'').replace(/\s*\(.*\)$/,'');
+      const campStr=(g.campionato||g.c||g['Campionato']||'').replace('COMITATO REGIONALE ','').replace('COMITATO NAZIONALE ','');
+      return `<tr style="border-bottom:1px solid #eee">
+        <td style="padding:3px 6px;white-space:nowrap">${g.data||g.d||g['Data']||''}</td>
+        <td style="padding:3px 6px;font-size:.65rem;color:#555">${escH(campStr)}</td>
+        <td style="padding:3px 6px;font-weight:600">${escH(g.casa||g.h||g['Squadra Casa']||'')}</td>
+        <td style="padding:3px 6px">${escH(g.ospite||g.a||g['Squadra Ospite']||'')}</td>
+        <td style="padding:3px 6px;font-weight:700;text-align:center">${escH(g.risultato||g.r||g['Risultato']||'–')}</td>
+        <td style="padding:3px 6px;font-size:.63rem;color:var(--mu)">${escH(campo)}</td>
+        <td style="padding:3px 6px">${_nazRuoloBadge(g.ruolo||g['ruolo']||'')}</td>
+        <td style="padding:3px 6px;font-family:monospace;color:var(--mu2)">${g.numero||g.num||g['Numero Gara']||''}</td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+}
+
+function renderNazEntranti(arb){
+  const el=document.getElementById('naz-panel-entranti');
+  if(!el)return;
+  if(!arb.length){
+    el.innerHTML=`<div style="background:#f0f8ff;border:1px solid #bee3f8;border-radius:8px;padding:16px;font-size:.82rem">
+      <b>ℹ️ Come funziona questa sezione</b><br><br>
+      Questa sezione mostra gli arbitri provenienti da fuori Sardegna che arbitrano gare di campionati <em>nazionali</em> in Sardegna.<br><br>
+      Al momento non sono stati trovati dati — questo accade quando:<br>
+      • Il workflow national non ha ancora scaricato le gare nazionali in Sardegna<br>
+      • Non ci sono campionati nazionali con gare in Sardegna nel periodo considerato<br><br>
+      Lancia il workflow <b>national</b> su GitHub Actions per aggiornare i dati.
+    </div>`;
+    return;
+  }
+  let html=`<div style="overflow-x:auto"><table class="rtbl" id="tbl-naz-entr">
+    <thead><tr>
+      <th>#</th><th>Nome</th><th>Prov.</th><th>Ruoli</th>
+      <th>Gare in RSA</th><th>Campionati</th><th>Dettaglio</th>
+    </tr></thead><tbody>
+    ${arb.sort((a,b)=>(b.n_gare||0)-(a.n_gare||0)).map((a,i)=>{
+      const pv=a.provincia||'';
+      const ruoliStr=(a.ruoli||[]).map(_nazRuoloBadge).join(' ');
+      const camps=Object.keys(a.campionati||{});
+      const campStr=camps.slice(0,3).map(c=>`<span style="font-size:.6rem;color:#555;background:#f0f0f0;border-radius:3px;padding:1px 5px">${escH(c.replace('COMITATO REGIONALE ',''))}</span>`).join('')+(camps.length>3?` +${camps.length-3}`:'');
+      const rowId='naz-entr-'+i;
+      return `<tr>
+        <td style="text-align:center">${i+1}</td>
+        <td style="font-weight:700">${escH(a.nome)}</td>
+        <td><span style="background:#2980b9;color:#fff;font-size:.65rem;border-radius:3px;padding:1px 6px">${pv}</span></td>
+        <td>${ruoliStr}</td>
+        <td style="text-align:center;font-weight:800;color:#2980b9;font-size:1.1rem">${a.n_gare||0}</td>
+        <td style="font-size:.68rem">${campStr}</td>
+        <td style="text-align:center"><button style="font-size:.7rem;padding:2px 8px;background:#2980b9;color:#fff;border:none;border-radius:4px;cursor:pointer" onclick="toggleNazDetail('${rowId}')">▼ Gare</button></td>
+      </tr>
+      <tr id="${rowId}-detail" style="display:none;background:#fafafa">
+        <td colspan="7" style="padding:8px 14px">${_nazGareDetail(a.gare||[])}</td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+  el.innerHTML=html;
+  setTimeout(()=>makeTableSortable(document.getElementById('tbl-naz-entr')),30);
+}
+
+function renderNazGare(gare){
+  const el=document.getElementById('naz-panel-gare');
+  if(!el)return;
+  if(!gare.length){
+    el.innerHTML=`<p class="il">Nessuna gara nazionale in Sardegna trovata — lancia il workflow national per aggiornare i dati.</p>`;
+    return;
+  }
+  // Raggruppa per campionato
+  const perCamp={};
+  gare.forEach(g=>{const c=g.campionato||g['Campionato']||'?';(perCamp[c]=perCamp[c]||[]).push(g);});
+
+  let html=`<div style="margin-bottom:10px;font-size:.8rem;color:var(--mu)"><b>${gare.length} gare</b> nazionali in Sardegna · ${Object.keys(perCamp).length} campionati</div>`;
+
+  // Filtro campionato
+  html+=`<div style="margin-bottom:10px">
+    <select id="naz-gare-filter" style="padding:4px 10px;border-radius:5px;border:1px solid var(--br);font-size:.78rem" onchange="renderNazGareFiltered()">
+      <option value="">Tutti i campionati</option>
+      ${Object.keys(perCamp).sort().map(c=>`<option value="${escH(c)}">${escH(c.replace('COMITATO REGIONALE ','').replace('COMITATO NAZIONALE ',''))}</option>`).join('')}
+    </select>
+  </div>
+  <div id="naz-gare-table"></div>`;
+  el.innerHTML=html;
+  renderNazGareFiltered();
+}
+
+function renderNazGareFiltered(){
+  const fil=(document.getElementById('naz-gare-filter')||{}).value||'';
+  const gare=(D.nazionale?.gare_nazionali_in_sardegna||[]).filter(g=>!fil||(g.campionato||g['Campionato']||'')===fil);
+  const el=document.getElementById('naz-gare-table');
+  if(!el)return;
+  el.innerHTML=`<div style="overflow-x:auto"><table class="rtbl" id="tbl-naz-gare">
+    <thead><tr>
+      <th style="cursor:pointer" onclick="sT('tbl-naz-gare',0,event)">Data</th>
+      <th>Campionato</th>
+      <th style="cursor:pointer" onclick="sT('tbl-naz-gare',2,event)">Casa</th>
+      <th style="cursor:pointer" onclick="sT('tbl-naz-gare',3,event)">Ospite</th>
+      <th>Risultato</th>
+      <th>Campo</th>
+      <th>Arbitro 1</th>
+      <th>Arbitro 2</th>
+      <th>N° Gara</th>
+    </tr></thead><tbody>
+    ${gare.sort((a,b)=>(b['Data']||b.data||'').localeCompare(a['Data']||a.data||'')).map(g=>{
+      const isSardoArb1=g['Arbitro 1']&&/\((CA|SS|NU|OR|SU)\)/.test(g['Arbitro 1']||'');
+      const isSardoArb2=g['Arbitro 2']&&/\((CA|SS|NU|OR|SU)\)/.test(g['Arbitro 2']||'');
+      const campStr=(g['Campionato']||g.campionato||'').replace('COMITATO REGIONALE ','').replace('COMITATO NAZIONALE ','');
+      const campo=(g['Campo']||'').replace(/^.*\d{5}\s+/,'').replace(/\s*\(.*\)$/,'');
+      return `<tr>
+        <td style="white-space:nowrap;font-size:.75rem">${g['Data']||''}</td>
+        <td style="font-size:.65rem;color:#555">${escH(campStr)}</td>
+        <td style="font-weight:600">${escH(g['Squadra Casa']||'')}</td>
+        <td>${escH(g['Squadra Ospite']||'')}</td>
+        <td style="font-weight:700;text-align:center">${g['Risultato']||'–'}</td>
+        <td style="font-size:.65rem;color:var(--mu)">${escH(campo)}</td>
+        <td style="font-size:.72rem;${isSardoArb1?'color:#c0392b;font-weight:700':'color:var(--mu)'}">${escH(g['Arbitro 1']||'')}</td>
+        <td style="font-size:.72rem;${isSardoArb2?'color:#c0392b;font-weight:700':'color:var(--mu)'}">${escH(g['Arbitro 2']||'')}</td>
+        <td style="font-family:monospace;font-size:.68rem;color:var(--mu2)">${g['Numero Gara']||''}</td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+  setTimeout(()=>makeTableSortable(document.getElementById('tbl-naz-gare')),30);
+}
+
+function renderNazSquadre(squadre){
+  const el=document.getElementById('naz-panel-squadre');
+  if(!el)return;
+  if(!squadre.length){
+    el.innerHTML=`<div style="background:#f9f0ff;border:1px solid #e1bee7;border-radius:8px;padding:16px;font-size:.82rem">
+      <b>ℹ️ Come funziona questa sezione</b><br><br>
+      Questa sezione mostra le squadre sarde che partecipano a campionati nazionali (gare fuori Sardegna).<br><br>
+      Al momento non sono stati trovati dati. Lancia il workflow <b>national</b> per aggiornare.
+    </div>`;
+    return;
+  }
+  let html=`<div style="overflow-x:auto"><table class="rtbl" id="tbl-naz-sq">
+    <thead><tr>
+      <th>#</th><th>Squadra</th><th>Gare</th><th>Campionati</th><th>Dettaglio</th>
+    </tr></thead><tbody>
+    ${squadre.sort((a,b)=>(b.n_gare||0)-(a.n_gare||0)).map((s,i)=>{
+      const camps=Object.keys(s.campionati||{});
+      const campStr=camps.map(c=>`<span style="font-size:.6rem;background:#f0e6ff;color:#6a0dad;border-radius:3px;padding:1px 5px;margin:1px">${escH(c.replace('COMITATO REGIONALE ','').replace('COMITATO NAZIONALE ',''))}</span>`).join('');
+      const rowId='naz-sq-'+i;
+      return `<tr>
+        <td style="text-align:center">${i+1}</td>
+        <td style="font-weight:700;color:#8e44ad">${escH(s.nome)}</td>
+        <td style="text-align:center;font-weight:800;font-size:1.1rem;color:#8e44ad">${s.n_gare||0}</td>
+        <td style="font-size:.68rem">${campStr}</td>
+        <td style="text-align:center"><button style="font-size:.7rem;padding:2px 8px;background:#8e44ad;color:#fff;border:none;border-radius:4px;cursor:pointer" onclick="toggleNazDetail('${rowId}')">▼ Gare</button></td>
+      </tr>
+      <tr id="${rowId}-detail" style="display:none;background:#faf6ff">
+        <td colspan="5" style="padding:8px 14px">${_nazGareDetail(s.gare||[])}</td>
+      </tr>`;
+    }).join('')}
+    </tbody></table></div>`;
+  el.innerHTML=html;
+  setTimeout(()=>makeTableSortable(document.getElementById('tbl-naz-sq')),30);
+}
+// ── FINE SEZIONE NAZIONALE ──────────────────────────────────────────
 </script>
 
 <script>
