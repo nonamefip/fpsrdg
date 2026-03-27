@@ -247,10 +247,22 @@ def main():
                     if pp['nome'].split()[0].upper() == cogn and pp['provincia'] in PROV_SARDE:
                         persona_trovata = True; break
 
-                if persona_trovata:
-                    new_gare.append(g)
-                    existing_nums.add(num)
-                    trovate_fuori += 1
+                if not persona_trovata:
+                    continue
+
+                # Scarta gare con campo IN Sardegna (sono gare RSA o nazionali in Sardegna)
+                campo = g.get('Campo', '')
+                if not campo_fuori_sardegna(campo):
+                    continue
+
+                # Scarta gare con campionato RSA (doppia sicurezza)
+                camp = g.get('Campionato', '')
+                if 'COMITATO REGIONALE SARDEGNA' in camp.upper():
+                    continue
+
+                new_gare.append(g)
+                existing_nums.add(num)
+                trovate_fuori += 1
 
             time.sleep(random.uniform(0.8, 1.5))
 
