@@ -189,13 +189,18 @@ def main():
             if key in key_to_idx:
                 # Aggiorna la gara esistente (cattura modifiche retroattive)
                 if da in refresh_days_set or args.full_refresh:
-                    # Preserva i provvedimenti già trovati dalla Fase 2
+                    # Preserva SEMPRE i provvedimenti già trovati dalla Fase 2
                     old_provv = existing[key_to_idx[key]].get('Provvedimenti', '').strip()
                     new_provv = r.get('Provvedimenti', '').strip()
-                    if old_provv and not new_provv:
-                        r['Provvedimenti'] = old_provv
+                    r['Provvedimenti'] = new_provv if new_provv else old_provv
                     existing[key_to_idx[key]] = r
                     aggiornati += 1; updated += 1
+                else:
+                    # Anche senza refresh: preserva sempre i provvedimenti
+                    old_provv = existing[key_to_idx[key]].get('Provvedimenti', '').strip()
+                    new_provv = r.get('Provvedimenti', '').strip()
+                    r['Provvedimenti'] = new_provv if new_provv else old_provv
+                    existing[key_to_idx[key]] = r
             else:
                 key_to_idx[key] = len(existing)
                 existing.append(r); nuovi+=1; added+=1
