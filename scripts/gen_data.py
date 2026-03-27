@@ -750,7 +750,9 @@ if os.path.exists(NATIONAL_CACHE):
             nome = pp['nome']
             if nome not in arb_fuori:
                 arb_fuori[nome] = {'nome':nome,'provincia':pp['provincia'],'citta':pp.get('citta',''),
-                                   'ruolo':field,'n_gare':0,'campionati':{},'gare':[]}
+                                   'ruoli':[],'n_gare':0,'campionati':{},'gare':[]}
+            if field not in arb_fuori[nome]['ruoli']:
+                arb_fuori[nome]['ruoli'].append(field)
             arb_fuori[nome]['n_gare'] += 1
             camp = g.get('Campionato','')
             arb_fuori[nome]['campionati'][camp] = arb_fuori[nome]['campionati'].get(camp,0)+1
@@ -811,7 +813,9 @@ for g in gare_in_sardegna:
             nome = pp['nome']
             if nome not in arb_non_sardi:
                 arb_non_sardi[nome] = {'nome':nome,'provincia':pp['provincia'],
-                                       'citta':pp.get('citta',''),'n_gare':0,'campionati':{},'gare':[]}
+                                       'citta':pp.get('citta',''),'ruoli':[],'n_gare':0,'campionati':{},'gare':[]}
+            if field not in arb_non_sardi[nome]['ruoli']:
+                arb_non_sardi[nome]['ruoli'].append(field)
             arb_non_sardi[nome]['n_gare'] += 1
             camp = g.get('Campionato','')
             arb_non_sardi[nome]['campionati'][camp] = arb_non_sardi[nome]['campionati'].get(camp,0)+1
