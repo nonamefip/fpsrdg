@@ -10,16 +10,17 @@ on:
       mode:
         description: 'Modalità scraper'
         required: false
-        default: 'normal'
+        default: 'template-only'
         type: choice
         options:
-          - normal        # aggiornamento giornaliero (default)
-          - full-refresh  # riscarica tutto dall'inizio
-          - all-provv     # riscarica TUTTI i provvedimenti mancanti (dopo full-refresh)
-          - reprovv       # solo fase 2: riscarica gare senza provvedimenti (ultimi 21gg)
-          - national      # solo scraper nazionale
+          - template-only  # solo rebuild HTML, niente scraper (deploy.bat)
+          - normal         # aggiornamento giornaliero
+          - full-refresh   # riscarica tutto dall'inizio
+          - all-provv      # riscarica TUTTI i provvedimenti mancanti
+          - reprovv        # provvedimenti ultimi 21gg
+          - national       # solo scraper nazionale
   schedule:
-    - cron: '30 2 * * *'
+    - cron: '30 2 * * *'   # ogni notte alle 2:30
 
 permissions:
   contents: write
@@ -51,26 +52,36 @@ jobs:
       - name: Installa dipendenze
         run: pip install -r requirements.txt
 
+      # ── SCRAPER RSA ──────────────────────────────────────────────
       - name: Scarica dati FIP (normale)
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.mode == 'normal' }}
-        run: python scripts/fip_scraper.py --refresh-days 21
+        if: >
+          github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && inputs.mode == 'normal')
+        run: python scripts/fip_scraper.py --refresh-days 7
 
       - name: Scarica dati FIP (full-refresh)
-        if: ${{ inputs.mode == 'full-refresh' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'full-refresh' }}
         run: python scripts/fip_scraper.py --full-refresh
 
       - name: Scarica dati FIP (all-provv – tutti i provvedimenti mancanti)
-        if: ${{ inputs.mode == 'all-provv' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'all-provv' }}
         run: python scripts/fip_scraper.py --all-provv
 
       - name: Scarica dati FIP (reprovv – provvedimenti ultimi 21gg)
-        if: ${{ inputs.mode == 'reprovv' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'reprovv' }}
         run: python scripts/fip_scraper.py --reprovv
 
+      # ── SCRAPER NAZIONALE ────────────────────────────────────────
+      # Gira ogni notte + quando si lancia 'national' manualmente
+      # NON gira quando si fa deploy.bat (template-only o push template)
       - name: Scarica dati nazionali
-        if: ${{ inputs.mode == 'national' || github.event_name != 'workflow_dispatch' }}
+        if: >
+          github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && inputs.mode == 'national') ||
+          (github.event_name == 'workflow_dispatch' && inputs.mode == 'normal')
         run: python scripts/fip_national_scraper.py
 
+      # ── BUILD ────────────────────────────────────────────────────
       - name: Genera dati JSON
         run: python scripts/gen_data.py
 
