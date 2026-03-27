@@ -11605,18 +11605,43 @@ function renderNazFuori(arb){
   arb.forEach(a=>{
     (a.ruoli||['?']).forEach(r=>{perRuolo[r]=(perRuolo[r]||0)+(a.n_gare||0);});
   });
+  const totGare=arb.reduce((s,a)=>s+(a.n_gare||0),0);
 
   // KPI ruoli
   const ruoliHtml=Object.entries(perRuolo).sort((a,b)=>b[1]-a[1]).map(([r,n])=>
     `<span style="display:inline-block;margin:2px 4px">${_nazRuoloBadge(r)} <b>${n}</b> gare</span>`
   ).join('');
 
-  let html=`<div style="background:#fff5f5;border:1px solid #fdd;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:.8rem">
-    <b>Distribuzione per ruolo:</b> ${ruoliHtml}
-  </div>`;
+  // Campionati unici per filtro
+  const allCamps=new Set();
+  arb.forEach(a=>Object.keys(a.campionati||{}).forEach(c=>allCamps.add(c)));
 
-  // Tabella arbitri
-  html+=`<div style="overflow-x:auto"><table class="rtbl" id="tbl-naz-fuori">
+  let html=`<div style="background:#fff5f5;border:1px solid #fdd;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:.8rem;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+    <div><b>${arb.length}</b> ufficiali · <b>${totGare}</b> gare totali fuori Sardegna</div>
+    <div><b>Per ruolo:</b> ${ruoliHtml}</div>
+  </div>
+  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <label style="font-size:.78rem;color:var(--mu)">Filtra campionato:</label>
+    <select id="naz-fuori-filter" style="padding:4px 10px;border-radius:5px;border:1px solid var(--br);font-size:.78rem" onchange="renderNazFuoriFiltered()">
+      <option value="">Tutti (${allCamps.size} campionati)</option>
+      ${[...allCamps].sort().map(c=>`<option value="${escH(c)}">${escH(c.replace('COMITATO REGIONALE ','').replace('COMITATO NAZIONALE ',''))}</option>`).join('')}
+    </select>
+  </div>
+  <div id="naz-fuori-table"></div>`;
+
+  el.innerHTML=html;
+  renderNazFuoriFiltered();
+}
+
+function renderNazFuoriFiltered(){
+  const fil=(document.getElementById('naz-fuori-filter')||{}).value||'';
+  const n=D.nazionale||{};
+  let arb=(n.arbitri_fuori_sardegna||[]);
+  if(fil) arb=arb.filter(a=>a.campionati&&a.campionati[fil]);
+  const el=document.getElementById('naz-fuori-table');
+  if(!el)return;
+
+  el.innerHTML=`<div style="overflow-x:auto"><table class="rtbl" id="tbl-naz-fuori">
     <thead><tr>
       <th style="cursor:pointer" onclick="sT('tbl-naz-fuori',0,event)">#</th>
       <th style="cursor:pointer" onclick="sT('tbl-naz-fuori',1,event)">Nome</th>
@@ -11633,28 +11658,25 @@ function renderNazFuori(arb){
       const ruoliStr=(a.ruoli||[]).map(_nazRuoloBadge).join(' ');
       const camps=Object.keys(a.campionati||{});
       const campStr=camps.slice(0,3).map(c=>`<span style="font-size:.6rem;color:#555;display:inline-block;margin:1px 2px;background:#f0f0f0;border-radius:3px;padding:1px 5px">${escH(c.replace('COMITATO REGIONALE ','').replace('COMITATO NAZIONALE ',''))}</span>`).join('')+(camps.length>3?`<span style="font-size:.6rem;color:var(--mu)">+${camps.length-3}</span>`:'');
-      const gare=a.gare||[];
-      const lastG=gare.map(g=>g.data||g.d||'').filter(Boolean).sort().pop()||'';
+      const gare=fil?a.gare.filter(g=>g.c===fil):a.gare||[];
+      const nGareFil=fil?(a.campionati[fil]||0):(a.n_gare||0);
+      const lastG=gare.map(g=>g.d||'').filter(Boolean).sort().pop()||'';
       const rowId='naz-arb-'+i;
       return `<tr>
         <td data-val="${i+1}" style="text-align:center">${i+1}</td>
         <td data-val="${escH(a.nome)}" style="font-weight:700;color:${pvCol};cursor:pointer" onclick="openPersona('${esc(a.nome)}')">${escH(a.nome)}</td>
         <td data-val="${pv}">${pvB(pv)}</td>
         <td>${ruoliStr}</td>
-        <td data-val="${a.n_gare||0}" style="text-align:center;font-weight:800;color:#c0392b;font-size:1.1rem">${a.n_gare||0}</td>
+        <td data-val="${nGareFil}" style="text-align:center;font-weight:800;color:#c0392b;font-size:1.1rem">${nGareFil}</td>
         <td style="font-size:.68rem">${campStr}</td>
         <td data-val="${lastG}" style="font-size:.72rem;color:var(--mu)">${lastG}</td>
         <td style="text-align:center"><button style="font-size:.7rem;padding:2px 8px;background:#c0392b;color:#fff;border:none;border-radius:4px;cursor:pointer" onclick="toggleNazDetail('${rowId}')">▼ Gare</button></td>
       </tr>
       <tr id="${rowId}-detail" style="display:none;background:#fafafa">
-        <td colspan="8" style="padding:8px 14px">
-          ${_nazGareDetail(gare)}
-        </td>
+        <td colspan="8" style="padding:8px 14px">${_nazGareDetail(gare)}</td>
       </tr>`;
     }).join('')}
     </tbody></table></div>`;
-
-  el.innerHTML=html;
   setTimeout(()=>makeTableSortable(document.getElementById('tbl-naz-fuori')),30);
 }
 
@@ -11808,21 +11830,37 @@ function renderNazSquadre(squadre){
   }
   let html=`<div style="overflow-x:auto"><table class="rtbl" id="tbl-naz-sq">
     <thead><tr>
-      <th>#</th><th>Squadra</th><th>Gare</th><th>Campionati</th><th>Dettaglio</th>
+      <th>#</th><th>Squadra</th><th>Gare</th><th>V</th><th>P</th><th>Ruolo</th><th>Campionati</th><th>Dettaglio</th>
     </tr></thead><tbody>
     ${squadre.sort((a,b)=>(b.n_gare||0)-(a.n_gare||0)).map((s,i)=>{
       const camps=Object.keys(s.campionati||{});
       const campStr=camps.map(c=>`<span style="font-size:.6rem;background:#f0e6ff;color:#6a0dad;border-radius:3px;padding:1px 5px;margin:1px">${escH(c.replace('COMITATO REGIONALE ','').replace('COMITATO NAZIONALE ',''))}</span>`).join('');
+      const gare=s.gare||[];
+      // Calcola V/P e ruoli
+      let v=0,p=0,casa=0,ospite=0;
+      gare.forEach(g=>{
+        if(g.ruolo==='casa')casa++;else ospite++;
+        const r=g.r||g.risultato||'';
+        const m=r.match(/(\d+)-(\d+)/);
+        if(m){
+          const pc=parseInt(m[1]),po=parseInt(m[2]);
+          if(g.ruolo==='casa'){if(pc>po)v++;else if(pc<po)p++;}
+          else{if(po>pc)v++;else if(po<pc)p++;}
+        }
+      });
       const rowId='naz-sq-'+i;
       return `<tr>
         <td style="text-align:center">${i+1}</td>
         <td style="font-weight:700;color:#8e44ad">${escH(s.nome)}</td>
         <td style="text-align:center;font-weight:800;font-size:1.1rem;color:#8e44ad">${s.n_gare||0}</td>
+        <td style="text-align:center;font-weight:700;color:#27ae60">${v}</td>
+        <td style="text-align:center;font-weight:700;color:#c0392b">${p}</td>
+        <td style="text-align:center;font-size:.72rem">${casa>0?`<span title="Partite in casa" style="background:#e8f4fd;color:#2980b9;border-radius:3px;padding:1px 5px">🏠${casa}</span>`:''}${ospite>0?`<span title="Partite in trasferta" style="background:#fdf6e8;color:#d35400;border-radius:3px;padding:1px 5px;margin-left:3px">✈️${ospite}</span>`:''}</td>
         <td style="font-size:.68rem">${campStr}</td>
         <td style="text-align:center"><button style="font-size:.7rem;padding:2px 8px;background:#8e44ad;color:#fff;border:none;border-radius:4px;cursor:pointer" onclick="toggleNazDetail('${rowId}')">▼ Gare</button></td>
       </tr>
       <tr id="${rowId}-detail" style="display:none;background:#faf6ff">
-        <td colspan="5" style="padding:8px 14px">${_nazGareDetail(s.gare||[])}</td>
+        <td colspan="8" style="padding:8px 14px">${_nazGareDetail(s.gare||[])}</td>
       </tr>`;
     }).join('')}
     </tbody></table></div>`;
