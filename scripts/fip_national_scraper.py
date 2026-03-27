@@ -166,13 +166,19 @@ def is_sardo(field_value):
     return bool(m) and m.group(1).upper() in PROV_SARDE
 
 def campo_fuori_sardegna(campo):
-    if not campo: return False
+    """Ritorna True se il campo è CHIARAMENTE fuori Sardegna, False se è in Sardegna o non riconoscibile."""
+    if not campo: return True  # senza campo assumiamo fuori (gara nazionale)
+    # Se ha sigla provincia esplicita, usiamo quella
     m = re.search(r'\((\w{2,3})\)', campo)
     if m: return m.group(1).upper() not in PROV_SARDE
-    # Se non ha sigla provincia, assume fuori Sardegna
+    # Se non ha sigla: scarta SOLO se riconosciamo parole sarde nel campo
     parole_sarde = ['CAGLIARI','SASSARI','NUORO','ORISTANO','CARBONIA','IGLESIAS',
-                    'OLBIA','TEMPIO','QUARTU','SELARGIUS','ALGHERO','MACOMER']
-    return not any(p in campo.upper() for p in parole_sarde)
+                    'OLBIA','TEMPIO','QUARTU','SELARGIUS','ALGHERO','MACOMER',
+                    'SENNORI','PORTO TORRES','IGLESIAS','CARBONIA','ARZACHENA',
+                    'OZIERI','SINISCOLA','TORTOLI','LANUSEI','MURAVERA']
+    campo_up = campo.upper()
+    if any(p in campo_up for p in parole_sarde): return False  # è in Sardegna
+    return True  # non riconosciuto come sardo → assume fuori Sardegna
 
 def main():
     print(f"=== FIP National Scraper v2 — {date.today()} ===")
@@ -247,22 +253,10 @@ def main():
                     if pp['nome'].split()[0].upper() == cogn and pp['provincia'] in PROV_SARDE:
                         persona_trovata = True; break
 
-                if not persona_trovata:
-                    continue
-
-                # Scarta gare con campo IN Sardegna (sono gare RSA o nazionali in Sardegna)
-                campo = g.get('Campo', '')
-                if not campo_fuori_sardegna(campo):
-                    continue
-
-                # Scarta gare con campionato RSA (doppia sicurezza)
-                camp = g.get('Campionato', '')
-                if 'COMITATO REGIONALE SARDEGNA' in camp.upper():
-                    continue
-
-                new_gare.append(g)
-                existing_nums.add(num)
-                trovate_fuori += 1
+                if persona_trovata:
+                    new_gare.append(g)
+                    existing_nums.add(num)
+                    trovate_fuori += 1
 
             time.sleep(random.uniform(0.8, 1.5))
 
