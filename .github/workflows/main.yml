@@ -35,6 +35,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -72,8 +74,6 @@ jobs:
         run: python scripts/fip_scraper.py --reprovv
 
       # ── SCRAPER NAZIONALE ────────────────────────────────────────
-      # Gira ogni notte + quando si lancia 'national' manualmente
-      # NON gira quando si fa deploy.bat (template-only o push template)
       - name: Scarica dati nazionali
         if: >
           github.event_name == 'schedule' ||
@@ -81,9 +81,32 @@ jobs:
           (github.event_name == 'workflow_dispatch' && inputs.mode == 'normal')
         run: python scripts/fip_national_scraper.py
 
+      # ── COMMIT CACHE ─────────────────────────────────────────────
+      # Salva la cache aggiornata su GitHub dopo ogni scraper
+      - name: Salva cache su GitHub
+        if: >
+          github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && inputs.mode != 'template-only')
+        run: |
+          git config user.name "FIP Bot"
+          git config user.email "fipbot@noreply.github.com"
+          git add cache/fip_sardegna_cache.json || true
+          git add cache/fip_national_cache.json || true
+          git diff --staged --quiet || git commit -m "Aggiornamento cache $(date '+%Y-%m-%d %H:%M')"
+          git push || true
+
       # ── BUILD ────────────────────────────────────────────────────
       - name: Genera dati JSON
         run: python scripts/gen_data.py
+
+      - name: Salva data JSON su GitHub
+        if: >
+          github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && inputs.mode != 'template-only')
+        run: |
+          git add cache/data_v5_new.json || true
+          git diff --staged --quiet || git commit -m "Aggiornamento dati $(date '+%Y-%m-%d %H:%M')"
+          git push || true
 
       - name: Genera dashboard HTML
         run: python scripts/build.py
