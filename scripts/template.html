@@ -2116,22 +2116,17 @@ function renderPersonsTable(cid,persons,opts={}){
     const _today2=_now.toISOString().split('T')[0];
     const _nowMin=_now.getHours()*60+_now.getMinutes();
     const _arbFields=['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'];
-    // Conta da D.gare: gare con risultato dove questa persona è designata
-    const gareArbConRis=(D.gare||[]).filter(g=>{
-      if(!g['Risultato'])return false;
-      return _arbFields.some(f=>pns(g[f]||'')===p.nome);
-    });
-    // Conta anche gare di oggi già iniziate (senza risultato ancora) da gare_future
-    const gareOggiInCorso=(D.gare_future||[]).filter(g=>{
-      if(g['Risultato'])return false;
+    // Conta da D.gare: gare arbitrate = data passata (con o senza risultato) + oggi già iniziate (+30min)
+    const gareArbOggi=(D.gare||[]).filter(g=>{
       if(!_arbFields.some(f=>pns(g[f]||'')===p.nome))return false;
       const gd=g['Data']||'';
-      if(gd!==_today2)return false;
-      const gOra=g['Ora']||'';if(!gOra)return false;
+      if(gd>_today2)return false;          // future: escludi
+      if(gd<_today2)return true;           // passate: includi sempre (con o senza risultato)
+      // oggi: includi solo se iniziata da almeno 30 minuti
+      const gOra=g['Ora']||'';if(!gOra)return true;
       const pp=gOra.split(':');
       return parseInt(pp[0]||0)*60+parseInt(pp[1]||0)+30<=_nowMin;
     });
-    const gareArbOggi=[...gareArbConRis,...gareOggiInCorso];
     const nGareArbOggi=gareArbOggi.length;
     // UDC e Osservatori: ricalcolo in tempo reale da D.gare (stesso filtro +30min arbitri)
     const _udcFields=['Segnapunti','Cronometrista','24 Secondi','Addetto Referto'];
