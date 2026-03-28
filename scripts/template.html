@@ -2673,51 +2673,54 @@ function openGiornoMulti(dates){
   var DW=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
   var label=dates.map(function(ds){var d=new Date(ds+'T12:00');return DW[d.getDay()]+' '+d.getDate()+' '+mesiL[d.getMonth()];}).join(' + ');
   title.innerHTML='📅 '+label;
-  // Raccoglie tutte le gare dei giorni selezionati
   var allGare=[];
   dates.forEach(function(ds){
-    var g1=(D.gare||[]).filter(function(g){return g['Data']===ds;});
-    var g2=(D.gare_future||[]).filter(function(g){return g['Data']===ds;});
-    allGare=allGare.concat(g1).concat(g2);
+    (D.gare||[]).filter(function(g){return g['Data']===ds;}).forEach(function(g){allGare.push(g);});
+    (D.gare_future||[]).filter(function(g){return g['Data']===ds;}).forEach(function(g){allGare.push(g);});
   });
-  // Deduplica per numero gara
   var seen=new Set();
-  allGare=allGare.filter(function(g){var k=g['Numero Gara']||(g['Data']+g['Squadra Casa']+g['Squadra Ospite']);if(seen.has(k))return false;seen.add(k);return true;});
+  allGare=allGare.filter(function(g){
+    var k=g['Numero Gara']||(g['Data']+(g['Squadra Casa']||'')+(g['Squadra Ospite']||''));
+    if(seen.has(k))return false;seen.add(k);return true;
+  });
   allGare.sort(function(a,b){return (a['Data']||'').localeCompare(b['Data']||'')||((a['Ora']||'').localeCompare(b['Ora']||''));});
-  var camps=[...new Set(allGare.map(function(g){return g['Campionato']||'';}).filter(Boolean))];
   var tot=allGare.length;
   var coperti=allGare.filter(function(g){return(g['Arbitro 1']||'').trim()||(g['Arbitro 2']||'').trim();}).length;
-  // Riusa il rendering di openGiornoModal per le righe
+  var camps=[...new Set(allGare.map(function(g){return g['Campionato']||'';}).filter(Boolean))];
+  var todayStr=new Date().toISOString().split('T')[0];
   var rows=allGare.map(function(g){
     var haRis=!!g['Risultato'];
-    var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+    var isFut=!haRis&&(g['Data']||'')>=todayStr;
     var campClr=campColor(g['Campionato']||'')||'#555';
-    var a1=g['Arbitro 1']||'',a2=g['Arbitro 2']||'';
-    var a1n=pns(a1),a2n=pns(a2);
-    var isFut=!haRis&&(g['Data']||'')>=(new Date().toISOString().split('T')[0]);
-    return'<tr style="'+(isFut?'background:#fffbf0':haRis&&pc>po?'':'')+'">'+
-      '<td style="font-size:.65rem;color:var(--mu);white-space:nowrap">'+g['Data']+'</td>'+
-      '<td style="font-size:.68rem;color:var(--mu)">'+escH(g['Ora']||'')+'</td>'+
-      '<td style="font-size:.6rem;font-family:monospace">'+escH(g['Numero Gara']||'')+'</td>'+
-      '<td><span style="background:'+campClr+';color:#fff;border-radius:3px;padding:1px 5px;font-size:.58rem;font-weight:600;cursor:pointer;white-space:nowrap" onclick="openCampionato(\''+esc(g['Campionato']||'')+'\');event.stopPropagation()">'+escH(g['Campionato']||'')+'</span></td>'+
-      '<td><span class="rn rn-sq" onclick="openSquadra(\''+esc(g['Squadra Casa']||'\')+'\');event.stopPropagation()">'+escH(g['Squadra Casa']||'')+'</span></td>'+
-      '<td style="text-align:center;font-weight:700;font-size:.8rem">'+(haRis?g['Risultato']:'<span style="color:var(--mu);font-size:.65rem">Prog.</span>')+'</td>'+
-      '<td><span class="rn rn-sq" onclick="openSquadra(\''+esc(g['Squadra Ospite']||'')+'\');event.stopPropagation()">'+escH(g['Squadra Ospite']||'')+'</span></td>'+
-      '<td>'+(a1n?'<span class="rn rn-Arbitro" onclick="openPersona(\''+esc(a1n)+'\')">'+escH(a1n)+'</span>':'')+' '+(a2n?'<span class="rn rn-Arbitro" onclick="openPersona(\''+esc(a2n)+'\')">'+escH(a2n)+'</span>':'')+'</td>'+
-      '</tr>';
+    var a1n=pns(g['Arbitro 1']||''), a2n=pns(g['Arbitro 2']||'');
+    var casa=escH(g['Squadra Casa']||''), ospite=escH(g['Squadra Ospite']||'');
+    var casaE=esc(g['Squadra Casa']||''), ospiteE=esc(g['Squadra Ospite']||'');
+    var campE=esc(g['Campionato']||''), campH=escH(g['Campionato']||'');
+    var ris=haRis?'<b>'+g['Risultato']+'</b>':'<span style="color:var(--mu);font-size:.65rem">Prog.</span>';
+    var a1html=a1n?'<span class="rn rn-Arbitro" onclick="openPersona(\''+esc(a1n)+'\')">'+escH(a1n)+'</span>':'';
+    var a2html=a2n?'<span class="rn rn-Arbitro" onclick="openPersona(\''+esc(a2n)+'\')">'+escH(a2n)+'</span>':'';
+    return '<tr style="'+(isFut?'background:#fffbf0':'')+'">'
+      +'<td style="font-size:.65rem;color:var(--mu);white-space:nowrap">'+g['Data']+'</td>'
+      +'<td style="font-size:.68rem;color:var(--mu)">'+escH(g['Ora']||'')+'</td>'
+      +'<td style="font-size:.6rem;font-family:monospace">'+escH(g['Numero Gara']||'')+'</td>'
+      +'<td><span style="background:'+campClr+';color:#fff;border-radius:3px;padding:1px 5px;font-size:.58rem;font-weight:600;cursor:pointer" onclick="openCampionato(\''+campE+'\');event.stopPropagation()">'+campH+'</span></td>'
+      +'<td><span class="rn rn-sq" onclick="openSquadra(\''+casaE+'\');event.stopPropagation()">'+casa+'</span></td>'
+      +'<td style="text-align:center;font-weight:700">'+ris+'</td>'
+      +'<td><span class="rn rn-sq" onclick="openSquadra(\''+ospiteE+'\');event.stopPropagation()">'+ospite+'</span></td>'
+      +'<td>'+a1html+' '+a2html+'</td>'
+      +'</tr>';
   }).join('');
-  body.innerHTML='<div class="scs" style="margin-bottom:10px">'+
-    '<div class="sc"><div class="sv">'+tot+'</div><div class="sl">Gare totali</div></div>'+
-    '<div class="sc"><div class="sv" style="color:var(--green)">'+coperti+'</div><div class="sl">Coperte</div></div>'+
-    '<div class="sc"><div class="sv" style="color:var(--red)">'+(tot-coperti)+'</div><div class="sl">Scoperte</div></div>'+
-    '<div class="sc"><div class="sv">'+camps.length+'</div><div class="sl">Campionati</div></div>'+
-    '</div>'+
-    '<div style="overflow-x:auto"><table class="mtbl" style="font-size:.73rem"><thead><tr>'+
-    '<th>Data</th><th>Ora</th><th>N°</th><th>Campionato</th><th>Casa</th><th>Ris.</th><th>Ospite</th><th>Arbitri</th>'+
-    '</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  body.innerHTML='<div class="scs" style="margin-bottom:10px">'
+    +'<div class="sc"><div class="sv">'+tot+'</div><div class="sl">Gare totali</div></div>'
+    +'<div class="sc"><div class="sv" style="color:var(--green)">'+coperti+'</div><div class="sl">Coperte</div></div>'
+    +'<div class="sc"><div class="sv" style="color:var(--red)">'+(tot-coperti)+'</div><div class="sl">Scoperte</div></div>'
+    +'<div class="sc"><div class="sv">'+camps.length+'</div><div class="sl">Campionati</div></div>'
+    +'</div>'
+    +'<div style="overflow-x:auto"><table class="mtbl" style="font-size:.73rem"><thead><tr>'
+    +'<th>Data</th><th>Ora</th><th>N°</th><th>Campionato</th><th>Casa</th><th>Ris.</th><th>Ospite</th><th>Arbitri</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
   openMo('mo-persona');
 }
-
 function renderHomePv(){
   var el=document.getElementById('h-pv');if(!el)return;
   var PV_NOMI={CA:'Cagliari',SS:'Sassari',SU:'Sud Sardegna',NU:'Nuoro',OR:'Oristano'};
