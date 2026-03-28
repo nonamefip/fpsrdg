@@ -10,11 +10,10 @@ on:
       mode:
         description: 'Modalità scraper'
         required: false
-        default: 'template-only'
+        default: 'normal'
         type: choice
         options:
-          - template-only  # solo rebuild HTML, niente scraper (deploy.bat)
-          - normal         # aggiornamento giornaliero
+          - normal         # aggiornamento giornaliero (default anche per deploy.bat)
           - full-refresh   # riscarica tutto dall'inizio
           - all-provv      # riscarica TUTTI i provvedimenti mancanti
           - reprovv        # provvedimenti ultimi 21gg
@@ -54,9 +53,9 @@ jobs:
       - name: Installa dipendenze
         run: pip install -r requirements.txt
 
-      # ── SCRAPER RSA ──────────────────────────────────────────────
       - name: Scarica dati FIP (normale)
         if: >
+          github.event_name == 'push' ||
           github.event_name == 'schedule' ||
           (github.event_name == 'workflow_dispatch' && inputs.mode == 'normal')
         run: python scripts/fip_scraper.py --refresh-days 7
@@ -65,15 +64,14 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'full-refresh' }}
         run: python scripts/fip_scraper.py --full-refresh
 
-      - name: Scarica dati FIP (all-provv – tutti i provvedimenti mancanti)
+      - name: Scarica dati FIP (all-provv)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'all-provv' }}
         run: python scripts/fip_scraper.py --all-provv
 
-      - name: Scarica dati FIP (reprovv – provvedimenti ultimi 21gg)
+      - name: Scarica dati FIP (reprovv)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'reprovv' }}
         run: python scripts/fip_scraper.py --reprovv
 
-      # ── SCRAPER NAZIONALE ────────────────────────────────────────
       - name: Scarica dati nazionali
         if: >
           github.event_name == 'schedule' ||
@@ -81,31 +79,22 @@ jobs:
           (github.event_name == 'workflow_dispatch' && inputs.mode == 'normal')
         run: python scripts/fip_national_scraper.py
 
-      # ── COMMIT CACHE ─────────────────────────────────────────────
-      # Salva la cache aggiornata su GitHub dopo ogni scraper
       - name: Salva cache su GitHub
-        if: >
-          github.event_name == 'schedule' ||
-          (github.event_name == 'workflow_dispatch' && inputs.mode != 'template-only')
         run: |
           git config user.name "FIP Bot"
           git config user.email "fipbot@noreply.github.com"
           git add cache/fip_sardegna_cache.json || true
           git add cache/fip_national_cache.json || true
-          git diff --staged --quiet || git commit -m "Aggiornamento cache $(date '+%Y-%m-%d %H:%M')"
+          git diff --staged --quiet || git commit -m "Cache aggiornata $(date '+%Y-%m-%d %H:%M')"
           git push || true
 
-      # ── BUILD ────────────────────────────────────────────────────
       - name: Genera dati JSON
         run: python scripts/gen_data.py
 
-      - name: Salva data JSON su GitHub
-        if: >
-          github.event_name == 'schedule' ||
-          (github.event_name == 'workflow_dispatch' && inputs.mode != 'template-only')
+      - name: Salva JSON su GitHub
         run: |
           git add cache/data_v5_new.json || true
-          git diff --staged --quiet || git commit -m "Aggiornamento dati $(date '+%Y-%m-%d %H:%M')"
+          git diff --staged --quiet || git commit -m "Dati aggiornati $(date '+%Y-%m-%d %H:%M')"
           git push || true
 
       - name: Genera dashboard HTML
