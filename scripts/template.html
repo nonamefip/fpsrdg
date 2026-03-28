@@ -2116,22 +2116,17 @@ function renderPersonsTable(cid,persons,opts={}){
     const _today2=_now.toISOString().split('T')[0];
     const _nowMin=_now.getHours()*60+_now.getMinutes();
     const _arbFields=['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'];
-    // Conta da D.gare: gare con risultato dove questa persona è designata
-    const gareArbConRis=(D.gare||[]).filter(g=>{
-      if(!g['Risultato'])return false;
-      return _arbFields.some(f=>pns(g[f]||'')===p.nome);
-    });
-    // Conta anche gare di oggi già iniziate (senza risultato ancora) da gare_future
-    const gareOggiInCorso=(D.gare_future||[]).filter(g=>{
-      if(g['Risultato'])return false;
+    // Conta da D.gare: gare arbitrate = data passata (con o senza risultato) + oggi già iniziate (+30min)
+    const gareArbOggi=(D.gare||[]).filter(g=>{
       if(!_arbFields.some(f=>pns(g[f]||'')===p.nome))return false;
       const gd=g['Data']||'';
-      if(gd!==_today2)return false;
-      const gOra=g['Ora']||'';if(!gOra)return false;
+      if(gd>_today2)return false;          // future: escludi
+      if(gd<_today2)return true;           // passate: includi sempre (con o senza risultato)
+      // oggi: includi solo se iniziata da almeno 30 minuti
+      const gOra=g['Ora']||'';if(!gOra)return true;
       const pp=gOra.split(':');
       return parseInt(pp[0]||0)*60+parseInt(pp[1]||0)+30<=_nowMin;
     });
-    const gareArbOggi=[...gareArbConRis,...gareOggiInCorso];
     const nGareArbOggi=gareArbOggi.length;
     // UDC e Osservatori: ricalcolo in tempo reale da D.gare (stesso filtro +30min arbitri)
     const _udcFields=['Segnapunti','Cronometrista','24 Secondi','Addetto Referto'];
@@ -10145,11 +10140,10 @@ function renderH2HArb(){
   const ARB_COLORS=['#003087','#e67e22','#27ae60','#8e44ad'];
   const ARB_COLORS_BG=['rgba(0,48,135,.15)','rgba(230,126,34,.15)','rgba(39,174,96,.15)','rgba(142,68,173,.15)'];
 
-  // Ordine di importanza campionati
   const CAMP_ORDER=['Serie B','Serie C','Divisione regionale 1','Divisione regionale 2',
     'Under 19','Under 17','Under 15','Under 14','Under 13',
     'Coppa','Femminile','Gold','Eccellenza','Maschile','Regionale'];
-  function campSort(c){
+  function campSortH2H(c){
     const cu=(c||'').toUpperCase();
     for(let i=0;i<CAMP_ORDER.length;i++){if(cu.includes(CAMP_ORDER[i].toUpperCase()))return i;}
     return 99;
@@ -10173,8 +10167,7 @@ function renderH2HArb(){
 
   if(!arbData.length){res.innerHTML='<p style="color:#6b7a99;padding:20px">Arbitri non trovati.</p>';return;}
 
-  // Aggiorna select campionato
-  const allCamps=[...new Set(arbData.flatMap(a=>Object.keys(a.campC)))].sort((a,b)=>campSort(a)-campSort(b));
+  const allCamps=[...new Set(arbData.flatMap(a=>Object.keys(a.campC)))].sort((a,b)=>campSortH2H(a)-campSortH2H(b));
   const selCamp=document.getElementById('ha-camp');
   if(selCamp&&selCamp.options.length<=1){
     allCamps.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c.replace(/COMITATO REGIONALE SARDEGNA /i,'').replace(/,$/,'').trim();selCamp.appendChild(o);});
@@ -10207,19 +10200,18 @@ function renderH2HArb(){
     }
   }
 
-  // ── TIMELINE PER SINGOLO ARBITRO (una riga per arbitro, rettangoli per campionato) ──
+  // ── TIMELINE PER SINGOLO ARBITRO ──
   const tlWrap=document.getElementById('h2h-arb-timeline-wrap');
   const tlLegend=document.getElementById('h2h-arb-legend');
   if(tlWrap&&tlLegend){
     tlWrap.style.display='block';
-    const campList=[...new Set(arbData.flatMap(a=>a.g.map(g=>g.c||g.Campionato||'')))].filter(Boolean).sort((a,b)=>campSort(a)-campSort(b));
+    const campList=[...new Set(arbData.flatMap(a=>a.g.map(g=>g.c||g.Campionato||'')))].filter(Boolean).sort((a,b)=>campSortH2H(a)-campSortH2H(b));
     const PALETTE=['#e63946','#457b9d','#2a9d8f','#e9c46a','#f4a261','#6a4c93','#1982c4','#8ac926','#ff595e','#6a994e','#a8dadc','#c77dff'];
     const campColors=campList.reduce((acc,c,i)=>{acc[c]=PALETTE[i%PALETTE.length];return acc;},{});
     const allMonths=[...new Set(arbData.flatMap(a=>a.g.map(g=>(g.d||g.Data||'').slice(0,7))))].filter(Boolean).sort();
     const isActive=c=>_h2hTimelineActiveCamps.size===0||_h2hTimelineActiveCamps.has(c);
     const activeCamps=campList.filter(isActive);
 
-    // Una riga per arbitro
     const tlHtml=arbData.map(a=>{
       const rowBars=allMonths.map(m=>{
         const gM=a.g.filter(g=>(g.d||g.Data||'').startsWith(m));
@@ -10244,8 +10236,6 @@ function renderH2HArb(){
     }).join('');
 
     const monthLabels=allMonths.map(m=>`<div style="flex:1;min-width:30px;text-align:center;font-size:.58rem;color:#888">${m.slice(5,7)}/${m.slice(2,4)}</div>`).join('');
-
-    // Sostituisci canvas con HTML
     const tlCanvas=document.getElementById('h2h-arb-timeline');
     if(tlCanvas){
       tlCanvas.style.display='none';
@@ -10257,7 +10247,6 @@ function renderH2HArb(){
         <div>${tlHtml}</div>`;
     }
 
-    // Legenda campionati cliccabile, ordinata per importanza
     tlLegend.innerHTML=campList.map(c=>{
       const active=_h2hTimelineActiveCamps.size===0||_h2hTimelineActiveCamps.has(c);
       const label=c.replace(/COMITATO REGIONALE SARDEGNA /i,'').replace(/,$/,'').trim();
@@ -10267,8 +10256,8 @@ function renderH2HArb(){
 
   // ── TABELLA CONFRONTO ──
   const gareCom=arbData.length>=2?(()=>{
-    const g1keys=new Set(arbData[0].g.map(g=>g.num||g['Numero Gara']||g.d+g.h));
-    return arbData[1].g.filter(g=>g1keys.has(g.num||g['Numero Gara']||g.d+g.h));
+    const g1keys=new Set(arbData[0].g.map(g=>g.num||g['Numero Gara']||g.d+(g.h||'')));
+    return arbData[1].g.filter(g=>g1keys.has(g.num||g['Numero Gara']||g.d+(g.h||'')));
   })():[];
 
   res.innerHTML=`
