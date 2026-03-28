@@ -12,6 +12,26 @@ from datetime import date, timedelta
 TODAY_STR = str(date.today())
 FUTURE_END = str(date.today() + timedelta(days=14))
 RAW_FUTURE = [g for g in RAW if TODAY_STR <= g['Data'] <= FUTURE_END]
+
+import datetime as _dt
+def _gara_arbitrata(g):
+    """Restituisce True se la gara va contata come arbitrata (già svolta).
+    Logica: data passata → sempre sì; data futura → no; oggi → sì se ora+30min già trascorsa."""
+    gd = g.get('Data','')
+    if not gd: return False
+    if gd < TODAY_STR: return True       # passata: conta sempre (con o senza risultato)
+    if gd > TODAY_STR: return False      # futura: non conta
+    # oggi: conta solo se iniziata da almeno 30 minuti
+    ora = g.get('Ora','')
+    if not ora: return True
+    try:
+        now = _dt.datetime.now()
+        pp = ora.split(':')
+        start_min = int(pp[0])*60 + int(pp[1])
+        now_min = now.hour*60 + now.minute
+        return start_min + 30 <= now_min
+    except:
+        return True
 print(f"Gare filtrate (dal 01/09/2025): {len(RAW_ALL)}, fino a {YESTERDAY}")
 print(f"Gare future (prossimi 14gg): {len(RAW_FUTURE)}")
 
@@ -263,9 +283,10 @@ for g in RAW_ALL:
         persons[pid]['ruoli'].add(field)
         persons[pid]['categorie'].add(cat)
         ge = {**g,'_ruolo':field,'_cat':cat}
-        if cat=='Arbitro':     persons[pid]['gare_arbitro'].append(ge)
-        elif cat=='UDC':       persons[pid]['gare_udc'].append(ge)
-        else:                  persons[pid]['gare_osservatore'].append(ge)
+        if _gara_arbitrata(g):   # conta solo gare già svolte (passate o oggi +30min)
+            if cat=='Arbitro':     persons[pid]['gare_arbitro'].append(ge)
+            elif cat=='UDC':       persons[pid]['gare_udc'].append(ge)
+            else:                  persons[pid]['gare_osservatore'].append(ge)
         persons[pid]['campionati'][g['Campionato']] += 1
         persons[pid]['giorni'][g['Data']] += 1
         persons[pid]['mesi'][g['Data'][:7]] += 1
