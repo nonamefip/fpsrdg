@@ -10430,7 +10430,7 @@ function renderH2HArb(){
             const c=g.c||g.Campionato||'';
             const h=getCampH(c);
             const cShort=c.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim();
-            return`<div title="${cShort}\n${d}" style="height:${h}px;min-height:4px;background:${campColors[c]};width:100%;border-radius:1px 1px 0 0"></div>`;
+            return`<div title="${cShort} - ${d}" style="height:${h}px;min-height:4px;background:${campColors[c]};width:100%;border-radius:1px 1px 0 0"></div>`;
           }).join('');
           const tot=gDay.length;
           return`<div style="width:${BAR_W}px;flex-shrink:0;display:flex;flex-direction:column-reverse;align-items:center;height:60px;position:relative;cursor:default" title="${d}: ${tot}g">
