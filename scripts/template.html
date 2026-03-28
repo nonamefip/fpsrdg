@@ -2620,7 +2620,7 @@ function renderTimeline(){
     var bp=Math.round(nT/_mx*100);var bclr=isT?'var(--gold)':isP?'var(--bl2)':nT>80?'var(--red)':nT>40?'#c98a00':'var(--bl2)';
     var cv='#ccc';if(isT||isP){cv='#1a7a3c';}else{var c=_cov[ds];cv=(c&&c.t>0)?(c.c/c.t>=.8?'#1a7a3c':c.c/c.t>=.5?'var(--gold)':'var(--red)'):'var(--red)';}
     var ds2=ds;
-    html+='<div class="tl-day'+(isT?' today':'')+(isP?' tl-past':'')+'" data-ds="'+ds2+'"' style="background:'+bg+';border-color:'+bc+'" onclick="tlDayClick(\''+ds2+'\')" onmouseenter="showTlTip(event,\''+d\')" onmouseenter="showTlTip(event,\''+ds2+'\','+nT+')" onmousemove="moveTlTip(event)" onmouseleave="hideTlTip()">'
+    html+='<div class="tl-day'+(isT?' today':'')+(isP?' tl-past':'')+'" data-ds="'+ds2+'" style="background:'+bg+';border-color:'+bc+'" onclick="tlDayClick(\''+ds2+'\')" onmouseenter="showTlTip(event,\''+ds2+'\','+nT+')" onmousemove="moveTlTip(event)" onmouseleave="hideTlTip()">'
       +'<div class="tl-dow" style="color:'+dc+'">'+_DW[dw]+'</div>'
       +'<div class="tl-date">'+d.getDate()+'/'+(d.getMonth()+1)+'</div>'
       +'<div class="tl-n" style="color:'+nc+'">'+(nT||'&#8211;')+'</div>'
