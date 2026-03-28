@@ -566,7 +566,7 @@ tr.loss-row td{background:#fdecea!important;}
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
 </head>
 <body>
@@ -1082,15 +1082,34 @@ tr.loss-row td{background:#fdecea!important;}
         <input type="text" id="ha1-q" placeholder="Nome..." oninput="suggestArb('ha1-q','ha1-sug',1)" autocomplete="off">
         <div id="ha1-sug" class="sug-box" style="display:none;top:100%;left:0;right:0;width:auto"></div>
       </div>
-      <div class="fg" style="position:relative"><label>Arbitro 2 (opzionale)</label>
+      <div class="fg" style="position:relative"><label>Arbitro 2</label>
         <input type="text" id="ha2-q" placeholder="Nome..." oninput="suggestArb('ha2-q','ha2-sug',2)" autocomplete="off">
         <div id="ha2-sug" class="sug-box" style="display:none;top:100%;left:0;right:0;width:auto"></div>
+      </div>
+      <div class="fg" style="position:relative"><label>Arbitro 3</label>
+        <input type="text" id="ha3-q" placeholder="Nome..." oninput="suggestArb('ha3-q','ha3-sug',3)" autocomplete="off">
+        <div id="ha3-sug" class="sug-box" style="display:none;top:100%;left:0;right:0;width:auto"></div>
+      </div>
+      <div class="fg" style="position:relative"><label>Arbitro 4</label>
+        <input type="text" id="ha4-q" placeholder="Nome..." oninput="suggestArb('ha4-q','ha4-sug',4)" autocomplete="off">
+        <div id="ha4-sug" class="sug-box" style="display:none;top:100%;left:0;right:0;width:auto"></div>
       </div>
       <div class="fg"><label>Campionato</label><select id="ha-camp" onchange="renderH2HArb()"><option value="">Tutti</option></select></div>
       <button class="btn b-go" onclick="renderH2HArb()">Confronta</button>
       <button class="btn b-gr" onclick="resetH2HArb()">↺</button>
     </div>
-    <div id="h2h-arb-result"><p style="color:#6b7a99;padding:20px">Seleziona uno o due arbitri per confrontarli.</p></div>
+    <!-- Grafico cumulativo -->
+    <div id="h2h-arb-chart-wrap" style="display:none;margin:16px 0;background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+      <div style="font-weight:700;font-size:.85rem;color:#003087;margin-bottom:10px">📈 Gare cumulative per giornata</div>
+      <canvas id="h2h-arb-chart" height="120"></canvas>
+    </div>
+    <!-- Timeline cronologica -->
+    <div id="h2h-arb-timeline-wrap" style="display:none;margin:16px 0;background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+      <div style="font-weight:700;font-size:.85rem;color:#003087;margin-bottom:6px">📅 Timeline cronologica — clicca i campionati per evidenziarli</div>
+      <canvas id="h2h-arb-timeline" height="80"></canvas>
+      <div id="h2h-arb-legend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;font-size:.72rem"></div>
+    </div>
+    <div id="h2h-arb-result"><p style="color:#6b7a99;padding:20px">Seleziona uno o più arbitri per confrontarli.</p></div>
   </div>
 </div>
 
@@ -7520,7 +7539,9 @@ ${body}
 
 const GARE_V5=D.gare||[], COP=D.copertura||{}, GS=D.global_stats||{per_giorno:{},per_mese:{}};
 const CAMPI=D.campi||{}; let PROVV=D.provvedimenti||[];
-let h2hArb1=null, h2hArb2=null;
+let h2hArb1=null, h2hArb2=null, h2hArb3=null, h2hArb4=null;
+let _h2hTimelineActiveCamps=new Set(); // campionati attivi nella timeline
+let _h2hChartInst=null, _h2hTimelineInst=null; // istanze Chart.js
 
 // ── SORT TABLE ──
 const _sortState={};
@@ -10106,74 +10127,202 @@ function selectArb(num,nome){
   renderH2HArb();
 }
 function resetH2HArb(){
-  h2hArb1=null;h2hArb2=null;
-  ['ha1-q','ha2-q'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['ha1-sug','ha2-sug'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  h2hArb1=null;h2hArb2=null;h2hArb3=null;h2hArb4=null;
+  _h2hTimelineActiveCamps=new Set();
+  ['ha1-q','ha2-q','ha3-q','ha4-q'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['ha1-sug','ha2-sug','ha3-sug','ha4-sug'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
   const s=document.getElementById('ha-camp');if(s)s.value='';
-  const r=document.getElementById('h2h-arb-result');if(r)r.innerHTML='<p style="color:#6b7a99;padding:20px">Seleziona uno o due arbitri.</p>';
+  const r=document.getElementById('h2h-arb-result');if(r)r.innerHTML='<p style="color:#6b7a99;padding:20px">Seleziona uno o più arbitri per confrontarli.</p>';
+  ['h2h-arb-chart-wrap','h2h-arb-timeline-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  if(_h2hChartInst){_h2hChartInst.destroy();_h2hChartInst=null;}
+  if(_h2hTimelineInst){_h2hTimelineInst.destroy();_h2hTimelineInst=null;}
 }
 function renderH2HArb(){
   const res=document.getElementById('h2h-arb-result'); if(!res)return;
   const campF=document.getElementById('ha-camp')?.value||'';
-  if(!h2hArb1&&!h2hArb2){res.innerHTML='<p style="color:#6b7a99;padding:20px">Seleziona uno o due arbitri.</p>';return;}
-  const p1=h2hArb1?P[h2hArb1]:null, p2=h2hArb2?P[h2hArb2]:null;
-  function stats(p){
-    if(!p)return null;
+  const ARB_COLORS=['#003087','#e67e22','#27ae60','#8e44ad'];
+  const ARB_COLORS_BG=['rgba(0,48,135,.15)','rgba(230,126,34,.15)','rgba(39,174,96,.15)','rgba(142,68,173,.15)'];
+
+  // Raccogli arbitri selezionati (1-4)
+  const arbNames=[h2hArb1,h2hArb2,h2hArb3,h2hArb4].filter(Boolean);
+  if(!arbNames.length){
+    res.innerHTML='<p style="color:#6b7a99;padding:20px">Seleziona uno o più arbitri per confrontarli.</p>';
+    ['h2h-arb-chart-wrap','h2h-arb-timeline-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+    return;
+  }
+
+  const arbData=arbNames.map((nome,ci)=>{
+    const p=P[nome]; if(!p)return null;
     let g=(p.gare_arbitro||[]);
-    if(campF) g=g.filter(x=>(x.c||x.Campionato)===campF);
-    const campC={};g.forEach(x=>{ const c=x.c||x.Campionato||''; campC[c]=(campC[c]||0)+1;});
-    return{g,campC};
+    if(campF) g=g.filter(x=>(x.c||x.Campionato||'')===campF);
+    g=g.slice().sort((a,b)=>(a.d||a.Data||'').localeCompare(b.d||b.Data||''));
+    const campC={};g.forEach(x=>{const c=x.c||x.Campionato||'';campC[c]=(campC[c]||0)+1;});
+    return{nome,p,g,campC,color:ARB_COLORS[ci],bg:ARB_COLORS_BG[ci]};
+  }).filter(Boolean);
+
+  if(!arbData.length){res.innerHTML='<p style="color:#6b7a99;padding:20px">Arbitri non trovati.</p>';return;}
+
+  // Aggiorna select campionato
+  const allCamps=[...new Set(arbData.flatMap(a=>Object.keys(a.campC)))].sort();
+  const selCamp=document.getElementById('ha-camp');
+  if(selCamp&&selCamp.options.length<=1){
+    allCamps.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCamp.appendChild(o);});
   }
-  const s1=stats(p1),s2=stats(p2);
-  // Gare in comune
-  let gareCom=[];
-  if(p1&&p2){
-    const g1keys=new Set((p1.gare_arbitro||[]).map(g=>g.num||g['Numero Gara']||g.d+g.h));
-    gareCom=(p2.gare_arbitro||[]).filter(g=>g1keys.has(g.num||g['Numero Gara']||g.d+g.h));
-    if(campF) gareCom=gareCom.filter(g=>(g.c||g.Campionato)===campF);
+
+  // ── GRAFICO CUMULATIVO ──
+  const chartWrap=document.getElementById('h2h-arb-chart-wrap');
+  const chartCanvas=document.getElementById('h2h-arb-chart');
+  if(chartWrap&&chartCanvas&&arbData.length>0){
+    chartWrap.style.display='block';
+    // Raccogli tutte le date ordinate
+    const allDates=[...new Set(arbData.flatMap(a=>a.g.map(g=>g.d||g.Data||'')))].filter(Boolean).sort();
+    if(allDates.length>1){
+      const datasets=arbData.map(a=>{
+        let cum=0;
+        const data=allDates.map(d=>{
+          cum+=(a.g.filter(g=>(g.d||g.Data||'')===d).length);
+          return cum;
+        });
+        return{label:a.nome.split(' ')[0],data,borderColor:a.color,backgroundColor:a.bg,
+          borderWidth:2.5,pointRadius:3,pointHoverRadius:6,tension:.3,fill:false};
+      });
+      // Labels: mostra solo mesi
+      const labels=allDates.map(d=>d.slice(5,10));
+      // Mostra 1 label ogni ~2 settimane
+      const step=Math.max(1,Math.floor(allDates.length/20));
+      const displayLabels=labels.map((l,i)=>i%step===0?l:'');
+      if(_h2hChartInst){_h2hChartInst.destroy();}
+      if(typeof Chart!=='undefined'){
+        _h2hChartInst=new Chart(chartCanvas,{
+          type:'line',
+          data:{labels:displayLabels,datasets},
+          options:{
+            responsive:true,maintainAspectRatio:true,
+            plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:20}}},
+            scales:{
+              x:{grid:{color:'rgba(0,0,0,.06)'},ticks:{font:{size:10},maxRotation:0}},
+              y:{grid:{color:'rgba(0,0,0,.06)'},ticks:{font:{size:10}},beginAtZero:true,title:{display:true,text:'Gare cumulative',font:{size:10}}}
+            }
+          }
+        });
+      }
+    }
   }
-  const allCamps=[...new Set([...Object.keys(s1?.campC||{}),...Object.keys(s2?.campC||{})])].sort();
+
+  // ── TIMELINE CRONOLOGICA ──
+  const tlWrap=document.getElementById('h2h-arb-timeline-wrap');
+  const tlCanvas=document.getElementById('h2h-arb-timeline');
+  const tlLegend=document.getElementById('h2h-arb-legend');
+  if(tlWrap&&tlCanvas&&tlLegend){
+    tlWrap.style.display='block';
+    // Raccogli tutti i campionati per colori
+    const campList=[...new Set(arbData.flatMap(a=>a.g.map(g=>g.c||g.Campionato||'')))].filter(Boolean).sort();
+    const campColors=campList.reduce((acc,c,i)=>{
+      const hue=Math.round((i/Math.max(campList.length,1))*360);
+      acc[c]=`hsl(${hue},65%,48%)`;return acc;
+    },{});
+    // Raggruppa gare per settimana
+    const allGare=arbData.flatMap(a=>a.g.map(g=>({...g,_arb:a.nome,_color:a.color})));
+    allGare.sort((a,b)=>(a.d||a.Data||'').localeCompare(b.d||b.Data||''));
+    // Raggruppa per mese-settimana
+    const weekMap={};
+    allGare.forEach(g=>{
+      const d=g.d||g.Data||''; if(!d)return;
+      const dt=new Date(d); const wk=dt.toISOString().slice(0,7); // per mese
+      if(!weekMap[wk])weekMap[wk]={};
+      const c=g.c||g.Campionato||'Altro';
+      weekMap[wk][c]=(weekMap[wk][c]||0)+1;
+    });
+    const weeks=Object.keys(weekMap).sort();
+    if(weeks.length>0){
+      const isActive=c=>_h2hTimelineActiveCamps.size===0||_h2hTimelineActiveCamps.has(c);
+      const datasets=campList.map(c=>({
+        label:c,
+        data:weeks.map(w=>isActive(c)?(weekMap[w]?.[c]||0):0),
+        backgroundColor:isActive(c)?campColors[c]:'rgba(200,200,200,.3)',
+        borderColor:'transparent',borderWidth:0,
+      }));
+      if(_h2hTimelineInst){_h2hTimelineInst.destroy();}
+      if(typeof Chart!=='undefined'){
+        _h2hTimelineInst=new Chart(tlCanvas,{
+          type:'bar',
+          data:{labels:weeks,datasets},
+          options:{
+            responsive:true,maintainAspectRatio:true,
+            plugins:{legend:{display:false},tooltip:{callbacks:{title:t=>'Mese: '+t[0].label}}},
+            scales:{
+              x:{stacked:true,grid:{display:false},ticks:{font:{size:9},maxRotation:45}},
+              y:{stacked:true,grid:{color:'rgba(0,0,0,.06)'},ticks:{font:{size:9}}}
+            }
+          }
+        });
+      }
+      // Legenda cliccabile
+      tlLegend.innerHTML=campList.map(c=>{
+        const active=_h2hTimelineActiveCamps.size===0||_h2hTimelineActiveCamps.has(c);
+        return `<span onclick="h2hToggleCamp(${JSON.stringify(c)})" style="cursor:pointer;padding:3px 8px;border-radius:12px;border:2px solid ${campColors[c]};background:${active?campColors[c]:'transparent'};color:${active?'#fff':campColors[c]};font-size:.68rem;font-weight:600;transition:all .2s">${c.replace(/COMITATO REGIONALE SARDEGNA /i,'').replace(/,$/,'').trim()}</span>`;
+      }).join('');
+    }
+  }
+
+  // ── TABELLA CONFRONTO ──
+  const gareCom=arbData.length>=2?(()=>{
+    const g1keys=new Set(arbData[0].g.map(g=>g.num||g['Numero Gara']||g.d+g.h));
+    return arbData[1].g.filter(g=>g1keys.has(g.num||g['Numero Gara']||g.d+g.h));
+  })():[];
+
   res.innerHTML=`
-    <div style="display:grid;grid-template-columns:${p1&&p2?'1fr auto 1fr':'1fr'};gap:12px;margin-bottom:14px;align-items:start">
-      ${p1?`<div class="card" style="text-align:center">
-        <div style="font-size:.95rem;font-weight:800;color:#003087">${escH(p1.nome)}</div>
-        <div style="font-size:.72rem;color:#6b7a99">${p1.provincia} · ${catB(p1.categoria)}</div>
-        <div style="font-size:2rem;font-weight:900;color:#003087;margin:8px 0">${s1.g.length}</div>
-        <div style="font-size:.7rem;color:#6b7a99">gare${campF?' in '+campF:''}</div>
-      </div>`:''}
-      ${p1&&p2?`<div style="text-align:center;padding-top:36px"><div style="font-size:.68rem;color:#6b7a99">insieme</div><div style="font-size:2rem;font-weight:900;color:#003087">${gareCom.length}</div></div>`:''}
-      ${p2?`<div class="card" style="text-align:center">
-        <div style="font-size:.95rem;font-weight:800;color:#003087">${escH(p2.nome)}</div>
-        <div style="font-size:.72rem;color:#6b7a99">${p2.provincia} · ${catB(p2.categoria)}</div>
-        <div style="font-size:2rem;font-weight:900;color:#003087;margin:8px 0">${s2.g.length}</div>
-        <div style="font-size:.7rem;color:#6b7a99">gare${campF?' in '+campF:''}</div>
-      </div>`:''}
+    <div style="display:grid;grid-template-columns:${arbData.map(()=>'1fr').join(' ')};gap:10px;margin-bottom:14px">
+      ${arbData.map((a,ci)=>`<div class="card" style="text-align:center;border-top:3px solid ${a.color}">
+        <div style="font-size:.9rem;font-weight:800;color:${a.color}">${escH(a.nome)}</div>
+        <div style="font-size:.7rem;color:#6b7a99">${a.p.provincia} · ${catB(a.p.categoria)}</div>
+        <div style="font-size:2rem;font-weight:900;color:${a.color};margin:6px 0">${a.g.length}</div>
+        <div style="font-size:.68rem;color:#6b7a99">gare${campF?' in questo camp.':''}</div>
+      </div>`).join('')}
     </div>
-    ${allCamps.length?`<div class="card" style="margin-bottom:12px"><div class="card-title">Confronto per campionato</div>
-      <table style="width:100%;border-collapse:collapse;font-size:.76rem">
-        <thead><tr><th style="padding:5px 8px;background:#003087;color:#fff;text-align:left">Campionato</th>${p1?`<th style="padding:5px 8px;background:#003087;color:#fff;text-align:center">${escH(p1.nome.split(' ')[0])}</th>`:''}${p2?`<th style="padding:5px 8px;background:#003087;color:#fff;text-align:center">${escH(p2.nome.split(' ')[0])}</th>`:''}${p1&&p2?'<th style="padding:5px 8px;background:#003087;color:#fff;text-align:center">Δ</th>':''}</tr></thead>
-        <tbody>${allCamps.map((c,i)=>`<tr style="background:${i%2?'#f6f8ff':'#fff'}">
-          <td style="padding:4px 8px">${escH(c)}</td>
-          ${p1?`<td style="padding:4px 8px;text-align:center;font-weight:700;color:#003087">${s1.campC[c]||0}</td>`:''}
-          ${p2?`<td style="padding:4px 8px;text-align:center;font-weight:700;color:#1a7a3c">${s2.campC[c]||0}</td>`:''}
-          ${p1&&p2?`<td style="padding:4px 8px;text-align:center;font-weight:700;color:${(s1.campC[c]||0)>(s2.campC[c]||0)?'#003087':(s2.campC[c]||0)>(s1.campC[c]||0)?'#1a7a3c':'#9aa3b8'}">${(s1.campC[c]||0)-(s2.campC[c]||0)>0?'+':(s1.campC[c]||0)===(s2.campC[c]||0)?'':''
-          }${(s1.campC[c]||0)-(s2.campC[c]||0)}</td>`:''}</tr>`).join('')}</tbody>
-      </table></div>`:''}
-    ${gareCom.length?`<div class="card"><div class="card-title">Gare arbitrate insieme (${gareCom.length})</div>
-      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.74rem">
-        <thead><tr>${['#','Data','Campionato','Casa','Ospite','Ris.'].map(h=>`<th style="padding:4px 6px;background:#003087;color:#fff">${h}</th>`).join('')}</tr></thead>
-        <tbody>${gareCom.sort((a,b)=>(b.d||b.Data||'').localeCompare(a.d||a.Data||'')).map((g,i)=>`<tr style="background:${i%2?'#f6f8ff':'#fff'}">
-          <td style="padding:3px 6px;color:#9aa3b8">${i+1}</td>
+    ${arbData.length>=2&&gareCom.length?`<div class="card" style="margin-bottom:12px;text-align:center">
+      <div style="font-size:.75rem;color:#6b7a99">Gare arbitrate insieme</div>
+      <div style="font-size:1.8rem;font-weight:900;color:#003087">${gareCom.length}</div>
+    </div>`:''}
+    <div class="card"><div class="card-title">Confronto per campionato</div>
+      <table style="width:100%;border-collapse:collapse;font-size:.75rem">
+        <thead><tr>
+          <th style="padding:5px 8px;background:#003087;color:#fff;text-align:left">Campionato</th>
+          ${arbData.map(a=>`<th style="padding:5px 8px;background:${a.color};color:#fff;text-align:center">${escH(a.nome.split(' ')[0])}</th>`).join('')}
+          ${arbData.length>=2?'<th style="padding:5px 8px;background:#003087;color:#fff;text-align:center">Δ</th>':''}
+        </tr></thead>
+        <tbody>${allCamps.map(c=>`<tr style="border-bottom:1px solid #f0f0f0">
+          <td style="padding:4px 8px">${c.replace(/COMITATO REGIONALE SARDEGNA /i,'').replace(/,$/,'').trim()}</td>
+          ${arbData.map(a=>`<td style="padding:4px 8px;text-align:center;font-weight:700">${a.campC[c]||'—'}</td>`).join('')}
+          ${arbData.length>=2?`<td style="padding:4px 8px;text-align:center;color:${(arbData[0].campC[c]||0)>(arbData[1].campC[c]||0)?arbData[0].color:(arbData[1].campC[c]||0)>(arbData[0].campC[c]||0)?arbData[1].color:'#888'};font-weight:700">${Math.abs((arbData[0].campC[c]||0)-(arbData[1].campC[c]||0))||'='}</td>`:''}
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+    ${arbData.length>=2&&gareCom.length?`<div class="card" style="margin-top:12px"><div class="card-title">Gare arbitrate insieme</div>
+      <table style="width:100%;border-collapse:collapse;font-size:.74rem">
+        <thead><tr>
+          <th style="padding:4px 8px;background:#003087;color:#fff">Data</th>
+          <th style="padding:4px 8px;background:#003087;color:#fff">Campionato</th>
+          <th style="padding:4px 8px;background:#003087;color:#fff">Casa</th>
+          <th style="padding:4px 8px;background:#003087;color:#fff">Ospite</th>
+          <th style="padding:4px 8px;background:#003087;color:#fff">Ris.</th>
+        </tr></thead>
+        <tbody>${gareCom.sort((a,b)=>(b.d||b.Data||'').localeCompare(a.d||a.Data||'')).map(g=>`<tr style="border-bottom:1px solid #f0f0f0">
           <td style="padding:3px 6px">${g.d||g.Data||''}</td>
-          <td style="padding:3px 6px;font-size:.7rem">${escH(g.c||g.Campionato||'')}</td>
-          <td style="padding:3px 6px"><span class="rn rn-sq" onclick="openSquadra('${esc(g.h||g['Squadra Casa']||'')}')">${escH(g.h||g['Squadra Casa']||'')}</span></td>
-          <td style="padding:3px 6px"><span class="rn rn-sq" onclick="openSquadra('${esc(g.a||g['Squadra Ospite']||'')}')">${escH(g.a||g['Squadra Ospite']||'')}</span></td>
+          <td style="padding:3px 6px;font-size:.68rem;color:#6b7a99">${(g.c||g.Campionato||'').replace(/COMITATO REGIONALE SARDEGNA /i,'').replace(/,$/,'').trim()}</td>
+          <td style="padding:3px 6px">${escH(g.h||g['Squadra Casa']||'')}</td>
+          <td style="padding:3px 6px">${escH(g.a||g['Squadra Ospite']||'')}</td>
           <td style="padding:3px 6px;font-weight:700">${g.r||g.Risultato||'—'}</td>
         </tr>`).join('')}</tbody>
-      </table></div></div>`:''}`;
+      </table></div>`:''} `;
 }
 
-// ── CAMPI ──
+function h2hToggleCamp(c){
+  if(_h2hTimelineActiveCamps.has(c)) _h2hTimelineActiveCamps.delete(c);
+  else _h2hTimelineActiveCamps.add(c);
+  renderH2HArb();
+}
+
 function initCampiPage(){
   const sel=document.getElementById('fc-pv');
   if(sel&&sel.options.length<=1){
