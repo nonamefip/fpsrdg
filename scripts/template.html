@@ -5344,13 +5344,29 @@ function openPersona(nome,campFilter){
           return`<div class="sq-camp-group" data-camp="${c.replace(/"/g,'&quot;')}">
             <div onclick="const b=document.getElementById('${gid}');const a=this.querySelector('.sq-arr');b.style.display=b.style.display==='none'?'':'none';a.textContent=b.style.display==='none'?'▶':'▼';"
               style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 8px;background:var(--bl);color:#fff;border-radius:6px;margin-bottom:4px;font-size:.74rem;font-weight:700;user-select:none">
-              <span class="sq-arr">▼</span>
+              <span class="sq-arr">▶</span>
               <span style="flex:1">${escH(campLabel)}</span>
               <span style="font-size:.68rem;opacity:.8">${list.length} squadre · ${list.reduce((s,x)=>s+x.cnt,0)} gare</span>
             </div>
-            <div id="${gid}" style="overflow-x:auto;margin-bottom:8px">${makeTable(makeRows(list))}</div>
+            <div id="${gid}" style="overflow-x:auto;margin-bottom:8px;display:none">${makeTable(makeRows(list))}</div>
           </div>`;
         }).join('');
+        // Blocco "Tutte le squadre" collassabile
+        const allSqList=squadre.map(([sq,cnt])=>{
+          let v=0,per=0;
+          allG.filter(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq).forEach(g=>{if(g['Risultato']){const isCasa=g['Squadra Casa']===sq;const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;if(pc>po)v++;else if(po>pc)per++;}});
+          return{sq,cnt,v,per};
+        }).sort((a,b)=>b.cnt-a.cnt);
+        const allSqId=uid+'_allsq';
+        const allSqBlock=`<div style="margin-top:6px">
+          <div onclick="const b=document.getElementById('${allSqId}');const a=this.querySelector('.sq-arr2');b.style.display=b.style.display==='none'?'':'none';a.textContent=b.style.display==='none'?'▶':'▼';"
+            style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 8px;background:#546e7a;color:#fff;border-radius:6px;margin-bottom:4px;font-size:.74rem;font-weight:700;user-select:none">
+            <span class="sq-arr2">▶</span>
+            <span style="flex:1">📋 Tutte le squadre (per gare totali)</span>
+            <span style="font-size:.68rem;opacity:.8">${allSqList.length} squadre</span>
+          </div>
+          <div id="${allSqId}" style="overflow-x:auto;display:none">${makeTable(makeRows(allSqList))}</div>
+        </div>`;
         return`<div style="margin-top:12px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
             <div style="font-size:.8rem;font-weight:700;color:var(--bl)">🏀 Squadre arbitrate — rendimento</div>
@@ -5360,6 +5376,7 @@ function openPersona(nome,campFilter){
             </select>
           </div>
           ${groups}
+          ${allSqBlock}
         </div>`;
       })()}
 
@@ -6188,7 +6205,12 @@ function fgpP(nome){
   const _nowMin2=_now2.getHours()*60+_now2.getMinutes();
   const sqFilter=(document.getElementById('mpar-sq')?.value||'').toLowerCase().trim();
   const cittaFilter=(document.getElementById('mpar-citta')?.value||'').toLowerCase().trim();
-  let gare=(p.gare||[]).filter(g=>{
+  // Aggiungi gare future dell'arbitro
+  const gareFutArb=(D.gare_future||[]).filter(g=>
+    ['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].some(f=>pns(g[f]||'')===nome)
+  ).map(g=>({...g,'_ruolo':['Arbitro 1','Arbitro 2'].some(f=>pns(g[f]||'')===nome)?'Arbitro':'UDC','_cat':'futuro'}));
+  const tutteGare=[...(p.gare||[]),...gareFutArb];
+  let gare=tutteGare.filter(g=>{
     if(camp&&g['Campionato']!==camp)return false;
     if(d1&&g['Data']<d1)return false;
     if(sqFilter){
@@ -6208,8 +6230,9 @@ function fgpP(nome){
     }
     return true;
   }).sort((a,b)=>(a['Data']||'').localeCompare(b['Data']||''));
+  const nFutInList=gare.filter(g=>!g['Risultato']&&(g['Data']||'')>=_today2).length;
   const info=document.getElementById('mpar-info');
-  if(info)info.textContent=`${gare.length} gare`;
+  if(info)info.textContent=`${gare.length} gare${nFutInList>0?' (di cui '+nFutInList+' future 📅)':''}`;
   // Cammino istogrammi mensili
   try{
     const camminoDiv=document.getElementById('mpar-cammino');
@@ -10242,50 +10265,70 @@ function renderH2HArb(){
   if(tlWrap&&tlLegend){
     tlWrap.style.display='block';
     const campList=[...new Set(arbData.flatMap(a=>a.g.map(g=>g.c||g.Campionato||'')))].filter(Boolean).sort((a,b)=>campSortH2H(a)-campSortH2H(b));
-    const PALETTE=['#e63946','#457b9d','#2a9d8f','#e9c46a','#f4a261','#6a4c93','#1982c4','#8ac926','#ff595e','#6a994e','#a8dadc','#c77dff'];
-    const campColors=campList.reduce((acc,c,i)=>{acc[c]=PALETTE[i%PALETTE.length];return acc;},{});
-    const allMonths=[...new Set(arbData.flatMap(a=>a.g.map(g=>(g.d||g.Data||'').slice(0,7))))].filter(Boolean).sort();
+    // Colori fissi per importanza campionato
+    const CAMP_COLORS={'Serie B':'#1a237e','Serie C':'#283593','Divisione regionale 1':'#1565c0',
+      'Divisione regionale 2':'#1976d2','Under 19':'#0288d1','Under 17':'#0097a7',
+      'Under 15':'#00796b','Under 14':'#388e3c','Under 13':'#689f38',
+      'Coppa':'#f57f17','Femminile':'#c2185b','Gold':'#e65100','Eccellenza':'#6a1b9a','Regionale':'#78909c'};
+    function getCampColor(c){
+      const cu=(c||'').toUpperCase();
+      for(const[k,v] of Object.entries(CAMP_COLORS)){if(cu.includes(k.toUpperCase()))return v;}
+      return '#90a4ae';
+    }
+    const campColors=campList.reduce((acc,c)=>{acc[c]=getCampColor(c);return acc;},{});
+    // Altezza rettangolo proporzionale all'importanza (Serie B=60px, scende per categorie minori)
+    function getCampH(c){return Math.max(18,60-campSortH2H(c)*4);}
     const isActive=c=>_h2hTimelineActiveCamps.size===0||_h2hTimelineActiveCamps.has(c);
-    const activeCamps=campList.filter(isActive);
-
-    const tlHtml=arbData.map(a=>{
-      const rowBars=allMonths.map(m=>{
-        const gM=a.g.filter(g=>(g.d||g.Data||'').startsWith(m));
-        const totActive=gM.filter(g=>isActive(g.c||g.Campionato||'')).length;
-        if(totActive===0)return `<div style="flex:1;min-width:30px;height:50px;background:#f0f2f7;border-radius:3px;margin:0 1px"></div>`;
-        const segs=activeCamps.map(c=>{
-          const cnt=gM.filter(g=>(g.c||g.Campionato||'')===c).length;
-          if(!cnt)return '';
-          const pct=Math.round(cnt/totActive*100);
-          const cShort=c.replace(/COMITATO REGIONALE SARDEGNA /i,'').replace(/,$/,'').trim();
-          return `<div title="${cShort}: ${cnt}" style="height:${pct}%;background:${campColors[c]};min-height:4px"></div>`;
+    // Tutte le date con almeno una gara (per qualsiasi arbitro selezionato)
+    const allDates=[...new Set(arbData.flatMap(a=>a.g.map(g=>g.d||g.Data||'')))].filter(Boolean).sort();
+    if(!allDates.length){tlWrap.style.display='none';}
+    else{
+      const activeDates=allDates.filter(d=>arbData.some(a=>a.g.some(g=>(g.d||g.Data||'')===d&&isActive(g.c||g.Campionato||''))));
+      // Etichette mese (prima data di ogni mese)
+      const mesiL=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+      let curM='';
+      const monthBreaks={};
+      activeDates.forEach((d,i)=>{const m=d.slice(0,7);if(m!==curM){monthBreaks[i]=mesiL[parseInt(m.slice(5))-1]+' '+m.slice(2,4);curM=m;}});
+      const BAR_W=13;
+      // Riga per ogni arbitro
+      const tlHtml=arbData.map(a=>{
+        const bars=activeDates.map(d=>{
+          const gDay=a.g.filter(g=>(g.d||g.Data||'')===d&&isActive(g.c||g.Campionato||''));
+          if(!gDay.length)return`<div style="width:${BAR_W}px;flex-shrink:0;height:60px"></div>`;
+          // Ordina per importanza (più alto = più importante)
+          const sorted=gDay.slice().sort((x,y)=>campSortH2H(x.c||x.Campionato||'')-campSortH2H(y.c||y.Campionato||''));
+          const segs=sorted.map(g=>{
+            const c=g.c||g.Campionato||'';
+            const h=getCampH(c);
+            const cShort=c.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim();
+            return`<div title="${cShort}\n${d}" style="height:${h}px;min-height:4px;background:${campColors[c]};width:100%;border-radius:1px 1px 0 0"></div>`;
+          }).join('');
+          const tot=gDay.length;
+          return`<div style="width:${BAR_W}px;flex-shrink:0;display:flex;flex-direction:column-reverse;align-items:center;height:60px;position:relative;cursor:default" title="${d}: ${tot}g">
+            ${segs}
+            ${tot>1?`<div style="position:absolute;top:1px;left:0;right:0;text-align:center;font-size:.48rem;color:#fff;font-weight:800;pointer-events:none;text-shadow:0 0 2px rgba(0,0,0,.8)">${tot}</div>`:''}
+          </div>`;
         }).join('');
-        return `<div title="${m}: ${totActive} gare" style="flex:1;min-width:30px;display:flex;flex-direction:column-reverse;height:50px;margin:0 1px;border-radius:3px;overflow:hidden;position:relative">
-          ${segs}
-          <div style="position:absolute;top:2px;left:0;right:0;text-align:center;font-size:.6rem;color:rgba(0,0,0,.5);font-weight:700;pointer-events:none">${totActive}</div>
+        return`<div style="display:flex;align-items:flex-end;gap:0px;margin-bottom:3px">
+          <div style="width:105px;font-size:.7rem;font-weight:700;color:${a.color};flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-bottom:2px" title="${a.nome}">${escH(a.nome.split(' ')[0])}</div>
+          <div style="display:flex;align-items:flex-end;gap:1px;overflow-x:auto">${bars}</div>
         </div>`;
       }).join('');
-      return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-        <div style="width:110px;font-size:.72rem;font-weight:700;color:${a.color};flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${a.nome}">${escH(a.nome.split(' ')[0])}</div>
-        <div style="flex:1;display:flex;align-items:flex-end">${rowBars}</div>
+      // Riga etichette mesi
+      const monthRow=`<div style="display:flex;align-items:flex-end;gap:0px;margin-bottom:5px">
+        <div style="width:105px;flex-shrink:0"></div>
+        <div style="display:flex;gap:1px">${activeDates.map((d,i)=>`<div style="width:${BAR_W}px;flex-shrink:0;font-size:.5rem;color:#888;text-align:center;white-space:nowrap;overflow:hidden">${monthBreaks[i]||''}</div>`).join('')}</div>
       </div>`;
-    }).join('');
-
-    const monthLabels=allMonths.map(m=>`<div style="flex:1;min-width:30px;text-align:center;font-size:.58rem;color:#888">${m.slice(5,7)}/${m.slice(2,4)}</div>`).join('');
-    const tlDiv=document.getElementById('h2h-arb-timeline-html');
-    if(tlDiv){
-      tlDiv.innerHTML=`
-        <div style="display:flex;margin-bottom:2px;padding-left:116px">${monthLabels}</div>
-        <div>${tlHtml}</div>`;
+      const tlDiv=document.getElementById('h2h-arb-timeline-html');
+      if(tlDiv) tlDiv.innerHTML=monthRow+tlHtml;
     }
-
+    // Legenda cliccabile (selezione multipla)
     tlLegend.innerHTML=campList.map(c=>{
-      const active=_h2hTimelineActiveCamps.size===0||_h2hTimelineActiveCamps.has(c);
-      const label=c.replace(/COMITATO REGIONALE SARDEGNA /i,'').replace(/,$/,'').trim();
-      return `<span onclick="h2hToggleCamp(this.dataset.c)" data-c="${c.replace(/"/g,'&quot;')}" style="cursor:pointer;padding:3px 9px;border-radius:12px;border:2px solid ${campColors[c]};background:${active?campColors[c]:'transparent'};color:${active?'#fff':campColors[c]};font-size:.68rem;font-weight:600;transition:all .15s;white-space:nowrap;display:inline-block;margin:2px">${label}</span>`;
+      const active=isActive(c);
+      const label=c.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim();
+      return`<span onclick="h2hToggleCamp(this.dataset.c)" data-c="${c.replace(/"/g,'&quot;')}" style="cursor:pointer;padding:3px 9px;border-radius:12px;border:2px solid ${campColors[c]};background:${active?campColors[c]:'transparent'};color:${active?'#fff':campColors[c]};font-size:.68rem;font-weight:600;transition:all .15s;white-space:nowrap;display:inline-block;margin:2px">${label}</span>`;
     }).join('');
   }
-
   // ── TABELLA CONFRONTO ──
   const gareCom=arbData.length>=2?(()=>{
     const g1keys=new Set(arbData[0].g.map(g=>g.num||g['Numero Gara']||g.d+(g.h||'')));
