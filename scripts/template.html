@@ -10260,7 +10260,7 @@ function renderH2HArb(){
       // Legenda cliccabile
       tlLegend.innerHTML=campList.map(c=>{
         const active=_h2hTimelineActiveCamps.size===0||_h2hTimelineActiveCamps.has(c);
-        return `<span onclick="h2hToggleCamp(${JSON.stringify(c)})" style="cursor:pointer;padding:3px 8px;border-radius:12px;border:2px solid ${campColors[c]};background:${active?campColors[c]:'transparent'};color:${active?'#fff':campColors[c]};font-size:.68rem;font-weight:600;transition:all .2s">${c.replace(/COMITATO REGIONALE SARDEGNA /i,'').replace(/,$/,'').trim()}</span>`;
+        return `<span onclick="h2hToggleCamp(this.dataset.c)" data-c="${c.replace(/"/g,'&quot;')}" style="cursor:pointer;padding:3px 8px;border-radius:12px;border:2px solid ${campColors[c]};background:${active?campColors[c]:'transparent'};color:${active?'#fff':campColors[c]};font-size:.68rem;font-weight:600;transition:all .2s">${c.replace(/COMITATO REGIONALE SARDEGNA /i,'').replace(/,$/,'').trim()}</span>`;
       }).join('');
     }
   }
@@ -10321,6 +10321,9 @@ function h2hToggleCamp(c){
   if(_h2hTimelineActiveCamps.has(c)) _h2hTimelineActiveCamps.delete(c);
   else _h2hTimelineActiveCamps.add(c);
   renderH2HArb();
+}
+function h2hToggleCampEl(el){
+  h2hToggleCamp(el.dataset.c);
 }
 
 function initCampiPage(){
