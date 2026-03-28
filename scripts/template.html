@@ -1104,9 +1104,10 @@ tr.loss-row td{background:#fdecea!important;}
       <canvas id="h2h-arb-chart" height="120"></canvas>
     </div>
     <!-- Timeline cronologica -->
-    <div id="h2h-arb-timeline-wrap" style="display:none;margin:16px 0;background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+    <div id="h2h-arb-timeline-wrap" style="display:none;margin:16px 0;background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);min-height:80px">
       <div style="font-weight:700;font-size:.85rem;color:#003087;margin-bottom:6px">📅 Timeline cronologica — clicca i campionati per evidenziarli</div>
-      <canvas id="h2h-arb-timeline" height="80"></canvas>
+      <div id="h2h-arb-timeline-html"></div>
+      <canvas id="h2h-arb-timeline" height="0" style="display:none"></canvas>
       <div id="h2h-arb-legend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;font-size:.72rem"></div>
     </div>
     <div id="h2h-arb-result"><p style="color:#6b7a99;padding:20px">Seleziona uno o più arbitri per confrontarli.</p></div>
@@ -5290,40 +5291,75 @@ function openPersona(nome,campFilter){
       <!-- Squadre arbitrate rendimento -->
       ${(()=>{
         if(!squadre||!squadre.length)return'';
-        const maxSqG=Math.max(...squadre.map(([,cnt])=>cnt),1);
-        return`<div style="margin-top:12px">
-          <div style="font-size:.8rem;font-weight:700;color:var(--bl);margin-bottom:6px">🏀 Squadre arbitrate — rendimento</div>
-          <div style="overflow-x:auto">
-          <table class="rtbl" style="font-size:.73rem"><thead><tr>
+        // Raggruppa per campionato
+        const sqByCamp={};
+        squadre.forEach(([sq,cnt])=>{
+          const sqGare=allG.filter(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
+          const camps=[...new Set(sqGare.map(g=>g['Campionato']||''))].filter(Boolean);
+          const mainCamp=camps.length?camps.sort((a,b)=>sqGare.filter(g=>g['Campionato']===b).length-sqGare.filter(g=>g['Campionato']===a).length)[0]:'Altro';
+          if(!sqByCamp[mainCamp])sqByCamp[mainCamp]=[];
+          let v=0,per=0;
+          sqGare.forEach(g=>{if(g['Risultato']){const isCasa=g['Squadra Casa']===sq;const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;if(pc>po)v++;else if(po>pc)per++;}});
+          sqByCamp[mainCamp].push({sq,cnt,v,per});
+        });
+        const campOrder=['Serie B','Serie C','Divisione regionale 1','Divisione regionale 2','Under 19','Under 17','Under 15','Under 14','Under 13'];
+        const sortedCamps=Object.keys(sqByCamp).sort((a,b)=>{
+          const ia=campOrder.findIndex(c=>a.toUpperCase().includes(c.toUpperCase()));
+          const ib=campOrder.findIndex(c=>b.toUpperCase().includes(c.toUpperCase()));
+          return (ia<0?99:ia)-(ib<0?99:ib);
+        });
+        const uid='sqcmp_'+Math.random().toString(36).slice(2,6);
+        // Select campionato
+        const opts=`<option value="">Tutti i campionati (${squadre.length} squadre)</option>`+sortedCamps.map(c=>`<option value="${c.replace(/"/g,'&quot;')}">${c.replace(/COMITATO REGIONALE SARDEGNA /i,'').replace(/,$/,'').trim()} (${sqByCamp[c].length})</option>`).join('');
+        const makeTable=(rows)=>`<table class="rtbl" style="font-size:.73rem;width:100%"><thead><tr>
             <th>Squadra</th><th style="text-align:center">Gare</th>
             <th style="text-align:center;color:var(--green)">V</th>
             <th style="text-align:center;color:var(--red)">P</th>
             <th style="text-align:center">Win%</th>
-            <th style="min-width:120px">Barra</th>
-          </tr></thead><tbody>
-          ${squadre.map(([sq,cnt])=>{
-            const sqd=SQ[sq];
-            const sqGare=allG.filter(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
-            let v=0,per=0;
-            sqGare.forEach(g=>{if(g['Risultato']){const isCasa=g['Squadra Casa']===sq;const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;if(pc>po)v++;else if(po>pc)per++;}});
-            const wp=cnt?Math.round(v/cnt*100):0;
-            const pV=cnt?Math.round(v/cnt*100):0;
-            const pP=cnt?Math.round(per/cnt*100):0;
-            const rowBg=v>per?'#f0fff4':per>v?'#fff5f5':'#fff';
-            return`<tr style="background:${rowBg}">
-              <td><span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></td>
-              <td style="text-align:center;font-weight:700">${cnt}</td>
-              <td style="text-align:center;font-weight:700;color:var(--green)">${v}</td>
-              <td style="text-align:center;color:var(--red)">${per}</td>
-              <td style="text-align:center;font-weight:700;color:${wp>=50?'var(--green)':'var(--red)'}">${wp}%</td>
-              <td><div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#eee">
-                <div style="background:var(--green);width:${pV}%"></div>
-                <div style="background:#eee;width:${100-pV-pP}%"></div>
-                <div style="background:var(--red);width:${pP}%"></div>
-              </div></td>
-            </tr>`;
-          }).join('')}
-          </tbody></table></div>
+            <th style="min-width:100px">Barra</th>
+          </tr></thead><tbody>${rows}</tbody></table>`;
+        const makeRows=(list)=>list.map(({sq,cnt,v,per})=>{
+          const wp=cnt?Math.round(v/cnt*100):0;
+          const pV=cnt?Math.round(v/cnt*100):0;
+          const pP=cnt?Math.round(per/cnt*100):0;
+          const rowBg=v>per?'#f0fff4':per>v?'#fff5f5':'#fff';
+          return`<tr style="background:${rowBg}">
+            <td><span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></td>
+            <td style="text-align:center;font-weight:700">${cnt}</td>
+            <td style="text-align:center;font-weight:700;color:var(--green)">${v}</td>
+            <td style="text-align:center;color:var(--red)">${per}</td>
+            <td style="text-align:center;font-weight:700;color:${wp>=50?'var(--green)':'var(--red)'}">${wp}%</td>
+            <td><div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#eee">
+              <div style="background:var(--green);width:${pV}%"></div>
+              <div style="background:#eee;width:${100-pV-pP}%"></div>
+              <div style="background:var(--red);width:${pP}%"></div>
+            </div></td>
+          </tr>`;
+        }).join('');
+        // Gruppi collassabili
+        const groups=sortedCamps.map(c=>{
+          const list=sqByCamp[c].sort((a,b)=>b.cnt-a.cnt);
+          const campLabel=c.replace(/COMITATO REGIONALE SARDEGNA /i,'').replace(/,$/,'').trim();
+          const gid=uid+'_'+c.replace(/\W/g,'');
+          return`<div class="sq-camp-group" data-camp="${c.replace(/"/g,'&quot;')}">
+            <div onclick="const b=document.getElementById('${gid}');const a=this.querySelector('.sq-arr');b.style.display=b.style.display==='none'?'':'none';a.textContent=b.style.display==='none'?'▶':'▼';"
+              style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 8px;background:var(--bl);color:#fff;border-radius:6px;margin-bottom:4px;font-size:.74rem;font-weight:700;user-select:none">
+              <span class="sq-arr">▼</span>
+              <span style="flex:1">${escH(campLabel)}</span>
+              <span style="font-size:.68rem;opacity:.8">${list.length} squadre · ${list.reduce((s,x)=>s+x.cnt,0)} gare</span>
+            </div>
+            <div id="${gid}" style="overflow-x:auto;margin-bottom:8px">${makeTable(makeRows(list))}</div>
+          </div>`;
+        }).join('');
+        return`<div style="margin-top:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            <div style="font-size:.8rem;font-weight:700;color:var(--bl)">🏀 Squadre arbitrate — rendimento</div>
+            <select id="${uid}_sel" onchange="(function(v){document.querySelectorAll('.sq-camp-group').forEach(g=>{g.style.display=v===''||g.dataset.camp===v?'':'none'})})(this.value)"
+              style="font-size:.72rem;padding:3px 6px;border:1px solid var(--br);border-radius:6px;color:var(--bl)">
+              ${opts}
+            </select>
+          </div>
+          ${groups}
         </div>`;
       })()}
 
@@ -10236,13 +10272,9 @@ function renderH2HArb(){
     }).join('');
 
     const monthLabels=allMonths.map(m=>`<div style="flex:1;min-width:30px;text-align:center;font-size:.58rem;color:#888">${m.slice(5,7)}/${m.slice(2,4)}</div>`).join('');
-    const tlCanvas=document.getElementById('h2h-arb-timeline');
-    if(tlCanvas){
-      tlCanvas.style.display='none';
-      let tlDiv=document.getElementById('h2h-arb-timeline-html');
-      if(!tlDiv){tlDiv=document.createElement('div');tlDiv.id='h2h-arb-timeline-html';tlCanvas.parentElement.insertBefore(tlDiv,tlCanvas);}
+    const tlDiv=document.getElementById('h2h-arb-timeline-html');
+    if(tlDiv){
       tlDiv.innerHTML=`
-        <div style="font-weight:700;font-size:.82rem;color:#003087;margin-bottom:10px">📅 Distribuzione mensile per arbitro</div>
         <div style="display:flex;margin-bottom:2px;padding-left:116px">${monthLabels}</div>
         <div>${tlHtml}</div>`;
     }
