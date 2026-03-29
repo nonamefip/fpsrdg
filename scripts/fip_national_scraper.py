@@ -13,12 +13,23 @@ CACHE_FILE = "cache/fip_national_cache.json"
 RSA_CACHE  = "cache/fip_sardegna_cache.json"
 PROV_SARDE = {'CA','SS','NU','OR','SU','CI','OG','OT','VS'}
 
-# Stagione corrente divisa in 3 periodi per evitare il limite >100 risultati
-PERIODS = [
-    ("2025-09-01", "2025-11-30"),
-    ("2025-12-01", "2026-02-28"),
-    ("2026-03-01", "2026-06-30"),
-]
+# Stagione corrente divisa in mesi singoli per evitare overflow su cognomi comuni
+# (es. ZARA: cercando 3 mesi insieme supera il limite e fip.it restituisce pagina vuota)
+def get_monthly_periods():
+    """Genera lista di periodi mensili dalla stagione corrente ad oggi+3 mesi."""
+    periods = []
+    cur = date(2025, 9, 1)
+    end = date.today() + timedelta(days=90)
+    while cur <= end:
+        # Ultimo giorno del mese
+        if cur.month == 12:
+            m_end = date(cur.year + 1, 1, 1) - timedelta(days=1)
+        else:
+            m_end = date(cur.year, cur.month + 1, 1) - timedelta(days=1)
+        m_end = min(m_end, end)
+        periods.append((cur.isoformat(), m_end.isoformat()))
+        cur = m_end + timedelta(days=1)
+    return periods
 
 HEADERS_POOL = [
     {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36"},
@@ -131,7 +142,10 @@ def fetch(session, params, max_retries=4):
     return None
 
 def fetch_by_cognome(session, cognome, da, a):
-    """Cerca tutte le gare di un cognome in un periodo. Ritorna lista gare o None se troppi risultati."""
+    """Cerca tutte le gare di un cognome in un periodo.
+    Se fip.it restituisce 0 risultati E il periodo è > 15 giorni, assume overflow
+    e divide per settimane (cognomi comuni come ZARA restituiscono pagina vuota invece
+    del messaggio 'numero eccessivo')."""
     params = {
         "search":"true","data_da":da,"data_a":a,
         "cognome_arbitro":cognome,
@@ -141,23 +155,36 @@ def fetch_by_cognome(session, cognome, da, a):
     resp = fetch(session, params)
     if resp is None: return []
     rows = parse_page(resp.text)
+
+    # Caso 1: messaggio esplicito "numero eccessivo"
     if rows is None:
-        # Troppi risultati: dividi il periodo in mesi
-        print(f"  [!] {cognome} {da}→{a} troppi risultati, divido per mese...")
-        result = []
-        d_start = date.fromisoformat(da)
-        d_end = date.fromisoformat(a)
-        cur = d_start
-        while cur <= d_end:
-            m_end = date(cur.year, cur.month, 28) + timedelta(days=4)
-            m_end = date(m_end.year, m_end.month, 1) - timedelta(days=1)
-            m_end = min(m_end, d_end)
-            sub = fetch_by_cognome(session, cognome, cur.isoformat(), m_end.isoformat())
-            result.extend(sub)
-            cur = m_end + timedelta(days=1)
-            time.sleep(random.uniform(1, 2))
-        return result
+        print(f"  [!] {cognome} {da}→{a} troppi risultati (msg esplicito), divido per settimana...")
+        return _split_period(session, cognome, da, a)
+
+    # Caso 2: 0 risultati su periodo lungo → possibile overflow silenzioso (es. ZARA)
+    # I periodi mensili hanno max 31 giorni quindi questo non scatta mai in uso normale
+    d_start = date.fromisoformat(da)
+    d_end = date.fromisoformat(a)
+    giorni = (d_end - d_start).days
+    if len(rows) == 0 and giorni > 15:
+        print(f"  [?] {cognome} {da}→{a} = 0 risultati su {giorni}gg, possibile overflow — divido per settimana...")
+        return _split_period(session, cognome, da, a)
+
     return rows or []
+
+def _split_period(session, cognome, da, a):
+    """Divide un periodo in settimane e richiama fetch_by_cognome su ciascuna."""
+    result = []
+    d_start = date.fromisoformat(da)
+    d_end = date.fromisoformat(a)
+    cur = d_start
+    while cur <= d_end:
+        week_end = min(cur + timedelta(days=6), d_end)
+        sub = fetch_by_cognome(session, cognome, cur.isoformat(), week_end.isoformat())
+        result.extend(sub)
+        cur = week_end + timedelta(days=1)
+        time.sleep(random.uniform(0.5, 1.0))
+    return result
 
 def is_sardo(field_value):
     """Controlla se una persona è sarda dalla sigla provincia."""
@@ -228,7 +255,9 @@ def main():
     cognomi_list = sorted(cognomi_sardi.keys())
     total = len(cognomi_list)
 
-    print(f"\nCerco gare nazionali per {total} cognomi sardi...")
+    PERIODS = get_monthly_periods()
+    print(f"\nPeriodi mensili: {len(PERIODS)} ({PERIODS[0][0]} → {PERIODS[-1][1]})")
+    print(f"Cerco gare nazionali per {total} cognomi sardi...")
 
     for i, cogn in enumerate(cognomi_list, 1):
         info = cognomi_sardi[cogn]
