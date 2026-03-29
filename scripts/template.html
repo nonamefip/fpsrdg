@@ -816,6 +816,10 @@ tr.loss-row td{background:#fdecea!important;}
       <button class="tl-nav-btn" onclick="navTl(1)">&#8250;</button>
     </div>
     <div class="tl-info" id="tl-footer"></div>
+    <div id="tl-multisel-bar" style="display:none;padding:6px 0 2px">
+      <button onclick="tlMultiOpen()" style="background:var(--bl);color:#fff;border:none;border-radius:20px;padding:6px 16px;font-size:.78rem;font-weight:700;cursor:pointer">📅 <span id="tl-multisel-label">Vedi giorni</span></button>
+      <button onclick="tlMultiReset()" style="background:transparent;border:1.5px solid var(--br);border-radius:20px;padding:5px 12px;font-size:.74rem;cursor:pointer;margin-left:6px;color:var(--mu)">✕ Deseleziona</button>
+    </div>
   </div>
 
   <!-- ROW 3: 3 widget -->
@@ -5329,8 +5333,7 @@ function openPersona(nome,campFilter){
       <div style="overflow-x:auto"><table class="mtbl" id="tbl-mpar"><thead><tr>
         <th style="text-align:center;color:var(--mu)">#</th><th onclick="sT('tbl-mpar',0,event)">Data</th><th>Ora</th><th>N°</th>
         <th onclick="sT('tbl-mpar',2,event)">Camp.</th><th>Girone</th><th>Fase</th>
-        <th onclick="sT('tbl-mpar',6,event)">Casa</th><th onclick="sT('tbl-mpar',7,event)">Ospite</th>
-        <th onclick="sT('tbl-mpar',8,event)">Ris.</th><th>Ruolo</th><th>Prov.</th><th>Colleghi</th>
+        <th onclick="sT('tbl-mpar',6,event)">Casa</th><th>Ris.</th><th onclick="sT('tbl-mpar',7,event)">Ospite</th><th>Ruolo</th><th>Prov.</th><th>Colleghi</th>
       </tr></thead><tbody id="tbl-mpar-body"></tbody></table></div>
     </div>
     <div class="mtc hidden" id="mpt-cam"><div style="padding:8px" id="mpt-cam-inner"></div></div>
@@ -5454,60 +5457,69 @@ function openPersona(nome,campFilter){
       <!-- Timeline personale cronologica -->
       ${(()=>{
         if(!p.gare_arbitro||!p.gare_arbitro.length)return'';
-        const CAMP_COLORS_P={'Serie B':'#1a237e','Serie C':'#283593','Divisione regionale 1':'#1565c0',
-          'Divisione regionale 2':'#1976d2','Under 19':'#0288d1','Under 17':'#0097a7',
-          'Under 15':'#00796b','Under 14':'#388e3c','Under 13':'#689f38',
-          'Coppa':'#f57f17','Femminile':'#c2185b','Gold':'#e65100','Eccellenza':'#6a1b9a','Regionale':'#78909c'};
-        function pCampClr(c){const cu=(c||'').toUpperCase();for(const[k,v] of Object.entries(CAMP_COLORS_P)){if(cu.includes(k.toUpperCase()))return v;}return'#90a4ae';}
-        const CAMP_ORDER_TL=['Serie B','Serie C','Divisione regionale 1','Divisione regionale 2','Under 19','Under 17','Under 15','Under 14','Under 13','Coppa','Femminile','Gold','Eccellenza','Regionale'];
+        // Usa campColor() globale (stessa palette del resto del sito)
+        const CAMP_ORDER_TL=['Serie B','Serie C','Divisione regionale 1','Divisione regionale 2',
+          'Under 19','Under 17','Under 15','Under 14','Under 13',
+          'Coppa','Femminile','Gold','Eccellenza','Regionale'];
         function pCampSort(c){const cu=(c||'').toUpperCase();const i=CAMP_ORDER_TL.findIndex(k=>cu.includes(k.toUpperCase()));return i<0?99:i;}
-        function pCampH(c){return Math.max(14,60-pCampSort(c)*4);}
-        // Raggruppa gare per data
+        function pCampH(c){return Math.max(12,60-pCampSort(c)*4);}
+        // Raggruppa per data
         const garaByDate={};
-        (p.gare_arbitro||[]).forEach(g=>{const d=g['Data']||g.d||'';if(d){if(!garaByDate[d])garaByDate[d]=[];garaByDate[d].push(g);}});
-        const allDatesWithGare=Object.keys(garaByDate).sort();
-        if(!allDatesWithGare.length)return'';
-        // Genera TUTTI i giorni da primo a ultimo (inclusi giorni senza gare)
-        const dFirst=new Date(allDatesWithGare[0]+'T12:00');
-        const dLast=new Date(allDatesWithGare[allDatesWithGare.length-1]+'T12:00');
+        (p.gare_arbitro||[]).forEach(g=>{
+          const d=g['Data']||g.d||'';
+          if(d){if(!garaByDate[d])garaByDate[d]=[];garaByDate[d].push(g);}
+        });
+        const datesWithGare=Object.keys(garaByDate).sort();
+        if(!datesWithGare.length)return'';
+        // Genera TUTTI i giorni da primo a ultimo (spazi per giorni senza gare)
+        const dFirst=new Date(datesWithGare[0]+'T12:00');
+        const dLast=new Date(datesWithGare[datesWithGare.length-1]+'T12:00');
         const allDatesP=[];
         for(let d=new Date(dFirst);d<=dLast;d.setDate(d.getDate()+1)){
           allDatesP.push(d.toISOString().split('T')[0]);
         }
         const mesiL2=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
         let curMP='';const monthBP={};
-        allDatesP.forEach((d,i)=>{const m=d.slice(0,7);if(m!==curMP){monthBP[i]=mesiL2[parseInt(m.slice(5))-1]+' '+m.slice(2,4);curMP=m;}});
-        const BW=10;
-        // Campionati presenti
-        const campsP=[...new Set(allDatesWithGare.flatMap(d=>garaByDate[d].map(g=>g['Campionato']||g.c||'')))].filter(Boolean).sort((a,b)=>pCampSort(a)-pCampSort(b));
-        const uid_tl='ptl_'+nome.replace(/\W/g,'');
-        // Legenda selezionabile (stessa logica H2H)
-        const legendP=campsP.map(c=>{
-          const clr=pCampClr(c);
-          const label=c.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim();
-          var spanEl='<span class="ptl-leg-item" data-c="'+c.replace(/"/g,'&quot;')+'" data-uid="'+uid_tl+'" onclick="_ptlToggle(this,this.dataset.uid)" style="cursor:pointer;display:inline-block;margin:2px;padding:2px 8px;border-radius:10px;border:2px solid '+clr+';background:'+clr+';color:#fff;font-size:.62rem;font-weight:600">'+escH(label)+'</span>';
-          return spanEl;
-        }).join('');
-        // Barre
+        allDatesP.forEach((d,i)=>{
+          const m=d.slice(0,7);
+          if(m!==curMP){monthBP[i]=mesiL2[parseInt(m.slice(5))-1]+' '+m.slice(2,4);curMP=m;}
+        });
+        const BW=10;const MAX_H=60;
+        // Campionati presenti per legenda
+        const campsP=[...new Set(datesWithGare.flatMap(d=>garaByDate[d].map(g=>g['Campionato']||g.c||'')))].filter(Boolean).sort((a,b)=>pCampSort(a)-pCampSort(b));
+        const uid_tl='ptl_'+p.nome.replace(/\W/g,'_');
+        // Barre: una colonna per ogni giorno, gare separate (non sovrapposte), ordinate per importanza
         const tlBarsP=allDatesP.map((d,i)=>{
           const gs=(garaByDate[d]||[]).slice().sort((x,y)=>pCampSort(x['Campionato']||x.c||'')-pCampSort(y['Campionato']||y.c||''));
           if(!gs.length){
-            // Giorno senza gare: spazio vuoto
-            return '<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;height:60px;vertical-align:bottom"></div>';
+            return '<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;height:'+MAX_H+'px;vertical-align:bottom"></div>';
           }
-          const segs=gs.map(g=>{const c=g['Campionato']||g.c||'';return '<div class="ptl-seg" data-c="'+c.replace(/"/g,'&quot;')+'" title="'+c.replace(/COMITATO REGIONALE SARDEGNA /ig,'').trim()+'" style="height:'+pCampH(c)+'px;min-height:4px;background:'+pCampClr(c)+';width:100%;border-radius:1px 1px 0 0"></div>';}).join('');
+          // Ogni gara = rettangolo separato, altezza proporzionale all'importanza, colori campColor
+          const segs=gs.map(g=>{
+            const c=g['Campionato']||g.c||'';
+            const h=pCampH(c);
+            const col=campColor(c)||'#90a4ae';
+            const lbl=c.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim();
+            return '<div class="ptl-seg" data-c="'+escH(c)+'" title="'+escH(lbl)+' ('+d+')" style="height:'+h+'px;min-height:4px;background:'+col+';width:'+BW+'px;border-radius:1px 1px 0 0;margin-bottom:1px;display:block"></div>';
+          }).reverse().join(''); // reverse so most important on top
           const tot=gs.length;
-          return '<div style="display:inline-flex;flex-direction:column-reverse;align-items:center;flex-shrink:0;width:'+BW+'px;vertical-align:bottom;position:relative;height:60px" title="'+d+': '+tot+'g">'
+          return '<div style="display:inline-flex;flex-direction:column;justify-content:flex-end;flex-shrink:0;width:'+BW+'px;height:'+MAX_H+'px;vertical-align:bottom;position:relative" title="'+d+': '+tot+'g">'
             +segs
-            +(tot>1?'<div style="position:absolute;top:1px;left:0;right:0;text-align:center;font-size:.45rem;color:#fff;font-weight:800;text-shadow:0 0 2px rgba(0,0,0,.8);pointer-events:none">'+tot+'</div>':'')
+            +(tot>1?'<div style="position:absolute;top:0;left:0;right:0;text-align:center;font-size:.45rem;color:#fff;font-weight:800;text-shadow:0 0 2px rgba(0,0,0,.9);pointer-events:none">'+tot+'</div>':'')
             +'</div>';
         }).join('');
-        const monthRowP=allDatesP.map((d,i)=>'<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;font-size:.48rem;color:#888;text-align:center;overflow:hidden;white-space:nowrap">'+((monthBP[i]||''))+'</div>').join('');
+        const monthRowP=allDatesP.map((d,i)=>'<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;font-size:.48rem;color:#888;text-align:center;overflow:hidden;white-space:nowrap">'+(monthBP[i]||'')+'</div>').join('');
+        // Legenda cliccabile
+        const legendP=campsP.map(c=>{
+          const col=campColor(c)||'#90a4ae';
+          const lbl=c.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim();
+          return '<span class="ptl-leg-item" data-c="'+escH(c)+'" data-uid="'+uid_tl+'" onclick="_ptlToggle(this,this.dataset.uid)" style="cursor:pointer;display:inline-block;margin:2px;padding:2px 8px;border-radius:10px;border:2px solid '+col+';background:'+col+';color:#fff;font-size:.62rem;font-weight:600">'+escH(lbl)+'</span>';
+        }).join('');
         return '<div class="card" id="'+uid_tl+'" style="margin-top:10px;overflow:hidden">'
-          +'<div style="font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Timeline stagione — altezza=importanza · colore=categoria · spazi=giorni senza gare</div>'
+          +'<div style="font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Timeline stagione — altezza=importanza · colore=categoria · spazi=giorni non arbitrati</div>'
           +'<div style="overflow-x:auto">'
             +'<div style="margin-bottom:2px;white-space:nowrap">'+monthRowP+'</div>'
-            +'<div class="ptl-bars" style="white-space:nowrap;line-height:0;vertical-align:bottom">'+tlBarsP+'</div>'
+            +'<div style="white-space:nowrap;line-height:0;vertical-align:bottom">'+tlBarsP+'</div>'
           +'</div>'
           +'<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:3px">'+legendP+'</div>'
         +'</div>';
@@ -6123,7 +6135,7 @@ function mkTrendPersona(p, nome){
 }
 
 function mkGarePersonaTbl(gare,nome,tid,sqRef){
-  const rows=gare.sort((a,b)=>(b['Data']||'').localeCompare(a['Data']||'')).map((g,_ri)=>{
+  const rows=gare.sort((a,b)=>(a['Data']||'').localeCompare(b['Data']||'')||((a['Ora']||'').localeCompare(b['Ora']||''))).map((g,_ri)=>{
     const coll=[];
     ['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].forEach(f=>{
       const v=g[f]||'';const n=pns(v);
@@ -6456,7 +6468,7 @@ function fgpP(nome){
       if(gpv!==provFilter)return false;
     }
     return true;
-  }).sort((a,b)=>(a['Data']||'').localeCompare(b['Data']||''));
+  }).sort((a,b)=>(a['Data']||'').localeCompare(b['Data']||'')||((a['Ora']||'').localeCompare(b['Ora']||'')));
   const nFutInList=gare.filter(g=>!g['Risultato']&&(g['Data']||'')>=_today2).length;
   const info=document.getElementById('mpar-info');
   if(info)info.textContent=`${gare.length} gare${nFutInList>0?' (di cui '+nFutInList+' future 📅)':''}`;
@@ -6526,8 +6538,8 @@ function fgpP(nome){
       <td>${campBadge}</td>
       <td style="font-size:.68rem;color:var(--mu)">${escH(g['Girone']||'')}</td>
       <td><span class="rn rn-sq" style="${casaClr}" onclick="openSquadra('${esc(g['Squadra Casa']||'')}');event.stopPropagation()">${escH(g['Squadra Casa']||'')}</span></td>
-      <td><span class="rn rn-sq" style="${ospClr}" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}');event.stopPropagation()">${escH(g['Squadra Ospite']||'')}</span></td>
       <td style="text-align:center">${ris}</td>
+      <td><span class="rn rn-sq" style="${ospClr}" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}');event.stopPropagation()">${escH(g['Squadra Ospite']||'')}</span></td>
       <td style="font-size:.65rem;color:var(--mu)">${escH(g['_ruolo']||'')}</td>
       <td>${pvCampo?pvB(pvCampo):''}</td>
       <td style="font-size:.68rem;color:var(--mu)">${escH(citta)}</td>
