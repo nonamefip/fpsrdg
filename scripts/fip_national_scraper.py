@@ -22,6 +22,10 @@ PERIODS = [
     ("2026-03-01", "2026-06-30"),
 ]
 
+# Cognomi corti o comuni che su fip.it vanno in overflow su periodi da 3 mesi.
+# Per questi cerchiamo direttamente mese per mese senza tentare il periodo largo.
+COGNOMI_FORZA_MESE = {'ZARA', 'LADU', 'BONU', 'MURA', 'PANI', 'PIGA', 'URAS', 'OLLA'}
+
 HEADERS_POOL = [
     {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36"},
     {"User-Agent":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/121.0.0.0 Safari/537.36"},
@@ -32,7 +36,7 @@ MESI_IT = {"gennaio":"01","febbraio":"02","marzo":"03","aprile":"04",
            "maggio":"05","giugno":"06","luglio":"07","agosto":"08",
            "settembre":"09","ottobre":"10","novembre":"11","dicembre":"12"}
 
-prov_re = re.compile(r'\bdi\s+.+?\s+\((\w{2,3})\)\s*$', re.IGNORECASE)
+prov_re = re.compile(r'\bdi\s+.+?\s+\(\s*(\w{2,3})\s*\)\s*$', re.IGNORECASE)
 
 def clean(t): return " ".join(t.split()) if t else ""
 
@@ -53,7 +57,7 @@ def parse_person(s):
     if m and idx > 0:
         nome = s[:idx].strip()
         rest = s[idx+4:].strip()
-        cm2 = re.match(r'(.+?)\s*\((\w{2,3})\)', rest)
+        cm2 = re.match(r'(.+?)\s*\(\s*(\w{2,3})\s*\)', rest)
         return {'nome': nome, 'citta': cm2.group(1).strip() if cm2 else '', 'provincia': m.group(1).upper()}
     return None
 
@@ -117,10 +121,12 @@ def parse_page(html):
     return [parse_match(m) for m in matches]
 
 def fetch(session, params, max_retries=4):
+    """Ritorna (response, network_error).
+    network_error=True se tutti i tentativi sono falliti per errore di rete/HTTP."""
     for attempt in range(1, max_retries+1):
         try:
             resp = session.get(BASE_URL, params=params, timeout=15)
-            if resp.status_code == 200: return resp
+            if resp.status_code == 200: return resp, False
             elif resp.status_code == 429:
                 t = int(resp.headers.get("Retry-After", 30))
                 print(f"\n[429] attendo {t}s"); time.sleep(t)
@@ -130,7 +136,7 @@ def fetch(session, params, max_retries=4):
             print(f"\n[ERR] {e} tentativo {attempt}")
         if attempt < max_retries:
             time.sleep(random.uniform(2, 4) * attempt)
-    return None
+    return None, True  # errore di rete
 
 def _split_by_month(session, cognome, da, a):
     """Divide il periodo mese per mese e aggrega i risultati."""
@@ -150,7 +156,7 @@ def _split_by_month(session, cognome, da, a):
             "data_singola":"","numero_gara":"","codice_societa":"",
             "nome_squadra":"","codice_campo":"","codice_arbitro":"","comitato":""
         }
-        resp = fetch(session, params)
+        resp, net_err = fetch(session, params)
         if resp:
             rows = parse_page(resp.text)
             if rows:
@@ -161,10 +167,9 @@ def _split_by_month(session, cognome, da, a):
 
 def fetch_by_cognome(session, cognome, da, a):
     """Cerca tutte le gare di un cognome in un periodo.
-    Gestisce due casi di overflow:
-    1. fip.it restituisce "numero eccessivo" -> divide per mese
-    2. fip.it restituisce 0 risultati su periodo >45gg -> overflow silenzioso
-       (es. ZARA: cognome contenuto in molti altri) -> divide per mese
+    - Se fip.it dice "numero eccessivo" -> divide per mese (overflow esplicito)
+    - Se errore di rete -> restituisce [] senza dividere per mese
+    - Se risposta vuota legittima (arbitro senza gare) -> restituisce []
     """
     params = {
         "search":"true","data_da":da,"data_a":a,
@@ -172,15 +177,14 @@ def fetch_by_cognome(session, cognome, da, a):
         "data_singola":"","numero_gara":"","codice_societa":"",
         "nome_squadra":"","codice_campo":"","codice_arbitro":"","comitato":""
     }
-    resp = fetch(session, params)
-    if resp is None: return []
+    resp, net_err = fetch(session, params)
+    if resp is None:
+        # Errore di rete: NON interpretiamo come overflow, saltiamo
+        return []
     rows = parse_page(resp.text)
     if rows is None:
+        # Overflow esplicito ("numero eccessivo") -> divide per mese
         print(f"  [!] {cognome} {da}->{a} troppi risultati, divido per mese...")
-        return _split_by_month(session, cognome, da, a)
-    giorni = (date.fromisoformat(a) - date.fromisoformat(da)).days
-    if len(rows) == 0 and giorni > 45:
-        print(f"  [?] {cognome} {da}->{a} = 0 su {giorni}gg, overflow silenzioso, divido per mese...")
         return _split_by_month(session, cognome, da, a)
     return rows or []
 
@@ -261,7 +265,10 @@ def main():
 
         trovate_fuori = 0
         for da, a in PERIODS:
-            gare = fetch_by_cognome(session, cogn, da, a)
+            if cogn in COGNOMI_FORZA_MESE:
+                gare = _split_by_month(session, cogn, da, a)
+            else:
+                gare = fetch_by_cognome(session, cogn, da, a)
             for g in gare:
                 num = g.get('Numero Gara','')
                 if not num: continue
