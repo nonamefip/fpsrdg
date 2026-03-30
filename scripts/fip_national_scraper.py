@@ -226,7 +226,7 @@ def main():
     # Estrai cognomi di arbitri/UDC sardi
     cognomi_sardi = {}  # cognome -> {province, ruoli}
     for g in rsa_gare:
-        for field in ['Arbitro 1','Arbitro 2','Arbitro 3','Segnapunti','Cronometrista','24 Secondi','Osservatore']:
+        for field in ['Arbitro 1','Arbitro 2','Arbitro 3']:
             val = g.get(field,'')
             if not val: continue
             pp = parse_person(val)
@@ -236,7 +236,7 @@ def main():
             if cogn not in cognomi_sardi:
                 cognomi_sardi[cogn] = {'province': set(), 'ruoli': set(), 'nome_completo': pp['nome']}
             cognomi_sardi[cogn]['province'].add(pp['provincia'])
-            ruolo = 'Arbitro' if 'Arbitro' in field else ('UDC' if field in ['Segnapunti','Cronometrista','24 Secondi'] else 'Osservatore')
+            cognomi_sardi[cogn]['ruoli'].add('Arbitro')
             cognomi_sardi[cogn]['ruoli'].add(ruolo)
 
     print(f"Cognomi sardi unici trovati: {len(cognomi_sardi)}")
@@ -277,7 +277,7 @@ def main():
 
                 # Filtra: voglio solo gare dove QUESTO arbitro è sardo (filtra omonimi)
                 persona_trovata = False
-                for field in ['Arbitro 1','Arbitro 2','Arbitro 3','Segnapunti','Cronometrista','24 Secondi','Osservatore']:
+                for field in ['Arbitro 1','Arbitro 2','Arbitro 3']:
                     val = g.get(field,'')
                     if not val: continue
                     pp = parse_person(val)
