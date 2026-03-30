@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-FIP National Scraper v2
-Cerca gare nazionali di arbitri/UDC/osservatori sardi fuori dalla Sardegna.
-Legge i cognomi direttamente da fip_sardegna_cache.json.
+FIP National Scraper v3
+Logica semplice e corretta:
+  1. Estrae tutti gli arbitri sardi dalla cache RSA (nome completo)
+  2. Per ognuno cerca su fip.it per COGNOME + NOME (elimina omonimi)
+  3. Scarta le gare già presenti nella cache RSA (per numero gara)
+  4. Quello che rimane = gare nazionali
 """
 import requests, json, os, re, sys, time, random
 from bs4 import BeautifulSoup
@@ -13,18 +16,11 @@ CACHE_FILE = "cache/fip_national_cache.json"
 RSA_CACHE  = "cache/fip_sardegna_cache.json"
 PROV_SARDE = {'CA','SS','NU','OR','SU','CI','OG','OT','VS'}
 
-# Stagione corrente divisa in 3 periodi (~3 mesi ciascuno).
-# Per cognomi comuni (es. ZARA) fip.it restituisce pagina vuota invece del messaggio
-# "numero eccessivo" — in quel caso fetch_by_cognome divide automaticamente per mese.
 PERIODS = [
     ("2025-09-01", "2025-11-30"),
     ("2025-12-01", "2026-02-28"),
     ("2026-03-01", "2026-06-30"),
 ]
-
-# Cognomi corti o comuni che su fip.it vanno in overflow su periodi da 3 mesi.
-# Per questi cerchiamo direttamente mese per mese senza tentare il periodo largo.
-COGNOMI_FORZA_MESE = {'ZARA', 'LADU', 'BONU', 'MURA', 'PANI', 'PIGA', 'URAS', 'OLLA'}
 
 HEADERS_POOL = [
     {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0.0.0 Safari/537.36"},
@@ -116,13 +112,11 @@ def parse_page(html):
     soup = BeautifulSoup(html, "html.parser")
     txt = soup.get_text().lower()
     if "numero eccessivo" in txt:
-        return None  # troppi risultati
+        return None
     matches = soup.find_all("div", class_="results-matches__match")
     return [parse_match(m) for m in matches]
 
 def fetch(session, params, max_retries=4):
-    """Ritorna (response, network_error).
-    network_error=True se tutti i tentativi sono falliti per errore di rete/HTTP."""
     for attempt in range(1, max_retries+1):
         try:
             resp = session.get(BASE_URL, params=params, timeout=15)
@@ -136,10 +130,9 @@ def fetch(session, params, max_retries=4):
             print(f"\n[ERR] {e} tentativo {attempt}")
         if attempt < max_retries:
             time.sleep(random.uniform(2, 4) * attempt)
-    return None, True  # errore di rete
+    return None, True
 
-def _split_by_month(session, cognome, da, a):
-    """Divide il periodo mese per mese e aggrega i risultati."""
+def _split_by_month(session, cognome, nome, da, a):
     result = []
     d_start = date.fromisoformat(da)
     d_end = date.fromisoformat(a)
@@ -152,11 +145,11 @@ def _split_by_month(session, cognome, da, a):
         m_end = min(m_end, d_end)
         params = {
             "search":"true","data_da":cur.isoformat(),"data_a":m_end.isoformat(),
-            "cognome_arbitro":cognome,
+            "cognome_arbitro":cognome,"nome_arbitro":nome,
             "data_singola":"","numero_gara":"","codice_societa":"",
             "nome_squadra":"","codice_campo":"","codice_arbitro":"","comitato":""
         }
-        resp, net_err = fetch(session, params)
+        resp, _ = fetch(session, params)
         if resp:
             rows = parse_page(resp.text)
             if rows:
@@ -165,54 +158,25 @@ def _split_by_month(session, cognome, da, a):
         time.sleep(random.uniform(1.0, 2.0))
     return result
 
-def fetch_by_cognome(session, cognome, da, a):
-    """Cerca tutte le gare di un cognome in un periodo.
-    - Se fip.it dice "numero eccessivo" -> divide per mese (overflow esplicito)
-    - Se errore di rete -> restituisce [] senza dividere per mese
-    - Se risposta vuota legittima (arbitro senza gare) -> restituisce []
-    """
+def fetch_by_persona(session, cognome, nome, da, a):
     params = {
         "search":"true","data_da":da,"data_a":a,
-        "cognome_arbitro":cognome,
+        "cognome_arbitro":cognome,"nome_arbitro":nome,
         "data_singola":"","numero_gara":"","codice_societa":"",
         "nome_squadra":"","codice_campo":"","codice_arbitro":"","comitato":""
     }
     resp, net_err = fetch(session, params)
     if resp is None:
-        # Errore di rete: NON interpretiamo come overflow, saltiamo
         return []
     rows = parse_page(resp.text)
     if rows is None:
-        # Overflow esplicito ("numero eccessivo") -> divide per mese
-        print(f"  [!] {cognome} {da}->{a} troppi risultati, divido per mese...")
-        return _split_by_month(session, cognome, da, a)
+        print(f"  [!] {cognome} {nome} {da}->{a} troppi risultati, divido per mese...")
+        return _split_by_month(session, cognome, nome, da, a)
     return rows or []
 
-def is_sardo(field_value):
-    """Controlla se una persona è sarda dalla sigla provincia."""
-    if not field_value: return False
-    m = re.search(r'\((\w{2,3})\)', field_value)
-    return bool(m) and m.group(1).upper() in PROV_SARDE
-
-def campo_fuori_sardegna(campo):
-    """Ritorna True se il campo è CHIARAMENTE fuori Sardegna, False se è in Sardegna o non riconoscibile."""
-    if not campo: return True  # senza campo assumiamo fuori (gara nazionale)
-    # Se ha sigla provincia esplicita, usiamo quella
-    m = re.search(r'\((\w{2,3})\)', campo)
-    if m: return m.group(1).upper() not in PROV_SARDE
-    # Se non ha sigla: scarta SOLO se riconosciamo parole sarde nel campo
-    parole_sarde = ['CAGLIARI','SASSARI','NUORO','ORISTANO','CARBONIA','IGLESIAS',
-                    'OLBIA','TEMPIO','QUARTU','SELARGIUS','ALGHERO','MACOMER',
-                    'SENNORI','PORTO TORRES','IGLESIAS','CARBONIA','ARZACHENA',
-                    'OZIERI','SINISCOLA','TORTOLI','LANUSEI','MURAVERA']
-    campo_up = campo.upper()
-    if any(p in campo_up for p in parole_sarde): return False  # è in Sardegna
-    return True  # non riconosciuto come sardo → assume fuori Sardegna
-
 def main():
-    print(f"=== FIP National Scraper v2 — {date.today()} ===")
+    print(f"=== FIP National Scraper v3 — {date.today()} ===")
 
-    # Carica cache RSA per estrarre cognomi arbitri sardi
     if not os.path.exists(RSA_CACHE):
         print(f"ERRORE: Cache RSA non trovata: {RSA_CACHE}")
         sys.exit(1)
@@ -221,100 +185,80 @@ def main():
         rsa_gare = json.load(f)
     print(f"Cache RSA caricata: {len(rsa_gare)} gare")
 
-    def gara_key(g): return (g.get('Numero Gara',''), g.get('Campionato','') or g.get('Comitato',''))
-    rsa_keys = {gara_key(g) for g in rsa_gare if g.get('Numero Gara')}
+    rsa_nums = {g.get('Numero Gara','') for g in rsa_gare if g.get('Numero Gara')}
 
-    # Estrai cognomi di arbitri/UDC sardi
-    cognomi_sardi = {}  # cognome -> {province, ruoli}
+    # Estrai arbitri sardi per nome completo (elimina omonimi alla radice)
+    arbitri_sardi = {}  # "COGNOME NOME" -> provincia
     for g in rsa_gare:
-        for field in ['Arbitro 1','Arbitro 2','Arbitro 3']:
-            val = g.get(field,'')
+        for field in ['Arbitro 1', 'Arbitro 2', 'Arbitro 3']:
+            val = g.get(field, '')
             if not val: continue
             pp = parse_person(val)
             if not pp or pp['provincia'] not in PROV_SARDE: continue
-            cogn = pp['nome'].split()[0].upper() if pp['nome'] else ''
-            if not cogn or len(cogn) < 3: continue
-            if cogn not in cognomi_sardi:
-                cognomi_sardi[cogn] = {'province': set(), 'ruoli': set(), 'nome_completo': pp['nome']}
-            cognomi_sardi[cogn]['province'].add(pp['provincia'])
-            cognomi_sardi[cogn]['ruoli'].add('Arbitro')
+            nome_completo = pp['nome'].upper().strip()
+            if not nome_completo or len(nome_completo) < 4: continue
+            if nome_completo not in arbitri_sardi:
+                arbitri_sardi[nome_completo] = pp['provincia']
 
-    print(f"Cognomi sardi unici trovati: {len(cognomi_sardi)}")
+    print(f"Arbitri sardi unici trovati: {len(arbitri_sardi)}")
 
-    # Carica cache nazionale esistente
     existing = []
     if os.path.exists(CACHE_FILE):
         with open(CACHE_FILE, encoding="utf-8") as f:
             existing = json.load(f)
         print(f"Cache nazionale esistente: {len(existing)} gare")
 
-    existing_keys = {gara_key(g) for g in existing if g.get('Numero Gara')}
+    existing_nums = {g.get('Numero Gara','') for g in existing if g.get('Numero Gara')}
 
     session = requests.Session()
     session.headers.update(random.choice(HEADERS_POOL))
 
     new_gare = []
-    cognomi_list = sorted(cognomi_sardi.keys())
-    total = len(cognomi_list)
+    arbitri_list = sorted(arbitri_sardi.keys())
+    total = len(arbitri_list)
 
-    print(f"\nCerco gare nazionali per {total} cognomi sardi...")
+    print(f"\nCerco gare nazionali per {total} arbitri sardi...")
 
-    for i, cogn in enumerate(cognomi_list, 1):
-        info = cognomi_sardi[cogn]
-        print(f"[{i}/{total}] {cogn} ({','.join(info['province'])})...", end=" ", flush=True)
+    for i, nome_completo in enumerate(arbitri_list, 1):
+        provincia = arbitri_sardi[nome_completo]
+        parti = nome_completo.split()
+        cognome = parti[0]
+        nome = " ".join(parti[1:]) if len(parti) > 1 else ""
+
+        print(f"[{i}/{total}] {nome_completo} ({provincia})...", end=" ", flush=True)
 
         trovate_fuori = 0
         for da, a in PERIODS:
-            if cogn in COGNOMI_FORZA_MESE:
-                gare = _split_by_month(session, cogn, da, a)
-            else:
-                gare = fetch_by_cognome(session, cogn, da, a)
+            gare = fetch_by_persona(session, cognome, nome, da, a)
             for g in gare:
-                num = g.get('Numero Gara','')
+                num = g.get('Numero Gara', '')
                 if not num: continue
-                key = gara_key(g)
-                if key in rsa_keys: continue       # già in RSA
-                if key in existing_keys: continue  # già in nazionale cache
-
-                # Filtra: voglio solo gare dove QUESTO arbitro è sardo (filtra omonimi)
-                persona_trovata = False
-                for field in ['Arbitro 1','Arbitro 2','Arbitro 3']:
-                    val = g.get(field,'')
-                    if not val: continue
-                    pp = parse_person(val)
-                    if not pp: continue
-                    if pp['nome'].split()[0].upper() == cogn and pp['provincia'] in PROV_SARDE:
-                        persona_trovata = True; break
-
-                if persona_trovata:
-                    new_gare.append(g)
-                    existing_keys.add(gara_key(g))
-                    trovate_fuori += 1
-
+                if num in rsa_nums: continue
+                if num in existing_nums: continue
+                new_gare.append(g)
+                existing_nums.add(num)
+                trovate_fuori += 1
             time.sleep(random.uniform(0.8, 1.5))
 
         print(f"{trovate_fuori} nuove gare fuori RSA")
 
-    # Unisci con cache esistente
     all_gare = existing + new_gare
     print(f"\n✅ Gare nazionali totali: {len(all_gare)} (+{len(new_gare)} nuove)")
 
-    # Salva
     os.makedirs("cache", exist_ok=True)
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(all_gare, f, ensure_ascii=False, indent=2)
     print(f"💾 Cache nazionale salvata: {CACHE_FILE}")
 
-    # Riepilogo per provincia
     prov_count = {}
     for g in all_gare:
-        for field in ['Arbitro 1','Arbitro 2','Osservatore']:
-            val = g.get(field,'')
+        for field in ['Arbitro 1', 'Arbitro 2', 'Arbitro 3']:
+            val = g.get(field, '')
             pp = parse_person(val)
             if pp and pp['provincia'] in PROV_SARDE:
-                prov_count[pp['provincia']] = prov_count.get(pp['provincia'],0)+1
+                prov_count[pp['provincia']] = prov_count.get(pp['provincia'], 0) + 1
     print("\nGare per provincia arbitro:")
-    for pv, cnt in sorted(prov_count.items(), key=lambda x:-x[1]):
+    for pv, cnt in sorted(prov_count.items(), key=lambda x: -x[1]):
         print(f"  {pv}: {cnt}")
 
 if __name__ == "__main__":
