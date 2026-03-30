@@ -221,7 +221,8 @@ def main():
         rsa_gare = json.load(f)
     print(f"Cache RSA caricata: {len(rsa_gare)} gare")
 
-    rsa_nums = {g.get('Numero Gara','') for g in rsa_gare if g.get('Numero Gara')}
+    def gara_key(g): return (g.get('Numero Gara',''), g.get('Campionato','') or g.get('Comitato',''))
+    rsa_keys = {gara_key(g) for g in rsa_gare if g.get('Numero Gara')}
 
     # Estrai cognomi di arbitri/UDC sardi
     cognomi_sardi = {}  # cognome -> {province, ruoli}
@@ -247,7 +248,7 @@ def main():
             existing = json.load(f)
         print(f"Cache nazionale esistente: {len(existing)} gare")
 
-    existing_nums = {g.get('Numero Gara','') for g in existing if g.get('Numero Gara')}
+    existing_keys = {gara_key(g) for g in existing if g.get('Numero Gara')}
 
     session = requests.Session()
     session.headers.update(random.choice(HEADERS_POOL))
@@ -271,8 +272,9 @@ def main():
             for g in gare:
                 num = g.get('Numero Gara','')
                 if not num: continue
-                if num in rsa_nums: continue       # già in RSA
-                if num in existing_nums: continue  # già in nazionale cache
+                key = gara_key(g)
+                if key in rsa_keys: continue       # già in RSA
+                if key in existing_keys: continue  # già in nazionale cache
 
                 # Filtra: voglio solo gare dove QUESTO arbitro è sardo (filtra omonimi)
                 persona_trovata = False
@@ -286,7 +288,7 @@ def main():
 
                 if persona_trovata:
                     new_gare.append(g)
-                    existing_nums.add(num)
+                    existing_keys.add(gara_key(g))
                     trovate_fuori += 1
 
             time.sleep(random.uniform(0.8, 1.5))
