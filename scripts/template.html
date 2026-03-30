@@ -3191,7 +3191,7 @@ function renderHome(){
           ${pvRank.map(([pv,n])=>`<span style="background:var(--wh);border:1px solid var(--br);border-radius:4px;padding:2px 7px;font-size:.67rem"><b style="color:${PC[pv.split('-')[0]]||'var(--bl)'}">${pv}</b> <b>${n}</b></span>`).join('')}
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;max-height:400px;overflow-y:auto">${allCoppie.map(([k,n],i)=>{
+      <div style="display:flex;flex-direction:column;gap:4px;max-height:calc(100vh - 280px);overflow-y:auto">${allCoppie.map(([k,n],i)=>{
       const [a1,a2]=k.split('|||');
       const pv1=P[a1]?.provincia||'';
       const pv2=P[a2]?.provincia||'';

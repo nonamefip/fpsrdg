@@ -768,7 +768,7 @@ if os.path.exists(NATIONAL_CACHE):
         if camp.startswith('COMITATO REGIONALE SARDEGNA'): continue
         # Verifica che ci sia almeno un arbitro sardo nella gara
         if not any(persona_sarda(g.get(f,'')) for f in ['Arbitro 1','Arbitro 2','Arbitro 3']): continue
-        for field in ['Arbitro 1','Arbitro 2','Arbitro 3','Segnapunti','Cronometrista','24 Secondi','Osservatore']:
+        for field in ['Arbitro 1','Arbitro 2','Arbitro 3']:
             val = g.get(field,'')
             if not persona_sarda(val): continue
             pp = parse_person(val)
@@ -790,23 +790,17 @@ if os.path.exists(NATIONAL_CACHE):
     nazionale['arbitri_fuori_sardegna'] = sorted(arb_fuori.values(), key=lambda x:-x['n_gare'])
 
     # 3. Squadre sarde fuori Sardegna
+    # Usa match esatto: la squadra nella gara nazionale deve essere
+    # esattamente uguale (case-insensitive) a una squadra nella cache RSA
     sq_fuori = {}
-    sarde_nomi = set(squads.keys())
+    sarde_nomi_up = {s.upper(): s for s in squads.keys()}
     for g in nat_raw:
         if g.get('Numero Gara','') in rsa_nums: continue
         if g.get('Campionato','').startswith('COMITATO REGIONALE SARDEGNA'): continue
         for role, sq_name in [('casa',g.get('Squadra Casa','')),('ospite',g.get('Squadra Ospite',''))]:
             if not sq_name: continue
-            matched = None
-            sq_up = sq_name.upper()
-            for sq_sarda in sarde_nomi:
-                sq_s_up = sq_sarda.upper()
-                if sq_s_up in sq_up or sq_up in sq_s_up:
-                    matched = sq_sarda; break
-                words_sarda = set(sq_s_up.split()) - {'ASD','SSD','BASKET','PALLACANESTRO','A','B','C','DIL','POL'}
-                words_nat = set(sq_up.split()) - {'ASD','SSD','BASKET','PALLACANESTRO','A','B','C','DIL','POL'}
-                if len(words_sarda) >= 2 and len(words_sarda & words_nat) >= 2:
-                    matched = sq_sarda; break
+            sq_up = sq_name.strip().upper()
+            matched = sarde_nomi_up.get(sq_up)
             if matched:
                 if matched not in sq_fuori:
                     sq_fuori[matched] = {'nome':matched,'n_gare':0,'campionati':{},'gare':[]}
