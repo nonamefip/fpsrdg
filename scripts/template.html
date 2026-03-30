@@ -2626,7 +2626,8 @@ function renderTimeline(){
   var _all=[..._ds].sort().filter(function(d){if(_tlMode==='future')return d>=_ts;if(_tlMode==='passate')return d<_ts;return true;});
   if(!_all.length){el.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessuna giornata</span>';if(footer)footer.innerHTML='';return;}
   var _ai=_all.findIndex(function(d){return d>=_ts;});if(_ai<0)_ai=_all.length-1;
-  var _ws=Math.max(0,_ai-3+_tlOffset);var _vis=_all.slice(_ws,_ws+20);
+  // Oggi appare in posizione 2 (0-based) = 3a casella da sinistra
+  var _ws=Math.max(0,_ai-2+_tlOffset);var _vis=_all.slice(_ws,_ws+20);
   var _mx=Math.max.apply(null,_all.map(function(d){return(_pg[d]&&_pg[d].gare||0)+(_pf[d]||0);}).concat([1]));
   var html='',_pm=-1;
   _vis.forEach(function(ds){
@@ -2635,7 +2636,7 @@ function renderTimeline(){
     if(_pm>=0&&mo!==_pm){html+='<div style="flex-shrink:0;width:12px;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="width:1px;flex:1;background:var(--br)"></div><div style="writing-mode:vertical-rl;font-size:.5rem;color:var(--mu);opacity:.6">'+_ME[mo]+'</div><div style="width:1px;flex:1;background:var(--br)"></div></div>';}
     _pm=mo;
     var bg=isT?'var(--gold2)':isP?'#e6f1fb':'#fff';var bc=isT?'var(--gold)':isP?'#b5d4f4':nT>60?'var(--bl2)':'var(--br)';var todayStyle=isT?'outline:3px solid var(--gold);outline-offset:-2px;':'';
-    var nc=isT?'var(--gold)':isP?'var(--bl2)':nT>100?'var(--red)':nT>50?'#c98a00':'var(--tx)';
+    var nc=isT?'var(--gold)':isP?'#1a6bb5':nT>100?'var(--red)':nT>50?'#c98a00':'var(--tx)';
     var dc=dw===0?'var(--red)':dw===6?'#c0176e':'var(--mu)';
     var bp=Math.round(nT/_mx*100);var bclr=isT?'var(--gold)':isP?'var(--bl2)':nT>80?'var(--red)':nT>40?'#c98a00':'var(--bl2)';
     var cv='#ccc';if(isT||isP){cv='#1a7a3c';}else{var c=_cov[ds];cv=(c&&c.t>0)?(c.c/c.t>=.8?'#1a7a3c':c.c/c.t>=.5?'var(--gold)':'var(--red)'):'var(--red)';}
@@ -3248,11 +3249,13 @@ function renderHome(){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div>
           <div style="font-size:.68rem;font-weight:700;color:var(--green);margin-bottom:4px">↑ In crescita</div>
-          <div style="max-height:300px;overflow-y:auto">
+          <div style="overflow-y:auto">
           ${top5up.map(t=>{
-            const clr=PC[P[t.n]?.provincia]||'var(--green)';
+            const pv=P[t.n]?.provincia||'';
+            const clr=PC[pv]||'var(--green)';
             return`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #f0f4f0">
               <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" data-n="${t.n}">${escH(t.n)}</span>
+              ${pv?`<span style="font-size:.58rem;font-weight:700;color:#fff;background:${clr};border-radius:3px;padding:0 4px">${pv}</span>`:''}
               <span style="font-size:.68rem;color:var(--mu)">${t.c2}→${t.c1}</span>
               <span style="font-size:.72rem;font-weight:700;color:var(--green)">+${t.delta}</span>
             </div>`;
@@ -3261,12 +3264,17 @@ function renderHome(){
         </div>
         <div>
           <div style="font-size:.68rem;font-weight:700;color:var(--red);margin-bottom:4px">↓ In calo</div>
-          <div style="max-height:300px;overflow-y:auto">
-          ${top5dn.map(t=>`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #fff0f0">
+          <div style="overflow-y:auto">
+          ${top5dn.map(t=>{
+            const pv=P[t.n]?.provincia||'';
+            const clr=PC[pv]||'var(--red)';
+            return`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #fff0f0">
               <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" data-n="${t.n}">${escH(t.n)}</span>
+              ${pv?`<span style="font-size:.58rem;font-weight:700;color:#fff;background:${clr};border-radius:3px;padding:0 4px">${pv}</span>`:''}
               <span style="font-size:.68rem;color:var(--mu)">${t.c2}→${t.c1}</span>
               <span style="font-size:.72rem;font-weight:700;color:var(--red)">${t.delta}</span>
-            </div>`).join('')}
+            </div>`;
+          }).join('')}
           </div>
         </div>
       </div>`;
@@ -5662,7 +5670,16 @@ function openPersona(nome,campFilter){
             +bars
             +'</div>';
         }).join('');
-        const monthRowP=allDatesP.map((d,i)=>'<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;font-size:.48rem;color:#888;text-align:center;overflow:hidden;white-space:nowrap">'+(monthBP[i]||'')+'</div>').join('');
+        const monthRowP=allDatesP.map((d,i)=>{
+          const dt=new Date(d+'T12:00');
+          const day=dt.getDate();
+          const isFirst=day===1;
+          const isMon=(day===1||day===5||day===10||day===15||day===20||day===25);
+          const label=isFirst?(monthBP[i]||String(day)):isMon?String(day):'';
+          const color=isFirst?'#1a6bb5':'#888';
+          const fw=isFirst?'700':'400';
+          return`<div style="display:inline-block;width:${BW}px;flex-shrink:0;font-size:.44rem;color:${color};font-weight:${fw};text-align:center;overflow:hidden;white-space:nowrap">${label}</div>`;
+        }).join('');
         // Legenda cliccabile
         const legendP=campsP.map(c=>{
           const col=campColor(c)||'#90a4ae';
@@ -5758,16 +5775,24 @@ function openPersona(nome,campFilter){
           </div>
           <div id="${allSqId}" style="overflow-x:auto;display:none">${makeTable(makeRows(allSqList))}</div>
         </div>`;
+        const outerUid=uid+'_outer';
         return`<div style="margin-top:12px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-            <div style="font-size:.8rem;font-weight:700;color:var(--bl)">🏀 Squadre arbitrate — rendimento</div>
-            <select id="${uid}_sel" onchange="(function(v){document.querySelectorAll('.sq-camp-group').forEach(g=>{g.style.display=v===''||g.dataset.camp===v?'':'none'})})(this.value)"
-              style="font-size:.72rem;padding:3px 6px;border:1px solid var(--br);border-radius:6px;color:var(--bl)">
-              ${opts}
-            </select>
+          <div onclick="const b=document.getElementById('${outerUid}');const a=this.querySelector('.sq-outer-arr');b.style.display=b.style.display==='none'?'block':'none';a.textContent=b.style.display==='none'?'▶':'▼';"
+            style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;background:var(--bl);color:#fff;border-radius:8px;margin-bottom:0;font-size:.8rem;font-weight:700;user-select:none">
+            <span class="sq-outer-arr">▶</span>
+            <span style="flex:1">🏀 Squadre arbitrate — rendimento</span>
+            <span style="font-size:.7rem;opacity:.75">${squadre.length} squadre</span>
           </div>
-          ${groups}
-          ${allSqBlock}
+          <div id="${outerUid}" style="display:none;margin-top:4px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;padding:4px 0">
+              <select id="${uid}_sel" onchange="(function(v){document.querySelectorAll('.sq-camp-group').forEach(g=>{g.style.display=v===''||g.dataset.camp===v?'':'none'})})(this.value)"
+                style="font-size:.72rem;padding:3px 6px;border:1px solid var(--br);border-radius:6px;color:var(--bl)">
+                ${opts}
+              </select>
+            </div>
+            ${groups}
+            ${allSqBlock}
+          </div>
         </div>`;
       })()}
 
@@ -10236,26 +10261,26 @@ function renderGlobalStats(){
     const bars=sortedMs.map(m=>{
       const vals=PROVS.map(pv=>getVal(m,pv));
       const tot=vals.reduce((a,b)=>a+b,0);
-      const h=Math.max(tot>0?4:0,Math.round(tot/maxVal*80));
-      let stackH=0;
-      const segs=PROVS.map((pv,i)=>{
-        const v=vals[i]; if(!v)return '';
-        const sh=Math.round(v/maxVal*80);
-        stackH+=sh;
-        return`<div style="width:100%;height:${sh}px;background:${PROV_COLORS[pv]};opacity:.85" title="${pv}: ${v}"></div>`;
+      // Ogni provincia ha la sua barra verticale affiancata
+      const barW=Math.max(8, Math.floor(60/PROVS.length)-1);
+      const provBars=PROVS.map((pv,i)=>{
+        const v=vals[i]; if(!v) return `<div style="width:${barW}px"></div>`;
+        const h=Math.max(2,Math.round(v/maxVal*80));
+        return`<div style="display:flex;flex-direction:column;align-items:center;width:${barW}px" title="${pv}: ${v}">
+          <div style="font-size:.42rem;color:${PROV_COLORS[pv]};font-weight:700;line-height:1">${v}</div>
+          <div style="width:${barW-2}px;height:${h}px;background:${PROV_COLORS[pv]};border-radius:2px 2px 0 0"></div>
+        </div>`;
       }).join('');
       const mLabel=m.slice(5);
-      return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer" title="${m}: ${tot}">
+      return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;min-width:50px" title="${m}: ${tot}">
+        <div style="display:flex;align-items:flex-end;gap:1px;height:90px;padding-bottom:0">${provBars}</div>
+        <div style="font-size:.58rem;color:#6b7a99;margin-top:2px;border-top:1px solid #e0e4f0;padding-top:2px;width:100%;text-align:center">${mNames[parseInt(mLabel)]||mLabel}</div>
         <div style="font-size:.5rem;color:#9aa3b8">${tot||''}</div>
-        <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:80px">
-          ${segs}
-        </div>
-        <div style="font-size:.58rem;color:#6b7a99;margin-top:1px">${mNames[parseInt(mLabel)]||mLabel}</div>
       </div>`;
     }).join('');
-    return`<div style="margin-bottom:12px">
+    return`<div style="margin-bottom:16px">
       <div style="font-size:.72rem;font-weight:700;color:var(--bl);margin-bottom:6px">${title}</div>
-      <div style="display:flex;align-items:flex-end;gap:3px;padding:4px 0">${bars}</div>
+      <div style="display:flex;align-items:flex-end;gap:4px;padding:4px 0;overflow-x:auto">${bars}</div>
     </div>`;
   }
 
@@ -10269,7 +10294,8 @@ function renderGlobalStats(){
     +mkHistogram('📊 Gare designate per mese (per provincia arbitro)',sortedM,
       (m,pv)=>gareByMeseProv[m]?.[pv]||0, maxG1, true)
     +mkHistogram('👤 Arbitri unici utilizzati per mese (per provincia)',sortedM,
-      (m,pv)=>arbByMeseProv[m]?.[pv]?.size||0, maxG2, false);
+      (m,pv)=>arbByMeseProv[m]?.[pv]?.size||0, maxG2, false)
+    +`<div style="font-size:.6rem;color:var(--mu);margin-top:4px">Le barre mostrano i valori per ogni provincia affiancate per mese</div>`;
 }
 
 // ── PROVVEDIMENTI ──
@@ -11329,7 +11355,7 @@ function renderFutureGames(){
       var n=e[0],c=e[1];
       var p=P[n];
       var fipCode=CODICI_FIP[n.toUpperCase()]||'';
-      summaryHtml+='<span style="background:#fff;border:1px solid #c0d0ff;border-radius:12px;padding:3px 10px;font-size:.68rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px" data-n="'+escH(n)+'">';
+      summaryHtml+='<span style="background:#fff;border:1px solid #c0d0ff;border-radius:12px;padding:3px 10px;font-size:.68rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px" onclick="(function(){var q=document.getElementById(\'fp-q\');if(q){q.value=\''+escH(n)+'\';renderProssime();showPage(\'prossime\');}})();">';
       summaryHtml+='<span class="rn rn-'+(p?p.categoria:'Arbitro')+'" style="font-size:.65rem">'+escH(n)+'</span>';
       if(fipCode) summaryHtml+='<span style="font-family:monospace;font-size:.58rem;color:#888">'+fipCode+'</span>';
       summaryHtml+=' <b style="color:#003087">'+c+'</b></span>';
