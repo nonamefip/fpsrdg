@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-FIP National Scraper v3
-Logica semplice e corretta:
-  1. Estrae tutti gli arbitri sardi dalla cache RSA (nome completo)
-  2. Per ognuno cerca su fip.it per COGNOME + NOME (elimina omonimi)
-  3. Scarta le gare già presenti nella cache RSA (per numero gara)
-  4. Quello che rimane = gare nazionali
+FIP National Scraper v5
+Logica corretta e verificata:
+  1. Estrae arbitri sardi dalla cache RSA (nome completo)
+  2. Per ogni arbitro cerca su fip.it per cognome
+  3. Scarta SOLO le gare con campionato "COMITATO REGIONALE SARDEGNA..."
+  4. Verifica che il nome completo dell'arbitro sia nella gara
+  5. Quello che rimane = gare fuori Sardegna
 """
 import requests, json, os, re, sys, time, random
 from bs4 import BeautifulSoup
@@ -116,6 +117,10 @@ def parse_page(html):
     matches = soup.find_all("div", class_="results-matches__match")
     return [parse_match(m) for m in matches]
 
+def is_gara_sarda(campionato):
+    """Scarta SOLO le gare del Comitato Regionale Sardegna."""
+    return campionato.upper().startswith("COMITATO REGIONALE SARDEGNA")
+
 def fetch(session, params, max_retries=4):
     for attempt in range(1, max_retries+1):
         try:
@@ -132,7 +137,7 @@ def fetch(session, params, max_retries=4):
             time.sleep(random.uniform(2, 4) * attempt)
     return None, True
 
-def _split_by_month(session, cognome, nome, da, a):
+def _split_by_month(session, cognome, da, a):
     result = []
     d_start = date.fromisoformat(da)
     d_end = date.fromisoformat(a)
@@ -145,7 +150,7 @@ def _split_by_month(session, cognome, nome, da, a):
         m_end = min(m_end, d_end)
         params = {
             "search":"true","data_da":cur.isoformat(),"data_a":m_end.isoformat(),
-            "cognome_arbitro":cognome,"nome_arbitro":nome,
+            "cognome_arbitro":cognome,
             "data_singola":"","numero_gara":"","codice_societa":"",
             "nome_squadra":"","codice_campo":"","codice_arbitro":"","comitato":""
         }
@@ -158,10 +163,10 @@ def _split_by_month(session, cognome, nome, da, a):
         time.sleep(random.uniform(1.0, 2.0))
     return result
 
-def fetch_by_persona(session, cognome, nome, da, a):
+def fetch_by_cognome(session, cognome, da, a):
     params = {
         "search":"true","data_da":da,"data_a":a,
-        "cognome_arbitro":cognome,"nome_arbitro":nome,
+        "cognome_arbitro":cognome,
         "data_singola":"","numero_gara":"","codice_societa":"",
         "nome_squadra":"","codice_campo":"","codice_arbitro":"","comitato":""
     }
@@ -170,12 +175,12 @@ def fetch_by_persona(session, cognome, nome, da, a):
         return []
     rows = parse_page(resp.text)
     if rows is None:
-        print(f"  [!] {cognome} {nome} {da}->{a} troppi risultati, divido per mese...")
-        return _split_by_month(session, cognome, nome, da, a)
+        print(f"  [!] {cognome} {da}->{a} troppi risultati, divido per mese...")
+        return _split_by_month(session, cognome, da, a)
     return rows or []
 
 def main():
-    print(f"=== FIP National Scraper v3 — {date.today()} ===")
+    print(f"=== FIP National Scraper v5 — {date.today()} ===")
 
     if not os.path.exists(RSA_CACHE):
         print(f"ERRORE: Cache RSA non trovata: {RSA_CACHE}")
@@ -185,9 +190,7 @@ def main():
         rsa_gare = json.load(f)
     print(f"Cache RSA caricata: {len(rsa_gare)} gare")
 
-    rsa_nums = {g.get('Numero Gara','') for g in rsa_gare if g.get('Numero Gara')}
-
-    # Estrai arbitri sardi per nome completo (elimina omonimi alla radice)
+    # Estrai arbitri sardi per nome completo
     arbitri_sardi = {}  # "COGNOME NOME" -> provincia
     for g in rsa_gare:
         for field in ['Arbitro 1', 'Arbitro 2', 'Arbitro 3']:
@@ -208,7 +211,8 @@ def main():
             existing = json.load(f)
         print(f"Cache nazionale esistente: {len(existing)} gare")
 
-    existing_nums = {g.get('Numero Gara','') for g in existing if g.get('Numero Gara')}
+    # Chiave univoca: numero gara + campionato (evita collisioni tra comitati diversi)
+    existing_keys = {(g.get('Numero Gara',''), g.get('Campionato','')) for g in existing if g.get('Numero Gara')}
 
     session = requests.Session()
     session.headers.update(random.choice(HEADERS_POOL))
@@ -217,26 +221,33 @@ def main():
     arbitri_list = sorted(arbitri_sardi.keys())
     total = len(arbitri_list)
 
-    print(f"\nCerco gare nazionali per {total} arbitri sardi...")
+    print(f"\nCerco gare fuori Sardegna per {total} arbitri sardi...")
 
     for i, nome_completo in enumerate(arbitri_list, 1):
         provincia = arbitri_sardi[nome_completo]
-        parti = nome_completo.split()
-        cognome = parti[0]
-        nome = " ".join(parti[1:]) if len(parti) > 1 else ""
+        cognome = nome_completo.split()[0]
 
         print(f"[{i}/{total}] {nome_completo} ({provincia})...", end=" ", flush=True)
 
         trovate_fuori = 0
         for da, a in PERIODS:
-            gare = fetch_by_persona(session, cognome, nome, da, a)
+            gare = fetch_by_cognome(session, cognome, da, a)
             for g in gare:
                 num = g.get('Numero Gara', '')
+                camp = g.get('Campionato', '')
                 if not num: continue
-                if num in rsa_nums: continue
-                if num in existing_nums: continue
+                # Scarta gare sarde
+                if is_gara_sarda(camp): continue
+                # Verifica che il nome completo sia nella gara (filtra omonimi)
+                tutti_arbitri = " | ".join(filter(None, [
+                    g.get('Arbitro 1',''), g.get('Arbitro 2',''), g.get('Arbitro 3','')
+                ]))
+                if nome_completo not in tutti_arbitri.upper(): continue
+                # Evita duplicati
+                key = (num, camp)
+                if key in existing_keys: continue
                 new_gare.append(g)
-                existing_nums.add(num)
+                existing_keys.add(key)
                 trovate_fuori += 1
             time.sleep(random.uniform(0.8, 1.5))
 
