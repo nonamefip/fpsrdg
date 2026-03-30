@@ -759,10 +759,15 @@ if os.path.exists(NATIONAL_CACHE):
             nazionale['gare_nazionali_in_sardegna'].append(g)
 
     # 2. Arbitri/UDC/osservatori sardi fuori Sardegna
+    # Un arbitro sardo è "fuori" se la gara NON è del Comitato Regionale Sardegna
+    # (indipendentemente da dove si gioca fisicamente)
     arb_fuori = {}
     for g in nat_raw:
         if g.get('Numero Gara','') in rsa_nums: continue
-        if not campo_fuori_sardegna(g.get('Campo','')): continue
+        camp = g.get('Campionato','')
+        if camp.startswith('COMITATO REGIONALE SARDEGNA'): continue
+        # Verifica che ci sia almeno un arbitro sardo nella gara
+        if not any(persona_sarda(g.get(f,'')) for f in ['Arbitro 1','Arbitro 2','Arbitro 3']): continue
         for field in ['Arbitro 1','Arbitro 2','Arbitro 3','Segnapunti','Cronometrista','24 Secondi','Osservatore']:
             val = g.get(field,'')
             if not persona_sarda(val): continue
@@ -789,7 +794,7 @@ if os.path.exists(NATIONAL_CACHE):
     sarde_nomi = set(squads.keys())
     for g in nat_raw:
         if g.get('Numero Gara','') in rsa_nums: continue
-        if not campo_fuori_sardegna(g.get('Campo','')): continue
+        if g.get('Campionato','').startswith('COMITATO REGIONALE SARDEGNA'): continue
         for role, sq_name in [('casa',g.get('Squadra Casa','')),('ospite',g.get('Squadra Ospite',''))]:
             if not sq_name: continue
             matched = None
