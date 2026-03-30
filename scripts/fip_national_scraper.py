@@ -237,7 +237,6 @@ def main():
                 cognomi_sardi[cogn] = {'province': set(), 'ruoli': set(), 'nome_completo': pp['nome']}
             cognomi_sardi[cogn]['province'].add(pp['provincia'])
             cognomi_sardi[cogn]['ruoli'].add('Arbitro')
-            cognomi_sardi[cogn]['ruoli'].add(ruolo)
 
     print(f"Cognomi sardi unici trovati: {len(cognomi_sardi)}")
 
