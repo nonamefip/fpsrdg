@@ -891,9 +891,9 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="db-card" style="margin-bottom:12px">
     <div class="db-card-hd" style="cursor:pointer" onclick="toggleSection('h-fut-wrap','h-fut-tog')">
       📅 Prossime gare (14 giorni) <span id="h-fut-count" style="font-size:.75rem;color:var(--mu)"></span>
-      <span id="h-fut-tog" style="float:right;font-size:.8rem;color:var(--mu)">▼</span>
+      <span id="h-fut-tog" style="float:right;font-size:.8rem;color:var(--mu)">▶</span>
     </div>
-    <div id="h-fut-wrap"><div id="h-fut"></div></div>
+    <div id="h-fut-wrap" style="display:none"><div id="h-fut"></div></div>
   </div>
 
   <!-- ROW 8: Attività mensile collassabile -->
@@ -2626,7 +2626,7 @@ function renderTimeline(){
   var _all=[..._ds].sort().filter(function(d){if(_tlMode==='future')return d>=_ts;if(_tlMode==='passate')return d<_ts;return true;});
   if(!_all.length){el.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessuna giornata</span>';if(footer)footer.innerHTML='';return;}
   var _ai=_all.findIndex(function(d){return d>=_ts;});if(_ai<0)_ai=_all.length-1;
-  var _ws=Math.max(0,_ai+_tlOffset);var _vis=_all.slice(_ws,_ws+20);
+  var _ws=Math.max(0,_ai-3+_tlOffset);var _vis=_all.slice(_ws,_ws+20);
   var _mx=Math.max.apply(null,_all.map(function(d){return(_pg[d]&&_pg[d].gare||0)+(_pf[d]||0);}).concat([1]));
   var html='',_pm=-1;
   _vis.forEach(function(ds){
@@ -3170,13 +3170,32 @@ function renderHome(){
       const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');
       if(a1&&a2){const k=[a1,a2].sort().join('|||');coppie[k]=(coppie[k]||0)+1;}
     });
-    const topCoppie=Object.entries(coppie).sort((a,b)=>b[1]-a[1]).slice(0,10);
-    const maxC=topCoppie[0]?.[1]||1;
+    const allCoppie=Object.entries(coppie).sort((a,b)=>b[1]-a[1]);
+    const maxC=allCoppie[0]?.[1]||1;
     const copEl=document.getElementById('h-coppie');
-    if(copEl) copEl.innerHTML=topCoppie.length?`<div style="display:flex;flex-direction:column;gap:4px">${topCoppie.map(([k,n],i)=>{
+    // Classifica per provincia
+    const pvCoppie={};
+    allCoppie.forEach(([k,n])=>{
       const [a1,a2]=k.split('|||');
-      const clr1=PC[P[a1]?.provincia]||'var(--bl)';
-      const clr2=PC[P[a2]?.provincia]||'var(--bl2)';
+      const pv1=P[a1]?.provincia||'?';
+      const pv2=P[a2]?.provincia||'?';
+      const pvKey=pv1===pv2?pv1:(pv1<pv2?pv1+'-'+pv2:pv2+'-'+pv1);
+      pvCoppie[pvKey]=(pvCoppie[pvKey]||0)+n;
+    });
+    const pvRank=Object.entries(pvCoppie).sort((a,b)=>b[1]-a[1]);
+    if(copEl) copEl.innerHTML=allCoppie.length?`
+      <div style="margin-bottom:8px;padding:6px 8px;background:#f0f5ff;border-radius:6px;font-size:.68rem">
+        <b style="color:var(--bl)">Accoppiamenti per provincia:</b>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">
+          ${pvRank.map(([pv,n])=>`<span style="background:var(--wh);border:1px solid var(--br);border-radius:4px;padding:2px 7px;font-size:.67rem"><b style="color:${PC[pv.split('-')[0]]||'var(--bl)'}">${pv}</b> <b>${n}</b></span>`).join('')}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;max-height:400px;overflow-y:auto">${allCoppie.map(([k,n],i)=>{
+      const [a1,a2]=k.split('|||');
+      const pv1=P[a1]?.provincia||'';
+      const pv2=P[a2]?.provincia||'';
+      const clr1=PC[pv1]||'var(--bl)';
+      const clr2=PC[pv2]||'var(--bl2)';
       const bar=Math.round(n/maxC*100);
       const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
       return`<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;background:${i%2?'#f8faff':'#fff'};border:1px solid #eef1fa">
@@ -3184,8 +3203,10 @@ function renderHome(){
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
             <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" data-n="${a1}">${escH(a1)}</span>
+            ${pv1?`<span style="font-size:.6rem;color:${clr1};font-weight:700">(${pv1})</span>`:''}
             <span style="color:var(--mu2);font-size:.65rem">+</span>
             <span class="rn rn-Arbitro" style="font-size:.72rem;cursor:pointer" data-n="${a2}">${escH(a2)}</span>
+            ${pv2?`<span style="font-size:.6rem;color:${clr2};font-weight:700">(${pv2})</span>`:''}
           </div>
           <div style="height:4px;background:#eef1fa;border-radius:2px;margin-top:3px">
             <div style="height:4px;background:linear-gradient(90deg,${clr1},${clr2});border-radius:2px;width:${bar}%"></div>
@@ -3220,13 +3241,14 @@ function renderHome(){
       const pct=c2>0?Math.round((c1-c2)/c2*100):c1>0?100:0;
       return{n,c1,c2,delta,pct};
     }).filter(t=>t.c1>0||t.c2>0).sort((a,b)=>b.delta-a.delta);
-    const top5up=trends.filter(t=>t.delta>0).slice(0,5);
-    const top5dn=trends.filter(t=>t.delta<0).sort((a,b)=>a.delta-b.delta).slice(0,5);
+    const top5up=trends.filter(t=>t.delta>0);
+    const top5dn=trends.filter(t=>t.delta<0).sort((a,b)=>a.delta-b.delta);
     const trendEl=document.getElementById('h-trend');
     if(trendEl) trendEl.innerHTML=`
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <div>
           <div style="font-size:.68rem;font-weight:700;color:var(--green);margin-bottom:4px">↑ In crescita</div>
+          <div style="max-height:300px;overflow-y:auto">
           ${top5up.map(t=>{
             const clr=PC[P[t.n]?.provincia]||'var(--green)';
             return`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #f0f4f0">
@@ -3235,14 +3257,17 @@ function renderHome(){
               <span style="font-size:.72rem;font-weight:700;color:var(--green)">+${t.delta}</span>
             </div>`;
           }).join('')}
+          </div>
         </div>
         <div>
           <div style="font-size:.68rem;font-weight:700;color:var(--red);margin-bottom:4px">↓ In calo</div>
+          <div style="max-height:300px;overflow-y:auto">
           ${top5dn.map(t=>`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #fff0f0">
               <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" data-n="${t.n}">${escH(t.n)}</span>
               <span style="font-size:.68rem;color:var(--mu)">${t.c2}→${t.c1}</span>
               <span style="font-size:.72rem;font-weight:700;color:var(--red)">${t.delta}</span>
             </div>`).join('')}
+          </div>
         </div>
       </div>`;
   }catch(e){}
@@ -10168,19 +10193,83 @@ function renderGlobalStats(){
   const el=document.getElementById('gs-mesi'); if(!el)return;
   const sorted=Object.entries(mesi).sort((a,b)=>a[0].localeCompare(b[0]));
   if(!sorted.length){el.innerHTML='<p style="color:#9aa3b8;font-size:.78rem">Nessun dato</p>';return;}
-  const maxG=Math.max(...sorted.map(([,v])=>v.gare||0),1);
-  el.innerHTML=`<div id="mesi-detail" style="display:none;margin-bottom:8px;background:#f0f4ff;border:1px solid #c0d0ff;border-radius:8px;padding:8px 10px;font-size:.75rem"></div><div style="display:flex;align-items:flex-end;gap:4px;height:60px;padding:4px 0">
-    ${sorted.map(([m,v])=>{
-      const h=Math.max(4,Math.round((v.gare||0)/maxG*54));
-      const mLabel=m.slice(5); // MM
-      const mNames=['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer" title="${m}: ${v.gare} gare" onclick="expandMese('${m}')">
-        <div style="font-size:.55rem;color:#9aa3b8">${v.gare}</div>
-        <div class="mese-bar" data-m="${m}" style="width:100%;height:${h}px;background:#003087;border-radius:2px 2px 0 0;opacity:.8"></div>
-        <div style="font-size:.6rem;color:#6b7a99">${mNames[parseInt(mLabel)]||mLabel}</div>
+
+  const PROVS=['CA','SS','NU','OR','SU'];
+  const PROV_COLORS={'CA':'#c0392b','SS':'#1a6bb5','NU':'#c05a20','OR':'#0a8c6a','SU':'#6c3dc8'};
+  const mNames=['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+
+  // ── Istogramma 1: gare per mese per provincia ──
+  // Calcola gare per mese per provincia dalla cache gare
+  const gareByMeseProv={};
+  (D.gare||[]).forEach(g=>{
+    const m=(g['Data']||'').slice(0,7); if(!m)return;
+    if(!gareByMeseProv[m])gareByMeseProv[m]={};
+    PROVS.forEach(pv=>{
+      ['Arbitro 1','Arbitro 2','Arbitro 3'].forEach(f=>{
+        const val=g[f]||''; if(!val)return;
+        const mpv=val.match(/\(\s*([A-Z]{2,3})\s*\)\s*$/);
+        if(mpv&&mpv[1]===pv) gareByMeseProv[m][pv]=(gareByMeseProv[m][pv]||0)+1;
+      });
+    });
+  });
+  const sortedM=sorted.map(([m])=>m);
+  const maxG1=Math.max(...sortedM.map(m=>PROVS.reduce((s,pv)=>s+(gareByMeseProv[m]?.[pv]||0),0)),1);
+
+  // ── Istogramma 2: arbitri unici per provincia per mese ──
+  const arbByMeseProv={};
+  sortedM.forEach(m=>{arbByMeseProv[m]={};});
+  (D.gare||[]).forEach(g=>{
+    const m=(g['Data']||'').slice(0,7); if(!m||!arbByMeseProv[m])return;
+    ['Arbitro 1','Arbitro 2','Arbitro 3'].forEach(f=>{
+      const val=g[f]||''; if(!val)return;
+      const mpv=val.match(/\(\s*([A-Z]{2,3})\s*\)\s*$/);
+      if(!mpv)return;
+      const pv=mpv[1]; if(!PROVS.includes(pv))return;
+      const nome=val.split(' di ')[0].trim();
+      if(!arbByMeseProv[m][pv])arbByMeseProv[m][pv]=new Set();
+      arbByMeseProv[m][pv].add(nome);
+    });
+  });
+  const maxG2=Math.max(...sortedM.map(m=>PROVS.reduce((s,pv)=>s+(arbByMeseProv[m]?.[pv]?.size||0),0)),1);
+
+  function mkHistogram(title,sortedMs,getVal,maxVal,showLegend){
+    const bars=sortedMs.map(m=>{
+      const vals=PROVS.map(pv=>getVal(m,pv));
+      const tot=vals.reduce((a,b)=>a+b,0);
+      const h=Math.max(tot>0?4:0,Math.round(tot/maxVal*80));
+      let stackH=0;
+      const segs=PROVS.map((pv,i)=>{
+        const v=vals[i]; if(!v)return '';
+        const sh=Math.round(v/maxVal*80);
+        stackH+=sh;
+        return`<div style="width:100%;height:${sh}px;background:${PROV_COLORS[pv]};opacity:.85" title="${pv}: ${v}"></div>`;
+      }).join('');
+      const mLabel=m.slice(5);
+      return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer" title="${m}: ${tot}">
+        <div style="font-size:.5rem;color:#9aa3b8">${tot||''}</div>
+        <div style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:80px">
+          ${segs}
+        </div>
+        <div style="font-size:.58rem;color:#6b7a99;margin-top:1px">${mNames[parseInt(mLabel)]||mLabel}</div>
       </div>`;
-    }).join('')}
+    }).join('');
+    return`<div style="margin-bottom:12px">
+      <div style="font-size:.72rem;font-weight:700;color:var(--bl);margin-bottom:6px">${title}</div>
+      <div style="display:flex;align-items:flex-end;gap:3px;padding:4px 0">${bars}</div>
+    </div>`;
+  }
+
+  const legend=`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;font-size:.65rem">
+    ${PROVS.map(pv=>`<span style="display:flex;align-items:center;gap:3px">
+      <span style="width:10px;height:10px;border-radius:2px;background:${PROV_COLORS[pv]};display:inline-block"></span>${pv}
+    </span>`).join('')}
   </div>`;
+
+  el.innerHTML=legend
+    +mkHistogram('📊 Gare designate per mese (per provincia arbitro)',sortedM,
+      (m,pv)=>gareByMeseProv[m]?.[pv]||0, maxG1, true)
+    +mkHistogram('👤 Arbitri unici utilizzati per mese (per provincia)',sortedM,
+      (m,pv)=>arbByMeseProv[m]?.[pv]?.size||0, maxG2, false);
 }
 
 // ── PROVVEDIMENTI ──
@@ -11385,8 +11474,8 @@ function renderProssime(){
         '<td><span style="font-size:.62rem;background:'+campClr+';color:#fff;border-radius:3px;padding:1px 5px;cursor:pointer;white-space:nowrap" onclick="openCampionato(\''+esc(g['Campionato']||'')+'\')">'+escH(g['Campionato']||'')+'</span></td>'+
         '<td><span class="rn rn-sq" onclick="openSquadra(\''+esc(g['Squadra Casa']||'')+'\')">'+escH(g['Squadra Casa']||'')+'</span></td>'+
         '<td><span class="rn rn-sq" onclick="openSquadra(\''+esc(g['Squadra Ospite']||'')+'\')">'+escH(g['Squadra Ospite']||'')+'</span></td>'+
-        '<td style="font-size:.68rem">'+(a1n?'<span class="rn rn-Arbitro" data-n="'+a1n+'" onclick="openPersona(this.dataset.n)">'+escH(a1n)+'</span>':'<span style="color:#ccc">—</span>')+'</td>'+
-        '<td style="font-size:.68rem">'+(a2n?'<span class="rn rn-Arbitro" data-n="'+a2n+'" onclick="openPersona(this.dataset.n)">'+escH(a2n)+'</span>':'')+'</td>'+
+        '<td style="font-size:.68rem">'+(a1n?'<span class="rn rn-Arbitro" data-n="'+a1n+'" style="cursor:pointer" onclick="document.getElementById(\'fp-q\').value=\''+a1n+'\';renderProssime()">'+escH(a1n)+'</span>':'<span style="color:#ccc">—</span>')+'</td>'+
+        '<td style="font-size:.68rem">'+(a2n?'<span class="rn rn-Arbitro" data-n="'+a2n+'" style="cursor:pointer" onclick="document.getElementById(\'fp-q\').value=\''+a2n+'\';renderProssime()">'+escH(a2n)+'</span>':'')+'</td>'+
         '<td style="font-size:.65rem;color:#636e72">'+escH(udc)+'</td>'+
         '<td style="font-size:.65rem;color:var(--mu);max-width:120px;white-space:normal">'+escH((g['Campo']||'').split(',')[0])+'</td>'+
         '</tr>';
