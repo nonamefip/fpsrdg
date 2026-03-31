@@ -763,6 +763,7 @@ if os.path.exists(NATIONAL_CACHE):
     # (indipendentemente da dove si gioca fisicamente)
     arb_fuori = {}
     for g in nat_raw:
+        if g.get('Numero Gara','') in rsa_nums: continue
         camp = g.get('Campionato','')
         if camp.startswith('COMITATO REGIONALE SARDEGNA'): continue
         # Verifica che ci sia almeno un arbitro sardo nella gara
@@ -781,10 +782,20 @@ if os.path.exists(NATIONAL_CACHE):
             arb_fuori[nome]['n_gare'] += 1
             camp = g.get('Campionato','')
             arb_fuori[nome]['campionati'][camp] = arb_fuori[nome]['campionati'].get(camp,0)+1
+            # Determina se la gara è in Sardegna
+            campo_val = g.get('Campo','')
+            m_prov = __import__('re').search(r'\(\s*([A-Z]{2,3})\s*\)\s*$', campo_val)
+            in_sardegna = bool(m_prov) and m_prov.group(1).upper() in PROV_SARDE
+            # Sigla campo: provincia sarda o 'NAZ' per le altre
+            campo_sigla = m_prov.group(1).upper() if m_prov and in_sardegna else ('ITA' if m_prov else '')
             arb_fuori[nome]['gare'].append({
                 'd':g.get('Data',''),'c':camp,'h':g.get('Squadra Casa',''),
-                'a':g.get('Squadra Ospite',''),'campo':g.get('Campo',''),
-                'r':g.get('Risultato',''),'num':g.get('Numero Gara',''),'ruolo':field
+                'a':g.get('Squadra Ospite',''),'campo':campo_val,
+                'campo_sigla': campo_sigla,'in_sardegna': in_sardegna,
+                'r':g.get('Risultato',''),'num':g.get('Numero Gara',''),'ruolo':field,
+                'arb1':g.get('Arbitro 1',''),'arb2':g.get('Arbitro 2',''),'arb3':g.get('Arbitro 3',''),
+                'segnapunti':g.get('Segnapunti',''),'cronometrista':g.get('Cronometrista',''),
+                'ventiquattro':g.get('24 Secondi',''),'osservatore':g.get('Osservatore','')
             })
     nazionale['arbitri_fuori_sardegna'] = sorted(arb_fuori.values(), key=lambda x:-x['n_gare'])
 
@@ -794,6 +805,7 @@ if os.path.exists(NATIONAL_CACHE):
     sq_fuori = {}
     sarde_nomi_up = {s.upper(): s for s in squads.keys()}
     for g in nat_raw:
+        if g.get('Numero Gara','') in rsa_nums: continue
         if g.get('Campionato','').startswith('COMITATO REGIONALE SARDEGNA'): continue
         for role, sq_name in [('casa',g.get('Squadra Casa','')),('ospite',g.get('Squadra Ospite',''))]:
             if not sq_name: continue
