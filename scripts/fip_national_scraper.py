@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 """
-FIP National Scraper v5
-Logica corretta e verificata:
+FIP National Scraper v6
+Modulo 1 — Arbitri sardi:
   1. Estrae arbitri sardi dalla cache RSA (nome completo)
   2. Per ogni arbitro cerca su fip.it per cognome
   3. Scarta SOLO le gare con campionato "COMITATO REGIONALE SARDEGNA..."
   4. Verifica che il nome completo dell'arbitro sia nella gara
   5. Quello che rimane = gare fuori Sardegna
+
+Modulo 2 — Squadre sarde nazionali (NUOVO):
+  1. Lista hardcoded di squadre sarde che militano in campionati nazionali
+  2. Per ogni squadra cerca su fip.it per nome_squadra
+  3. Scarta le gare del Comitato Regionale Sardegna
+  4. Salva tutte le gare (casa + trasferta) con tutti gli arbitri
 """
 import requests, json, os, re, sys, time, random
 from bs4 import BeautifulSoup
@@ -16,6 +22,20 @@ BASE_URL   = "https://fip.it/risultati/"
 CACHE_FILE = "cache/fip_national_cache.json"
 RSA_CACHE  = "cache/fip_sardegna_cache.json"
 PROV_SARDE = {'CA','SS','NU','OR','SU','CI','OG','OT','VS'}
+
+# Squadre sarde che militano in campionati nazionali 2025-2026
+# Cerca per parola chiave — FIP usa ricerca parziale su nome_squadra
+SQUADRE_SARDE_NAZIONALI = [
+    # Maschili
+    {"nome": "ESPERIA",        "desc": "Esperia Cagliari — Serie B Interregionale"},
+    {"nome": "SENNORI",        "desc": "Klass Sennori — Serie B Interregionale"},
+    {"nome": "BANCO DI SARDEGNA", "desc": "Dinamo Sassari — Serie A maschile"},
+    # Femminili
+    {"nome": "DINAMO LAB",     "desc": "Dinamo Lab Sassari — Serie A1 Femminile"},
+    {"nome": "VIRTUS CAGLIARI","desc": "Virtus Cagliari — Serie A2 Femminile"},
+    {"nome": "SELARGIUS",      "desc": "San Salvatore Selargius — Serie A2 Femminile"},
+    {"nome": "SCUOLA ADD",     "desc": "Scuola Addestramento Pallacanestro — Under 17 Eccellenza"},
+]
 
 PERIODS = [
     ("2025-09-01", "2025-11-30"),
@@ -137,7 +157,8 @@ def fetch(session, params, max_retries=4):
             time.sleep(random.uniform(2, 4) * attempt)
     return None, True
 
-def _split_by_month(session, cognome, da, a):
+def _split_by_month(session, params_base, key_search, da, a):
+    """Divide la ricerca per mese quando ci sono troppi risultati."""
     result = []
     d_start = date.fromisoformat(da)
     d_end = date.fromisoformat(a)
@@ -148,12 +169,9 @@ def _split_by_month(session, cognome, da, a):
         else:
             m_end = date(cur.year, cur.month + 1, 1) - timedelta(days=1)
         m_end = min(m_end, d_end)
-        params = {
-            "search":"true","data_da":cur.isoformat(),"data_a":m_end.isoformat(),
-            "cognome_arbitro":cognome,
-            "data_singola":"","numero_gara":"","codice_societa":"",
-            "nome_squadra":"","codice_campo":"","codice_arbitro":"","comitato":""
-        }
+        params = dict(params_base)
+        params["data_da"] = cur.isoformat()
+        params["data_a"] = m_end.isoformat()
         resp, _ = fetch(session, params)
         if resp:
             rows = parse_page(resp.text)
@@ -176,11 +194,28 @@ def fetch_by_cognome(session, cognome, da, a):
     rows = parse_page(resp.text)
     if rows is None:
         print(f"  [!] {cognome} {da}->{a} troppi risultati, divido per mese...")
-        return _split_by_month(session, cognome, da, a)
+        return _split_by_month(session, params, "cognome_arbitro", da, a)
+    return rows or []
+
+def fetch_by_squadra(session, nome_squadra, da, a):
+    """Cerca tutte le gare (casa + trasferta) di una squadra."""
+    params = {
+        "search":"true","data_da":da,"data_a":a,
+        "nome_squadra":nome_squadra,
+        "cognome_arbitro":"","data_singola":"","numero_gara":"",
+        "codice_societa":"","codice_campo":"","codice_arbitro":"","comitato":""
+    }
+    resp, net_err = fetch(session, params)
+    if resp is None:
+        return []
+    rows = parse_page(resp.text)
+    if rows is None:
+        print(f"  [!] {nome_squadra} {da}->{a} troppi risultati, divido per mese...")
+        return _split_by_month(session, params, "nome_squadra", da, a)
     return rows or []
 
 def main():
-    print(f"=== FIP National Scraper v5 — {date.today()} ===")
+    print(f"=== FIP National Scraper v6 — {date.today()} ===")
 
     if not os.path.exists(RSA_CACHE):
         print(f"ERRORE: Cache RSA non trovata: {RSA_CACHE}")
@@ -211,17 +246,20 @@ def main():
             existing = json.load(f)
         print(f"Cache nazionale esistente: {len(existing)} gare")
 
-    # Chiave univoca: numero gara + campionato (evita collisioni tra comitati diversi)
+    # Chiave univoca: numero gara + campionato
     existing_keys = {(g.get('Numero Gara',''), g.get('Campionato','')) for g in existing if g.get('Numero Gara')}
 
     session = requests.Session()
     session.headers.update(random.choice(HEADERS_POOL))
 
     new_gare = []
+
+    # ─── MODULO 1: Arbitri sardi ───────────────────────────────────────────────
     arbitri_list = sorted(arbitri_sardi.keys())
     total = len(arbitri_list)
-
-    print(f"\nCerco gare fuori Sardegna per {total} arbitri sardi...")
+    print(f"\n{'='*60}")
+    print(f"MODULO 1 — Arbitri sardi fuori Sardegna ({total} arbitri)")
+    print('='*60)
 
     for i, nome_completo in enumerate(arbitri_list, 1):
         provincia = arbitri_sardi[nome_completo]
@@ -236,14 +274,11 @@ def main():
                 num = g.get('Numero Gara', '')
                 camp = g.get('Campionato', '')
                 if not num: continue
-                # Scarta gare sarde
                 if is_gara_sarda(camp): continue
-                # Verifica che il nome completo sia nella gara (filtra omonimi)
                 tutti_arbitri = " | ".join(filter(None, [
                     g.get('Arbitro 1',''), g.get('Arbitro 2',''), g.get('Arbitro 3','')
                 ]))
                 if nome_completo not in tutti_arbitri.upper(): continue
-                # Evita duplicati
                 key = (num, camp)
                 if key in existing_keys: continue
                 new_gare.append(g)
@@ -253,14 +288,60 @@ def main():
 
         print(f"{trovate_fuori} nuove gare fuori RSA")
 
+    # ─── MODULO 2: Squadre sarde nazionali ────────────────────────────────────
+    print(f"\n{'='*60}")
+    print(f"MODULO 2 — Squadre sarde nei campionati nazionali ({len(SQUADRE_SARDE_NAZIONALI)} squadre)")
+    print('='*60)
+
+    for sq in SQUADRE_SARDE_NAZIONALI:
+        nome_sq = sq['nome']
+        desc    = sq['desc']
+        print(f"\n▶ {desc} (cerca: '{nome_sq}')")
+
+        trovate_sq = 0
+        for da, a in PERIODS:
+            gare = fetch_by_squadra(session, nome_sq, da, a)
+            for g in gare:
+                num  = g.get('Numero Gara', '')
+                camp = g.get('Campionato', '')
+                if not num: continue
+                # Scarta gare RSA
+                if is_gara_sarda(camp): continue
+                # Verifica che la squadra sia effettivamente nella gara
+                sq_casa = g.get('Squadra Casa', '').upper()
+                sq_osp  = g.get('Squadra Ospite', '').upper()
+                if nome_sq.upper() not in sq_casa and nome_sq.upper() not in sq_osp:
+                    continue
+                key = (num, camp)
+                if key in existing_keys: continue
+                new_gare.append(g)
+                existing_keys.add(key)
+                trovate_sq += 1
+            time.sleep(random.uniform(0.8, 1.5))
+
+        print(f"  → {trovate_sq} nuove gare trovate")
+
+    # ─── Salvataggio ──────────────────────────────────────────────────────────
     all_gare = existing + new_gare
-    print(f"\n✅ Gare nazionali totali: {len(all_gare)} (+{len(new_gare)} nuove)")
+    print(f"\n{'='*60}")
+    print(f"✅ Gare nazionali totali: {len(all_gare)} (+{len(new_gare)} nuove)")
 
     os.makedirs("cache", exist_ok=True)
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(all_gare, f, ensure_ascii=False, indent=2)
     print(f"💾 Cache nazionale salvata: {CACHE_FILE}")
 
+    # Riepilogo per squadra sarda
+    print("\nGare per squadra sarda nella cache:")
+    keywords = ['ESPERIA','SENNORI','BANCO DI SARDEGNA','DINAMO LAB',
+                'VIRTUS CAGLIARI','SELARGIUS','SCUOLA ADD']
+    for kw in keywords:
+        count = sum(1 for g in all_gare
+                    if kw in g.get('Squadra Casa','').upper()
+                    or kw in g.get('Squadra Ospite','').upper())
+        if count: print(f"  {kw}: {count} gare")
+
+    # Riepilogo arbitri sardi
     prov_count = {}
     for g in all_gare:
         for field in ['Arbitro 1', 'Arbitro 2', 'Arbitro 3']:
@@ -268,7 +349,7 @@ def main():
             pp = parse_person(val)
             if pp and pp['provincia'] in PROV_SARDE:
                 prov_count[pp['provincia']] = prov_count.get(pp['provincia'], 0) + 1
-    print("\nGare per provincia arbitro:")
+    print("\nGare con arbitri sardi per provincia:")
     for pv, cnt in sorted(prov_count.items(), key=lambda x: -x[1]):
         print(f"  {pv}: {cnt}")
 
