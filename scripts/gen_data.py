@@ -763,7 +763,6 @@ if os.path.exists(NATIONAL_CACHE):
     # (indipendentemente da dove si gioca fisicamente)
     arb_fuori = {}
     for g in nat_raw:
-        if g.get('Numero Gara','') in rsa_nums: continue
         camp = g.get('Campionato','')
         if camp.startswith('COMITATO REGIONALE SARDEGNA'): continue
         # Verifica che ci sia almeno un arbitro sardo nella gara
@@ -795,7 +794,6 @@ if os.path.exists(NATIONAL_CACHE):
     sq_fuori = {}
     sarde_nomi_up = {s.upper(): s for s in squads.keys()}
     for g in nat_raw:
-        if g.get('Numero Gara','') in rsa_nums: continue
         if g.get('Campionato','').startswith('COMITATO REGIONALE SARDEGNA'): continue
         for role, sq_name in [('casa',g.get('Squadra Casa','')),('ospite',g.get('Squadra Ospite',''))]:
             if not sq_name: continue
