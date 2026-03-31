@@ -2623,10 +2623,21 @@ function renderTimeline(){
   var _DW=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
   var _ME=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
   var _ds=new Set();Object.keys(_pg).forEach(function(d){if((_pg[d]&&_pg[d].gare||0)>0)_ds.add(d);});Object.keys(_pf).forEach(function(d){if(_pf[d]>0)_ds.add(d);});
-  var _all=[..._ds].sort().filter(function(d){if(_tlMode==='future')return d>=_ts;if(_tlMode==='passate')return d<_ts;return true;});
+  // In modalità future includiamo anche gli ultimi 2 giorni passati per mostrare oggi in 3a posizione
+  var _allFull=[..._ds].sort();
+  var _all=_allFull.filter(function(d){
+    if(_tlMode==='future'){
+      // Prendi i 2 giorni passati più recenti + tutti i futuri
+      var pastDays=_allFull.filter(function(x){return x<_ts;});
+      var last2=pastDays.slice(-2);
+      return last2.includes(d)||d>=_ts;
+    }
+    if(_tlMode==='passate')return d<_ts;
+    return true;
+  });
   if(!_all.length){el.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessuna giornata</span>';if(footer)footer.innerHTML='';return;}
   var _ai=_all.findIndex(function(d){return d>=_ts;});if(_ai<0)_ai=_all.length-1;
-  // Oggi appare in posizione 2 (0-based) = 3a casella da sinistra
+  // Oggi in posizione 2 (3a da sinistra), i 2 passati prima
   var _ws=Math.max(0,_ai-2+_tlOffset);var _vis=_all.slice(_ws,_ws+20);
   var _mx=Math.max.apply(null,_all.map(function(d){return(_pg[d]&&_pg[d].gare||0)+(_pf[d]||0);}).concat([1]));
   var html='',_pm=-1;
@@ -3250,10 +3261,11 @@ function renderHome(){
         <div>
           <div style="font-size:.68rem;font-weight:700;color:var(--green);margin-bottom:4px">↑ In crescita</div>
           <div style="overflow-y:auto">
-          ${top5up.map(t=>{
+          ${top5up.map((t,i)=>{
             const pv=P[t.n]?.provincia||'';
             const clr=PC[pv]||'var(--green)';
             return`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #f0f4f0">
+              <span style="font-size:.62rem;color:var(--mu2);min-width:16px;text-align:right">${i+1}.</span>
               <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" data-n="${t.n}">${escH(t.n)}</span>
               ${pv?`<span style="font-size:.58rem;font-weight:700;color:#fff;background:${clr};border-radius:3px;padding:0 4px">${pv}</span>`:''}
               <span style="font-size:.68rem;color:var(--mu)">${t.c2}→${t.c1}</span>
@@ -3265,10 +3277,11 @@ function renderHome(){
         <div>
           <div style="font-size:.68rem;font-weight:700;color:var(--red);margin-bottom:4px">↓ In calo</div>
           <div style="overflow-y:auto">
-          ${top5dn.map(t=>{
+          ${top5dn.map((t,i)=>{
             const pv=P[t.n]?.provincia||'';
             const clr=PC[pv]||'var(--red)';
             return`<div style="display:flex;align-items:center;gap:5px;padding:3px 0;border-bottom:1px solid #fff0f0">
+              <span style="font-size:.62rem;color:var(--mu2);min-width:16px;text-align:right">${i+1}.</span>
               <span class="rn rn-Arbitro" style="flex:1;font-size:.7rem;cursor:pointer" data-n="${t.n}">${escH(t.n)}</span>
               ${pv?`<span style="font-size:.58rem;font-weight:700;color:#fff;background:${clr};border-radius:3px;padding:0 4px">${pv}</span>`:''}
               <span style="font-size:.68rem;color:var(--mu)">${t.c2}→${t.c1}</span>
@@ -5642,7 +5655,7 @@ function openPersona(nome,campFilter){
           const m=d.slice(0,7);
           if(m!==curMP){monthBP[i]=mesiL2[parseInt(m.slice(5))-1]+' '+m.slice(2,4);curMP=m;}
         });
-        const BW=10;const MAX_H=60;
+        const BW=10;const MAX_H=90;
         // Campionati presenti per legenda
         const campsP=[...new Set(datesWithGare.flatMap(d=>garaByDate[d].map(g=>g['Campionato']||g.c||'')))].filter(Boolean).sort((a,b)=>pCampSort(a)-pCampSort(b));
         const uid_tl='ptl_'+p.nome.replace(/\W/g,'_');
@@ -5689,8 +5702,8 @@ function openPersona(nome,campFilter){
         return '<div class="card" id="'+uid_tl+'" style="margin-top:10px;overflow:hidden">'
           +'<div style="font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Timeline stagione — altezza=importanza · colore=categoria · spazi=giorni non arbitrati</div>'
           +'<div style="overflow-x:auto">'
-            +'<div style="margin-bottom:2px;white-space:nowrap">'+monthRowP+'</div>'
-            +'<div style="white-space:nowrap;line-height:0;vertical-align:bottom">'+tlBarsP+'</div>'
+            +'<div style="white-space:nowrap;line-height:0;vertical-align:bottom;border-bottom:1px solid #d0d8ee">'+tlBarsP+'</div>'
+            +'<div style="white-space:nowrap;margin-top:1px">'+monthRowP+'</div>'
           +'</div>'
           +'<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:3px">'+legendP+'</div>'
         +'</div>';
@@ -6130,17 +6143,22 @@ function mkTrendInline(p, nome){
   allG.forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m&&g['Campionato']&&!campColPerMese[m])campColPerMese[m]=campColor(g['Campionato']);});
 
   // Mini barchart mensile
-  const barChart=`<div style="display:flex;align-items:flex-end;gap:2px;height:48px;overflow-x:auto">
+  const barChart=`<div style="display:flex;align-items:flex-end;gap:2px;height:70px;overflow-x:auto;border-bottom:2px solid #d0d8ee;padding-bottom:0">
     ${mesiSorted.map(m=>{
       const cnt=mesiCount[m]||0;
-      const barH=Math.max(2,Math.round(cnt/maxM*40));
+      const barH=Math.max(2,Math.round(cnt/maxM*56));
       const clr=campColPerMese[m]||'var(--bl)';
       const label=mesiL[parseInt(m.slice(5))]||'';
-      return`<div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:18px;flex:1" title="${label}: ${cnt}">
-        <span style="font-size:.5rem;color:var(--mu)">${cnt}</span>
-        <div style="width:100%;height:${barH}px;background:${clr};border-radius:2px 2px 0 0"></div>
-        <span style="font-size:.48rem;color:var(--mu2)">${label}</span>
+      return`<div style="display:flex;flex-direction:column;align-items:center;min-width:22px;flex:1;justify-content:flex-end;height:100%" title="${label}: ${cnt}">
+        <span style="font-size:.52rem;color:var(--mu)">${cnt}</span>
+        <div style="width:80%;height:${barH}px;background:${clr};border-radius:2px 2px 0 0"></div>
       </div>`;
+    }).join('')}
+  </div>
+  <div style="display:flex;gap:2px;margin-top:2px">
+    ${mesiSorted.map(m=>{
+      const label=mesiL[parseInt(m.slice(5))]||'';
+      return`<div style="flex:1;text-align:center;font-size:.48rem;color:var(--mu2)">${label}</div>`;
     }).join('')}
   </div>`;
 
@@ -6161,16 +6179,21 @@ function mkTrendInline(p, nome){
   </div>`;
 
   // Attività mensile (stessa cosa ma visuale)
-  const attMensile=`<div style="display:flex;align-items:flex-end;gap:3px;height:60px;overflow-x:auto;padding:2px 0">
+  const attMensile=`<div style="display:flex;align-items:flex-end;gap:3px;height:70px;overflow-x:auto;padding-bottom:0;border-bottom:2px solid #d0d8ee">
     ${mesiSorted.map(m=>{
       const cnt=mesiCount[m]||0;
-      const barH=Math.max(4,Math.round(cnt/maxM*52));
+      const barH=Math.max(4,Math.round(cnt/maxM*56));
       const label=mesiL[parseInt(m.slice(5))]||'';
-      return`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+      return`<div style="display:flex;flex-direction:column;align-items:center;flex:1;justify-content:flex-end;height:100%">
         <span style="font-size:.55rem;font-weight:700;color:var(--bl)">${cnt}</span>
-        <div style="width:100%;height:${barH}px;background:var(--bl2);border-radius:2px 2px 0 0"></div>
-        <span style="font-size:.5rem;color:var(--mu2)">${label}</span>
+        <div style="width:80%;height:${barH}px;background:var(--bl2);border-radius:2px 2px 0 0"></div>
       </div>`;
+    }).join('')}
+  </div>
+  <div style="display:flex;gap:3px;margin-top:2px">
+    ${mesiSorted.map(m=>{
+      const label=mesiL[parseInt(m.slice(5))]||'';
+      return`<div style="flex:1;text-align:center;font-size:.5rem;color:var(--mu2)">${label}</div>`;
     }).join('')}
   </div>`;
 
@@ -10258,29 +10281,29 @@ function renderGlobalStats(){
   const maxG2=Math.max(...sortedM.map(m=>PROVS.reduce((s,pv)=>s+(arbByMeseProv[m]?.[pv]?.size||0),0)),1);
 
   function mkHistogram(title,sortedMs,getVal,maxVal,showLegend){
+    const BAR_H=160; // altezza area barre
     const bars=sortedMs.map(m=>{
       const vals=PROVS.map(pv=>getVal(m,pv));
       const tot=vals.reduce((a,b)=>a+b,0);
-      // Ogni provincia ha la sua barra verticale affiancata
-      const barW=Math.max(8, Math.floor(60/PROVS.length)-1);
+      const barW=16; // larghezza fissa per ogni provincia
       const provBars=PROVS.map((pv,i)=>{
-        const v=vals[i]; if(!v) return `<div style="width:${barW}px"></div>`;
-        const h=Math.max(2,Math.round(v/maxVal*80));
-        return`<div style="display:flex;flex-direction:column;align-items:center;width:${barW}px" title="${pv}: ${v}">
-          <div style="font-size:.42rem;color:${PROV_COLORS[pv]};font-weight:700;line-height:1">${v}</div>
+        const v=vals[i]; if(!v) return `<div style="width:${barW}px;height:0;align-self:flex-end"></div>`;
+        const h=Math.max(3,Math.round(v/maxVal*BAR_H));
+        return`<div style="display:flex;flex-direction:column;align-items:center;width:${barW}px;align-self:flex-end" title="${pv}: ${v}">
+          <div style="font-size:.5rem;color:${PROV_COLORS[pv]};font-weight:700;line-height:1.2">${v}</div>
           <div style="width:${barW-2}px;height:${h}px;background:${PROV_COLORS[pv]};border-radius:2px 2px 0 0"></div>
         </div>`;
       }).join('');
       const mLabel=m.slice(5);
-      return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;min-width:50px" title="${m}: ${tot}">
-        <div style="display:flex;align-items:flex-end;gap:1px;height:90px;padding-bottom:0">${provBars}</div>
-        <div style="font-size:.58rem;color:#6b7a99;margin-top:2px;border-top:1px solid #e0e4f0;padding-top:2px;width:100%;text-align:center">${mNames[parseInt(mLabel)]||mLabel}</div>
-        <div style="font-size:.5rem;color:#9aa3b8">${tot||''}</div>
+      return`<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;min-width:${PROVS.length*barW+8}px" title="${m}: ${tot}">
+        <div style="display:flex;align-items:flex-end;gap:1px;height:${BAR_H}px;border-bottom:2px solid #d0d8ee;width:100%;justify-content:center">${provBars}</div>
+        <div style="font-size:.65rem;color:#3a4a7a;font-weight:600;margin-top:3px;text-align:center">${mNames[parseInt(mLabel)]||mLabel}</div>
+        <div style="font-size:.55rem;color:#9aa3b8">${tot||''}</div>
       </div>`;
     }).join('');
-    return`<div style="margin-bottom:16px">
-      <div style="font-size:.72rem;font-weight:700;color:var(--bl);margin-bottom:6px">${title}</div>
-      <div style="display:flex;align-items:flex-end;gap:4px;padding:4px 0;overflow-x:auto">${bars}</div>
+    return`<div style="margin-bottom:20px">
+      <div style="font-size:.72rem;font-weight:700;color:var(--bl);margin-bottom:8px">${title}</div>
+      <div style="display:flex;align-items:flex-end;gap:6px;padding:4px 0;overflow-x:auto">${bars}</div>
     </div>`;
   }
 
