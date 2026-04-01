@@ -10367,8 +10367,22 @@ function initProvvedimenti(){
   if(hdr)hdr.textContent=`⚠️ Provvedimenti Disciplinari (${PROVV.length} trovati)`;
 }
 // Parse a FIP provvedimento text into structured fields
+function cleanProvvText(t){
+  if(!t) return '';
+  // Normalizza caratteri problematici da encoding FIP
+  return t
+    .replace(/\u00ef\u00bf\u00bd/g,'"')  // UTF-8 mal decodificato → "
+    .replace(/\u00c3\u00af/g,'ï')
+    .replace(/\xef\xbf\xbd/g,'"')
+    .replace(/ï¿½/g,'"')
+    .replace(/â€œ/g,'"').replace(/â€/g,'"')
+    .replace(/â€™/g,"'").replace(/â€˜/g,"'")
+    .replace(/\u2019/g,"'").replace(/\u201c/g,'"').replace(/\u201d/g,'"');
+}
+
 function parseProvv(testo, casaGara, ospiteGara) {
   if(!testo) return [];
+  testo = cleanProvvText(testo);
   // Rimuove prefisso "soc. " iniziale globale se presente
   const testoClean = testo.replace(/^soc\.\s*/i,'');
   // Split su newline
@@ -10418,13 +10432,14 @@ function parseProvv(testo, casaGara, ospiteGara) {
         p.persona = '';
       } else {
         // Estrai persona: tutto prima del primo verbo/tipo
-        const personaM = resto.match(/^([A-ZÀÈÌÒÙÁÉÍÓÚ][^a-z]{2,40}?)\s+(?:inibiz|inibit|squalif|ammoniz|diffid|sospen|deplorazi|deploraz)/i);
+        // Gestisce anche il caso con "(nato/a il GG/MM/AAAA)" tra nome e tipo
+        const personaM = resto.match(/^([A-ZÀÈÌÒÙÁÉÍÓÚ][A-ZÀÈÌÒÙÁÉÍÓÚ\s']{2,40}?)\s*(?:\(nato[^)]*\))?\s*(?:inibiz|inibit|squalif|ammoniz|diffid|sospen|deplorazi|deploraz)/i);
         if(personaM){
           p.persona = personaM[1].trim();
           p.societa = matchSquadra(socRaw);
         } else {
           // Prova match generico NOME COGNOME (tutto maiuscolo prima del tipo)
-          const tuttoMaius = resto.match(/^([A-ZÀÈÌÒÙÁÉÍÓÚ][A-ZÀÈÌÒÙÁÉÍÓÚ\s']{2,40}?)\s+(?:inibiz|inibit|squalif|ammoniz|diffid|sospen|deplorazi|deploraz|per\s)/i);
+          const tuttoMaius = resto.match(/^([A-ZÀÈÌÒÙÁÉÍÓÚ][A-ZÀÈÌÒÙÁÉÍÓÚ\s']{2,50}?)\s*(?:\(nato\/a[^)]*\))?\s*(?:inibiz|inibit|squalif|ammoniz|diffid|sospen|deplorazi|deploraz|per\s)/i);
           if(tuttoMaius){
             p.persona = tuttoMaius[1].trim();
             p.societa = matchSquadra(socRaw);
@@ -10458,8 +10473,9 @@ function parseProvv(testo, casaGara, ospiteGara) {
     // Articolo
     const artM = r.match(/\[?art\.?\s*([\d,/\w]+)\s*(?:RG|RS|RGI|C\.G\.)?\]?/i);
     if(artM) p.articolo = artM[1];
-    // Motivo
-    const motM = r.match(/\bper\s+(.+?)(?:\s*\[art|\s*$)/i);
+    // Motivo — salta la parte (nato/a ...) e prende il vero motivo
+    const restoSenzaNato = r.replace(/\(nato\/a[^)]*\)/gi, '').replace(/\s{2,}/g,' ');
+    const motM = restoSenzaNato.match(/\bper\s+(.+?)(?:\s*\[art|\s*$)/i);
     if(motM) p.motivo = motM[1].trim().slice(0,150);
     return p;
   }).filter(p=>p.tipo);
