@@ -24,23 +24,28 @@ RSA_CACHE  = "cache/fip_sardegna_cache.json"
 PROV_SARDE = {'CA','SS','NU','OR','SU','CI','OG','OT','VS'}
 
 # Squadre sarde che militano in campionati nazionali 2025-2026
-# Cerca per parola chiave — FIP usa ricerca parziale su nome_squadra
 SQUADRE_SARDE_NAZIONALI = [
-    # Maschili
-    {"nome": "ESPERIA",        "desc": "Esperia Cagliari — Serie B Interregionale"},
-    {"nome": "SENNORI",        "desc": "Klass Sennori — Serie B Interregionale"},
-    {"nome": "BANCO DI SARDEGNA", "desc": "Dinamo Sassari — Serie A maschile"},
-    # Femminili
-    {"nome": "DINAMO LAB",     "desc": "Dinamo Lab Sassari — Serie A1 Femminile"},
-    {"nome": "VIRTUS CAGLIARI","desc": "Virtus Cagliari — Serie A2 Femminile"},
-    {"nome": "SELARGIUS",      "desc": "San Salvatore Selargius — Serie A2 Femminile"},
-    {"nome": "SCUOLA ADD",     "desc": "Scuola Addestramento Pallacanestro — Under 17 Eccellenza"},
+    {"nome": "ESPERIA",           "nome_esatto": "ESPERIA",           "desc": "Esperia Cagliari"},
+    {"nome": "SENNORI",           "nome_esatto": "SENNORI",           "desc": "Klass Sennori"},
+    {"nome": "BANCO DI SARDEGNA", "nome_esatto": "BANCO DI SARDEGNA", "desc": "Dinamo Sassari"},
+    {"nome": "DINAMO LAB",        "nome_esatto": "DINAMO LAB",        "desc": "Dinamo Lab Sassari"},
+    {"nome": "VIRTUS CAGLIARI",   "nome_esatto": "VIRTUS CAGLIARI",   "desc": "Virtus Cagliari"},
+    {"nome": "SELARGIUS",         "nome_esatto": "SELARGIUS",         "desc": "San Salvatore Selargius"},
+    {"nome": "SCUOLA ADD",        "nome_esatto": "SCUOLA ADD",        "desc": "Scuola Addestramento"},
 ]
 
 PERIODS = [
     ("2025-09-01", "2025-11-30"),
     ("2025-12-01", "2026-02-28"),
     ("2026-03-01", "2026-06-30"),
+]
+
+PERIODS_MONTHLY = [
+    ("2025-09-01", "2025-09-30"), ("2025-10-01", "2025-10-31"),
+    ("2025-11-01", "2025-11-30"), ("2025-12-01", "2025-12-31"),
+    ("2026-01-01", "2026-01-31"), ("2026-02-01", "2026-02-28"),
+    ("2026-03-01", "2026-03-31"), ("2026-04-01", "2026-04-30"),
+    ("2026-05-01", "2026-05-31"), ("2026-06-01", "2026-06-30"),
 ]
 
 HEADERS_POOL = [
@@ -141,10 +146,13 @@ def is_gara_sarda(campionato):
     """Scarta SOLO le gare del Comitato Regionale Sardegna."""
     return campionato.upper().startswith("COMITATO REGIONALE SARDEGNA")
 
-def fetch(session, params, max_retries=4):
+def fetch(session, params, max_retries=4, use_post=False):
     for attempt in range(1, max_retries+1):
         try:
-            resp = session.get(BASE_URL, params=params, timeout=15)
+            if use_post:
+                resp = session.post(BASE_URL, data=params, timeout=15)
+            else:
+                resp = session.get(BASE_URL, params=params, timeout=15)
             if resp.status_code == 200: return resp, False
             elif resp.status_code == 429:
                 t = int(resp.headers.get("Retry-After", 30))
@@ -157,7 +165,7 @@ def fetch(session, params, max_retries=4):
             time.sleep(random.uniform(2, 4) * attempt)
     return None, True
 
-def _split_by_month(session, params_base, key_search, da, a):
+def _split_by_month(session, params_base, da, a, use_post=False):
     """Divide la ricerca per mese quando ci sono troppi risultati."""
     result = []
     d_start = date.fromisoformat(da)
@@ -172,7 +180,7 @@ def _split_by_month(session, params_base, key_search, da, a):
         params = dict(params_base)
         params["data_da"] = cur.isoformat()
         params["data_a"] = m_end.isoformat()
-        resp, _ = fetch(session, params)
+        resp, _ = fetch(session, params, use_post=use_post)
         if resp:
             rows = parse_page(resp.text)
             if rows:
@@ -188,30 +196,30 @@ def fetch_by_cognome(session, cognome, da, a):
         "data_singola":"","numero_gara":"","codice_societa":"",
         "nome_squadra":"","codice_campo":"","codice_arbitro":"","comitato":""
     }
-    resp, net_err = fetch(session, params)
+    resp, net_err = fetch(session, params, use_post=False)
     if resp is None:
         return []
     rows = parse_page(resp.text)
     if rows is None:
         print(f"  [!] {cognome} {da}->{a} troppi risultati, divido per mese...")
-        return _split_by_month(session, params, "cognome_arbitro", da, a)
+        return _split_by_month(session, params, da, a, use_post=False)
     return rows or []
 
 def fetch_by_squadra(session, nome_squadra, da, a):
-    """Cerca tutte le gare (casa + trasferta) di una squadra."""
+    """Cerca tutte le gare di una squadra via GET mese per mese."""
     params = {
         "search":"true","data_da":da,"data_a":a,
         "nome_squadra":nome_squadra,
         "cognome_arbitro":"","data_singola":"","numero_gara":"",
         "codice_societa":"","codice_campo":"","codice_arbitro":"","comitato":""
     }
-    resp, net_err = fetch(session, params)
+    resp, net_err = fetch(session, params, use_post=False)
     if resp is None:
         return []
     rows = parse_page(resp.text)
     if rows is None:
         print(f"  [!] {nome_squadra} {da}->{a} troppi risultati, divido per mese...")
-        return _split_by_month(session, params, "nome_squadra", da, a)
+        return _split_by_month(session, params, da, a, use_post=False)
     return rows or []
 
 def main():
@@ -299,7 +307,8 @@ def main():
         print(f"\n▶ {desc} (cerca: '{nome_sq}')")
 
         trovate_sq = 0
-        for da, a in PERIODS:
+        nome_esatto = sq.get('nome_esatto', nome_sq).upper()
+        for da, a in PERIODS_MONTHLY:
             gare = fetch_by_squadra(session, nome_sq, da, a)
             for g in gare:
                 num  = g.get('Numero Gara', '')
@@ -307,10 +316,10 @@ def main():
                 if not num: continue
                 # Scarta gare RSA
                 if is_gara_sarda(camp): continue
-                # Verifica che la squadra sia effettivamente nella gara
+                # Verifica nome esatto nella gara (filtra omonimi peninsulari)
                 sq_casa = g.get('Squadra Casa', '').upper()
                 sq_osp  = g.get('Squadra Ospite', '').upper()
-                if nome_sq.upper() not in sq_casa and nome_sq.upper() not in sq_osp:
+                if nome_esatto not in sq_casa and nome_esatto not in sq_osp:
                     continue
                 key = (num, camp)
                 if key in existing_keys: continue
