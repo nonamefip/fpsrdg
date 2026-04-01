@@ -865,3 +865,146 @@ print(f"\n✅ data_v5_new.json: {size//1024} KB ({size/1024/1024:.1f} MB)")
 print(f"   Persons:{len(pers_out)} | Squads:{len(sq_out)} | H2H:{len(h2h_out)} | Campi:{len(campi_out)}")
 print(f"   Province:{sorted(all_province)} | Campionati:{len(all_camp_names)}")
 print(f"   Gare:{len(RAW_ALL)} | Provvedimenti:{len(provvedimenti_list)}")
+
+# ══════════════════════════════════════════════════════════════
+# SQUADRE NAZIONALI SARDE (da fip_sardegna_full_cache.json)
+# ══════════════════════════════════════════════════════════════
+FULL_CACHE = 'cache/fip_sardegna_full_cache.json'
+
+SQUADRE_NAZ_SARDE = [
+    {'keyword': 'BANCO DI SARDEGNA SASSARI', 'nome_display': 'Dinamo Banco di Sardegna',        'campionato_filter': 'SERIE A M'},
+    {'keyword': 'BANCO DI SARDEGNA SASSARI', 'nome_display': 'Dinamo Lab Sassari',               'campionato_filter': 'A1 FEMMINILE'},
+    {'keyword': 'ESPERIA',                   'nome_display': 'Esperia Cagliari',                  'campionato_filter': 'SERIE B INTERREGIONALE'},
+    {'keyword': 'KLASS SENNORI',             'nome_display': 'Klass Sennori',                     'campionato_filter': 'SERIE B INTERREGIONALE'},
+    {'keyword': 'SARDEGNA MARMI',            'nome_display': 'Sardegna Marmi Virtus Cagliari',    'campionato_filter': 'A2 FEMMINILE'},
+    {'keyword': 'NUOVA ICOM',                'nome_display': 'Nuova Icom San Salvatore Selargius','campionato_filter': 'A2 FEMMINILE'},
+    {'keyword': 'CUS CAGLIARI',              'nome_display': 'CUS Cagliari',                      'campionato_filter': 'A2 FEMMINILE'},
+    {'keyword': 'SCUOLA ADD',                'nome_display': 'SAP Alghero',                       'campionato_filter': 'UNDER 17'},
+]
+
+squadre_nazionali_out = []
+
+if os.path.exists(FULL_CACHE):
+    with open(FULL_CACHE, encoding='utf-8') as f:
+        full_raw = json.load(f)
+    print(f"Full cache: {len(full_raw)} gare totali")
+
+    for sq_def in SQUADRE_NAZ_SARDE:
+        kw      = sq_def['keyword'].upper()
+        cf      = sq_def['campionato_filter'].upper()
+        display = sq_def['nome_display']
+
+        gare_sq = [
+            g for g in full_raw
+            if (kw in (g.get('Squadra Casa') or '').upper() or kw in (g.get('Squadra Ospite') or '').upper())
+            and cf in (g.get('Campionato') or '').upper()
+            and not (g.get('Campionato') or '').upper().startswith('COMITATO REGIONALE SARDEGNA')
+        ]
+
+        if not gare_sq:
+            continue
+
+        camp_count = Counter(g.get('Campionato','') for g in gare_sq)
+        campionato_reale = camp_count.most_common(1)[0][0]
+        gironi = set(g.get('Girone','') for g in gare_sq if g.get('Girone',''))
+        girone = ', '.join(sorted(gironi)) if gironi else ''
+
+        v = p_sq = pf = ps = 0
+        for g in gare_sq:
+            if not g.get('Risultato'): continue
+            try:
+                pc, po = int(g['Punti Casa']), int(g['Punti Ospite'])
+                is_casa = kw in (g.get('Squadra Casa') or '').upper()
+                mio = pc if is_casa else po
+                avv_pt = po if is_casa else pc
+                pf += mio; ps += avv_pt
+                if mio > avv_pt:   v += 1; p_sq += 2
+                elif mio == avv_pt: p_sq += 1
+            except: pass
+
+        tot_giocate = sum(1 for g in gare_sq if g.get('Risultato'))
+        p_giocate = tot_giocate - v
+
+        calendario = []
+        for g in sorted(gare_sq, key=lambda x: x.get('Data','')):
+            is_casa = kw in (g.get('Squadra Casa') or '').upper()
+            avversario = g.get('Squadra Ospite','') if is_casa else g.get('Squadra Casa','')
+            risultato = g.get('Risultato','')
+            esito = ''
+            if risultato:
+                try:
+                    pc, po = int(g['Punti Casa']), int(g['Punti Ospite'])
+                    mio = pc if is_casa else po
+                    avv_pt = po if is_casa else pc
+                    if mio > avv_pt:   esito = 'V'
+                    elif mio < avv_pt: esito = 'P'
+                    else:              esito = 'N'
+                except: pass
+            calendario.append({
+                'd': g.get('Data',''), 'ora': g.get('Ora',''), 'num': g.get('Numero Gara',''),
+                'casa': g.get('Squadra Casa',''), 'ospite': g.get('Squadra Ospite',''),
+                'avversario': avversario, 'ruolo': 'casa' if is_casa else 'ospite',
+                'ris': risultato, 'pc': g.get('Punti Casa',''), 'po': g.get('Punti Ospite',''),
+                'esito': esito, 'campo': g.get('Campo',''), 'fase': g.get('Fase',''),
+                'arb1': g.get('Arbitro 1',''), 'arb2': g.get('Arbitro 2',''), 'arb3': g.get('Arbitro 3',''),
+                'segnapunti': g.get('Segnapunti',''), 'cronometrista': g.get('Cronometrista',''),
+                'osservatore': g.get('Osservatore',''), 'provvedimenti': g.get('Provvedimenti',''),
+            })
+
+        avversari = Counter()
+        avv_vinte = Counter()
+        avv_perse = Counter()
+        for g in gare_sq:
+            is_casa = kw in (g.get('Squadra Casa') or '').upper()
+            avv = g.get('Squadra Ospite','') if is_casa else g.get('Squadra Casa','')
+            avversari[avv] += 1
+            if g.get('Risultato'):
+                try:
+                    pc, po = int(g['Punti Casa']), int(g['Punti Ospite'])
+                    mio = pc if is_casa else po
+                    avv_pt = po if is_casa else pc
+                    if mio > avv_pt:   avv_vinte[avv] += 1
+                    elif mio < avv_pt: avv_perse[avv] += 1
+                except: pass
+
+        arb_stats = defaultdict(lambda: {'gare':0,'vinte':0,'perse':0,'pareggi':0})
+        for g in gare_sq:
+            if not g.get('Risultato'): continue
+            is_casa = kw in (g.get('Squadra Casa') or '').upper()
+            try:
+                pc, po = int(g['Punti Casa']), int(g['Punti Ospite'])
+                mio = pc if is_casa else po
+                avv_pt = po if is_casa else pc
+                for f2 in ['Arbitro 1','Arbitro 2']:
+                    arb = parse_person(g.get(f2,''))
+                    if not arb: continue
+                    an = arb['nome']
+                    arb_stats[an]['gare'] += 1
+                    if mio > avv_pt:    arb_stats[an]['vinte'] += 1
+                    elif mio < avv_pt:  arb_stats[an]['perse'] += 1
+                    else:               arb_stats[an]['pareggi'] += 1
+            except: pass
+
+        squadre_nazionali_out.append({
+            'nome': display, 'keyword': kw, 'campionato': campionato_reale, 'girone': girone,
+            'n_gare': len(gare_sq), 'giocate': tot_giocate, 'vinte': v, 'perse': p_giocate,
+            'punti': p_sq, 'pf': pf, 'ps': ps, 'diff': pf - ps,
+            'calendario': calendario,
+            'avversari': [[k, avversari[k], avv_vinte.get(k,0), avv_perse.get(k,0)] for k in sorted(avversari, key=lambda x:-avversari[x])],
+            'arbitri': sorted([{'nome':k,'gare':v2['gare'],'vinte':v2['vinte'],'perse':v2['perse'],'pareggi':v2['pareggi']} for k,v2 in arb_stats.items()], key=lambda x:-x['gare']),
+        })
+
+    print(f"Squadre nazionali sarde elaborate: {len(squadre_nazionali_out)}")
+    for sq in squadre_nazionali_out:
+        print(f"  {sq['nome']}: {sq['n_gare']} gare | {sq['vinte']}V {sq['perse']}P | {sq['punti']}pt | {sq['pf']}-{sq['ps']}")
+else:
+    print("Full cache non trovata — sezione squadre nazionali vuota")
+
+nazionale['squadre_nazionali_sarde'] = squadre_nazionali_out
+
+# Aggiorna D con i nuovi dati nazionali
+D['nazionale'] = nazionale
+
+with open('cache/data_v5_new.json','w',encoding='utf-8') as f2:
+    json.dump(D,f2,ensure_ascii=False,separators=(',',':'))
+print("✅ data_v5_new.json aggiornato con squadre nazionali sarde")
