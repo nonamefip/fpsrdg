@@ -12643,78 +12643,149 @@ function renderNazSquadre(squadre){
 function renderNazSqNaz(){
   const el=document.getElementById('naz-panel-sqnaz');
   if(!el)return;
-  const sqSardeNomi=new Set(Object.keys(SQ));
-  const PROV_S_RE=/\((CA|SS|NU|OR|SU|CI|OG|OT|VS)\)\s*$/;
-  if(!window._nazGareCache) window._nazGareCache={};
+  if(!window._nazSqCache) window._nazSqCache={};
 
-  // Raccoglie gare da arbitri fuori (hanno dati completi con arb1/arb2/campo)
-  const garaSet=new Set();
-  const sqNaz={};
-
-  (D.nazionale?.arbitri_fuori_sardegna||[]).forEach(a=>{
-    (a.gare||[]).forEach(g=>{
-      const key=(g.num||'')+'|'+(g.c||'');
-      if(garaSet.has(key))return; garaSet.add(key);
-      const camp=g.c||'';
-      if(camp.includes('SARDEGNA'))return;
-      [['casa',g.h||''],['ospite',g.a||'']].forEach(([ruolo,sq])=>{
-        if(!sq)return;
-        const sqUp=sq.trim().toUpperCase();
-        const matched=[...sqSardeNomi].find(s=>s.trim().toUpperCase()===sqUp);
-        if(!matched)return;
-        if(!sqNaz[matched]){sqNaz[matched]={nome:matched,gare:[],campionati:{},v:0,p:0,n:0};}
-        const ris=g.r||'';
-        if(ris){
-          const pts=ris.split('-').map(x=>parseInt(x)||0);
-          if(pts.length===2){
-            const [pc,po]=ruolo==='casa'?pts:[pts[1],pts[0]];
-            if(pc>po)sqNaz[matched].v++; else if(po>pc)sqNaz[matched].p++; else sqNaz[matched].n++;
-          }
-        }
-        sqNaz[matched].campionati[camp]=(sqNaz[matched].campionati[camp]||0)+1;
-        sqNaz[matched].gare.push({d:g.d,c:camp,h:g.h,a:g.a,r:ris,campo:g.campo||'',num:g.num,arb1:g.arb1||'',arb2:g.arb2||'',ruolo});
-      });
-    });
-  });
-
-  const sqList=Object.values(sqNaz).sort((a,b)=>b.gare.length-a.gare.length);
+  const sqList=(D.nazionale?.squadre_nazionali_sarde||[]);
   if(!sqList.length){
     el.innerHTML=`<div style="padding:30px;color:var(--mu);text-align:center">
       <div style="font-size:2rem;margin-bottom:8px">🏀</div>
       <b>Nessuna squadra sarda trovata nei campionati nazionali.</b><br>
-      <span style="font-size:.78rem">Le squadre compaiono qui quando partecipano a campionati interregionali (es. Serie B Interregionale con KLASS SENNORI).</span>
+      <span style="font-size:.78rem">Lancia il workflow in modalità "normal" per aggiornare i dati.</span>
     </div>`;
     return;
   }
 
-  let html=`<div style="margin-bottom:12px;font-size:.8rem;color:var(--mu)"><b>${sqList.length} squadre sarde</b> trovate in campionati nazionali/interregionali</div>`;
-  html+=`<div style="overflow-x:auto"><table class="rtbl" id="tbl-naz-sqnaz">
-    <thead><tr>
-      <th>#</th><th>Squadra</th><th>Gare</th>
-      <th style="color:var(--green)">V</th><th style="color:var(--red)">P</th>
-      <th>W%</th><th>Campionati</th><th>Dettaglio</th>
-    </tr></thead><tbody>
-    ${sqList.map((sq,i)=>{
-      const tot=sq.gare.length;
-      const wp=tot?Math.round(sq.v/tot*100):0;
-      const rowId='naz-sqnaz-'+i;
-      window._nazGareCache[rowId]=sq.gare;
-      const camps=[...new Set(sq.gare.map(g=>g.c||''))].map(c=>c.replace('COMITATO REGIONALE ','').replace('COMITATO NAZIONALE ','')).filter(Boolean).join(', ');
-      return `<tr>
-        <td style="text-align:center">${i+1}</td>
-        <td style="font-weight:700;cursor:pointer;color:var(--bl2)" onclick="openSquadra('${esc(sq.nome)}')">${escH(sq.nome)}</td>
-        <td style="text-align:center;font-weight:800;color:var(--bl);font-size:1.05rem">${tot}</td>
-        <td style="text-align:center;font-weight:700;color:var(--green)">${sq.v}</td>
-        <td style="text-align:center;color:var(--red)">${sq.p}</td>
+  // Raggruppa per campionato
+  const perCamp={};
+  sqList.forEach(sq=>{
+    const c=sq.campionato||'?';
+    if(!perCamp[c]) perCamp[c]=[];
+    perCamp[c].push(sq);
+  });
+
+  let html='';
+  Object.entries(perCamp).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([camp,squadre])=>{
+    const campShort=camp.replace('Nazionale ','').replace('COMITATO REGIONALE LAZIO ','').replace('COMITATO REGIONALE UMBRIA ','');
+    html+=`<div style="margin:18px 0 8px;font-size:.85rem;font-weight:800;color:var(--bl2);border-bottom:2px solid var(--bl2);padding-bottom:4px">📋 ${escH(campShort)}</div>`;
+    html+=`<div style="overflow-x:auto"><table class="rtbl" style="margin-bottom:16px">
+      <thead><tr>
+        <th>Squadra</th><th>G</th>
+        <th style="color:var(--green)">V</th><th style="color:var(--red)">P</th>
+        <th>Pt</th><th>PF</th><th>PS</th><th>Diff</th><th>W%</th><th></th>
+      </tr></thead><tbody>`;
+
+    squadre.sort((a,b)=>b.punti-a.punti||b.diff-a.diff).forEach((sq,i)=>{
+      const wp=sq.giocate?Math.round(sq.vinte/sq.giocate*100):0;
+      const rowId='sqnaz-'+sq.nome.replace(/\s/g,'_')+'-'+i;
+      window._nazSqCache[rowId]=sq;
+      html+=`<tr style="cursor:pointer" onclick="toggleSqNazDetail('${rowId}')">
+        <td style="font-weight:700;color:var(--bl2)">${escH(sq.nome)}${sq.girone?` <span style="font-size:.65rem;color:var(--mu)">(${escH(sq.girone)})</span>`:''}</td>
+        <td style="text-align:center">${sq.n_gare}</td>
+        <td style="text-align:center;font-weight:700;color:var(--green)">${sq.vinte}</td>
+        <td style="text-align:center;color:var(--red)">${sq.perse}</td>
+        <td style="text-align:center;font-weight:800;color:var(--bl);font-size:1.05rem">${sq.punti}</td>
+        <td style="text-align:center">${sq.pf}</td>
+        <td style="text-align:center">${sq.ps}</td>
+        <td style="text-align:center;font-weight:700;color:${sq.diff>=0?'var(--green)':'var(--red)'}">${sq.diff>=0?'+':''}${sq.diff}</td>
         <td style="text-align:center;font-weight:700;color:${wp>=50?'var(--green)':'var(--red)'}">${wp}%</td>
-        <td style="font-size:.68rem;color:#555">${escH(camps)}</td>
-        <td style="text-align:center"><button style="font-size:.7rem;padding:2px 8px;background:var(--bl);color:#fff;border:none;border-radius:4px;cursor:pointer" onclick="toggleNazDetail('${rowId}')">▼ Gare</button></td>
+        <td style="text-align:center;font-size:.7rem;color:var(--bl)">▼</td>
       </tr>
-      <tr id="${rowId}-detail" style="display:none;background:#fafafa"><td colspan="8" style="padding:8px 14px"></td></tr>`;
-    }).join('')}
-    </tbody></table></div>`;
+      <tr id="${rowId}-detail" style="display:none;background:#f8faff"><td colspan="10" style="padding:0"></td></tr>`;
+    });
+    html+=`</tbody></table></div>`;
+  });
+
   el.innerHTML=html;
-  setTimeout(()=>makeTableSortable(document.getElementById('tbl-naz-sqnaz')),30);
+}
+
+function toggleSqNazDetail(rowId){
+  const det=document.getElementById(rowId+'-detail');
+  if(!det)return;
+  if(det.style.display!=='none'){det.style.display='none'; return;}
+  det.style.display='';
+  const sq=window._nazSqCache[rowId];
+  if(!sq){det.cells[0].innerHTML='<i>Dati non disponibili</i>'; return;}
+
+  // Tabs: Calendario | Avversari | Arbitri
+  const tabs=['cal','avv','arb'];
+  const tabLabels=['📅 Calendario','⚔️ Avversari','🏁 Arbitri'];
+  let h=`<div style="padding:10px 14px">`;
+  h+=`<div style="display:flex;gap:6px;margin-bottom:10px">`;
+  tabs.forEach((t,i)=>{
+    h+=`<button id="sqnaz-tab-${rowId}-${t}" style="padding:4px 10px;font-size:.72rem;border:1px solid var(--bl);border-radius:4px;cursor:pointer;background:${i===0?'var(--bl)':'#fff'};color:${i===0?'#fff':'var(--bl)'}" onclick="sqNazTab('${rowId}','${t}')">${tabLabels[i]}</button>`;
+  });
+  h+=`</div>`;
+
+  // Calendario
+  h+=`<div id="sqnaz-panel-${rowId}-cal">`;
+  h+=`<div style="overflow-x:auto"><table class="rtbl" style="font-size:.72rem">
+    <thead><tr><th>Data</th><th>Ruolo</th><th>Avversario</th><th>Ris.</th><th>Esito</th><th>Arbitro 1</th><th>Arbitro 2</th><th>Campo</th></tr></thead><tbody>`;
+  (sq.calendario||[]).forEach(g=>{
+    const esitoCls=g.esito==='V'?'color:var(--green);font-weight:700':g.esito==='P'?'color:var(--red)':'color:var(--mu)';
+    const ruoloBadge=g.ruolo==='casa'?`<span style="background:#e3f2fd;color:#1565c0;padding:1px 5px;border-radius:3px;font-size:.65rem">CASA</span>`:`<span style="background:#fce4ec;color:#c62828;padding:1px 5px;border-radius:3px;font-size:.65rem">TRASF.</span>`;
+    const arb1p=parseArbProv(g.arb1||'');
+    const arb2p=parseArbProv(g.arb2||'');
+    const arb1sardo=arb1p&&['CA','SS','NU','OR','SU','CI','OG','OT','VS'].includes(arb1p.prov);
+    const arb2sardo=arb2p&&['CA','SS','NU','OR','SU','CI','OG','OT','VS'].includes(arb2p.prov);
+    h+=`<tr>
+      <td style="white-space:nowrap">${g.d||''}</td>
+      <td>${ruoloBadge}</td>
+      <td style="font-weight:600">${escH(g.avversario||'')}</td>
+      <td style="text-align:center;font-weight:700">${g.ris||'—'}</td>
+      <td style="text-align:center;${esitoCls}">${g.esito||'—'}</td>
+      <td style="${arb1sardo?'color:var(--bl2);font-weight:600':''}">${escH(arb1p?arb1p.nome:'')}<span style="font-size:.6rem;color:var(--mu)">${arb1p?` (${arb1p.prov})`:''}</span></td>
+      <td style="${arb2sardo?'color:var(--bl2);font-weight:600':''}">${escH(arb2p?arb2p.nome:'')}<span style="font-size:.6rem;color:var(--mu)">${arb2p?` (${arb2p.prov})`:''}</span></td>
+      <td style="font-size:.65rem;color:var(--mu)">${escH((g.campo||'').split(',')[0]||'')}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table></div></div>`;
+
+  // Avversari
+  h+=`<div id="sqnaz-panel-${rowId}-avv" style="display:none">`;
+  h+=`<div style="overflow-x:auto"><table class="rtbl" style="font-size:.72rem">
+    <thead><tr><th>#</th><th>Avversario</th><th>Gare</th><th style="color:var(--green)">V</th><th style="color:var(--red)">P</th><th>W%</th></tr></thead><tbody>`;
+  (sq.avversari||[]).forEach(([avv,tot,v,p],i)=>{
+    const wp=tot?Math.round(v/tot*100):0;
+    h+=`<tr><td style="text-align:center">${i+1}</td><td style="font-weight:600">${escH(avv)}</td>
+      <td style="text-align:center">${tot}</td>
+      <td style="text-align:center;font-weight:700;color:var(--green)">${v}</td>
+      <td style="text-align:center;color:var(--red)">${p}</td>
+      <td style="text-align:center;font-weight:700;color:${wp>=50?'var(--green)':'var(--red)'}">${wp}%</td></tr>`;
+  });
+  h+=`</tbody></table></div></div>`;
+
+  // Arbitri
+  h+=`<div id="sqnaz-panel-${rowId}-arb" style="display:none">`;
+  h+=`<div style="overflow-x:auto"><table class="rtbl" style="font-size:.72rem">
+    <thead><tr><th>#</th><th>Arbitro</th><th>Gare</th><th style="color:var(--green)">V</th><th style="color:var(--red)">P</th><th>W%</th></tr></thead><tbody>`;
+  (sq.arbitri||[]).forEach((arb,i)=>{
+    const wp=arb.gare?Math.round(arb.vinte/arb.gare*100):0;
+    h+=`<tr><td style="text-align:center">${i+1}</td><td style="font-weight:600">${escH(arb.nome)}</td>
+      <td style="text-align:center">${arb.gare}</td>
+      <td style="text-align:center;font-weight:700;color:var(--green)">${arb.vinte}</td>
+      <td style="text-align:center;color:var(--red)">${arb.perse}</td>
+      <td style="text-align:center;font-weight:700;color:${wp>=50?'var(--green)':'var(--red)'}">${wp}%</td></tr>`;
+  });
+  h+=`</tbody></table></div></div>`;
+
+  h+=`</div>`;
+  det.cells[0].innerHTML=h;
+}
+
+function sqNazTab(rowId,tab){
+  ['cal','avv','arb'].forEach(t=>{
+    const panel=document.getElementById('sqnaz-panel-'+rowId+'-'+t);
+    const btn=document.getElementById('sqnaz-tab-'+rowId+'-'+t);
+    if(panel) panel.style.display=t===tab?'':'none';
+    if(btn){btn.style.background=t===tab?'var(--bl)':'#fff';btn.style.color=t===tab?'#fff':'var(--bl)';}
+  });
+}
+
+function parseArbProv(s){
+  if(!s)return null;
+  const m=s.match(/^(.+?)\s+di\s+.+?\s*\(([A-Z]{2,3})\)\s*$/);
+  if(!m)return null;
+  return {nome:m[1].trim(),prov:m[2].trim()};
 }
 
 // ── ARBITRI ESTERNI IN SARDEGNA ──────────────────────────────────────
