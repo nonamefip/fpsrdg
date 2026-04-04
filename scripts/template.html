@@ -6386,6 +6386,7 @@ function openPersona(nome,campFilter){
           const col=campColor(c)||'#90a4ae';
           const lbl=c.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim();
           return '<span class="ptl-leg-item" data-c="'+escH(c)+'" data-uid="'+uid_tl+'" onclick="_ptlToggle(this,this.dataset.uid)" style="cursor:pointer;display:inline-block;margin:2px;padding:2px 8px;border-radius:10px;border:2px solid '+col+';background:'+col+';color:#fff;font-size:.62rem;font-weight:600">'+escH(lbl)+'</span>';
+        }).join('');
         return '<div class="card" id="'+uid_tl+'" style="margin-top:10px;overflow:hidden">'
           +'<div style="font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Timeline stagione — altezza=importanza · colore=categoria · arancio=sab/dom</div>'
           +'<div style="overflow-x:auto">'
