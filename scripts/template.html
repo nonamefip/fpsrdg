@@ -6386,12 +6386,12 @@ function openPersona(nome,campFilter){
           const col=campColor(c)||'#90a4ae';
           const lbl=c.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim();
           return '<span class="ptl-leg-item" data-c="'+escH(c)+'" data-uid="'+uid_tl+'" onclick="_ptlToggle(this,this.dataset.uid)" style="cursor:pointer;display:inline-block;margin:2px;padding:2px 8px;border-radius:10px;border:2px solid '+col+';background:'+col+';color:#fff;font-size:.62rem;font-weight:600">'+escH(lbl)+'</span>';
-        }).join('');
         return '<div class="card" id="'+uid_tl+'" style="margin-top:10px;overflow:hidden">'
-          +'<div style="font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Timeline stagione — altezza=importanza · colore=categoria · spazi=giorni senza gare · barre affiancate se più gare nello stesso giorno</div>'
+          +'<div style="font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Timeline stagione — altezza=importanza · colore=categoria · arancio=sab/dom</div>'
           +'<div style="overflow-x:auto">'
-            +'<div style="white-space:nowrap;line-height:0;vertical-align:bottom;border-bottom:1px solid #d0d8ee">'+tlBarsP+'</div>'
-            +'<div style="white-space:nowrap;margin-top:1px">'+monthRowP+'</div>'
+            +'<div style="white-space:nowrap;line-height:0;vertical-align:bottom;border-bottom:2px solid #b5d4f4">'+tlBarsP+'</div>'
+            +'<div style="white-space:nowrap;margin-top:2px">'+dayRowP+'</div>'
+            +'<div style="white-space:nowrap;margin-top:0">'+monthRowP+'</div>'
           +'</div>'
           +'<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:3px">'+legendP+'</div>'
         +'</div>';
@@ -6531,15 +6531,14 @@ function openPersona(nome,campFilter){
           </div>`;
         }).join('');
 
-        // ── VERSIONE B: Strip mensile migliorata — giorni leggibili con separatori ──
+        // ── VERSIONE B: Strip mensile migliorata — celle che riempiono tutta la larghezza ──
         const calB=(()=>{
           const todayDs=(typeof D!=='undefined'&&D.generated)?D.generated.slice(0,10):new Date().toISOString().split('T')[0];
-          // Celle flessibili: riempiono tutta la larghezza disponibile
-          const dayW=Math.max(22,Math.floor((window.innerWidth||1200)*0.88/32));
-          const dayH=Math.max(30,dayW+6);
-          // Header numeri 1-31
-          const hdr='<div style="display:flex;gap:1px;margin-bottom:2px;padding-left:44px">'
-            +Array.from({length:31},(_,i)=>`<div style="flex:1;min-width:${dayW}px;font-size:.55rem;color:var(--mu2);text-align:center">${i+1}</div>`).join('')
+          // NON usiamo window.innerWidth — usiamo CSS flex puro per riempire il contenitore
+          const dayH=28;
+          // Header numeri 1-31 — flex puro senza larghezza fissa
+          const hdr='<div style="display:flex;gap:0;margin-bottom:2px;padding-left:44px;width:100%">'
+            +Array.from({length:31},(_,i)=>`<div style="flex:1;font-size:.52rem;color:var(--mu2);text-align:center;min-width:0">${i+1}</div>`).join('')
             +'</div>';
           const rows=mesi.map(m=>{
             const giorni=mesiGiorniMap[m];
@@ -6549,7 +6548,7 @@ function openPersona(nome,campFilter){
             let tot=0;
             const cells=Array.from({length:31},(_,i)=>{
               const d=i+1;
-              if(d>dInM) return`<div style="flex:1;min-width:${dayW}px;height:${dayH}px;"></div>`;
+              if(d>dInM) return`<div style="flex:1;height:${dayH}px;min-width:0"></div>`;
               const ds=`${m}-${d<10?'0':''}${d}`;
               const cnt=giorni[ds]||0;
               const dow=new Date(ds+'T12:00').getDay();
@@ -6562,9 +6561,9 @@ function openPersona(nome,campFilter){
               const weSep=isDom?'border-left:2px solid #f1c40f;opacity:1;':isSab?'border-left:1.5px solid #b5d4f4;':'';
               tot+=cnt;
               return`<div data-cal-ds="${ds}" title="${ds}${isToday?' — OGGI':''}: ${cnt} gar${cnt===1?'a':'e'}" 
-                style="flex:1;min-width:${dayW}px;height:${dayH}px;border-radius:3px;background:${bg};${weSep}${outline}
+                style="flex:1;min-width:0;height:${dayH}px;border-radius:2px;background:${bg};${weSep}${outline}
                   display:flex;align-items:center;justify-content:center;flex-direction:column;
-                  cursor:${cnt>0||isToday?'pointer':'default'};font-size:clamp(.45rem,.8vw,.6rem);font-weight:700;color:${clr};
+                  cursor:${cnt>0||isToday?'pointer':'default'};font-size:.6rem;font-weight:700;color:${clr};
                   transition:transform .1s" 
                 onclick="calDayClick('${ds}',${cnt})"
                 onmouseover="this.style.transform='scale(1.08)'"
@@ -6574,9 +6573,9 @@ function openPersona(nome,campFilter){
               </div>`;
             }).join('');
             return`<div style="display:flex;align-items:center;gap:1px;padding:1px 0;border-bottom:1px solid var(--br)">
-              <div style="width:42px;font-size:.67rem;font-weight:600;color:var(--mu);flex-shrink:0;padding-right:2px;text-align:right">${label}</div>
-              <div style="display:flex;gap:1px">${cells}</div>
-              <div style="font-size:.62rem;font-weight:700;color:var(--bl);margin-left:6px;min-width:24px">${tot||''}</div>
+              <div style="width:38px;font-size:.65rem;font-weight:600;color:var(--mu);flex-shrink:0;padding-right:2px;text-align:right">${label}</div>
+              <div style="display:flex;gap:0;flex:1;min-width:0">${cells}</div>
+              <div style="font-size:.62rem;font-weight:700;color:var(--bl);margin-left:4px;flex-shrink:0;width:22px;text-align:right">${tot||''}</div>
             </div>`;
           }).join('');
           return`<div style="overflow:hidden;font-size:.62rem;width:100%;box-sizing:border-box">${hdr}${rows}</div>`;
