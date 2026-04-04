@@ -910,6 +910,27 @@ tr.loss-row td{background:#fdecea!important;}
   </div>
 
 
+  <!-- ROW 4e: Arbitri meno attivi -->
+  <div class="db-card" style="margin-bottom:12px">
+    <div class="db-card-hd" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      🐢 Arbitri meno attivi
+      <select id="fermi-pv" onchange="renderArbiFermi()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
+        <option value="">Tutte le province</option>
+        <option value="CA">CA</option><option value="SS">SS</option><option value="SU">SU</option>
+        <option value="NU">NU</option><option value="OR">OR</option>
+      </select>
+      <select id="fermi-m1" onchange="renderArbiFermi()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
+        <option value="">Dal (mese)...</option>
+      </select>
+      <select id="fermi-m2" onchange="renderArbiFermi()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
+        <option value="">Al (mese)...</option>
+      </select>
+      <button onclick="document.getElementById('fermi-pv').value='';document.getElementById('fermi-m1').value='';document.getElementById('fermi-m2').value='';renderArbiFermi()" style="font-size:.68rem;padding:2px 8px;border:1px solid var(--br);border-radius:6px;background:none;cursor:pointer;color:var(--mu)">↺</button>
+      <span style="font-size:.65rem;color:var(--mu);margin-left:auto">arbitri con 0 o poche gare nel periodo</span>
+    </div>
+    <div id="fermi-body" style="margin-top:8px"></div>
+  </div>
+
   <!-- ROW 4b: Province complete -->
   <div class="db-card" style="margin-bottom:12px">
     <div class="db-card-hd">📍 Province — Statistiche complete</div>
@@ -3198,9 +3219,13 @@ function renderTopMeseCol(col){
       const ct={};gare.forEach(g=>{['Squadra Casa','Squadra Ospite'].forEach(f=>{const s=g[f]||'';if(!s)return;if(fPv&&SQ[s]?.prov!==fPv)return;ct[s]=(ct[s]||0)+1;});});
       entries=Object.entries(ct).sort((a,b)=>b[1]-a[1]);
     }
-    if(!entries.length){el.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessun dato</span>';return;}
+    if(!entries.length){
+      el.innerHTML='<div style="color:var(--mu);font-size:.75rem;padding:8px;text-align:center">📭 Nessun dato per questo filtro</div>';
+      return;
+    }
     const maxV=entries[0][1]||1;
-    const label=fM?(()=>{const[y,mo]=fM.split('-');return MESI_IT[parseInt(mo)-1]+' '+y;})():'Stagione';
+    const label=fM?(()=>{const[y,mo]=fM.split('-');return MESI_IT[parseInt(mo)-1]+' '+y;})():'Tutta la stagione';
+    const totGare=entries.reduce((s,[,v])=>s+v,0);
     let rankPos=0,lastVal=-1;
     el.innerHTML='<div style="font-size:.6rem;color:var(--mu);margin-bottom:4px">'+label+(fPv?' · '+fPv:'')+'</div>'
       +'<div style="display:flex;flex-direction:column;gap:2px;max-height:420px;overflow-y:auto">'
@@ -3223,6 +3248,13 @@ function renderTopMeseCol(col){
 }
 function renderTopMese(){renderTopMeseCol();}
 
+function _tmSortClick(th){
+  const col=th.dataset.sc;
+  if(!col)return;
+  if(_trendSort.col===col){_trendSort.asc=!_trendSort.asc;}
+  else{_trendSort.col=col;_trendSort.asc=false;}
+  renderTrendMese();
+}
 function _tmTrendToggle(e){
   if(e.target.tagName==='SELECT'||e.target.tagName==='BUTTON')return;
   const wrap=document.getElementById('trend-mese-wrap');
@@ -3269,10 +3301,12 @@ function renderTrendMese(){
   }).filter(Boolean);
   // Sort
   const sc=_trendSort.col;
+  const sortAsc=_trendSort.asc;
   arbRows.sort((a,b)=>{
-    let va=sc==='tot'?a.tot:sc==='nome'?a.n.localeCompare(b.n,'it'):(a.mm[sc]||0);
-    let vb=sc==='tot'?b.tot:sc==='nome'?b.n.localeCompare(a.n,'it'):(b.mm[sc]||0);
-    return _trendSort.asc?(sc==='nome'?-1:1)*Math.sign(typeof va==='string'?va.localeCompare(vb):va-vb):(sc==='nome'?1:-1)*Math.sign(typeof va==='string'?va.localeCompare(vb):vb-va);
+    let diff;
+    if(sc==='tot'||sc==='rank'){diff=a.tot-b.tot; return sortAsc?diff:-diff;}
+    if(sc==='nome'){diff=a.n.localeCompare(b.n,'it'); return sortAsc?diff:-diff;}
+    diff=(a.mm[sc]||0)-(b.mm[sc]||0); return sortAsc?diff:-diff;
   });
   // Find absolute max and per-month max
   const absMax=Math.max(...arbRows.flatMap(r=>visMesi.map(m=>r.mm[m]||0)),0);
@@ -3281,7 +3315,8 @@ function renderTrendMese(){
   function thSort(col,label){
     const active=_trendSort.col===col;
     const arrow=active?(_trendSort.asc?'↑':'↓'):'⇅';
-    return`<th onclick="(function(){_trendSort.col='${col}';_trendSort.asc=(_trendSort.col==='${col}'&&!_trendSort.asc);renderTrendMese();})()" style="cursor:pointer;user-select:none;white-space:nowrap;padding:4px 6px;font-size:.65rem;background:#f0f4ff;position:sticky;top:0;z-index:1">${label} <span style="color:${active?'var(--bl)':'#aaa'}">${arrow}</span></th>`;
+    const encCol=encodeURIComponent(col);
+    return'<th data-sc="'+escH(col)+'" onclick="_tmSortClick(this)" style="cursor:pointer;user-select:none;white-space:nowrap;padding:4px 8px;font-size:.65rem;background:#f0f4ff;position:sticky;top:0;z-index:1">'+escH(label)+' <span style="color:'+(active?'var(--bl)':'#aaa')+'">'+arrow+'</span></th>';
   }
   let rank=0,lastTot=-1;
   const rows=arbRows.map((r,idx)=>{
@@ -3308,6 +3343,87 @@ function renderTrendMese(){
     <span style="background:#e8f4fd;color:#0c5880;border-radius:3px;padding:1px 5px;font-weight:700">■ max del mese</span>
   </div>`;
   body.innerHTML=legendMax+`<div style="overflow-x:auto;max-height:500px;overflow-y:auto"><table style="border-collapse:collapse;width:100%;min-width:500px"><thead>${hdr}</thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function renderArbiFermi(){
+  const selPv=document.getElementById('fermi-pv');
+  const selM1=document.getElementById('fermi-m1');
+  const selM2=document.getElementById('fermi-m2');
+  const body=document.getElementById('fermi-body');
+  if(!body)return;
+  const MESI_IT=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  // Popola selettori mese
+  if(selM1&&selM1.options.length<=1){
+    const ms=new Set();
+    (D.gare||[]).forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)ms.add(m);});
+    [...ms].sort().forEach(m=>{
+      const[y,mo]=m.split('-');
+      const lbl=MESI_IT[parseInt(mo)-1]+' '+y;
+      selM1.innerHTML+=`<option value="${m}">${lbl}</option>`;
+      selM2.innerHTML+=`<option value="${m}">${lbl}</option>`;
+    });
+  }
+  const fPv=selPv?selPv.value:'';
+  const fM1=selM1?selM1.value:'';
+  const fM2=selM2?selM2.value:'';
+  // Tutti gli arbitri attivi nel sistema
+  const allArbs=Object.values(P).filter(p=>p.categoria==='Arbitro'||(p.categorie||[]).includes('Arbitro'));
+  // Conta gare per arbitro nel periodo
+  const PROV_COLORS={'CA':'#c0392b','SS':'#1a6bb5','NU':'#c05a20','OR':'#0a8c6a','SU':'#6c3dc8'};
+  const arbGare={};
+  (D.gare||[]).forEach(g=>{
+    const m=(g['Data']||'').slice(0,7);
+    if(fM1&&m<fM1)return;
+    if(fM2&&m>fM2)return;
+    ['Arbitro 1','Arbitro 2'].forEach(f=>{
+      const n=pns(g[f]||'');if(!n)return;
+      arbGare[n]=(arbGare[n]||0)+1;
+    });
+  });
+  // Filtra per provincia
+  let arbList=allArbs.filter(p=>{
+    if(fPv&&p.provincia!==fPv)return false;
+    return true;
+  });
+  // Ordina per gare crescenti (meno attivi prima)
+  arbList.sort((a,b)=>(arbGare[a.nome]||0)-(arbGare[b.nome]||0));
+  if(!arbList.length){body.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessun arbitro</span>';return;}
+  const maxG=Math.max(...arbList.map(p=>arbGare[p.nome]||0),1);
+  const periodoLabel=(fM1||fM2)?(fM1?(()=>{const[y,mo]=fM1.split('-');return MESI_IT[parseInt(mo)-1]+' '+y;})():'inizio')+' → '+(fM2?(()=>{const[y,mo]=fM2.split('-');return MESI_IT[parseInt(mo)-1]+' '+y;})():'oggi'):'Tutta la stagione';
+  // Raggruppa: 0 gare, 1-3 gare, 4-10 gare, 10+
+  const groups=[
+    {label:'⛔ 0 gare',items:arbList.filter(p=>(arbGare[p.nome]||0)===0),clrBg:'#fff5f5',clrBdr:'#ffa8a8'},
+    {label:'🔴 1–3 gare',items:arbList.filter(p=>{const g=arbGare[p.nome]||0;return g>=1&&g<=3;}),clrBg:'#fff9f0',clrBdr:'#ffc580'},
+    {label:'🟡 4–10 gare',items:arbList.filter(p=>{const g=arbGare[p.nome]||0;return g>=4&&g<=10;}),clrBg:'#fffdf0',clrBdr:'#f5e57a'},
+    {label:'🟢 11–20 gare',items:arbList.filter(p=>{const g=arbGare[p.nome]||0;return g>=11&&g<=20;}),clrBg:'#f0fff4',clrBdr:'#86efac'},
+  ];
+  function mkRow(p){
+    const g=arbGare[p.nome]||0;
+    const clr=PROV_COLORS[p.provincia]||PC[p.provincia]||'var(--bl)';
+    const pct=Math.round(g/maxG*100);
+    const lastGara=p.gare&&p.gare.length?(p.gare.slice().sort((a,b)=>(b['Data']||'').localeCompare(a['Data']||''))[0]['Data']||''):'—';
+    const nFut=(D.gare_future||[]).filter(gf=>['Arbitro 1','Arbitro 2'].some(f=>pns(gf[f]||'')===p.nome)).length;
+    return`<div style="display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:6px;border:1px solid #f0f2f8;background:#fff;cursor:pointer" onclick="openPersona('${esc(p.nome)}')">
+      <span style="min-width:18px;font-size:.6rem;background:${clr};color:#fff;border-radius:3px;padding:0 4px;font-weight:700;text-align:center">${p.provincia||'?'}</span>
+      <span style="flex:1;font-size:.74rem;font-weight:${g===0?700:500};color:${g===0?'#c0392b':clr};overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(p.nome)}">${escH(p.nome)}</span>
+      ${nFut>0?`<span style="font-size:.6rem;background:#e17055;color:#fff;border-radius:8px;padding:0 5px">📅${nFut}</span>`:''}
+      <span style="font-size:.68rem;color:var(--mu);white-space:nowrap">ultima: ${lastGara.slice(5).split('-').reverse().join('/')}</span>
+      <div style="width:50px;height:5px;background:#eee;border-radius:3px;flex-shrink:0"><div style="height:100%;width:${pct}%;background:${g===0?'#e74c3c':clr};border-radius:3px"></div></div>
+      <span style="font-size:.9rem;font-weight:800;color:${g===0?'#c0392b':clr};min-width:24px;text-align:right">${g}</span>
+    </div>`;
+  }
+  const groupsHtml=groups.map(({label,items,clrBg,clrBdr})=>{
+    if(!items.length)return'';
+    return`<details open style="margin-bottom:8px">
+      <summary style="cursor:pointer;font-size:.72rem;font-weight:700;padding:6px 10px;background:${clrBg};border:1px solid ${clrBdr};border-radius:6px;list-style:none;display:flex;align-items:center;gap:6px">
+        ${label} <span style="font-size:.65rem;font-weight:400;color:var(--mu)">(${items.length} arbitri)</span>
+      </summary>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px;padding:0 4px">
+        ${items.map(mkRow).join('')}
+      </div>
+    </details>`;
+  }).join('');
+  body.innerHTML=`<div style="font-size:.68rem;color:var(--mu);margin-bottom:8px">Periodo: <b>${periodoLabel}</b>${fPv?' · Provincia: <b>'+fPv+'</b>':''} · <b>${arbList.length}</b> arbitri totali</div>`+groupsHtml;
 }
 
 function renderHome(){
@@ -3494,6 +3610,7 @@ function renderHome(){
   renderTopArbMese();
   renderTopMeseCol();
   renderTrendMese();
+  renderArbiFermi();
 
   const actEl=document.getElementById('h-act');
   if(actEl)renderActivityChart();
@@ -10681,8 +10798,12 @@ function renderGlobalStats(){
           <span style="color:var(--mu)">|</span>
           <span><b style="color:var(--bl)">Totale stagione:</b> <b>${totalAll}</b></span>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px">${pvAvgs}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px"><b style="color:var(--bl);font-size:.62rem;margin-right:4px">Media/mese per provincia:</b>${pvMeseAvgs}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px">${pvAvgs}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px"><b style="color:var(--bl);font-size:.62rem;margin-right:4px">Media/mese per provincia:</b>${pvMeseAvgs}</div>
+        <div style="margin-top:4px">
+          <b style="color:var(--bl);font-size:.62rem">Totale per mese:</b>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px">${totByM.map(({m,tot})=>{const[y,mo]=m.split('-');return`<span style="background:#fff;border:1px solid #dde3f0;border-radius:3px;padding:1px 7px;font-size:.62rem"><b style="color:var(--bl)">${mNames[parseInt(mo)]||mo}</b> <b>${tot}</b></span>`;}).join('')}</div>
+        </div>
       </div>
     </div>`;
   }
