@@ -2195,21 +2195,22 @@ function renderPersonsTable(cid,persons,opts={}){
   // Intestazioni gruppo: usa colspan esatti basati sulle colonne reali
   // Colonne reali per isArb=true, showCat=false:
   // 2(vuoto) + 3(ana) + 10(att: Tot,Arb,UDC,Oss,Gg,4g,3g,2g,1g,Med/g) + 2(fare) + 3(camp) + 3(sq) + 2(km) + 1(top)
-  const _attCols=isArb?10:5; // 5 base + 5 extra (4g,3g,2g,1g,Med/g)
+  const _attCols=isArb?11:5; // Tot,Arb,Naz,UDC,Oss,Gg + 4g,3g,2g,1g,Med/g = 11
   const _sqCols=3; // Sing, Dopp, Sqd
   const _campCols=3; // 🏠 🤝 Camp
   const _kmCols=isArb?2:1;
   const _topCols=isArb?1:0;
-  const groupHeaderHtml=isArb?`<tr style="pointer-events:none">
+  const _GH_ST='text-align:center;font-size:.62rem;font-weight:700;padding:5px 6px;letter-spacing:.4px;border-bottom:2px solid rgba(255,255,255,.2)';
+  const groupHeaderHtml=isArb?`<tr style="pointer-events:none;border-bottom:2px solid rgba(255,255,255,.15)">
     <th colspan="2" style="background:var(--tbl-hdr);border:none;padding:0"></th>
-    <th colspan="3" class="th-ana" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">ANAGRAFICA</th>
-    <th colspan="${_attCols}" class="th-att" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">ATTIVITÀ SVOLTA</th>
-    <th colspan="${isArb?3:2}" class="th-fare" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">DA COMPLETARE</th>
-    <th colspan="${_campCols}" class="th-camp" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">CAMPIONATI</th>
-    <th colspan="${_sqCols}" class="th-sq" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">SQUADRE</th>
-    <th colspan="${_kmCols}" class="th-km" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">PERCORRENZA</th>
+    <th colspan="3" class="th-ana" style="${_GH_ST}">ANAGRAFICA</th>
+    <th colspan="${_attCols}" class="th-att" style="${_GH_ST}">ATTIVITÀ SVOLTA</th>
+    <th colspan="${isArb?3:2}" class="th-fare" style="${_GH_ST}">DA COMPLETARE</th>
+    <th colspan="${_campCols}" class="th-camp" style="${_GH_ST}">CAMPIONATI</th>
+    <th colspan="${_sqCols}" class="th-sq" style="${_GH_ST}">SQUADRE</th>
+    <th colspan="${_kmCols}" class="th-km" style="${_GH_ST}">PERCORRENZA</th>
     <th style="background:var(--tbl-hdr);border:none;padding:0" colspan="${_topCols}"></th>
-    ${isArb?`<th class="th-att" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px;background:#fff3e0;color:#e67e22">PROVV.</th><th style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px;background:#fdecea;color:#c0392b">NAZ.</th>`:''}
+    ${isArb?`<th class="th-att" style="${_GH_ST};background:#d35400;color:#fff">PROVV.</th><th style="${_GH_ST};background:#922b21;color:#fff">NAZ.</th>`:''}
   </tr>`:'';
 
   // Accumulatori per riga media
@@ -2758,7 +2759,9 @@ function renderTimeline(){
   var _mx=Math.max.apply(null,_all.map(function(d){return(_pg[d]&&_pg[d].gare||0)+(_pf[d]||0);}).concat([1]));
   var html='',_pm=-1;
   _vis.forEach(function(ds){
-    var d=new Date(ds);var mo=d.getMonth();var nP=(_pg[ds]&&_pg[ds].gare)||0;var nF=_pf[ds]||0;var nT=nP+nF;
+    var d=new Date(ds);var mo=d.getMonth();var nP=(_pg[ds]&&_pg[ds].gare)||0;var nF=_pf[ds]||0;
+    // Per date future usa solo _pf per evitare doppio conteggio con _pg
+    var isDs=(ds>=_ts);var nT=isDs?nF:nP;
     var isT=(ds===_ts),isP=(ds<_ts),dw=d.getDay();
     if(_pm>=0&&mo!==_pm){html+='<div style="flex-shrink:0;width:12px;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="width:1px;flex:1;background:var(--br)"></div><div style="writing-mode:vertical-rl;font-size:.5rem;color:var(--mu);opacity:.6">'+_ME[mo]+'</div><div style="width:1px;flex:1;background:var(--br)"></div></div>';}
     _pm=mo;
@@ -4594,7 +4597,26 @@ function renderArb(){
   if(cod)a=a.filter(p=>(CODICI_FIP[p.nome]||'').includes(cod));
   if(pv)a=a.filter(p=>p.provincia===pv);
   if(camp)a=a.filter(p=>p.campionati[camp]);
-  a.sort((x,y)=>sort==='nome'?x.nome.localeCompare(y.nome,'it'):sort==='provincia'?x.provincia.localeCompare(y.provincia):sort==='km'?calcKmArb(y)-calcKmArb(x):y.n_gare_arbitro-x.n_gare_arbitro);
+  // Sort: per 'n_gare' usa nGareOggi real-time (ricalcolato da D.gare)
+  if(sort==='nome') a.sort((x,y)=>x.nome.localeCompare(y.nome,'it'));
+  else if(sort==='provincia') a.sort((x,y)=>x.provincia.localeCompare(y.provincia));
+  else if(sort==='km') a.sort((x,y)=>calcKmArb(y)-calcKmArb(x));
+  else {
+    // Calcola nGareOggi real-time per ogni arbitro per sort accurato
+    const _todayS=new Date().toISOString().split('T')[0];
+    const _nowMS=new Date().getHours()*60+new Date().getMinutes();
+    const _arbFlds=['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'];
+    function _gOggi(p){
+      return (D.gare||[]).filter(g=>{
+        if(!_arbFlds.some(f=>pns(g[f]||'')===p.nome))return false;
+        const gd=g['Data']||'';
+        if(gd>_todayS)return false;if(gd<_todayS)return true;
+        const go=g['Ora']||'';if(!go)return true;
+        const pp=go.split(':');return parseInt(pp[0]||0)*60+parseInt(pp[1]||0)+30<=_nowMS;
+      }).length;
+    }
+    a.sort((x,y)=>_gOggi(y)-_gOggi(x));
+  }
   renderPersonsTable('arb-list',a,{tid:'tbl-arb',mainGare:'n_gare_arbitro'});
   setTimeout(()=>rtblAddFreezeBtns('tbl-arb'),50);
 }
@@ -6320,15 +6342,18 @@ function openPersona(nome,campFilter){
           prevMonth=m;
           const gs=(garaByDate[d]||[]).slice().sort((x,y)=>pCampSort(x['Campionato']||x.c||'')-pCampSort(y['Campionato']||y.c||''));
           if(!gs.length){
-            // Giorno vuoto: piccolo tick ogni 5 giorni, più alto a inizio mese
-            const tickH=isNewMonth?8:dayN%5===0?5:2;
-            const tickClr=isNewMonth?'#1a6bb5':dayN%5===0?'#b5d4f4':'#dde3f0';
-            tlBarsP+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;height:'+MAX_H+'px;vertical-align:bottom;position:relative">'
-              +'<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:1px;height:'+tickH+'px;background:'+tickClr+'"></div>'
+            // Giorno vuoto: piccolo tick — sabato/domenica/festivi evidenziati
+            const isWE2=(dt2.getDay()===0||dt2.getDay()===6);
+            const tickH=isNewMonth?8:dayN%5===0?4:isWE2?3:1;
+            const tickClr=isNewMonth?'#1a6bb5':isWE2?'#e67e22':dayN%5===0?'#b5d4f4':'#dde3f0';
+            const weBg=isWE2?'background:rgba(230,126,34,0.06);':'';
+            tlBarsP+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;height:'+MAX_H+'px;vertical-align:bottom;position:relative;'+weBg+'">'
+              +'<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:'+(isWE2?'1.5':'1')+'px;height:'+tickH+'px;background:'+tickClr+'"></div>'
               +'</div>';
           } else {
             const n=gs.length;
             const bw=Math.max(4,Math.floor((BW-1)/n));
+            const isWE3=(dt2.getDay()===0||dt2.getDay()===6);
             const bars=gs.map(g=>{
               const c=g['Campionato']||g.c||'';
               const h=pCampH(c);
@@ -6339,7 +6364,7 @@ function openPersona(nome,campFilter){
               const tip=escH(lbl)+(ora?' '+escH(ora):'')+(sq1?' · '+escH(sq1.split(' ').slice(-1)[0]):'');
               return '<div class="ptl-seg" data-c="'+escH(c)+'" title="'+tip+' ('+d+')" style="display:inline-block;width:'+bw+'px;height:'+h+'px;min-height:4px;background:'+col+';border-radius:2px 2px 0 0;vertical-align:bottom;flex-shrink:0"></div>';
             }).join('<div style="display:inline-block;width:1px;flex-shrink:0"></div>');
-            tlBarsP+='<div style="display:inline-flex;align-items:flex-end;flex-shrink:0;width:'+BW+'px;height:'+MAX_H+'px;vertical-align:bottom;gap:0;justify-content:center" title="'+d+': '+n+'g">'
+            tlBarsP+='<div style="display:inline-flex;align-items:flex-end;flex-shrink:0;width:'+BW+'px;height:'+MAX_H+'px;vertical-align:bottom;gap:0;justify-content:center;'+(isWE3?'background:rgba(230,126,34,0.08);':'')+'" title="'+d+': '+n+'g">'
               +bars+'</div>';
           }
           // Riga etichette: nome mese a inizio mese, numeri ogni 5 giorni
@@ -6614,8 +6639,8 @@ function openPersona(nome,campFilter){
           </div>
           <div style="font-size:.58rem;color:var(--mu);margin-top:3px">💡 Clicca un giorno per aprirlo · Clicca due giorni diversi per aprire un range di date</div>
           <!-- Pannelli -->
-          <div id="${uid}_A" style="overflow-x:auto"><div style="display:flex;flex-wrap:wrap;gap:8px">${calA}</div></div>
-          <div id="${uid}_B" style="display:none;overflow-x:auto">${calB}</div>
+          <div id="${uid}_A" style="width:100%;overflow-x:auto"><div style="display:flex;flex-wrap:wrap;gap:8px">${calA}</div></div>
+          <div id="${uid}_B" style="display:none;width:100%;box-sizing:border-box">${calB}</div>
         </div>`;
       })()}
 
