@@ -486,7 +486,7 @@ tr.loss-row td{background:#fdecea!important;}
   backdrop-filter:blur(4px);isolation:isolate;}
 .mo.open{display:flex;pointer-events:auto;}
 .mbox{background:#fff;border-radius:var(--radius-lg);
-  width:min(98vw,1300px);max-height:calc(100vh - 28px);
+  width:min(99vw,1600px);max-height:calc(100vh - 16px);
   display:flex;flex-direction:column;
   box-shadow:0 24px 80px rgba(0,0,60,.3);overflow:hidden;position:relative;
   resize:both;min-width:400px;min-height:200px;}
@@ -2204,7 +2204,7 @@ function renderPersonsTable(cid,persons,opts={}){
     <th colspan="2" style="background:var(--tbl-hdr);border:none;padding:0"></th>
     <th colspan="3" class="th-ana" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">ANAGRAFICA</th>
     <th colspan="${_attCols}" class="th-att" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">ATTIVITÀ SVOLTA</th>
-    <th colspan="2" class="th-fare" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">DA COMPLETARE</th>
+    <th colspan="${isArb?3:2}" class="th-fare" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">DA COMPLETARE</th>
     <th colspan="${_campCols}" class="th-camp" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">CAMPIONATI</th>
     <th colspan="${_sqCols}" class="th-sq" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">SQUADRE</th>
     <th colspan="${_kmCols}" class="th-km" style="text-align:center;font-size:.62rem;font-weight:600;padding:4px 6px;letter-spacing:.3px">PERCORRENZA</th>
@@ -2346,9 +2346,9 @@ function renderPersonsTable(cid,persons,opts={}){
       <td ${tdAna} data-val="${p.citta||''}" style="font-size:.72rem;color:var(--mu)">${escH(p.citta||'')}</td>
       <td ${tdAna} data-val="${fip}" style="font-family:monospace;font-size:.68rem">${fip?`<span style="background:#1a3a6b;color:#b5d4f4;border-radius:4px;padding:2px 8px;font-size:.65rem;font-weight:700;letter-spacing:1.5px;font-family:'Courier New',Courier,monospace">${fip}</span>`:''}</td>
       ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
-      <td ${tdAtt} data-val="${nGareOggi+(isArb?nGareNaz:0)}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}"
-        title="Gare fatte fino ad oggi (Arb+UDC+Oss+Naz)"
-        data-n="${p.nome}" onclick="event.stopPropagation();openPersona(this.dataset.n)">${nGareOggi+(isArb?nGareNaz:0)}</td>
+      <td ${tdAtt} data-val="${nGareOggi}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}"
+        title="Gare regionali fatte (Arb+UDC+Oss). Escluse nazionali (colonna 🇮🇹)."
+        data-n="${p.nome}" onclick="event.stopPropagation();openPersona(this.dataset.n)">${nGareOggi}</td>
       <td ${tdAtt} data-val="${nGareArbOggiDisp}" style="text-align:center">${nGareArbOggiDisp?mkLink(nGareArbOggiDisp,1,pvColor):''}</td>
       ${isArb?(()=>{
         if(!nGareNaz) return '<td data-val="0" style="text-align:center;color:var(--mu2)">—</td>';
@@ -2365,6 +2365,7 @@ function renderPersonsTable(cid,persons,opts={}){
       <td ${tdAtt} data-val="${parseFloat(mediaG)||0}" style="text-align:center;font-weight:700;color:var(--bl)">${mediaG}</td>
       `:''}
       <td ${tdFare} data-val="${nFut}" style="text-align:center;font-weight:${nFut>0?700:400};color:${fareClr}">${nFut||'—'}</td>
+      ${isArb?(()=>{const _nFN=(D.nazionale?.arbitri_fuori_sardegna||[]).find(a=>a.nome===p.nome);const nFutN=_nFN?(_nFN.n_gare_future||0):0;return nFutN?'<td data-val="'+nFutN+'" style="text-align:center;background:#fdecea;font-weight:700;color:#c0392b" title="Gare nazionali da arbitrare">🇮🇹 '+nFutN+'</td>':'<td data-val="0" style="text-align:center;color:var(--mu2)">—</td>';})():''}
       <td ${tdFare} data-val="${nGareOggi+nFut}" style="text-align:center;font-size:.75rem;color:var(--mu)" title="Fatte oggi (${nGareOggi}) + future (${nFut})">${nGareOggi+nFut}</td>
       <td ${tdCamp} data-val="${nCampi}" style="text-align:center">${nCampi?mkLink(nCampi,3,pvColor):0}</td>
       <td ${tdCamp} data-val="${nColl}" style="text-align:center">${nColl?mkLink(nColl,2,pvColor):0}</td>
@@ -2402,11 +2403,13 @@ function renderPersonsTable(cid,persons,opts={}){
     <td colspan="3" class="td-ana" style="background:#2c3e50;"></td>
     <td class="td-att" style="text-align:center;font-weight:700;color:#90CAF9">${Math.round(sumTot/n)}</td>
     <td class="td-att" style="text-align:center;color:#90CAF9">${Math.round(sumArb/n)}</td>
+    <td class="td-att" style="background:#4a1a1a;"></td>
     <td class="td-att" style="text-align:center;color:#90CAF9">${Math.round(sumUdc/n)}</td>
     <td class="td-att" style="text-align:center;color:#90CAF9">—</td>
     <td class="td-att" style="text-align:center;color:#90CAF9">${Math.round(sumGg/n)}</td>
     <td colspan="5" class="td-att" style="background:#1a5276;"></td>
     <td class="td-fare" style="text-align:center;color:#A5D6A7">${Math.round(sumFare/n)}</td>
+    <td class="td-fare" style="background:#1e6b3c;"></td>
     <td class="td-fare" style="background:#1e6b3c;"></td>
     <td colspan="3" class="td-camp" style="background:#6c3483;"></td>
     <td class="td-sq" style="text-align:center;color:#FFCC80">${Math.round(sumSing/n)}</td>
@@ -2442,7 +2445,8 @@ function renderPersonsTable(cid,persons,opts={}){
     <th class="th-att" onclick="sT('${tableId}',${12+co},event)" title="Giornate con 1 gara" style="cursor:pointer;color:#a0e0b0">1g</th>
     <th class="th-att" onclick="sT('${tableId}',${13+co},event)" title="Media gare/giorno · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Med/g</th>
     `:''}
-    <th class="th-fare" onclick="sT('${tableId}',${9+co+ae},event)" title="Gare future assegnate · Shift+click per multiplo" style="cursor:pointer">Da fare</th>
+    <th class="th-fare" onclick="sT('${tableId}',${9+co+ae},event)" title="Gare regionali future assegnate · Shift+click per multiplo" style="cursor:pointer">Da fare</th>
+    ${isArb?'<th class="th-fare" style="background:#fdecea;color:#c0392b" title="Gare nazionali future">🇮🇹 Naz.</th>':''}
     <th class="th-fare" onclick="sT('${tableId}',${10+co+ae},event)" title="Totale previsto (fatte + future) · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Tot.prev.</th>
     <th class="th-camp" onclick="sT('${tableId}',${11+co+ae},event)" title="Campi diversi · Shift+click per multiplo" style="cursor:pointer">&#127967;</th>
     <th class="th-camp" onclick="sT('${tableId}',${12+co+ae},event)" title="Colleghi · Shift+click per multiplo" style="cursor:pointer">&#129309;</th>
@@ -3447,7 +3451,7 @@ function _openArbCampD(nome,camp){
             <div style="font-size:.64rem;font-weight:700;color:#27ae60;margin-bottom:3px">✅ Incontrate</div>
             <div style="display:flex;flex-direction:column;gap:2px">
               ${allSq.filter(s=>incSet.has(s)).map(s=>{
-                const gInfo=(gareInfo[s]||[]).sort((a,b)=>(a.data||'').localeCompare(b.data||''));
+                const gInfo=((gironi[gir]?.gareInfo||{})[s]||[]).slice().sort((a,b)=>(a.data||'').localeCompare(b.data||''));
                 const dates=gInfo.map(g=>g.data?g.data.slice(5).split('-').reverse().join('/'):'').join(', ');
                 const ris=gInfo.map(g=>g.ris||'Prog.').join(', ');
                 return`<div style="display:flex;align-items:center;gap:4px;padding:3px 6px;background:#f0fff4;border-radius:4px;border:1px solid #86efac;cursor:pointer" onclick="openSquadra('${esc(s)}')">
@@ -6290,7 +6294,7 @@ function openPersona(nome,campFilter){
           const m=d.slice(0,7);
           if(m!==curMP){monthBP[i]=mesiL2[parseInt(m.slice(5))-1]+' '+m.slice(2,4);curMP=m;}
         });
-        const BW=12;const MAX_H=90;
+        const BW=13;const MAX_H=130;
         const MONTH_SEP=10; // spazio separatore tra mesi
         // Campionati presenti per legenda
         const campsP=[...new Set(datesWithGare.flatMap(d=>garaByDate[d].map(g=>g['Campionato']||g.c||'')))].filter(Boolean).sort((a,b)=>pCampSort(a)-pCampSort(b));
@@ -6299,6 +6303,7 @@ function openPersona(nome,campFilter){
         // Costruiamo le barre e la riga etichette insieme, inserendo separatori mensili
         let tlBarsP='';
         let monthRowP='';
+        let dayRowP='';
         let prevMonth='';
         allDatesP.forEach((d,i)=>{
           const dt=new Date(d+'T12:00');
@@ -6308,9 +6313,9 @@ function openPersona(nome,campFilter){
           const isNewMonth=(m!==prevMonth);
           // Separatore mensile
           if(isNewMonth&&i>0){
-            // barre: spazio verticale con linea
             tlBarsP+='<div style="display:inline-block;width:'+MONTH_SEP+'px;flex-shrink:0;height:'+MAX_H+'px;vertical-align:bottom;border-left:2px solid #b5d4f4;margin:0 1px"></div>';
             monthRowP+='<div style="display:inline-block;width:'+MONTH_SEP+'px;flex-shrink:0"></div>';
+            dayRowP+='<div style="display:inline-block;width:'+MONTH_SEP+'px;flex-shrink:0"></div>';
           }
           prevMonth=m;
           const gs=(garaByDate[d]||[]).slice().sort((x,y)=>pCampSort(x['Campionato']||x.c||'')-pCampSort(y['Campionato']||y.c||''));
@@ -6339,15 +6344,17 @@ function openPersona(nome,campFilter){
           }
           // Riga etichette: nome mese a inizio mese, numeri ogni 5 giorni
           let lbl='';let lclr='#aaa';let lfw='400';let lfont='.44rem';
+          // Riga 1: numero giorno
+          let dlbl='';let dclr='#bbb';let dfw='400';
+          if(dayN===1||dayN===10||dayN===20){dlbl=String(dayN);dclr=dayN===1?'#1a6bb5':'#999';dfw=dayN===1?'700':'400';}
+          else if(dayN===15||dayN===25){dlbl=String(dayN);dclr='#bbb';}
+          dayRowP+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;font-size:.48rem;color:'+dclr+';font-weight:'+dfw+';text-align:center;overflow:visible;white-space:nowrap">'+dlbl+'</div>';
+          // Riga 2: nome mese (solo a inizio mese)
           if(isNewMonth){
             lbl=mesiLFull[parseInt(m.slice(5))-1];
-            lclr='#1a6bb5';lfw='700';lfont='.5rem';
-          } else if(dayN===10||dayN===20){
-            lbl=String(dayN);lclr='#888';
-          } else if(dayN===15||dayN===25){
-            lbl=String(dayN);lclr='#aaa';
+            lclr='#1a6bb5';lfw='700';lfont='.65rem';
           }
-          monthRowP+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;font-size:'+lfont+';color:'+lclr+';font-weight:'+lfw+';text-align:left;overflow:visible;white-space:nowrap;padding-top:2px">'+lbl+'</div>';
+          monthRowP+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;font-size:'+lfont+';color:'+lclr+';font-weight:'+lfw+';text-align:left;overflow:visible;white-space:nowrap;padding-top:1px">'+lbl+'</div>';
         });
         // Legenda cliccabile
         const legendP=campsP.map(c=>{
@@ -6503,8 +6510,8 @@ function openPersona(nome,campFilter){
         const calB=(()=>{
           const todayDs=(typeof D!=='undefined'&&D.generated)?D.generated.slice(0,10):new Date().toISOString().split('T')[0];
           // Celle flessibili: riempiono tutta la larghezza disponibile
-          const dayW=Math.max(20,Math.floor((window.innerWidth||900)*0.9/32));
-          const dayH=Math.max(26,dayW+4);
+          const dayW=Math.max(22,Math.floor((window.innerWidth||1200)*0.88/32));
+          const dayH=Math.max(30,dayW+6);
           // Header numeri 1-31
           const hdr='<div style="display:flex;gap:1px;margin-bottom:2px;padding-left:44px">'
             +Array.from({length:31},(_,i)=>`<div style="flex:1;min-width:${dayW}px;font-size:.55rem;color:var(--mu2);text-align:center">${i+1}</div>`).join('')
@@ -6526,7 +6533,8 @@ function openPersona(nome,campFilter){
               const bg=isToday?'var(--gold)':cnt===0?(isWE?'#daeeff':'#e8f4ff'):cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt>=3?'var(--bl)':'#c0392b';
               const clr=(cnt>1||isToday)?'#fff':'var(--mu)';
               const outline=isToday?'outline:2.5px solid #e0a800;outline-offset:-1px;':'';
-              const weSep=isWE?'border-left:2px solid #b5d4f4;':'';
+              const isDom=dow===0;const isSab=dow===6;
+              const weSep=isDom?'border-left:2px solid #f1c40f;opacity:1;':isSab?'border-left:1.5px solid #b5d4f4;':'';
               tot+=cnt;
               return`<div data-cal-ds="${ds}" title="${ds}${isToday?' — OGGI':''}: ${cnt} gar${cnt===1?'a':'e'}" 
                 style="flex:1;min-width:${dayW}px;height:${dayH}px;border-radius:3px;background:${bg};${weSep}${outline}
@@ -6546,7 +6554,7 @@ function openPersona(nome,campFilter){
               <div style="font-size:.62rem;font-weight:700;color:var(--bl);margin-left:6px;min-width:24px">${tot||''}</div>
             </div>`;
           }).join('');
-          return`<div style="overflow-x:hidden;font-size:.6rem;width:100%">${hdr}${rows}</div>`;
+          return`<div style="overflow:hidden;font-size:.62rem;width:100%;box-sizing:border-box">${hdr}${rows}</div>`;
         })();
         // ── VERSIONE C: Barre settimanali (domenica separata) ──
         const calC=mesi.map(m=>{
