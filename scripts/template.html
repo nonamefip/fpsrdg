@@ -846,7 +846,7 @@ tr.loss-row td{background:#fdecea!important;}
 
   <!-- ROW 3b: Top 10 arbitri per mese -->
   <div class="db-card" style="margin-bottom:12px">
-    <div class="db-card-hd">📅 Top 10 arbitri per mese — gare arbitrate
+    <div class="db-card-hd">📅 Top arbitri per mese — gare arbitrate
       <span id="top-arb-mese-sel-wrap" style="float:right;font-size:.72rem;font-weight:400">
         <select id="top-arb-mese-sel" onchange="renderTopArbMese()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px"></select>
       </span>
@@ -869,44 +869,72 @@ tr.loss-row td{background:#fdecea!important;}
       <div id="h-sq"></div>
     </div>
   </div>
+  <!-- ROW 4c: Top per mese con filtri indipendenti -->
+  <div class="db-card" style="margin-bottom:12px">
+    <div class="db-card-hd">🏅 Top per mese <span style="font-size:.65rem;font-weight:400;color:var(--mu)">(filtri indipendenti per colonna)</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px">
+      <div class="db-card" style="margin:0">
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;flex-wrap:wrap">
+          <span style="font-size:.72rem;font-weight:700;color:var(--bl)">👨‍⚖️ Top Arbitri</span>
+          <select id="tm-arb-m" onchange="renderTopMeseCol('arb')" style="font-size:.68rem;padding:1px 4px;border:1px solid var(--br);border-radius:4px"><option value="">Tutti i mesi</option></select>
+          <select id="tm-arb-pv" onchange="renderTopMeseCol('arb')" style="font-size:.68rem;padding:1px 4px;border:1px solid var(--br);border-radius:4px">
+            <option value="">Tutte</option><option value="CA">CA</option><option value="SS">SS</option><option value="SU">SU</option><option value="NU">NU</option><option value="OR">OR</option>
+          </select>
+          <button onclick="document.getElementById('tm-arb-m').value='';document.getElementById('tm-arb-pv').value='';renderTopMeseCol('arb')" style="font-size:.6rem;padding:1px 5px;border:1px solid var(--br);border-radius:4px;background:none;cursor:pointer;color:var(--mu)">↺</button>
+        </div>
+        <div id="tm-arb-list"></div>
+      </div>
+      <div class="db-card" style="margin:0">
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;flex-wrap:wrap">
+          <span style="font-size:.72rem;font-weight:700;color:var(--bl)">📋 Top UDC</span>
+          <select id="tm-udc-m" onchange="renderTopMeseCol('udc')" style="font-size:.68rem;padding:1px 4px;border:1px solid var(--br);border-radius:4px"><option value="">Tutti i mesi</option></select>
+          <select id="tm-udc-pv" onchange="renderTopMeseCol('udc')" style="font-size:.68rem;padding:1px 4px;border:1px solid var(--br);border-radius:4px">
+            <option value="">Tutte</option><option value="CA">CA</option><option value="SS">SS</option><option value="SU">SU</option><option value="NU">NU</option><option value="OR">OR</option>
+          </select>
+          <button onclick="document.getElementById('tm-udc-m').value='';document.getElementById('tm-udc-pv').value='';renderTopMeseCol('udc')" style="font-size:.6rem;padding:1px 5px;border:1px solid var(--br);border-radius:4px;background:none;cursor:pointer;color:var(--mu)">↺</button>
+        </div>
+        <div id="tm-udc-list"></div>
+      </div>
+      <div class="db-card" style="margin:0">
+        <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;flex-wrap:wrap">
+          <span style="font-size:.72rem;font-weight:700;color:var(--bl)">🏆 Top Squadre</span>
+          <select id="tm-sq-m" onchange="renderTopMeseCol('sq')" style="font-size:.68rem;padding:1px 4px;border:1px solid var(--br);border-radius:4px"><option value="">Tutti i mesi</option></select>
+          <select id="tm-sq-pv" onchange="renderTopMeseCol('sq')" style="font-size:.68rem;padding:1px 4px;border:1px solid var(--br);border-radius:4px">
+            <option value="">Tutte</option><option value="CA">CA</option><option value="SS">SS</option><option value="SU">SU</option><option value="NU">NU</option><option value="OR">OR</option>
+          </select>
+          <button onclick="document.getElementById('tm-sq-m').value='';document.getElementById('tm-sq-pv').value='';renderTopMeseCol('sq')" style="font-size:.6rem;padding:1px 5px;border:1px solid var(--br);border-radius:4px;background:none;cursor:pointer;color:var(--mu)">↺</button>
+        </div>
+        <div id="tm-sq-list"></div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- ROW 4b: Province complete -->
   <div class="db-card" style="margin-bottom:12px">
     <div class="db-card-hd">📍 Province — Statistiche complete</div>
     <div id="h-pv"></div>
   </div>
 
-  <!-- ROW 4c: Top per mese con filtri -->
+  <!-- ROW 4d: Trend arbitri per mese collassabile -->
   <div class="db-card" style="margin-bottom:12px">
-    <div class="db-card-hd" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      🏅 Top per mese
-      <select id="top-mese-sel-m" onchange="renderTopMese()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
-        <option value="">— mese —</option>
-      </select>
-      <select id="top-mese-sel-pv" onchange="renderTopMese()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
+    <div class="db-card-hd" style="cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap" onclick="_tmTrendToggle(event)">
+      <span>📈 Trend arbitri per mese</span>
+      <span id="trend-mese-tog" style="font-size:.8rem;color:var(--mu)">▶</span>
+      <span style="font-size:.65rem;font-weight:400;color:var(--mu);margin-left:4px">clicca per espandere</span>
+      <select id="trend-mese-pv" onchange="renderTrendMese()" onclick="event.stopPropagation()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px;margin-left:auto">
         <option value="">Tutte le province</option>
         <option value="CA">CA</option><option value="SS">SS</option><option value="SU">SU</option>
         <option value="NU">NU</option><option value="OR">OR</option>
       </select>
-      <button onclick="document.getElementById('top-mese-sel-m').value='';document.getElementById('top-mese-sel-pv').value='';renderTopMese()" style="font-size:.68rem;padding:2px 8px;border:1px solid var(--br);border-radius:6px;background:none;cursor:pointer;color:var(--mu)">↺</button>
-    </div>
-    <div id="top-mese-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px"></div>
-  </div>
-
-  <!-- ROW 4d: Trend arbitri per mese -->
-  <div class="db-card" style="margin-bottom:12px">
-    <div class="db-card-hd" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      📈 Trend arbitri per mese
-      <select id="trend-mese-pv" onchange="renderTrendMese()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
-        <option value="">Tutte le province</option>
-        <option value="CA">CA</option><option value="SS">SS</option><option value="SU">SU</option>
-        <option value="NU">NU</option><option value="OR">OR</option>
-      </select>
-      <select id="trend-mese-m" onchange="renderTrendMese()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
+      <select id="trend-mese-m" onchange="renderTrendMese()" onclick="event.stopPropagation()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
         <option value="">Tutti i mesi</option>
       </select>
-      <button onclick="document.getElementById('trend-mese-pv').value='';document.getElementById('trend-mese-m').value='';renderTrendMese()" style="font-size:.68rem;padding:2px 8px;border:1px solid var(--br);border-radius:6px;background:none;cursor:pointer;color:var(--mu)">↺</button>
+      <button onclick="event.stopPropagation();document.getElementById('trend-mese-pv').value='';document.getElementById('trend-mese-m').value='';renderTrendMese()" style="font-size:.68rem;padding:2px 8px;border:1px solid var(--br);border-radius:6px;background:none;cursor:pointer;color:var(--mu)">↺</button>
     </div>
-    <div id="trend-mese-body" style="margin-top:8px"></div>
+    <div id="trend-mese-wrap" style="display:none;margin-top:8px">
+      <div id="trend-mese-body"></div>
+    </div>
   </div>
 
   <!-- ROW 5: Coppie + Trend -->
@@ -917,7 +945,7 @@ tr.loss-row td{background:#fdecea!important;}
     </div>
     <div class="db-card">
       <div class="db-card-hd">📈 Trend arbitri (30gg vs 30gg prec.)</div>
-      <div id="h-trend"></div>
+      <div id="h-trend" style="overflow-y:auto;max-height:500px"></div>
     </div>
   </div>
 
@@ -3110,22 +3138,26 @@ function renderTopArbMese(){
   const top10=Object.entries(arbCount).sort((a,b)=>b[1]-a[1]); // tutti
   if(!top10.length){grid.innerHTML='<span style="color:var(--mu);font-size:.75rem;padding:8px">Nessun dato per questo mese</span>';return;}
   const maxV=top10[0][1]||1;
+  // Calcola rank con parità (stesso valore = stesso rank)
+  const sortedVals=top10.map(([,c])=>c);
+  function getRank(cnt){ let r=1; for(const v of sortedVals){if(v>cnt)r++;} return r; }
   const medals=['🥇','🥈','🥉'];
   grid.innerHTML=top10.map(([nome,cnt],i)=>{
     const p=P[nome]||{};
     const clr=PC[p.provincia]||'var(--bl)';
     const pct=Math.round(cnt/maxV*100);
-    const medal=medals[i]||`<span style="color:var(--mu2);font-size:.72rem;font-weight:700">${i+1}.</span>`;
-    const rankNum=`<div style="position:absolute;top:4px;left:6px;font-size:.55rem;font-weight:900;color:var(--mu2);line-height:1">#${i+1}</div>`;
+    const rank=getRank(cnt);
+    const medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':`<span style="color:var(--mu2);font-size:.72rem;font-weight:700">${rank}.</span>`;
+    const rankNum=`<div style="position:absolute;top:4px;left:6px;font-size:.55rem;font-weight:900;color:var(--mu2);line-height:1">#${rank}</div>`;
     const bg=i===0?'linear-gradient(135deg,#fff9e6,#fffdf5)':i===1?'linear-gradient(135deg,#f7f7f7,#fff)':i===2?'linear-gradient(135deg,#fdf3e7,#fff)':'#fff';
     const border=i===0?'2px solid #f1c40f':i===1?'1.5px solid #bdc3c7':i===2?'1.5px solid #e67e22':'1px solid #f0f2f8';
     const nFut=(D.gare_future||[]).filter(g=>(g['Data']||'').startsWith(selMese)&&['Arbitro 1','Arbitro 2'].some(f=>pns(g[f]||'')===nome)).length;
-    return`<div style="background:${bg};border:${border};border-radius:10px;padding:10px 12px;cursor:pointer;transition:box-shadow .15s;position:relative;min-width:150px;max-width:175px;flex-shrink:0" onclick="openPersona('${esc(nome)}')" title="${escH(nome)}: ${cnt} gare in ${selMese}">
+    return`<div style="background:${bg};border:${border};border-radius:10px;padding:10px 12px;cursor:pointer;transition:box-shadow .15s;position:relative;min-width:170px;max-width:200px;flex-shrink:0" onclick="openPersona('${esc(nome)}')" title="${escH(nome)}: ${cnt} gare in ${selMese}">
       ${rankNum}
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
         <span style="font-size:1.1rem">${medal}</span>
         <div style="flex:1;min-width:0">
-          <div style="font-size:.76rem;font-weight:700;color:${clr};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(nome)}</div>
+          <div style="font-size:.72rem;font-weight:700;color:${clr};white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escH(nome)}">${escH(nome.split(" ")[0].slice(0,10)+" "+(nome.split(" ").slice(1).join(" ")||""))}</div>
           <div style="font-size:.6rem;color:var(--mu)">${pvB(p.provincia)||''}</div>
         </div>
         <div style="font-size:1.6rem;font-weight:900;color:${clr};line-height:1">${cnt}</div>
@@ -3139,89 +3171,85 @@ function renderTopArbMese(){
   }).join('');
 }
 
-function renderTopMese(){
-  const selM=document.getElementById('top-mese-sel-m');
-  const selPv=document.getElementById('top-mese-sel-pv');
-  const grid=document.getElementById('top-mese-grid');
-  if(!grid)return;
+function _tmInitMesi(selId){
+  const sel=document.getElementById(selId);
+  if(!sel||sel.options.length>1)return;
   const MESI_IT=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-  // Popola mesi
-  if(selM&&selM.options.length<=1){
-    const ms=new Set();(D.gare||[]).forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)ms.add(m);});
-    [...ms].sort().reverse().forEach(m=>{const[y,mo]=m.split('-');selM.innerHTML+=`<option value="${m}">${MESI_IT[parseInt(mo)-1]} ${y}</option>`;});
-  }
-  const fM=selM?selM.value:'';
-  const fPv=selPv?selPv.value:'';
-  const gare=(D.gare||[]).filter(g=>{
-    if(fM&&!(g['Data']||'').startsWith(fM))return false;
-    return true;
-  });
-  // Top arbitri
-  const arbC={};
-  gare.forEach(g=>{['Arbitro 1','Arbitro 2'].forEach(f=>{const n=pns(g[f]||'');if(!n)return;const p=P[n]||{};if(fPv&&p.provincia!==fPv)return;arbC[n]=(arbC[n]||0)+1;});});
-  const topArb=Object.entries(arbC).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  // Top UDC
-  const udcC={};
-  gare.forEach(g=>{['Segnapunti','Cronometrista','24 Secondi','Addetto Referto'].forEach(f=>{const n=pns(g[f]||'');if(!n)return;const p=P[n]||{};if(fPv&&p.provincia!==fPv)return;udcC[n]=(udcC[n]||0)+1;});});
-  const topUdc=Object.entries(udcC).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  // Top squadre
-  const sqC={};
-  gare.forEach(g=>{['Squadra Casa','Squadra Ospite'].forEach(f=>{const s=g[f]||'';if(!s)return;if(fPv){const sq=SQ[s];if(!sq||sq.prov!==fPv)return;}sqC[s]=(sqC[s]||0)+1;});});
-  const topSq=Object.entries(sqC).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  function mkList(entries,catClass){
-    if(!entries.length)return'<span style="color:var(--mu);font-size:.75rem">Nessun dato</span>';
-    const maxV=entries[0][1]||1;
-    return entries.map(([nome,cnt],i)=>{
-      const p=P[nome]||SQ[nome]||{};
-      const clr=PC[p.provincia||p.prov]||'var(--bl)';
-      const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="color:var(--mu2);font-size:.7rem">${i+1}.</span>`;
-      const pct=Math.round(cnt/maxV*100);
-      const bg=i===0?'background:linear-gradient(90deg,#fff9e6,#fff)':i===1?'background:linear-gradient(90deg,#f5f5f5,#fff)':i===2?'background:linear-gradient(90deg,#fdf3e7,#fff)':'background:#fff';
-      const isArb=catClass==='rn-Arbitro'||catClass==='rn-UDC';
-      return`<div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:6px;${bg};border:1px solid ${i<3?'#f0e8d0':'#f0f2f8'};cursor:pointer" ${isArb?`onclick="openPersona('${esc(nome)}')"`:catClass==='rn-sq'?`onclick="openSquadra('${esc(nome)}')"`:''}>
-        <span style="min-width:22px;text-align:center">${medal}</span>
-        <span class="rn ${catClass}" style="flex:1;font-size:.74rem;color:${clr};font-weight:${i<3?700:500}">${escH(nome)}</span>
-        <div style="width:40px;height:4px;background:#eee;border-radius:2px;flex-shrink:0"><div style="height:100%;width:${pct}%;background:${clr};border-radius:2px"></div></div>
-        <span style="font-weight:800;color:${clr};font-size:.9rem;min-width:24px;text-align:right">${cnt}</span>
-      </div>`;
-    }).join('');
-  }
-  const label=fM?(()=>{const[y,mo]=fM.split('-');return MESI_IT[parseInt(mo)-1]+' '+y;})():'Tutta la stagione';
-  const pvLabel=fPv?` — ${fPv}`:'';
-  grid.innerHTML=`
-    <div class="db-card" style="margin:0">
-      <div class="db-card-hd" style="font-size:.73rem">👨‍⚖️ Top Arbitri${pvLabel}<span style="float:right;font-size:.65rem;color:var(--mu)">${label}</span></div>
-      <div style="display:flex;flex-direction:column;gap:2px">${mkList(topArb,'rn-Arbitro')}</div>
-    </div>
-    <div class="db-card" style="margin:0">
-      <div class="db-card-hd" style="font-size:.73rem">📋 Top UDC${pvLabel}<span style="float:right;font-size:.65rem;color:var(--mu)">${label}</span></div>
-      <div style="display:flex;flex-direction:column;gap:2px">${mkList(topUdc,'rn-UDC')}</div>
-    </div>
-    <div class="db-card" style="margin:0">
-      <div class="db-card-hd" style="font-size:.73rem">🏆 Top Squadre${pvLabel}<span style="float:right;font-size:.65rem;color:var(--mu)">${label}</span></div>
-      <div style="display:flex;flex-direction:column;gap:2px">${mkList(topSq,'rn-sq')}</div>
-    </div>`;
+  const ms=new Set();(D.gare||[]).forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)ms.add(m);});
+  [...ms].sort().reverse().forEach(m=>{const[y,mo]=m.split('-');sel.innerHTML+=`<option value="${m}">${MESI_IT[parseInt(mo)-1]} ${y}</option>`;});
 }
+function renderTopMeseCol(col){
+  _tmInitMesi('tm-arb-m');_tmInitMesi('tm-udc-m');_tmInitMesi('tm-sq-m');
+  const MESI_IT=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const cols=col?[col]:['arb','udc','sq'];
+  cols.forEach(c=>{
+    const fM=(document.getElementById('tm-'+c+'-m')||{}).value||'';
+    const fPv=(document.getElementById('tm-'+c+'-pv')||{}).value||'';
+    const el=document.getElementById('tm-'+c+'-list');if(!el)return;
+    const gare=(D.gare||[]).filter(g=>!fM||(g['Data']||'').startsWith(fM));
+    let entries=[];
+    if(c==='arb'){
+      const ct={};gare.forEach(g=>{['Arbitro 1','Arbitro 2'].forEach(f=>{const n=pns(g[f]||'');if(!n)return;if(fPv&&(P[n]||{}).provincia!==fPv)return;ct[n]=(ct[n]||0)+1;});});
+      entries=Object.entries(ct).sort((a,b)=>b[1]-a[1]);
+    } else if(c==='udc'){
+      const ct={};gare.forEach(g=>{['Segnapunti','Cronometrista','24 Secondi','Addetto Referto'].forEach(f=>{const n=pns(g[f]||'');if(!n)return;if(fPv&&(P[n]||{}).provincia!==fPv)return;ct[n]=(ct[n]||0)+1;});});
+      entries=Object.entries(ct).sort((a,b)=>b[1]-a[1]);
+    } else {
+      const ct={};gare.forEach(g=>{['Squadra Casa','Squadra Ospite'].forEach(f=>{const s=g[f]||'';if(!s)return;if(fPv&&SQ[s]?.prov!==fPv)return;ct[s]=(ct[s]||0)+1;});});
+      entries=Object.entries(ct).sort((a,b)=>b[1]-a[1]);
+    }
+    if(!entries.length){el.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessun dato</span>';return;}
+    const maxV=entries[0][1]||1;
+    const label=fM?(()=>{const[y,mo]=fM.split('-');return MESI_IT[parseInt(mo)-1]+' '+y;})():'Stagione';
+    let rankPos=0,lastVal=-1;
+    el.innerHTML='<div style="font-size:.6rem;color:var(--mu);margin-bottom:4px">'+label+(fPv?' · '+fPv:'')+'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:2px;max-height:420px;overflow-y:auto">'
+      +entries.map(([nome,cnt])=>{
+        if(cnt!==lastVal){rankPos++;lastVal=cnt;}
+        const p=c==='sq'?SQ[nome]||{}:P[nome]||{};
+        const clr=PC[p.provincia||p.prov]||'var(--bl)';
+        const medal=rankPos===1?'🥇':rankPos===2?'🥈':rankPos===3?'🥉':`<span style="color:var(--mu2);font-size:.7rem">${rankPos}.</span>`;
+        const pct=Math.round(cnt/maxV*100);
+        const bg=rankPos===1?'background:linear-gradient(90deg,#fff9e6,#fff)':rankPos===2?'background:linear-gradient(90deg,#f5f5f5,#fff)':rankPos===3?'background:linear-gradient(90deg,#fdf3e7,#fff)':'background:#fff';
+        const act=c==='sq'?`onclick="openSquadra('${esc(nome)}')"`:c==='arb'||c==='udc'?`onclick="openPersona('${esc(nome)}')"`:''
+        return`<div style="display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;${bg};border:1px solid ${rankPos<4?'#f0e8d0':'#f0f2f8'};cursor:pointer" ${act}>
+          <span style="min-width:22px;text-align:center">${medal}</span>
+          <span style="flex:1;font-size:.73rem;color:${clr};font-weight:${rankPos<4?700:400};overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(nome)}">${escH(nome)}</span>
+          <div style="width:36px;height:4px;background:#eee;border-radius:2px;flex-shrink:0"><div style="height:100%;width:${pct}%;background:${clr};border-radius:2px"></div></div>
+          <span style="font-weight:800;color:${clr};font-size:.88rem;min-width:22px;text-align:right">${cnt}</span>
+        </div>`;
+      }).join('')+'</div>';
+  });
+}
+function renderTopMese(){renderTopMeseCol();}
 
+function _tmTrendToggle(e){
+  if(e.target.tagName==='SELECT'||e.target.tagName==='BUTTON')return;
+  const wrap=document.getElementById('trend-mese-wrap');
+  const tog=document.getElementById('trend-mese-tog');
+  if(!wrap)return;
+  const open=wrap.style.display!=='none';
+  wrap.style.display=open?'none':'block';
+  if(tog)tog.textContent=open?'▶':'▼';
+  if(!open)renderTrendMese();
+}
+var _trendSort={col:'tot',asc:false};
 function renderTrendMese(){
   const selPv=document.getElementById('trend-mese-pv');
   const selM=document.getElementById('trend-mese-m');
   const body=document.getElementById('trend-mese-body');
   if(!body)return;
   const MESI_IT=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-  // Popola mesi select
   if(selM&&selM.options.length<=1){
     const ms=new Set();(D.gare||[]).forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)ms.add(m);});
     [...ms].sort().reverse().forEach(m=>{const[y,mo]=m.split('-');selM.innerHTML+=`<option value="${m}">${MESI_IT[parseInt(mo)-1]} ${y}</option>`;});
   }
   const fPv=selPv?selPv.value:'';
   const fM=selM?selM.value:'';
-  // Calcola gare per arbitro per mese
-  const arbMeseMap={}; // arbMeseMap[nome][mese] = count
+  const arbMeseMap={};
   const mesiSet=new Set();
   (D.gare||[]).forEach(g=>{
     const m=(g['Data']||'').slice(0,7);if(!m)return;
-    if(fM&&m!==fM)return;
     mesiSet.add(m);
     ['Arbitro 1','Arbitro 2'].forEach(f=>{
       const n=pns(g[f]||'');if(!n)return;
@@ -3230,36 +3258,56 @@ function renderTrendMese(){
       arbMeseMap[n][m]=(arbMeseMap[n][m]||0)+1;
     });
   });
-  const mesiSorted=[...mesiSet].sort();
-  if(!mesiSorted.length){body.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessun dato</span>';return;}
-  // Top 15 arbitri per totale
-  const arbTot=Object.entries(arbMeseMap).map(([n,mm])=>({n,tot:Object.values(mm).reduce((s,v)=>s+v,0),mm})).sort((a,b)=>b.tot-a.tot).slice(0,15);
-  if(!arbTot.length){body.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessun dato</span>';return;}
-  const maxPerM=Math.max(...arbTot.flatMap(a=>mesiSorted.map(m=>a.mm[m]||0)),1);
+  const allMesi=[...mesiSet].sort();
+  const visMesi=fM?[fM]:allMesi;
+  if(!visMesi.length){body.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessun dato</span>';return;}
+  // Build rows with totals
+  let arbRows=Object.entries(arbMeseMap).map(([n,mm])=>{
+    const tot=visMesi.reduce((s,m)=>s+(mm[m]||0),0);
+    if(!tot&&fPv)return null;
+    return{n,mm,tot};
+  }).filter(Boolean);
+  // Sort
+  const sc=_trendSort.col;
+  arbRows.sort((a,b)=>{
+    let va=sc==='tot'?a.tot:sc==='nome'?a.n.localeCompare(b.n,'it'):(a.mm[sc]||0);
+    let vb=sc==='tot'?b.tot:sc==='nome'?b.n.localeCompare(a.n,'it'):(b.mm[sc]||0);
+    return _trendSort.asc?(sc==='nome'?-1:1)*Math.sign(typeof va==='string'?va.localeCompare(vb):va-vb):(sc==='nome'?1:-1)*Math.sign(typeof va==='string'?va.localeCompare(vb):vb-va);
+  });
+  // Find absolute max and per-month max
+  const absMax=Math.max(...arbRows.flatMap(r=>visMesi.map(m=>r.mm[m]||0)),0);
+  const monthMax={};visMesi.forEach(m=>{monthMax[m]=Math.max(...arbRows.map(r=>r.mm[m]||0),0);});
   const PROV_COLORS={'CA':'#c0392b','SS':'#1a6bb5','NU':'#c05a20','OR':'#0a8c6a','SU':'#6c3dc8'};
-  const hdr=`<div style="display:grid;grid-template-columns:160px repeat(${mesiSorted.length},1fr) 60px;gap:2px;align-items:center;font-size:.62rem;font-weight:700;color:var(--mu);border-bottom:2px solid var(--br);padding-bottom:4px;margin-bottom:4px">
-    <div>Arbitro</div>
-    ${mesiSorted.map(m=>{const[y,mo]=m.split('-');return`<div style="text-align:center">${MESI_IT[parseInt(mo)-1]}</div>`;}).join('')}
-    <div style="text-align:center">Tot</div>
-  </div>`;
-  const rows=arbTot.map(({n,tot,mm})=>{
-    const p=P[n]||{};const clr=PROV_COLORS[p.provincia]||PC[p.provincia]||'var(--bl)';
-    const cells=mesiSorted.map(m=>{
-      const v=mm[m]||0;
-      const h=v?Math.max(4,Math.round(v/maxPerM*32)):0;
-      const bg=v?clr:'#eee';
-      return`<div style="display:flex;align-items:flex-end;justify-content:center;height:36px">
-        ${v?`<div style="width:18px;height:${h}px;background:${bg};border-radius:2px 2px 0 0;opacity:.85" title="${n}: ${v} gare in ${m}"></div>`:'<div style="width:18px;height:2px;background:#eee;margin-bottom:0"></div>'}
-        ${v?`<div style="font-size:.5rem;color:${clr};font-weight:700;position:absolute;transform:translateY(-${h+2}px)">${v}</div>`:''}
-      </div>`;
+  function thSort(col,label){
+    const active=_trendSort.col===col;
+    const arrow=active?(_trendSort.asc?'↑':'↓'):'⇅';
+    return`<th onclick="(function(){_trendSort.col='${col}';_trendSort.asc=(_trendSort.col==='${col}'&&!_trendSort.asc);renderTrendMese();})()" style="cursor:pointer;user-select:none;white-space:nowrap;padding:4px 6px;font-size:.65rem;background:#f0f4ff;position:sticky;top:0;z-index:1">${label} <span style="color:${active?'var(--bl)':'#aaa'}">${arrow}</span></th>`;
+  }
+  let rank=0,lastTot=-1;
+  const rows=arbRows.map((r,idx)=>{
+    if(r.tot!==lastTot){rank=idx+1;lastTot=r.tot;}
+    const p=P[r.n]||{};const clr=PROV_COLORS[p.provincia]||PC[p.provincia]||'var(--bl)';
+    const cells=visMesi.map(m=>{
+      const v=r.mm[m]||0;
+      const isAbsMax=(v>0&&v===absMax);
+      const isMonthMax=(v>0&&v===monthMax[m]&&monthMax[m]>0);
+      const bg=isAbsMax?'background:#fff3cd;font-weight:900;color:#856404':isMonthMax?'background:#e8f4fd;font-weight:700;color:#0c5880':'';
+      return`<td style="text-align:center;padding:3px 4px;font-size:.75rem;${bg}">${v||'—'}</td>`;
     }).join('');
-    return`<div style="display:grid;grid-template-columns:160px repeat(${mesiSorted.length},1fr) 60px;gap:2px;align-items:center;padding:2px 0;border-bottom:1px solid #f0f2f8">
-      <div style="font-size:.72rem;font-weight:600;color:${clr};cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="openPersona('${esc(n)}')">${escH(n)}</div>
+    const medal=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'';
+    return`<tr style="border-bottom:1px solid #f0f2f8">
+      <td style="padding:3px 6px;font-size:.7rem;color:var(--mu2);text-align:center;font-weight:700">${rank}</td>
+      <td style="padding:3px 8px;font-size:.74rem;font-weight:600;color:${clr};cursor:pointer;white-space:nowrap" onclick="openPersona('${esc(r.n)}')">${medal}${escH(r.n)}</td>
       ${cells}
-      <div style="text-align:center;font-size:.8rem;font-weight:900;color:${clr}">${tot}</div>
-    </div>`;
+      <td style="text-align:center;padding:3px 6px;font-size:.82rem;font-weight:900;color:${clr}">${r.tot}</td>
+    </tr>`;
   }).join('');
-  body.innerHTML=`<div style="overflow-x:auto"><div style="min-width:600px">${hdr}${rows}</div></div>`;
+  const hdr=`<tr style="background:#f0f4ff">${thSort('rank','#')}${thSort('nome','Arbitro')}${visMesi.map(m=>{const[y,mo]=m.split('-');return thSort(m,MESI_IT[parseInt(mo)-1]);}).join('')}${thSort('tot','Tot')}</tr>`;
+  const legendMax=`<div style="font-size:.62rem;color:var(--mu);margin-bottom:6px">
+    <span style="background:#fff3cd;color:#856404;border-radius:3px;padding:1px 5px;font-weight:700;margin-right:6px">■ max assoluto (${absMax})</span>
+    <span style="background:#e8f4fd;color:#0c5880;border-radius:3px;padding:1px 5px;font-weight:700">■ max del mese</span>
+  </div>`;
+  body.innerHTML=legendMax+`<div style="overflow-x:auto;max-height:500px;overflow-y:auto"><table style="border-collapse:collapse;width:100%;min-width:500px"><thead>${hdr}</thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function renderHome(){
@@ -3309,9 +3357,9 @@ function renderHome(){
           if(diff<=2){streak++;prev=g;}else break;
         }
         return{nome:p.nome,prov:p.provincia,streak,total:p.n_gare_arbitro||0};
-      }).filter(x=>x.streak>=2).sort((a,b)=>b.streak-a.streak).slice(0,5);
+      }).filter(x=>x.streak>=2).sort((a,b)=>b.streak===a.streak?b.total-a.total:b.streak-a.streak).slice(0,10);
       if(streakData.length){
-        wComb.innerHTML='<div style="display:flex;flex-direction:column;gap:4px">'
+        wComb.innerHTML='<div style="display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto">'
           +streakData.map((x,i)=>{
             const clr=PC[x.prov]||'var(--bl)';
             const medal=i===0?'🔥':i===1?'🥈':i===2?'🥉':'';
@@ -3444,7 +3492,7 @@ function renderHome(){
 
   renderHomePv();
   renderTopArbMese();
-  renderTopMese();
+  renderTopMeseCol();
   renderTrendMese();
 
   const actEl=document.getElementById('h-act');
@@ -10593,7 +10641,7 @@ function renderGlobalStats(){
           </div>`;
         }).join('');
         const mLabel=m.slice(5);
-        return`<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;min-width:130px;padding:0 6px" title="${m}: ${tot}">
+        return`<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;min-width:110px;padding:0 4px" title="${m}: ${tot}">
           <div style="display:flex;align-items:flex-end;gap:1px;height:${BAR_H}px;border-bottom:2px solid #d0d8ee;width:100%;justify-content:center">${provBars}</div>
           <div style="font-size:.68rem;color:#3a4a7a;font-weight:700;margin-top:4px;text-align:center">${mNames[parseInt(mLabel)]||mLabel}</div>
           <div style="font-size:.6rem;color:#9aa3b8;font-weight:600">${tot||''}</div>
@@ -10608,25 +10656,33 @@ function renderGlobalStats(){
       const pvAvgM=sortedMs.length?Math.round(pvTot/sortedMs.length):0;
       return`<span style="background:${PROV_COLORS[pv]};color:#fff;border-radius:3px;padding:1px 7px;font-size:.65rem;font-weight:700">${pv}: media ${pvAvgM}/mese · tot ${pvTot}</span>`;
     }).join('');
+    // Media per mese per singola provincia
+    const pvMeseAvgs=PROVS.map(pv=>{
+      const pvVals=sortedMs.map(m=>getVal(m,pv)).filter(v=>v>0);
+      const pvAvgM2=pvVals.length?Math.round(pvVals.reduce((s,v)=>s+v,0)/pvVals.length):0;
+      return pvAvgM2?`<span style="background:${PROV_COLORS[pv]};color:#fff;border-radius:3px;padding:1px 6px;font-size:.62rem;font-weight:700" title="${pv}: media ${pvAvgM2}/mese sui mesi attivi">${pv} media: ${pvAvgM2}</span>`:'';
+    }).filter(Boolean).join('');
     return`<div style="margin-bottom:28px">
       <div style="font-size:.75rem;font-weight:700;color:var(--bl);margin-bottom:10px">${title}</div>
-      <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:12px;align-items:start">
+      <div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:8px;align-items:start">
         <div>
           <div style="font-size:.62rem;color:var(--mu);margin-bottom:4px;font-weight:600">📅 Ordine cronologico</div>
-          <div style="display:flex;align-items:flex-end;gap:4px;padding:4px 0;overflow-x:auto">${barsLeft}</div>
+          <div style="display:flex;align-items:flex-end;gap:2px;padding:4px 0;overflow-x:auto">${barsLeft}</div>
         </div>
-        <div style="background:#dde3f0;height:100%"></div>
+        <div style="background:#dde3f0;align-self:stretch"></div>
         <div>
           <div style="font-size:.62rem;color:var(--mu);margin-bottom:4px;font-weight:600">📊 Per quantità (più alto → meno)</div>
-          <div style="display:flex;align-items:flex-end;gap:4px;padding:4px 0;overflow-x:auto">${barsRight}</div>
+          <div style="display:flex;align-items:flex-end;gap:2px;padding:4px 0;overflow-x:auto">${barsRight}</div>
         </div>
       </div>
-      <div style="margin-top:10px;padding:8px;background:#f4f7ff;border-radius:8px;font-size:.68rem;display:flex;flex-wrap:wrap;align-items:center;gap:10px">
-        <span><b style="color:var(--bl)">Media mensile:</b> <b>${avgMese}</b></span>
-        <span style="color:var(--mu)">|</span>
-        <span><b style="color:var(--bl)">Totale stagione:</b> <b>${totalAll}</b></span>
-        <span style="color:var(--mu)">|</span>
-        <div style="display:flex;flex-wrap:wrap;gap:4px">${pvAvgs}</div>
+      <div style="margin-top:8px;padding:8px;background:#f4f7ff;border-radius:8px;font-size:.68rem">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px">
+          <span><b style="color:var(--bl)">Media mensile totale:</b> <b>${avgMese}</b></span>
+          <span style="color:var(--mu)">|</span>
+          <span><b style="color:var(--bl)">Totale stagione:</b> <b>${totalAll}</b></span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px">${pvAvgs}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px"><b style="color:var(--bl);font-size:.62rem;margin-right:4px">Media/mese per provincia:</b>${pvMeseAvgs}</div>
       </div>
     </div>`;
   }
@@ -10637,12 +10693,43 @@ function renderGlobalStats(){
     </span>`).join('')}
   </div>`;
 
+  // Build flat sorted absolute values for istogrammi assoluti
+  function mkAbsHistogram(title,getAll){
+    const BAR_H=200;
+    // Collect all (pv,mese,val) triples
+    const items=[];
+    sortedM.forEach(m=>{PROVS.forEach(pv=>{const v=getAll(m,pv);if(v>0)items.push({pv,m,v});});});
+    items.sort((a,b)=>b.v-a.v);
+    if(!items.length)return'';
+    const maxV=items[0].v||1;
+    const MESI_IT2=['','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+    const bars=items.map((it,i)=>{
+      const h=Math.max(3,Math.round(it.v/maxV*BAR_H));
+      const mLabel=MESI_IT2[parseInt(it.m.slice(5))]||it.m.slice(5);
+      const gold=i===0?'box-shadow:0 0 0 2px gold;':'';
+      return`<div style="display:flex;flex-direction:column;align-items:center;min-width:42px;padding:0 2px" title="${it.pv} ${mLabel}: ${it.v}">
+        <div style="font-size:.48rem;color:${PROV_COLORS[it.pv]};font-weight:700;line-height:1.2">${it.v}</div>
+        <div style="width:28px;height:${h}px;background:${PROV_COLORS[it.pv]};border-radius:2px 2px 0 0;${gold}"></div>
+        <div style="font-size:.52rem;color:#3a4a7a;font-weight:600;margin-top:2px;text-align:center;white-space:nowrap">${it.pv}</div>
+        <div style="font-size:.48rem;color:#9aa3b8;text-align:center">${mLabel}</div>
+      </div>`;
+    }).join('');
+    return`<div style="margin-bottom:20px">
+      <div style="font-size:.72rem;font-weight:700;color:var(--bl);margin-bottom:6px">${title}</div>
+      <div style="display:flex;align-items:flex-end;gap:2px;overflow-x:auto;padding:4px 0">${bars}</div>
+    </div>`;
+  }
+
   el.innerHTML=legend
     +mkHistogram('📊 Gare designate per mese (per provincia arbitro)',sortedM,
       (m,pv)=>gareByMeseProv[m]?.[pv]||0, maxG1, true)
     +mkHistogram('👤 Arbitri unici utilizzati per mese (per provincia)',sortedM,
       (m,pv)=>arbByMeseProv[m]?.[pv]?.size||0, maxG2, false)
-    +`<div style="font-size:.6rem;color:var(--mu);margin-top:4px">Le barre mostrano i valori per ogni provincia affiancate per mese</div>`;
+    +mkAbsHistogram('📊 Gare designate — valori assoluti ordinati (prov × mese)',
+      (m,pv)=>gareByMeseProv[m]?.[pv]||0)
+    +mkAbsHistogram('👤 Arbitri unici — valori assoluti ordinati (prov × mese)',
+      (m,pv)=>arbByMeseProv[m]?.[pv]?.size||0)
+    +`<div style="font-size:.6rem;color:var(--mu);margin-top:4px">Le barre mostrano i valori per ogni provincia affiancate per mese · 🥇 indica il valore assoluto più alto</div>`;
 }
 
 // ── PROVVEDIMENTI ──
