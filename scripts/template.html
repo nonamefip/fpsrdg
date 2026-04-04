@@ -6343,7 +6343,7 @@ function openPersona(nome,campFilter){
           const gs=(garaByDate[d]||[]).slice().sort((x,y)=>pCampSort(x['Campionato']||x.c||'')-pCampSort(y['Campionato']||y.c||''));
           if(!gs.length){
             // Giorno vuoto: piccolo tick — sabato/domenica/festivi evidenziati
-            const isWE2=(dt2.getDay()===0||dt2.getDay()===6);
+            const isWE2=(dt.getDay()===0||dt.getDay()===6);
             const tickH=isNewMonth?8:dayN%5===0?4:isWE2?3:1;
             const tickClr=isNewMonth?'#1a6bb5':isWE2?'#e67e22':dayN%5===0?'#b5d4f4':'#dde3f0';
             const weBg=isWE2?'background:rgba(230,126,34,0.06);':'';
@@ -6353,7 +6353,7 @@ function openPersona(nome,campFilter){
           } else {
             const n=gs.length;
             const bw=Math.max(4,Math.floor((BW-1)/n));
-            const isWE3=(dt2.getDay()===0||dt2.getDay()===6);
+            const isWE3=(dt.getDay()===0||dt.getDay()===6);
             const bars=gs.map(g=>{
               const c=g['Campionato']||g.c||'';
               const h=pCampH(c);
