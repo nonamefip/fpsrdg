@@ -3381,98 +3381,154 @@ function renderTrendMese(){
 
 function _openArbCampD(nome,camp){
   const p=P[nome];if(!p)return;
-  const wrapId='arb-camp-detail-wrap-'+nome.replace(/[^a-zA-Z0-9]/g,'_');
-  const innerId='arb-camp-detail-inner-'+nome.replace(/[^a-zA-Z0-9]/g,'_');
-  // Find wrap by querying open modals
   let wrap=null,inner=null;
   document.querySelectorAll('[id^="arb-camp-detail-wrap-"]').forEach(el=>{if(el.id.includes(nome.slice(0,8).replace(/[^a-zA-Z0-9]/g,'_')))wrap=el;});
   document.querySelectorAll('[id^="arb-camp-detail-inner-"]').forEach(el=>{if(el.id.includes(nome.slice(0,8).replace(/[^a-zA-Z0-9]/g,'_')))inner=el;});
   if(!wrap||!inner)return;
-  // Toggle if same camp
   if(wrap.dataset.camp===camp&&wrap.style.display!=='none'){wrap.style.display='none';return;}
   wrap.dataset.camp=camp;
   wrap.style.display='block';
-  // Find all gare dell'arbitro in questo campionato
+
+  // Gare dell'arbitro in questo campionato
   const arbGare=(p.gare||[]).filter(g=>(g['Campionato']||'')===camp);
-  if(!arbGare.length){inner.innerHTML=`<div style="color:var(--mu);font-size:.75rem">Nessuna gara trovata per ${escH(camp)}</div>`;return;}
-  // Raggruppa per girone
+  if(!arbGare.length){inner.innerHTML=`<div style="color:var(--mu);font-size:.75rem">Nessuna gara trovata</div>`;return;}
+
+  // Tutte le gare del campionato (per statistiche totali)
+  const tutteGareCamp=(D.gare||[]).filter(g=>(g['Campionato']||'')===camp);
+  const tutteGareCampFut=(D.gare_future||[]).filter(g=>(g['Campionato']||'')===camp);
+  const totGareCampAll=tutteGareCamp.length+tutteGareCampFut.length;
+
+  // Arb1/Arb2 dell'arbitro nel campionato
+  const nArb1=arbGare.filter(g=>pns(g['Arbitro 1']||'')===nome).length;
+  const nArb2=arbGare.filter(g=>pns(g['Arbitro 2']||'')===nome).length;
+  const pctCamp=totGareCampAll>0?Math.round(arbGare.length/totGareCampAll*100):0;
+
+  // Tutte le squadre per girone (da TUTTE le gare del camp, passate+future)
+  const tutteSquadre={};
+  const garePerGirone={}; // tutte le gare per girone (passate)
+  const gareFutPerGirone={}; // future per girone
+  [...tutteGareCamp,...tutteGareCampFut].forEach(g=>{
+    const gir=g['Girone']||'—';
+    if(!tutteSquadre[gir])tutteSquadre[gir]=new Set();
+    const c=g['Squadra Casa']||'',o=g['Squadra Ospite']||'';
+    if(c)tutteSquadre[gir].add(c);
+    if(o)tutteSquadre[gir].add(o);
+  });
+  tutteGareCamp.forEach(g=>{
+    const gir=g['Girone']||'—';
+    garePerGirone[gir]=(garePerGirone[gir]||0)+1;
+  });
+  tutteGareCampFut.forEach(g=>{
+    const gir=g['Girone']||'—';
+    gareFutPerGirone[gir]=(gareFutPerGirone[gir]||0)+1;
+  });
+
+  // Raggruppa gare arbitro per girone con statistiche complete
   const gironi={};
   arbGare.forEach(g=>{
     const gir=g['Girone']||'—';
-    if(!gironi[gir])gironi[gir]={incontrate:new Set(),garePerSq:{},gareInfo:{}};
-    const casa=g['Squadra Casa']||'';const osp=g['Squadra Ospite']||'';
-    const giornata=g['Numero Gara']||g['Giornata']||g['giornata']||'';
-    const data=g['Data']||'';const ris=g['Risultato']||'';
-    if(casa){
-      gironi[gir].incontrate.add(casa);
-      gironi[gir].garePerSq[casa]=(gironi[gir].garePerSq[casa]||0)+1;
-      if(!gironi[gir].gareInfo[casa])gironi[gir].gareInfo[casa]=[];
-      gironi[gir].gareInfo[casa].push({data,ris,num:giornata,ruolo:'casa'});
-    }
-    if(osp){
-      gironi[gir].incontrate.add(osp);
-      gironi[gir].garePerSq[osp]=(gironi[gir].garePerSq[osp]||0)+1;
-      if(!gironi[gir].gareInfo[osp])gironi[gir].gareInfo[osp]=[];
-      gironi[gir].gareInfo[osp].push({data,ris,num:giornata,ruolo:'ospite'});
-    }
+    if(!gironi[gir])gironi[gir]={incontrate:new Set(),garePerSq:{},casaPerSq:{},fuoriPerSq:{},gareInfo:{},nArb1:0,nArb2:0};
+    const casa=g['Squadra Casa']||'',osp=g['Squadra Ospite']||'';
+    const data=g['Data']||'',ris=g['Risultato']||'';
+    const isArb1=pns(g['Arbitro 1']||'')===nome;
+    if(isArb1)gironi[gir].nArb1++;else gironi[gir].nArb2++;
+    [casa,osp].filter(Boolean).forEach(sq=>{
+      gironi[gir].incontrate.add(sq);
+      gironi[gir].garePerSq[sq]=(gironi[gir].garePerSq[sq]||0)+1;
+      if(sq===casa){gironi[gir].casaPerSq[sq]=(gironi[gir].casaPerSq[sq]||0)+1;}
+      else{gironi[gir].fuoriPerSq[sq]=(gironi[gir].fuoriPerSq[sq]||0)+1;}
+      if(!gironi[gir].gareInfo[sq])gironi[gir].gareInfo[sq]=[];
+      gironi[gir].gareInfo[sq].push({data,ris,ruolo:sq===casa?'🏠':'✈'});
+    });
   });
-  // Tutte le squadre del campionato (dal global H2H o da SQ)
-  const tutteSquadre={};
-  (D.gare||[]).filter(g=>(g['Campionato']||'')===camp).forEach(g=>{
-    const gir=g['Girone']||'—';
-    const casa=g['Squadra Casa']||'';const osp=g['Squadra Ospite']||'';
-    if(casa){if(!tutteSquadre[gir])tutteSquadre[gir]=new Set();tutteSquadre[gir].add(casa);}
-    if(osp){if(!tutteSquadre[gir])tutteSquadre[gir]=new Set();tutteSquadre[gir].add(osp);}
+
+  // Gare di ogni squadra nel campionato (quante in totale l'hanno giocata)
+  const totGareSq={};
+  tutteGareCamp.forEach(g=>{
+    const c=g['Squadra Casa']||'',o=g['Squadra Ospite']||'';
+    if(c)totGareSq[c]=(totGareSq[c]||0)+1;
+    if(o)totGareSq[o]=(totGareSq[o]||0)+1;
   });
+
   const clr=campColor(camp)||'var(--bl)';
   const shortCamp=camp.replace('COMITATO REGIONALE SARDEGNA ','').replace(/,$/,'').trim();
-  let html2=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-    <span style="background:${clr};color:#fff;border-radius:4px;padding:2px 10px;font-size:.75rem;font-weight:700">${escH(shortCamp)}</span>
-    <span style="font-size:.72rem;color:var(--mu)">${arbGare.length} gare arbitrate</span>
-    <button onclick="this.closest('[id^=arb-camp-detail-wrap]').style.display='none'" style="margin-left:auto;border:none;background:none;cursor:pointer;color:var(--mu);font-size:1rem">✕</button>
+
+  let html2=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+    <span style="background:${clr};color:#fff;border-radius:5px;padding:3px 12px;font-size:.8rem;font-weight:700">${escH(shortCamp)}</span>
+    <span style="font-size:.75rem;font-weight:700;color:var(--bl)">${arbGare.length} gare arbitrate</span>
+    <span style="font-size:.7rem;color:var(--mu)">su ${totGareCampAll} tot. campionato</span>
+    <span style="background:#e8f4ff;color:#1a6bb5;border-radius:4px;padding:2px 8px;font-size:.7rem;font-weight:700">${pctCamp}% gare camp.</span>
+    <span style="font-size:.68rem;color:var(--mu)">come 1° arb: <b>${nArb1}</b> · come 2° arb: <b>${nArb2}</b></span>
+    <button onclick="this.closest('[id^=arb-camp-detail-wrap]').style.display='none'" style="margin-left:auto;border:none;background:none;cursor:pointer;color:var(--mu);font-size:1.1rem">✕</button>
   </div>`;
+
   const gironiKeys=Object.keys(tutteSquadre).sort();
   if(!gironiKeys.length){
-    // No girone data - just show incontrate
     const inc=[...new Set(arbGare.flatMap(g=>[g['Squadra Casa']||'',g['Squadra Ospite']||''].filter(Boolean)))];
     html2+=`<div style="font-size:.72rem;color:var(--mu);margin-bottom:4px">${inc.length} squadre incontrate:</div>`;
     html2+=`<div style="display:flex;flex-wrap:wrap;gap:4px">${inc.sort().map(sq=>`<span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')" style="font-size:.72rem">${escH(sq)}</span>`).join('')}</div>`;
   } else {
     gironiKeys.forEach(gir=>{
       const allSq=[...(tutteSquadre[gir]||[])].sort();
-      const incSet=gironi[gir]?.incontrate||new Set();
-      const garePerSq=gironi[gir]?.garePerSq||{};
+      const gd=gironi[gir]||{incontrate:new Set(),garePerSq:{},casaPerSq:{},fuoriPerSq:{},gareInfo:{},nArb1:0,nArb2:0};
+      const incSet=gd.incontrate;
       const nInc=[...allSq].filter(s=>incSet.has(s)).length;
       const nNon=allSq.length-nInc;
-      html2+=`<div style="margin-bottom:10px">
-        <div style="font-size:.72rem;font-weight:700;color:var(--bl);margin-bottom:4px;display:flex;align-items:center;gap:6px">
-          Girone: <b>${escH(gir)}</b>
-          <span style="font-size:.65rem;font-weight:400;color:var(--mu)">${allSq.length} squadre · <span style="color:#27ae60">${nInc} incontrate</span> · <span style="color:#e74c3c">${nNon} non incontrate</span></span>
+      const totGarGir=(garePerGirone[gir]||0)+(gareFutPerGirone[gir]||0);
+      const arbGarGir=arbGare.filter(g=>(g['Girone']||'—')===gir);
+      const pctGir=totGarGir>0?Math.round(arbGarGir.length/totGarGir*100):0;
+
+      html2+=`<div style="margin-bottom:16px;border:1px solid #e0e8f0;border-radius:8px;overflow:hidden">
+        <div style="background:#f0f5ff;padding:7px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid #d0daf0">
+          <b style="font-size:.75rem;color:var(--bl)">${escH(gir)}</b>
+          <span style="font-size:.68rem;color:var(--mu)">${allSq.length} squadre</span>
+          <span style="font-size:.68rem;color:#27ae60;font-weight:600">✅ ${nInc} incontrate</span>
+          <span style="font-size:.68rem;color:#e74c3c;font-weight:600">❌ ${nNon} non incontrate</span>
+          <span style="font-size:.68rem;color:var(--mu)">· ${nInc}/${allSq.length} squadre</span>
+          <span style="background:#e8f4ff;color:#1a6bb5;border-radius:3px;padding:1px 7px;font-size:.67rem;font-weight:700;margin-left:4px">${pctGir}% gare girone (${arbGarGir.length}/${totGarGir})</span>
+          <span style="font-size:.67rem;color:var(--mu)">1°arb:${gd.nArb1} · 2°arb:${gd.nArb2}</span>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-          <div>
-            <div style="font-size:.64rem;font-weight:700;color:#27ae60;margin-bottom:3px">✅ Incontrate</div>
-            <div style="display:flex;flex-direction:column;gap:2px">
-              ${allSq.filter(s=>incSet.has(s)).map(s=>{
-                const gInfo=((gironi[gir]?.gareInfo||{})[s]||[]).slice().sort((a,b)=>(a.data||'').localeCompare(b.data||''));
-                const dates=gInfo.map(g=>g.data?g.data.slice(5).split('-').reverse().join('/'):'').join(', ');
-                const ris=gInfo.map(g=>g.ris||'Prog.').join(', ');
-                return`<div style="display:flex;align-items:center;gap:4px;padding:3px 6px;background:#f0fff4;border-radius:4px;border:1px solid #86efac;cursor:pointer" onclick="openSquadra('${esc(s)}')">
-                  <span class="rn rn-sq" style="flex:1;font-size:.7rem">${escH(s)}</span>
-                  <span style="font-size:.62rem;color:#27500A;white-space:nowrap">${dates}</span>
-                  <span style="font-size:.65rem;font-weight:700;color:#27ae60;min-width:18px;text-align:right;flex-shrink:0">${garePerSq[s]||0}g</span>
-                </div>`;
-              }).join('')||'<span style="color:var(--mu);font-size:.7rem">—</span>'}
-            </div>
-          </div>
-          <div>
-            <div style="font-size:.64rem;font-weight:700;color:#e74c3c;margin-bottom:3px">❌ Non incontrate</div>
-            <div style="display:flex;flex-direction:column;gap:2px">
-              ${allSq.filter(s=>!incSet.has(s)).map(s=>`<div style="display:flex;align-items:center;padding:2px 6px;background:#fff5f5;border-radius:4px;border:1px solid #fca5a5">
-                <span class="rn rn-sq" onclick="openSquadra('${esc(s)}')" style="font-size:.7rem;color:#9a3412">${escH(s)}</span>
-              </div>`).join('')||'<span style="color:var(--green);font-size:.7rem">🎉 Tutte incontrate!</span>'}
-            </div>
-          </div>
+        <div style="padding:8px 12px">
+          <table style="width:100%;border-collapse:collapse;font-size:.72rem">
+            <thead>
+              <tr style="border-bottom:2px solid #d0daf0;background:#f8faff">
+                <th style="text-align:left;padding:4px 6px;font-weight:600">Squadra</th>
+                <th style="text-align:center;padding:4px 4px;font-weight:600;color:#27ae60" title="Gare arbitrate">Arb.</th>
+                <th style="text-align:center;padding:4px 4px;font-weight:600;color:#1a6bb5" title="Gare in casa">🏠</th>
+                <th style="text-align:center;padding:4px 4px;font-weight:600;color:#e67e22" title="Gare fuori casa">✈</th>
+                <th style="text-align:left;padding:4px 6px;font-weight:600;color:var(--mu)">Date</th>
+                <th style="text-align:center;padding:4px 4px;font-weight:600;color:var(--mu)" title="Gare tot. squadra nel camp.">Sq.tot</th>
+                <th style="text-align:center;padding:4px 4px;font-weight:600;color:#8e44ad" title="% delle gare della squadra arbitrate">%sq</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${allSq.map(sq=>{
+                const inc=incSet.has(sq);
+                const n=gd.garePerSq[sq]||0;
+                const nC=gd.casaPerSq[sq]||0;
+                const nF=gd.fuoriPerSq[sq]||0;
+                const sqTot=totGareSq[sq]||0;
+                const pctSq=sqTot>0?Math.round(n/sqTot*100):0;
+                const gInfo=(gd.gareInfo[sq]||[]).slice().sort((a,b)=>(a.data||'').localeCompare(b.data||''));
+                const dates=gInfo.map(g=>`${g.ruolo}${g.data?g.data.slice(5).split('-').reverse().join('/'):'?'}`).join(' · ');
+                const rowBg=inc?'#f0fff4':'#fff5f5';
+                const nameClr=inc?'#27500A':'#9a3412';
+                return`<tr style="background:${rowBg};border-bottom:0.5px solid ${inc?'#c3e6cb':'#fca5a5'}">
+                  <td style="padding:4px 6px;cursor:pointer" onclick="openSquadra('${esc(sq)}')" >
+                    <span style="font-weight:600;color:${nameClr}">${inc?'✅':'❌'} ${escH(sq)}</span>
+                  </td>
+                  <td style="text-align:center;padding:4px;font-weight:700;color:${inc?'#27ae60':'#ccc'}">${inc?n:'—'}</td>
+                  <td style="text-align:center;padding:4px;color:#1a6bb5;font-weight:${nC>0?700:400}">${inc?(nC||'—'):'—'}</td>
+                  <td style="text-align:center;padding:4px;color:#e67e22;font-weight:${nF>0?700:400}">${inc?(nF||'—'):'—'}</td>
+                  <td style="padding:4px 6px;font-size:.65rem;color:var(--mu);white-space:nowrap">${dates||'—'}</td>
+                  <td style="text-align:center;padding:4px;color:var(--mu)">${sqTot||'—'}</td>
+                  <td style="text-align:center;padding:4px">
+                    ${inc?`<span style="background:${pctSq>=50?'#e8f8ee':pctSq>=25?'#fff8e0':'#f5f5f5'};color:${pctSq>=50?'#27ae60':pctSq>=25?'#e67e22':'var(--mu)'};border-radius:3px;padding:1px 5px;font-weight:700;font-size:.68rem">${pctSq}%</span>`:'<span style="color:#ccc">—</span>'}
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
         </div>
       </div>`;
     });
