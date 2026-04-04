@@ -3392,10 +3392,22 @@ function _openArbCampD(nome,camp){
   const gironi={};
   arbGare.forEach(g=>{
     const gir=g['Girone']||'—';
-    if(!gironi[gir])gironi[gir]={incontrate:new Set(),garePerSq:{}};
+    if(!gironi[gir])gironi[gir]={incontrate:new Set(),garePerSq:{},gareInfo:{}};
     const casa=g['Squadra Casa']||'';const osp=g['Squadra Ospite']||'';
-    if(casa){gironi[gir].incontrate.add(casa);gironi[gir].garePerSq[casa]=(gironi[gir].garePerSq[casa]||0)+1;}
-    if(osp){gironi[gir].incontrate.add(osp);gironi[gir].garePerSq[osp]=(gironi[gir].garePerSq[osp]||0)+1;}
+    const giornata=g['Numero Gara']||g['Giornata']||g['giornata']||'';
+    const data=g['Data']||'';const ris=g['Risultato']||'';
+    if(casa){
+      gironi[gir].incontrate.add(casa);
+      gironi[gir].garePerSq[casa]=(gironi[gir].garePerSq[casa]||0)+1;
+      if(!gironi[gir].gareInfo[casa])gironi[gir].gareInfo[casa]=[];
+      gironi[gir].gareInfo[casa].push({data,ris,num:giornata,ruolo:'casa'});
+    }
+    if(osp){
+      gironi[gir].incontrate.add(osp);
+      gironi[gir].garePerSq[osp]=(gironi[gir].garePerSq[osp]||0)+1;
+      if(!gironi[gir].gareInfo[osp])gironi[gir].gareInfo[osp]=[];
+      gironi[gir].gareInfo[osp].push({data,ris,num:giornata,ruolo:'ospite'});
+    }
   });
   // Tutte le squadre del campionato (dal global H2H o da SQ)
   const tutteSquadre={};
@@ -3434,10 +3446,16 @@ function _openArbCampD(nome,camp){
           <div>
             <div style="font-size:.64rem;font-weight:700;color:#27ae60;margin-bottom:3px">✅ Incontrate</div>
             <div style="display:flex;flex-direction:column;gap:2px">
-              ${allSq.filter(s=>incSet.has(s)).map(s=>`<div style="display:flex;align-items:center;gap:4px;padding:2px 6px;background:#f0fff4;border-radius:4px;border:1px solid #86efac">
-                <span class="rn rn-sq" onclick="openSquadra('${esc(s)}')" style="flex:1;font-size:.7rem">${escH(s)}</span>
-                <span style="font-size:.65rem;font-weight:700;color:#27ae60;min-width:16px;text-align:right">${garePerSq[s]||0}g</span>
-              </div>`).join('')||'<span style="color:var(--mu);font-size:.7rem">—</span>'}
+              ${allSq.filter(s=>incSet.has(s)).map(s=>{
+                const gInfo=(gareInfo[s]||[]).sort((a,b)=>(a.data||'').localeCompare(b.data||''));
+                const dates=gInfo.map(g=>g.data?g.data.slice(5).split('-').reverse().join('/'):'').join(', ');
+                const ris=gInfo.map(g=>g.ris||'Prog.').join(', ');
+                return`<div style="display:flex;align-items:center;gap:4px;padding:3px 6px;background:#f0fff4;border-radius:4px;border:1px solid #86efac;cursor:pointer" onclick="openSquadra('${esc(s)}')">
+                  <span class="rn rn-sq" style="flex:1;font-size:.7rem">${escH(s)}</span>
+                  <span style="font-size:.62rem;color:#27500A;white-space:nowrap">${dates}</span>
+                  <span style="font-size:.65rem;font-weight:700;color:#27ae60;min-width:18px;text-align:right;flex-shrink:0">${garePerSq[s]||0}g</span>
+                </div>`;
+              }).join('')||'<span style="color:var(--mu);font-size:.7rem">—</span>'}
             </div>
           </div>
           <div>
@@ -6272,44 +6290,65 @@ function openPersona(nome,campFilter){
           const m=d.slice(0,7);
           if(m!==curMP){monthBP[i]=mesiL2[parseInt(m.slice(5))-1]+' '+m.slice(2,4);curMP=m;}
         });
-        const BW=10;const MAX_H=90;
+        const BW=12;const MAX_H=90;
+        const MONTH_SEP=10; // spazio separatore tra mesi
         // Campionati presenti per legenda
         const campsP=[...new Set(datesWithGare.flatMap(d=>garaByDate[d].map(g=>g['Campionato']||g.c||'')))].filter(Boolean).sort((a,b)=>pCampSort(a)-pCampSort(b));
         const uid_tl='ptl_'+p.nome.replace(/\W/g,'_');
-        // Barre: una colonna per ogni giorno. Se >1 gara: barre affiancate, ognuna con propria larghezza
-        const BAR_MIN=6; // larghezza minima singola barra
-        const tlBarsP=allDatesP.map((d,i)=>{
+        const mesiLFull=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+        // Costruiamo le barre e la riga etichette insieme, inserendo separatori mensili
+        let tlBarsP='';
+        let monthRowP='';
+        let prevMonth='';
+        allDatesP.forEach((d,i)=>{
+          const dt=new Date(d+'T12:00');
+          const day=dt.getDay(); // 0=dom
+          const dayN=dt.getDate();
+          const m=d.slice(0,7);
+          const isNewMonth=(m!==prevMonth);
+          // Separatore mensile
+          if(isNewMonth&&i>0){
+            // barre: spazio verticale con linea
+            tlBarsP+='<div style="display:inline-block;width:'+MONTH_SEP+'px;flex-shrink:0;height:'+MAX_H+'px;vertical-align:bottom;border-left:2px solid #b5d4f4;margin:0 1px"></div>';
+            monthRowP+='<div style="display:inline-block;width:'+MONTH_SEP+'px;flex-shrink:0"></div>';
+          }
+          prevMonth=m;
           const gs=(garaByDate[d]||[]).slice().sort((x,y)=>pCampSort(x['Campionato']||x.c||'')-pCampSort(y['Campionato']||y.c||''));
           if(!gs.length){
-            return '<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;height:'+MAX_H+'px;vertical-align:bottom"></div>';
+            // Giorno vuoto: piccolo tick ogni 5 giorni, più alto a inizio mese
+            const tickH=isNewMonth?8:dayN%5===0?5:2;
+            const tickClr=isNewMonth?'#1a6bb5':dayN%5===0?'#b5d4f4':'#dde3f0';
+            tlBarsP+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;height:'+MAX_H+'px;vertical-align:bottom;position:relative">'
+              +'<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:1px;height:'+tickH+'px;background:'+tickClr+'"></div>'
+              +'</div>';
+          } else {
+            const n=gs.length;
+            const bw=Math.max(4,Math.floor((BW-1)/n));
+            const bars=gs.map(g=>{
+              const c=g['Campionato']||g.c||'';
+              const h=pCampH(c);
+              const col=campColor(c)||'#90a4ae';
+              const lbl=c.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim();
+              const ora=g['Ora']||g.ora||'';
+              const sq1=g['Squadra Casa']||'';
+              const tip=escH(lbl)+(ora?' '+escH(ora):'')+(sq1?' · '+escH(sq1.split(' ').slice(-1)[0]):'');
+              return '<div class="ptl-seg" data-c="'+escH(c)+'" title="'+tip+' ('+d+')" style="display:inline-block;width:'+bw+'px;height:'+h+'px;min-height:4px;background:'+col+';border-radius:2px 2px 0 0;vertical-align:bottom;flex-shrink:0"></div>';
+            }).join('<div style="display:inline-block;width:1px;flex-shrink:0"></div>');
+            tlBarsP+='<div style="display:inline-flex;align-items:flex-end;flex-shrink:0;width:'+BW+'px;height:'+MAX_H+'px;vertical-align:bottom;gap:0;justify-content:center" title="'+d+': '+n+'g">'
+              +bars+'</div>';
           }
-          const n=gs.length;
-          const bw=n===1?BW:Math.max(BAR_MIN,Math.floor((BW-1)/n)); // larghezza per barra affiancata
-          // Ogni gara = barra verticale separata affiancata
-          const bars=gs.map(g=>{
-            const c=g['Campionato']||g.c||'';
-            const h=pCampH(c);
-            const col=campColor(c)||'#90a4ae';
-            const lbl=c.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim();
-            const ora=g['Ora']||g.ora||'';
-            const sq1=g['Squadra Casa']||''; const sq2=g['Squadra Ospite']||'';
-            const tip=escH(lbl)+(ora?' '+escH(ora):'')+(sq1?' · '+escH(sq1.split(' ').slice(-1)[0]):'');
-            return '<div class="ptl-seg" data-c="'+escH(c)+'" title="'+tip+' ('+d+')" style="display:inline-block;width:'+bw+'px;height:'+h+'px;min-height:4px;background:'+col+';border-radius:2px 2px 0 0;vertical-align:bottom;margin-right:1px;flex-shrink:0"></div>';
-          }).join('');
-          return '<div style="display:inline-flex;align-items:flex-end;flex-shrink:0;width:'+BW+'px;height:'+MAX_H+'px;vertical-align:bottom;position:relative" title="'+d+': '+n+'g">'
-            +bars
-            +'</div>';
-        }).join('');
-        const monthRowP=allDatesP.map((d,i)=>{
-          const dt=new Date(d+'T12:00');
-          const day=dt.getDate();
-          const isFirst=day===1;
-          const isMon=(day===1||day===5||day===10||day===15||day===20||day===25);
-          const label=isFirst?(monthBP[i]||String(day)):isMon?String(day):'';
-          const color=isFirst?'#1a6bb5':'#888';
-          const fw=isFirst?'700':'400';
-          return`<div style="display:inline-block;width:${BW}px;flex-shrink:0;font-size:.44rem;color:${color};font-weight:${fw};text-align:center;overflow:hidden;white-space:nowrap">${label}</div>`;
-        }).join('');
+          // Riga etichette: nome mese a inizio mese, numeri ogni 5 giorni
+          let lbl='';let lclr='#aaa';let lfw='400';let lfont='.44rem';
+          if(isNewMonth){
+            lbl=mesiLFull[parseInt(m.slice(5))-1];
+            lclr='#1a6bb5';lfw='700';lfont='.5rem';
+          } else if(dayN===10||dayN===20){
+            lbl=String(dayN);lclr='#888';
+          } else if(dayN===15||dayN===25){
+            lbl=String(dayN);lclr='#aaa';
+          }
+          monthRowP+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;font-size:'+lfont+';color:'+lclr+';font-weight:'+lfw+';text-align:left;overflow:visible;white-space:nowrap;padding-top:2px">'+lbl+'</div>';
+        });
         // Legenda cliccabile
         const legendP=campsP.map(c=>{
           const col=campColor(c)||'#90a4ae';
@@ -6463,11 +6502,12 @@ function openPersona(nome,campFilter){
         // ── VERSIONE B: Strip mensile migliorata — giorni leggibili con separatori ──
         const calB=(()=>{
           const todayDs=(typeof D!=='undefined'&&D.generated)?D.generated.slice(0,10):new Date().toISOString().split('T')[0];
-          const dayW=22; // larghezza cella giorno
-          const dayH=28; // altezza cella
+          // Celle flessibili: riempiono tutta la larghezza disponibile
+          const dayW=Math.max(20,Math.floor((window.innerWidth||900)*0.9/32));
+          const dayH=Math.max(26,dayW+4);
           // Header numeri 1-31
-          const hdr='<div style="display:flex;gap:1px;margin-bottom:1px;padding-left:44px">'
-            +Array.from({length:31},(_,i)=>`<div style="width:${dayW}px;font-size:.52rem;color:var(--mu2);text-align:center;flex-shrink:0">${i+1}</div>`).join('')
+          const hdr='<div style="display:flex;gap:1px;margin-bottom:2px;padding-left:44px">'
+            +Array.from({length:31},(_,i)=>`<div style="flex:1;min-width:${dayW}px;font-size:.55rem;color:var(--mu2);text-align:center">${i+1}</div>`).join('')
             +'</div>';
           const rows=mesi.map(m=>{
             const giorni=mesiGiorniMap[m];
@@ -6477,7 +6517,7 @@ function openPersona(nome,campFilter){
             let tot=0;
             const cells=Array.from({length:31},(_,i)=>{
               const d=i+1;
-              if(d>dInM) return`<div style="width:${dayW}px;height:${dayH}px;flex-shrink:0;"></div>`;
+              if(d>dInM) return`<div style="flex:1;min-width:${dayW}px;height:${dayH}px;"></div>`;
               const ds=`${m}-${d<10?'0':''}${d}`;
               const cnt=giorni[ds]||0;
               const dow=new Date(ds+'T12:00').getDay();
@@ -6489,15 +6529,15 @@ function openPersona(nome,campFilter){
               const weSep=isWE?'border-left:2px solid #b5d4f4;':'';
               tot+=cnt;
               return`<div data-cal-ds="${ds}" title="${ds}${isToday?' — OGGI':''}: ${cnt} gar${cnt===1?'a':'e'}" 
-                style="width:${dayW}px;height:${dayH}px;border-radius:3px;background:${bg};${weSep}${outline}
-                  display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0;
-                  cursor:${cnt>0||isToday?'pointer':'default'};font-size:.52rem;font-weight:700;color:${clr};
+                style="flex:1;min-width:${dayW}px;height:${dayH}px;border-radius:3px;background:${bg};${weSep}${outline}
+                  display:flex;align-items:center;justify-content:center;flex-direction:column;
+                  cursor:${cnt>0||isToday?'pointer':'default'};font-size:clamp(.45rem,.8vw,.6rem);font-weight:700;color:${clr};
                   transition:transform .1s" 
                 onclick="calDayClick('${ds}',${cnt})"
-                onmouseover="this.style.transform='scale(1.15)'"
+                onmouseover="this.style.transform='scale(1.08)'"
                 onmouseout="this.style.transform=''">
                 <div>${cnt>0?cnt:(isToday?'●':'')}</div>
-                ${isToday?'<div style="font-size:.38rem;line-height:1">OGG</div>':''}
+                ${isToday?'<div style="font-size:.4rem;line-height:1">OGG</div>':''}
               </div>`;
             }).join('');
             return`<div style="display:flex;align-items:center;gap:1px;padding:1px 0;border-bottom:1px solid var(--br)">
@@ -6506,7 +6546,7 @@ function openPersona(nome,campFilter){
               <div style="font-size:.62rem;font-weight:700;color:var(--bl);margin-left:6px;min-width:24px">${tot||''}</div>
             </div>`;
           }).join('');
-          return`<div style="overflow-x:auto;font-size:.6rem">${hdr}${rows}</div>`;
+          return`<div style="overflow-x:hidden;font-size:.6rem;width:100%">${hdr}${rows}</div>`;
         })();
         // ── VERSIONE C: Barre settimanali (domenica separata) ──
         const calC=mesi.map(m=>{
