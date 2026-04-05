@@ -8624,7 +8624,7 @@ function openCampionato(camp){
             const girCol=sqGironeColor[sq]||'';
             const pos1=sqPos1[sq]||0;
             // Bordo sinistra colorato girone provenienza
-            const sideBar=isF1&&girCol?'border-left:4px solid '+girCol+';':''
+            const sideBar=isF1&&girCol?'border-left:4px solid '+girCol+';':'';
             gridHtml+='<tr style="background:'+(si%2?'var(--bl5)':'#fff')+'">'
               +'<td style="padding:6px 10px;font-weight:600;font-size:.72rem;color:var(--tx);position:sticky;left:0;z-index:1;background:'+(si%2?'var(--bl5)':'#fff')+';border-bottom:0.5px solid var(--br);white-space:nowrap;'+sideBar+'">'
               +(provSq?'<span style="background:'+( typeof PC!=='undefined'?PC[provSq]||'#888':'#888')+';color:#fff;border-radius:3px;padding:0 4px;font-size:.59rem;margin-right:4px">'+provSq+'</span>':'')
@@ -8802,15 +8802,12 @@ function openCampionato(camp){
 
           gridHtml+=matrixHtml;
 
-          return'<div id="'+calId+'_fg'+fgIdx+'" style="'+(fgIdx>0?'display:none':'')+'">'\
-            +(allFasiGironi.length===1?'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 14px;border-radius:8px;background:'+faseLabelIcon(fg.fase).color+'15;border-left:4px solid '+faseLabelIcon(fg.fase).color+'"><span style="font-size:1.1rem">'+faseLabelIcon(fg.fase).icon+'</span><div><div style="font-size:.76rem;font-weight:700;color:'+faseLabelIcon(fg.fase).color+'">'+faseLabelIcon(fg.fase).label+'</div><div style="font-size:.65rem;color:var(--mu)">'+escH(fg.fase)+(fg.girone?' · '+escH(fg.girone):'')+'</div></div></div>':'')\
-            +'<div id="'+calId+'_classic'+fgIdx+'">'+classicHtml+'</div>'\
-            +'<div id="'+calId+'_grid'+fgIdx+'" style="display:none">'+gridHtml+'</div>'\
+          return'<div id="'+calId+'_fg'+fgIdx+'" style="'+(fgIdx>0?'display:none':'')+'">'
+            +(allFasiGironi.length===1?'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 14px;border-radius:8px;background:'+faseLabelIcon(fg.fase).color+'15;border-left:4px solid '+faseLabelIcon(fg.fase).color+'"><span style="font-size:1.1rem">'+faseLabelIcon(fg.fase).icon+'</span><div><div style="font-size:.76rem;font-weight:700;color:'+faseLabelIcon(fg.fase).color+'">'+faseLabelIcon(fg.fase).label+'</div><div style="font-size:.65rem;color:var(--mu)">'+escH(fg.fase)+(fg.girone?' · '+escH(fg.girone):'')+'</div></div></div>':'')
+            +'<div id="'+calId+'_classic'+fgIdx+'">'+classicHtml+'</div>'
+            +'<div id="'+calId+'_grid'+fgIdx+'" style="display:none">'+gridHtml+'</div>'
             +'</div>';
         }).join('');
-
-        // Inietta funzioni tramite attributo onload su un elemento dummy invece di script tag
-        const jsSwitch='';        }).join('');
 
         // Inietta funzioni tramite attributo onload su un elemento dummy invece di script tag
         const jsSwitch='';
