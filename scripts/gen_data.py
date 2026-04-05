@@ -129,6 +129,51 @@ def classify_camp(c):
     sk = (ORDER.get(grp,99), 0 if gen=='M' else (1 if gen=='F' else 2), lv)
     return grp, gen, lv, sk
 
+# ══════════════════════════════════════════════════════════════
+# IQA — INDICE QUALITÀ ARBITRALE
+# peso_base × moltiplicatore_fase
+# ══════════════════════════════════════════════════════════════
+def calcola_peso_gara(campionato, fase=''):
+    """Restituisce il peso IQA di una singola gara."""
+    c = campionato or ''
+    cu = c.upper()
+    f = (fase or '').upper()
+    is_femm = bool(re.search(r'FEMMIN', cu))
+
+    # ── Peso base campionato ──────────────────────────────────
+    if   'SERIE A' in cu and not is_femm:                          peso = 100
+    elif 'SERIE B' in cu and not is_femm:                          peso = 75
+    elif 'SERIE C' in cu and not is_femm:                          peso = 55
+    elif 'SERIE B' in cu and is_femm:                              peso = 50
+    elif re.search(r'DIV.*REG.*1|DIVISIONE.*1', cu) and not is_femm: peso = 45
+    elif re.search(r'DIV.*REG.*2|DIVISIONE.*2', cu) and not is_femm: peso = 40
+    elif re.search(r'DIV.*REG.*1|DIVISIONE.*1', cu) and is_femm:  peso = 40  # DR1F (non esiste in Sardegna, per sicurezza)
+    elif re.search(r'DIV.*REG.*2|DIVISIONE.*2', cu) and is_femm:  peso = 35
+    elif 'UNDER 19' in cu and 'GOLD' in cu and not is_femm:        peso = 35
+    elif 'UNDER 19' in cu and is_femm:                             peso = 30
+    elif 'UNDER 19' in cu and not is_femm:                         peso = 30
+    elif 'UNDER 17' in cu and 'ECCEL' in cu and not is_femm:       peso = 25
+    elif 'UNDER 17' in cu and 'GOLD' in cu and not is_femm:        peso = 18
+    elif 'UNDER 17' in cu and not is_femm:                         peso = 16
+    elif 'UNDER 17' in cu and is_femm:                             peso = 14
+    elif 'UNDER 15' in cu and 'ECCEL' in cu and not is_femm:       peso = 16
+    elif 'UNDER 15' in cu and not is_femm:                         peso = 11
+    elif 'UNDER 15' in cu and is_femm:                             peso = 9
+    elif 'UNDER 14' in cu and not is_femm:                         peso = 8
+    elif 'UNDER 14' in cu and is_femm:                             peso = 7
+    elif 'UNDER 13' in cu and not is_femm:                         peso = 6
+    elif 'UNDER 13' in cu and is_femm:                             peso = 5
+    else:                                                           peso = 2   # minibasket, esordienti, altro
+
+    # ── Moltiplicatore fase ───────────────────────────────────
+    if   re.search(r'FINAL', f):                                    molt = 2.8
+    elif re.search(r'SEMIFINAL|PLAYOUT|PLAY.OUT', f):               molt = 2.0
+    elif re.search(r'QUARTI|PLAYOFF|PLAY.OFF', f):                  molt = 1.6
+    elif re.search(r'OROLOGIO|SECONDA\s+FASE|2.*FASE|REGIONALE|CLASSIFIC', f): molt = 1.3
+    else:                                                           molt = 1.0  # girone regolare / qualificazione
+
+    return round(peso * molt, 2)
+
 all_camp_names = sorted(set(g['Campionato'] for g in RAW_ALL if g.get('Campionato')))
 camp_meta = {}
 for c in all_camp_names:
@@ -598,6 +643,27 @@ def serialize_persons():
                 'a':ga['Squadra Ospite'],'r':ga.get('Risultato','')}
                for ga in sorted(p['gare_arbitro'],key=lambda x:x['Data'])[-10:]]
         all_gare=sorted(p['gare_arbitro']+p['gare_udc']+p['gare_osservatore'],key=lambda x:x['Data'])
+
+        # ── IQA: calcola peso per ogni gara arbitrata ──────────
+        iqa_totale = 0.0
+        iqa_per_camp = {}   # {campionato: iqa_parziale}
+        iqa_top_gare = []   # le 5 gare con peso più alto
+        for ga in p['gare_arbitro']:
+            pg = calcola_peso_gara(ga.get('Campionato',''), ga.get('Fase',''))
+            ga['_peso_iqa'] = pg
+            iqa_totale += pg
+            cn = ga.get('Campionato','')
+            iqa_per_camp[cn] = round(iqa_per_camp.get(cn, 0.0) + pg, 2)
+            iqa_top_gare.append({
+                'peso': pg, 'c': cn, 'f': ga.get('Fase',''),
+                'h': ga.get('Squadra Casa',''), 'a': ga.get('Squadra Ospite',''),
+                'd': ga.get('Data',''), 'r': ga.get('Risultato',''),
+                'num': ga.get('Numero Gara',''),
+            })
+        iqa_totale = round(iqa_totale, 1)
+        iqa_top_gare.sort(key=lambda x: x['peso'], reverse=True)
+        iqa_top_gare = iqa_top_gare[:5]
+
         out[pid]={
             'nome':p['nome'],'provincia':p['provincia'],'citta':p['citta'],
             'categoria':p['categoria'],'ruolo':p['categoria'],  # alias per compatibilità template
@@ -626,7 +692,8 @@ def serialize_persons():
             'gare_arbitro':[{'d':ga['Data'],'c':ga['Campionato'],'h':ga['Squadra Casa'],
                 'a':ga['Squadra Ospite'],'r':ga.get('Risultato',''),'pc':ga.get('Punti Casa',''),
                 'po':ga.get('Punti Ospite',''),'campo':ga.get('Campo',''),
-                'num':ga.get('Numero Gara',''),'girone':ga.get('Girone',''),'ruolo':ga.get('_ruolo','')}
+                'num':ga.get('Numero Gara',''),'girone':ga.get('Girone',''),'ruolo':ga.get('_ruolo',''),
+                'f':ga.get('Fase',''),'iqa':ga.get('_peso_iqa',0)}
                for ga in p['gare_arbitro']],
             'gare_udc':[{'d':ga['Data'],'c':ga['Campionato'],'h':ga['Squadra Casa'],
                 'a':ga['Squadra Ospite'],'r':ga.get('Risultato',''),'campo':ga.get('Campo',''),
@@ -638,6 +705,7 @@ def serialize_persons():
             'squadre_incontrate':{sq:{'gare':v['gare'],'vinte':v['vinte'],'perse':v['perse'],
                 'pareggi':v['pareggi'],'gare_list':v['gare_list']}
                 for sq,v in p['squadre_incontrate'].items()},
+            'iqa':iqa_totale,'iqa_per_camp':iqa_per_camp,'iqa_top_gare':iqa_top_gare,
         }
     return out
 

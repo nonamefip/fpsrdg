@@ -1078,7 +1078,7 @@ tr.loss-row td{background:#fdecea!important;}
     <div class="fg"><label>Cod. FIP</label><input type="text" id="fa-cod" placeholder="Es. 033850" oninput="renderArb()" style="width:90px"></div>
     <div class="fg"><label>Provincia</label><select id="fa-pv" onchange="renderArb()"><option value="">Tutte</option></select></div>
     <div class="fg"><label>Campionato</label><select id="fa-camp" onchange="renderArb()"><option value="">Tutti</option></select></div>
-    <div class="fg"><label>Ordina</label><select id="fa-sort" onchange="renderArb()"><option value="n_gare">Gare ↓</option><option value="nome">Nome A→Z</option><option value="provincia">Provincia</option><option value="km">Km ↓</option></select></div>
+    <div class="fg"><label>Ordina</label><select id="fa-sort" onchange="renderArb()"><option value="n_gare">Gare ↓</option><option value="iqa">IQA ↓</option><option value="nome">Nome A→Z</option><option value="provincia">Provincia</option><option value="km">Km ↓</option></select></div>
     <button class="btn b-gr" onclick="resetF('fa-q','fa-cod','fa-pv','fa-camp');closeArbSpotlight();renderArb()">↺</button>
     <button class="btn" style="font-size:.7rem;padding:4px 10px;background:#1a7a3c;color:#fff;border:none;border-radius:4px;cursor:pointer" onclick="exportArbCSV()">⬇ CSV</button>
   </div>
@@ -2215,7 +2215,7 @@ function renderPersonsTable(cid,persons,opts={}){
   </tr>`:'';
 
   // Accumulatori per riga media
-  let sumTot=0,sumArb=0,sumUdc=0,sumGg=0,sumCamp=0,sumSing=0,sumDopp=0,sumKm=0,sumFare=0,sumNaz=0,n=persons.length||1;
+  let sumTot=0,sumArb=0,sumUdc=0,sumGg=0,sumCamp=0,sumSing=0,sumDopp=0,sumKm=0,sumFare=0,sumNaz=0,sumIqa=0,n=persons.length||1;
 
   const _maxKmGara=isArb?Math.max(...persons.map(p=>{const km=calcKmArb(p);const _t=new Date(),_td=_t.toISOString().split('T')[0],_tm=_t.getHours()*60+_t.getMinutes();const ng=(p.gare_arbitro||[]).filter(g=>{const gd=g.d||g['Data']||'';if(gd<_td)return true;if(gd>_td)return false;const gOra=g.o||g['Ora']||'';if(!gOra)return true;const pp=gOra.split(':');return parseInt(pp[0]||0)*60+parseInt(pp[1]||0)+30<=_tm;}).length;return ng>0?Math.round(km/ng):0;}),1):1;
   const rows=persons.map((p,i)=>{
@@ -2303,6 +2303,7 @@ function renderPersonsTable(cid,persons,opts={}){
 
     // Accumula per media
     sumTot+=nGareOggi; sumArb+=nGareArbOggiDisp; sumUdc+=nGareUdcOggi;
+    sumIqa+=(p.iqa||0);
     sumGg+=nG; sumCamp+=nCamp; sumSing+=p.n_singolo||0;
     sumDopp+=nGareArbOggiDisp-(p.n_singolo||0); sumKm+=km; sumFare+=nFut; sumNaz+=nGareNaz;
 
@@ -2395,6 +2396,14 @@ function renderPersonsTable(cid,persons,opts={}){
         if(!nPv) return '<td data-val="0" style="text-align:center;color:var(--mu2)">—</td>';
         return `<td data-val="${nPv}" style="text-align:center;background:#fff8f0;cursor:pointer" onclick="showPage('provvedimenti');setTimeout(()=>{const el=document.getElementById('fpv-arb');if(el){el.value='${esc(p.nome)}';renderProvvedimenti();}},100)" title="Vedi provvedimenti gare"><span style="font-weight:700;color:#e67e22">${nPv}</span></td>`;
       })():''}
+      ${isArb?(()=>{
+        const iqa=p.iqa||0;
+        if(!iqa) return '<td data-val="0" style="text-align:center;color:var(--mu2);border-left:2px solid rgba(26,58,107,.15)">—</td>';
+        // Colore progressivo: <50=grigio, 50-200=blu chiaro, 200-500=blu, 500-1000=oro, >1000=oro brillante
+        const iqaClr=iqa>=1000?'#ffd54f':iqa>=500?'#b5d4f4':iqa>=200?'#90caf9':iqa>=50?'#bbdefb':'#cfd8dc';
+        const iqaBg=iqa>=1000?'#1a3a6b':iqa>=500?'#1e4a8a':iqa>=200?'#243b6e':iqa>=50?'#1a2e4a':'#2c3e50';
+        return `<td data-val="${iqa}" style="text-align:center;background:${iqaBg};cursor:pointer;border-left:2px solid rgba(255,255,255,.15)" onclick="event.stopPropagation();openPersona(this.dataset.n);setTimeout(()=>document.querySelectorAll('#mp-body .mt')[0]?.click(),250)" data-n="${escH(p.nome)}" title="IQA: ${iqa} — clicca per dettaglio"><span style="font-weight:800;color:${iqaClr};font-size:.8rem">${iqa}</span></td>`;
+      })():''}
     </tr>`;
   }).join('');
 
@@ -2421,6 +2430,7 @@ function renderPersonsTable(cid,persons,opts={}){
     <td class="td-km" style="text-align:right;color:#B0BEC5">${sumTot>0?Math.round(sumKm/sumTot):'—'}</td>
     <td style="background:var(--tbl-hdr);"></td>
     <td style="text-align:center;background:#fdecea;color:#e88;font-weight:700">${sumNaz||'—'}</td>
+    <td style="text-align:center;background:#1a3a6b;color:#ffd54f;font-weight:700;border-left:2px solid rgba(255,255,255,.15)">${Math.round(sumIqa/n)}</td>
   </tr>`:'';
 
   document.getElementById(cid).innerHTML=`<p class="il">${persons.length} persone</p>
@@ -2460,6 +2470,7 @@ function renderPersonsTable(cid,persons,opts={}){
     ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true,event)" title="Km medi/gara · Shift+click per multiplo" style="cursor:pointer">Km/g</th>
     <th onclick="sT('${tableId}',${19+co+ae},event)" title="Mese con più gare · Shift+click per multiplo" style="cursor:pointer">Top mese</th>
     <th onclick="sT('${tableId}',${20+co+ae},event)" title="Gare con provvedimenti · Shift+click per multiplo" style="cursor:pointer;background:#fff3e0;color:#e67e22">⚠️ Provv.</th>`:''}
+    ${isArb?`<th onclick="sT('${tableId}',${21+co+ae},true,event)" title="Indice Qualità Arbitrale: somma pesi gare (campionato × fase). Più alto = gare più importanti arbitrate." style="cursor:pointer;background:#1a3a6b;color:#ffd54f;font-weight:700;white-space:nowrap;border-left:2px solid rgba(255,255,255,.2)">⭐ IQA</th>`:''}
   </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>
   <div style="font-size:.62rem;color:var(--mu);padding:4px 0;margin-top:2px">💡 <b>Shift+click</b> su un'intestazione per aggiungere un secondo livello di ordinamento</div>`;
 }
@@ -4658,6 +4669,7 @@ function renderArb(){
   if(sort==='nome') a.sort((x,y)=>x.nome.localeCompare(y.nome,'it'));
   else if(sort==='provincia') a.sort((x,y)=>x.provincia.localeCompare(y.provincia));
   else if(sort==='km') a.sort((x,y)=>calcKmArb(y)-calcKmArb(x));
+  else if(sort==='iqa') a.sort((x,y)=>(y.iqa||0)-(x.iqa||0));
   else {
     // Calcola nGareOggi real-time per ogni arbitro per sort accurato
     const _todayS=new Date().toISOString().split('T')[0];
@@ -6289,6 +6301,79 @@ function openPersona(nome,campFilter){
           })()}
         </div>
       </div>
+
+      <!-- ⭐ IQA — Indice Qualità Arbitrale -->
+      ${(()=>{
+        const iqa=p.iqa||0;
+        if(!iqa||!p.n_gare_arbitro) return '';
+        const iqaPerCamp=p.iqa_per_camp||{};
+        const topGare=p.iqa_top_gare||[];
+        // Ordina campionati per IQA parziale desc
+        const campVoci=Object.entries(iqaPerCamp).sort((a,b)=>b[1]-a[1]);
+        const maxIqaCamp=campVoci.length?campVoci[0][1]:1;
+        // Rank globale IQA tra tutti gli arbitri
+        const allArbs2=Object.values(P).filter(x=>x.categoria==='Arbitro'&&(x.iqa||0)>0);
+        allArbs2.sort((a,b)=>(b.iqa||0)-(a.iqa||0));
+        const rankIqa=allArbs2.findIndex(x=>x.nome===nome)+1;
+        const totalArbs=allArbs2.length;
+        // Colore IQA
+        const iqaClr=iqa>=1000?'#ffd54f':iqa>=500?'#90caf9':iqa>=200?'#64b5f6':'#b0bec5';
+        const iqaBg=iqa>=1000?'#1a3a6b':iqa>=500?'#1e4a8a':iqa>=200?'#1a3558':'#2c3e50';
+        const barsHtml=campVoci.slice(0,8).map(([cn,cIqa])=>{
+          const col=campColor(cn)||'#456';
+          const pct=Math.round(cIqa/maxIqaCamp*100);
+          const short=cn.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim()
+            .replace('Divisione regionale','Div.Reg.').replace('Under ','U').replace(' Maschile','').replace(' Femminile',' ♀');
+          const fem=isFemCamp(cn);
+          return `<div style="display:flex;align-items:center;gap:8px;padding:2px 0;font-size:.7rem">
+            <div style="width:${Math.round(pct*1.5)}px;height:10px;border-radius:3px;background:${col};flex-shrink:0;min-width:3px"></div>
+            <span style="color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${escH(short)}${fem?' <span style="color:'+col+';font-size:8px">♀</span>':''}</span>
+            <span style="font-weight:700;color:${col};flex-shrink:0">${cIqa}</span>
+          </div>`;
+        }).join('');
+        const topGareHtml=topGare.length?`
+          <div style="font-size:.68rem;font-weight:700;color:var(--mu);margin:8px 0 4px">🏅 Gare più pesanti arbitrate:</div>
+          ${topGare.map(g=>{
+            const col=campColor(g.c)||'#456';
+            const short=(g.c||'').replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim()
+              .replace('Divisione regionale','Div.Reg.').replace('Under ','U');
+            const faseLabel=g.f?`<span style="font-size:.6rem;color:#999;margin-left:4px">${escH(g.f)}</span>`:'';
+            const numLink=g.num?`<span style="font-size:.6rem;color:var(--bl);cursor:pointer;text-decoration:underline;margin-left:4px" onclick="event.stopPropagation();openGara('${esc(g.num)}')">${escH(g.num)}</span>`:'';
+            return `<div style="display:flex;align-items:center;gap:6px;padding:3px 6px;background:#f7f9ff;border-radius:5px;margin-bottom:3px;font-size:.68rem">
+              <span style="background:${col};color:#fff;border-radius:3px;padding:1px 5px;font-weight:700;font-size:.58rem;flex-shrink:0">${escH(short)}</span>
+              ${faseLabel}
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${escH(g.h)} – ${escH(g.a)}</span>
+              <span style="font-size:.6rem;color:var(--mu);flex-shrink:0">${escH(g.d||'')}</span>
+              <span style="font-weight:800;color:#1a3a6b;flex-shrink:0">+${g.peso}</span>
+              ${numLink}
+            </div>`;
+          }).join('')}`:' ';
+        return `<div class="card" style="margin-top:10px;border:2px solid #1a3a6b">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+            <div style="background:${iqaBg};border-radius:10px;padding:10px 18px;text-align:center;min-width:100px">
+              <div style="font-size:.6rem;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.8px">⭐ IQA</div>
+              <div style="font-size:2rem;font-weight:900;color:${iqaClr};line-height:1">${iqa}</div>
+              <div style="font-size:.6rem;color:rgba(255,255,255,.45);margin-top:2px">Indice Qualità Arbitrale</div>
+            </div>
+            <div style="flex:1;min-width:140px">
+              <div style="font-size:.72rem;color:var(--mu);margin-bottom:4px">Ranking tra arbitri: <b style="color:#1a3a6b;font-size:.85rem">${rankIqa}°</b> su ${totalArbs}</div>
+              <div style="height:8px;background:#eee;border-radius:4px;overflow:hidden;margin-bottom:4px">
+                <div style="height:8px;background:#1a3a6b;width:${Math.round((1-rankIqa/totalArbs)*100)}%;border-radius:4px"></div>
+              </div>
+              <div style="font-size:.65rem;color:var(--mu)">
+                Media/gara: <b>${p.n_gare_arbitro?Math.round(iqa/p.n_gare_arbitro*10)/10:'—'}</b>
+                &nbsp;·&nbsp; Gare pesate: <b>${p.n_gare_arbitro||0}</b>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:.68rem;font-weight:700;color:var(--mu);margin-bottom:6px">IQA per campionato:</div>
+          ${barsHtml}
+          ${topGareHtml}
+          <div style="font-size:.6rem;color:var(--mu2);margin-top:8px;padding-top:6px;border-top:1px solid var(--br)">
+            Formula: peso campionato (Serie A=100 … minibasket=2) × moltiplicatore fase (×1.0 girone reg. … ×2.8 finale)
+          </div>
+        </div>`;
+      })()}
 
       <!-- Campionati arbitrati — ordine FIP -->
       <div class="card" style="margin-top:10px">
