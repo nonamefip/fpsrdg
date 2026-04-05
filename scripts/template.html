@@ -1881,6 +1881,18 @@ const catB=cat=>`<span class="badge bc-${cat}">${cat}</span>`;
 const escH=s=>(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function resetF(...ids){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});}
 function cpv(c){const m=(c||'').match(/\(\s*(\w{2,3})\s*\)\s*$/);return m?m[1].toUpperCase():'';}
+function _filterNonInc(containerId,pvSelId,campSelId){
+  const pv=(document.getElementById(pvSelId)||{}).value||'';
+  const camp=(document.getElementById(campSelId)||{}).value||'';
+  const rowsDiv=document.getElementById(containerId+'-rows');
+  if(!rowsDiv)return;
+  rowsDiv.querySelectorAll('.ni-item').forEach(el=>{
+    const elPv=el.dataset.pv||'';
+    const elCamp=el.dataset.camp||'';
+    const show=(!pv||elPv===pv)&&(!camp||elCamp===camp);
+    el.style.display=show?'':'none';
+  });
+}
 function pns(s){if(!s)return'';const i=s.toLowerCase().lastIndexOf(' di ');return i>0?s.substring(0,i).trim():s;}
 function bBar(val,max,color,px=120){return`<div class="bw"><div class="bar" style="width:${Math.max(2,val/max*px)}px;background:${color}"></div><span style="font-size:.7rem;color:var(--mu)">${val}</span></div>`;}
 function bProg(entries,max,color='var(--bl)'){
@@ -2211,7 +2223,7 @@ function renderPersonsTable(cid,persons,opts={}){
     <th colspan="${_sqCols}" class="th-sq" style="${_GH_ST}">SQUADRE</th>
     <th colspan="${_kmCols}" class="th-km" style="${_GH_ST}">PERCORRENZA</th>
     <th style="background:var(--tbl-hdr);border:none;padding:0" colspan="${_topCols}"></th>
-    ${isArb?`<th class="th-att" style="${_GH_ST};background:#d35400;color:#fff">PROVV.</th><th style="${_GH_ST};background:#922b21;color:#fff">NAZ.</th>`:''}
+    ${isArb?`<th class="th-att" style="${_GH_ST};background:#d35400;color:#fff">PROVV.</th><th style="${_GH_ST};background:#922b21;color:#fff">NAZ.</th><th style="${_GH_ST};background:#0a5c36;color:#7effc0">COV.</th>`:''}
   </tr>`:'';
 
   // Accumulatori per riga media
@@ -2281,7 +2293,7 @@ function renderPersonsTable(cid,persons,opts={}){
       const pp=gOra.split(':');
       return parseInt(pp[0]||0)*60+parseInt(pp[1]||0)+30<=_nowMin;
     }).length;
-    const nGareOggi=nGareArbOggi+nGareUdcOggi+nGareOssOggi;
+    const nGareOggi=cid==='udc-list'?nGareUdcOggi:cid==='oss-list'?nGareOssOggi:nGareArbOggi+nGareUdcOggi+nGareOssOggi;
     const nGareArbOggiDisp=nGareArbOggi; // Arb. = solo ruolo arbitro fino ad oggi
     if(isArb){
       Object.values(p.giorni||{}).forEach(cnt=>{if(cnt>=4)d4++;else if(cnt===3)d3++;else if(cnt===2)d2++;else if(cnt===1)d1++;});
@@ -2392,7 +2404,8 @@ function renderPersonsTable(cid,persons,opts={}){
         return `<td data-val="${cnt}" style="text-align:center;font-size:.72rem"><span style="font-weight:700;color:var(--bl)">${label}</span> <span style="color:var(--mu);font-size:.65rem">${cnt}g</span></td>`;
       })():''}
       ${isArb?(()=>{
-        const nPv=(PROVV||[]).filter(pv=>[pv.arbitro1,pv.arbitro2].some(a=>pns(a||'')===p.nome)).length;
+        const _pNome=p.nome.toLowerCase().trim();
+        const nPv=(PROVV||[]).filter(pv=>[pv.arbitro1,pv.arbitro2].some(a=>{const n=pns(a||'').toLowerCase().trim();return n&&(n===_pNome||n.includes(_pNome)||_pNome.includes(n));})).length;
         if(!nPv) return '<td data-val="0" style="text-align:center;color:var(--mu2)">—</td>';
         return `<td data-val="${nPv}" style="text-align:center;background:#fff8f0;cursor:pointer" onclick="showPage('provvedimenti');setTimeout(()=>{const el=document.getElementById('fpv-arb');if(el){el.value='${esc(p.nome)}';renderProvvedimenti();}},100)" title="Vedi provvedimenti gare"><span style="font-weight:700;color:#e67e22">${nPv}</span></td>`;
       })():''}
@@ -2403,6 +2416,19 @@ function renderPersonsTable(cid,persons,opts={}){
         const iqaClr=iqa>=1000?'#ffd54f':iqa>=500?'#b5d4f4':iqa>=200?'#90caf9':iqa>=50?'#bbdefb':'#cfd8dc';
         const iqaBg=iqa>=1000?'#1a3a6b':iqa>=500?'#1e4a8a':iqa>=200?'#243b6e':iqa>=50?'#1a2e4a':'#2c3e50';
         return `<td data-val="${iqa}" style="text-align:center;background:${iqaBg};cursor:pointer;border-left:2px solid rgba(255,255,255,.15)" onclick="event.stopPropagation();openPersona(this.dataset.n);setTimeout(()=>document.querySelectorAll('#mp-body .mt')[0]?.click(),250)" data-n="${escH(p.nome)}" title="IQA: ${iqa} — clicca per dettaglio"><span style="font-weight:800;color:${iqaClr};font-size:.8rem">${iqa}</span></td>`;
+      })():''}
+      ${isArb?(()=>{
+        // % copertura: singolo=1, doppio=0.5, su totale gare comitato (D.gare con data passata)
+        const _today_c=new Date().toISOString().split('T')[0];
+        const totGareComitato=(D.gare||[]).filter(g=>(g['Data']||'')<=_today_c).length||1;
+        const nSing=p.n_singolo||0;
+        const nArb=nGareArbOggiDisp;
+        const nDopp=nArb-nSing;
+        const peso=nSing + nDopp*0.5;
+        const pct=Math.round(peso/totGareComitato*100);
+        const pctClr=pct>=15?'#00c47a':pct>=8?'#27ae60':pct>=3?'#f39c12':'#95a5a6';
+        const pctBg=pct>=15?'#0a5c36':pct>=8?'#145a32':pct>=3?'#7d4400':'#2c3e50';
+        return `<td data-val="${pct}" style="text-align:center;background:${pctBg};border-left:2px solid rgba(255,255,255,.1)" title="Copertura: ${nSing} singolo + ${nDopp} doppio / ${totGareComitato} tot comitato = ${pct}%"><span style="font-weight:700;color:${pctClr};font-size:.78rem">${pct}%</span></td>`;
       })():''}
     </tr>`;
   }).join('');
@@ -2471,6 +2497,7 @@ function renderPersonsTable(cid,persons,opts={}){
     <th onclick="sT('${tableId}',${19+co+ae},event)" title="Mese con più gare · Shift+click per multiplo" style="cursor:pointer">Top mese</th>
     <th onclick="sT('${tableId}',${20+co+ae},event)" title="Gare con provvedimenti · Shift+click per multiplo" style="cursor:pointer;background:#fff3e0;color:#e67e22">⚠️ Provv.</th>`:''}
     ${isArb?`<th onclick="sT('${tableId}',${21+co+ae},true,event)" title="Indice Qualità Arbitrale: somma pesi gare (campionato × fase). Più alto = gare più importanti arbitrate." style="cursor:pointer;background:#1a3a6b;color:#ffd54f;font-weight:700;white-space:nowrap;border-left:2px solid rgba(255,255,255,.2)">⭐ IQA</th>`:''}
+    ${isArb?`<th onclick="sT('${tableId}',${22+co+ae},true,event)" title="% copertura gare comitato: singolo conta 1, in coppia conta 0.5" style="cursor:pointer;background:#0a5c36;color:#7effc0;font-weight:700;white-space:nowrap;border-left:2px solid rgba(255,255,255,.2)">% Cop.</th>`:''}
   </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>
   <div style="font-size:.62rem;color:var(--mu);padding:4px 0;margin-top:2px">💡 <b>Shift+click</b> su un'intestazione per aggiungere un secondo livello di ordinamento</div>`;
 }
@@ -4780,7 +4807,7 @@ function renderSq(){
     var rowBorder=wp>50?'border-left:3px solid var(--green)':wp>0&&wp<50?'border-left:3px solid var(--red)':'border-left:3px solid #eee';
     h+=`<tr style="${rowBg};${rowBorder}">`;
     h+=`<td class="rpos ${i===0?'g1':i===1?'g2':i===2?'g3':''}" data-val="${i+1}">${i+1}</td>`;
-    h+=`<td><span class="rn rn-sq" onclick="openSquadra('${esc(s.nome)}')">${escH(nomeGruppo!==s.nome?nomeGruppo:s.nome)}</span> <button onclick="sqToggle('sqg-${i}')" style="background:none;border:1px solid #ccc;border-radius:3px;padding:0 4px;font-size:.6rem;cursor:pointer;color:var(--mu)" title="Espandi/Contrai campionati">▼</button></td>`;
+    h+=`<td><span class="rn rn-sq" onclick="openSquadra('${esc(s.nome)}')" style="cursor:pointer">${escH(nomeGruppo!==s.nome?nomeGruppo:s.nome)}</span> ${camps.length>1?`<button onclick="sqToggle('sqg-${i}')" style="background:none;border:1px solid #ccc;border-radius:3px;padding:0 4px;font-size:.6rem;cursor:pointer;color:var(--mu)" id="sqbtn-${i}" title="Espandi/Contrai campionati">▶</button>`:''}</td>`;
     h+=`<td>${pvB(s.prov)}</td>`;
     h+=`<td data-val="${ptGlob}" style="text-align:center;font-weight:800;color:#1565c0;cursor:pointer" onclick="openSquadra('${esc(s.nome)}')" title="Apri classifica">${ptGlob}</td>`;
     h+=`<td data-val="${s.n_gare}" style="cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Vedi gare"><b style="color:var(--bl);text-decoration:underline">${s.n_gare}</b></td>`;
@@ -4842,7 +4869,9 @@ function sqToggle(grpId){
     if(!r.dataset.sqmember){r.style.display=hidden?'':'none';}
     else if(!hidden){r.style.display='none';}
   });
-  const btn=document.querySelector(`button[onclick="sqToggle('${grpId}')"]`);
+  // Update button arrow
+  const idx=grpId.replace('sqg-','');
+  const btn=document.getElementById('sqbtn-'+idx)||document.querySelector(`button[onclick="sqToggle('${grpId}')"]`);
   if(btn)btn.textContent=hidden?'▼':'▶';
 }
 function sqToggleAll(expand){
@@ -4851,6 +4880,7 @@ function sqToggleAll(expand){
     else{r.style.display='none';}
   });
   document.querySelectorAll('button[onclick^="sqToggle(\'sqg-"]').forEach(b=>b.textContent=expand?'▼':'▶');
+  document.querySelectorAll('[id^="sqbtn-"]').forEach(b=>b.textContent=expand?'▼':'▶');
   document.querySelectorAll('button[onclick^="sqToggleMember("]').forEach(b=>b.textContent='▶');
 }
 
@@ -6105,7 +6135,8 @@ function openPersona(nome,campFilter){
   let extraTabs='';
   let extraPanels='';
   // Provvedimenti per questo arbitro
-  const provvArb=(PROVV||[]).filter(pv=>[pv.arbitro1,pv.arbitro2].some(a=>pns(a||'')===nome));
+  const _nomeNorm=nome.toLowerCase().trim();
+  const provvArb=(PROVV||[]).filter(pv=>[pv.arbitro1,pv.arbitro2].some(a=>{const n=pns(a||'').toLowerCase().trim();return n&&(n===_nomeNorm||n.includes(_nomeNorm)||_nomeNorm.includes(n));}));
   const provvTab=provvArb.length?`<button class="mt" onclick="swTabId(this,'mpt-pv')" style="color:#e67e22">⚠️ Provv. (${provvArb.length})</button>`:'';
   const TIPO_CLR_P={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',deplorazione:'#16a085',ammenda:'#8e5ea2','squalifica campo':'#c0392b',provvedimento:'#7f8c8d'};
   const provvPanel=provvArb.length?`<div class="mtc hidden" id="mpt-pv">
@@ -6293,11 +6324,66 @@ function openPersona(nome,campFilter){
           ${(()=>{
             const nArb=p.n_gare_arbitro||0, nSing=p.n_singolo||0, nDopp=nArb-nSing;
             const pctDopp=nArb?Math.round(nDopp/nArb*100):0;
-            return`<div style="font-size:.85rem;margin-bottom:6px"><b style="color:var(--green)">${nDopp}</b> in coppia &nbsp; <b style="color:var(--gold)">${nSing}</b> in singolo</div>
-            <div style="height:8px;background:#eee;border-radius:4px;overflow:hidden">
-              <div style="height:8px;background:var(--green);width:${pctDopp}%;border-radius:4px"></div>
+            // % copertura su totale comitato
+            const _today_s=new Date().toISOString().split('T')[0];
+            const totCom=(D.gare||[]).filter(g=>(g['Data']||'')<=_today_s).length||1;
+            const pesoCop=nSing+nDopp*0.5;
+            const pctCom=Math.round(pesoCop/totCom*100);
+            // Per livello campionato (U13→massimo)
+            const CAMP_LVL_ORDER=['Serie B','Serie C','Divisione Regionale 1','Divisione regionale 1','Divisione Regionale 2','Divisione regionale 2','Under 19','Under 17','Under 15','Under 14','Under 13'];
+            const campLvls={};
+            (p.gare||[]).filter(g=>g['Ruolo_in_gara']==='Arbitro'||g['Arbitro 1']||g['Arbitro 2']).forEach(g=>{
+              const cn=g['Campionato']||'';
+              if(!campLvls[cn])campLvls[cn]={sing:0,dopp:0};
+              const isSing=!(g['Arbitro 2']&&pns(g['Arbitro 2']||''));
+              if(isSing)campLvls[cn].sing++;else campLvls[cn].dopp++;
+            });
+            const campLvlRows=Object.entries(campLvls).sort((a,b)=>campFipRank(a[0])-campFipRank(b[0])).map(([cn,cs])=>{
+              const totC=(D.gare||[]).filter(g=>(g['Campionato']||'')===cn&&(g['Data']||'')<=_today_s).length||1;
+              const pesoC=cs.sing+cs.dopp*0.5;
+              const pctC=Math.round(pesoC/totC*100);
+              const col=campColor(cn)||'#456';
+              const short=cn.replace('COMITATO REGIONALE SARDEGNA ','').replace('Divisione regionale','DR').replace('Under ','U');
+              return `<div style="display:flex;align-items:center;gap:6px;font-size:.68rem;padding:1px 0">
+                <span style="background:${col};color:#fff;border-radius:2px;padding:0 5px;flex-shrink:0;font-size:.6rem">${escH(short)}</span>
+                <div style="flex:1;height:6px;background:#eee;border-radius:3px;overflow:hidden">
+                  <div style="height:6px;background:${col};width:${Math.min(pctC,100)}%;border-radius:3px"></div>
+                </div>
+                <span style="color:var(--mu);flex-shrink:0;min-width:28px;text-align:right">${pctC}%</span>
+              </div>`;
+            }).join('');
+            // Per provincia
+            const pvLvls={};
+            (p.gare||[]).filter(g=>g['Arbitro 1']||g['Arbitro 2']).forEach(g=>{
+              const sq1=SQ[g['Squadra Casa']];const sq2=SQ[g['Squadra Ospite']];
+              const pvGame=sq1?.prov||sq2?.prov||'';
+              if(!pvGame)return;
+              if(!pvLvls[pvGame])pvLvls[pvGame]={sing:0,dopp:0};
+              const isSing=!(g['Arbitro 2']&&pns(g['Arbitro 2']||''));
+              if(isSing)pvLvls[pvGame].sing++;else pvLvls[pvGame].dopp++;
+            });
+            const pvRows=Object.entries(pvLvls).sort((a,b)=>{const ta=a[1].sing+a[1].dopp;const tb=b[1].sing+b[1].dopp;return tb-ta;}).map(([pv,cs])=>{
+              const totPv=(D.gare||[]).filter(g=>{const sq=SQ[g['Squadra Casa']];return(sq?.prov||'')=== pv&&(g['Data']||'')<=_today_s;}).length||1;
+              const pesoPv=cs.sing+cs.dopp*0.5;
+              const pctPv=Math.round(pesoPv/totPv*100);
+              const pvCol=PC[pv]||'var(--bl)';
+              return `<span style="display:inline-flex;align-items:center;gap:3px;background:#f0f4ff;border:1px solid #d0dcf0;border-radius:4px;padding:2px 7px;font-size:.68rem;margin:2px">
+                ${pvB(pv)} <b style="color:var(--bl)">${pctPv}%</b> <span style="color:var(--mu);font-size:.6rem">(${cs.sing+cs.dopp}g)</span>
+              </span>`;
+            }).join('');
+            return`<div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px">
+              <div><span style="font-size:1.6rem;font-weight:900;color:#00c47a">${pctCom}%</span> <span style="font-size:.72rem;color:var(--mu)">copertura comitato</span></div>
+              <div style="font-size:.72rem;color:var(--mu)">${pesoCop.toFixed(1)} gare equiv. / ${totCom} tot.</div>
             </div>
-            <div style="font-size:.68rem;color:var(--mu);margin-top:4px">${pctDopp}% in coppia</div>`;
+            <div style="margin-bottom:6px"><b style="font-size:.68rem;color:var(--mu)">In coppia / singolo:</b>
+              <div style="font-size:.85rem;margin:3px 0"><b style="color:var(--green)">${nDopp}</b> in coppia &nbsp; <b style="color:var(--gold)">${nSing}</b> in singolo</div>
+              <div style="height:8px;background:#eee;border-radius:4px;overflow:hidden">
+                <div style="height:8px;background:var(--green);width:${pctDopp}%;border-radius:4px"></div>
+              </div>
+              <div style="font-size:.68rem;color:var(--mu);margin-top:2px">${pctDopp}% in coppia</div>
+            </div>
+            ${campLvlRows?`<div style="margin-top:8px"><div style="font-size:.65rem;font-weight:700;color:var(--mu);margin-bottom:4px">% per campionato:</div>${campLvlRows}</div>`:''}
+            ${pvRows?`<div style="margin-top:8px"><div style="font-size:.65rem;font-weight:700;color:var(--mu);margin-bottom:4px">% per provincia:</div>${pvRows}</div>`:''}`;
           })()}
         </div>
       </div>
@@ -6899,6 +6985,10 @@ function openPersona(nome,campFilter){
 
   // Populate panel Squadre safely
   try {
+    // Filtri squadre nella scheda arbitro
+    const sqMet=new Set(squadre.map(([sq])=>sq));
+    const allCampsP=Object.keys(p.campionati||{});
+    // Squadre incontrate
     const sqBlocks=squadre.map(([sq,cnt],i)=>{
       const sqd=SQ[sq];
       const sqGare=allG.filter(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
@@ -6914,13 +7004,11 @@ function openPersona(nome,campFilter){
           if(pc>po)campStats[cn].v++;else campStats[cn].p++;
         }
       });
-      // Sort categories by FIP order
       const clist=Object.entries(campStats).sort((a,b)=>campFipRank(a[0])-campFipRank(b[0]));
       const totV=clist.reduce((s,[,cs])=>s+cs.v,0);
       const totP=clist.reduce((s,[,cs])=>s+cs.p,0);
       const wp=cnt?Math.round(totV/cnt*100):0;
       const pv=sqd?.prov||sqd?.provincia||'';
-      // Category rows — senza barre, solo numeri chiari
       const catRows=clist.map(([cn,cs])=>{
         const clr=campColor(cn)||'#888';
         const fem=isFemCamp(cn);
@@ -6954,7 +7042,60 @@ function openPersona(nome,campFilter){
         ${catRows}
       </div>`;
     }).join('');
-    document.getElementById('mpt-4').innerHTML=`<div style="font-size:10px;padding:5px 10px;color:var(--mu);border-bottom:0.5px solid var(--br);margin-bottom:6px">Clicca la categoria o il numero per vedere le gare arbitrate in quel campionato</div><div style="padding:4px">${sqBlocks}</div>`;
+
+    // Squadre NON incontrate, suddivise per campionato arbitrato
+    const camponiatiArb=Object.keys(p.campionati||{});
+    let nonIncBlocks='';
+    const nonIncAll=[];
+    camponiatiArb.forEach(cn=>{
+      const sqInCamp=Object.values(SQ).filter(sq=>sq.campionati&&sq.campionati[cn]);
+      const notMet=sqInCamp.filter(sq=>!sqMet.has(sq.nome));
+      notMet.forEach(sq=>nonIncAll.push({sq:sq.nome,pv:sq.prov||'',camp:cn}));
+    });
+    // Raggruppa per provincia e campionato per il filtro
+    const pvSet=[...new Set(nonIncAll.map(x=>x.pv).filter(Boolean))].sort();
+    const campSet=[...new Set(nonIncAll.map(x=>x.camp).filter(Boolean))].sort();
+    if(nonIncAll.length){
+      const nonIncId='sq-non-inc-'+Date.now();
+      const nonIncPvId='sq-ni-pv-'+Date.now();
+      const nonIncCampId='sq-ni-camp-'+Date.now();
+      nonIncBlocks=`<div style="margin-top:12px;border:1px solid #f0c070;border-radius:8px;overflow:hidden">
+        <div style="background:#fff8e8;padding:7px 12px;display:flex;align-items:center;gap:8px;cursor:pointer" onclick="const b=document.getElementById('${nonIncId}');b.style.display=b.style.display==='none'?'':'none'">
+          <span style="font-size:.75rem;font-weight:700;color:#8a6200">❌ ${nonIncAll.length} squadre non ancora incontrate</span>
+          <span style="font-size:.65rem;color:var(--mu);margin-left:auto">▼ espandi</span>
+        </div>
+        <div id="${nonIncId}" style="display:none;padding:8px 10px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
+            <select id="${nonIncPvId}" onchange="_filterNonInc('${nonIncId}','${nonIncPvId}','${nonIncCampId}')" style="font-size:.68rem;padding:2px 6px;border:1px solid var(--br);border-radius:4px">
+              <option value="">Tutte le province</option>
+              ${pvSet.map(pv=>`<option value="${escH(pv)}">${escH(pv)}</option>`).join('')}
+            </select>
+            <select id="${nonIncCampId}" onchange="_filterNonInc('${nonIncId}','${nonIncPvId}','${nonIncCampId}')" style="font-size:.68rem;padding:2px 6px;border:1px solid var(--br);border-radius:4px">
+              <option value="">Tutti i campionati</option>
+              ${campSet.map(c=>`<option value="${escH(c)}">${escH(c.replace('Divisione regionale','DR').replace('Under ','U'))}</option>`).join('')}
+            </select>
+            <button onclick="document.getElementById('${nonIncPvId}').value='';document.getElementById('${nonIncCampId}').value='';_filterNonInc('${nonIncId}','${nonIncPvId}','${nonIncCampId}')" style="font-size:.65rem;padding:2px 7px;border:1px solid var(--br);border-radius:4px;background:none;cursor:pointer">↺</button>
+          </div>
+          <div id="${nonIncId}-rows" style="display:flex;flex-wrap:wrap;gap:4px">
+            ${nonIncAll.map(x=>{
+              const col=campColor(x.camp)||'#888';
+              const sqd=SQ[x.sq];
+              return`<span class="ni-item" data-pv="${escH(x.pv)}" data-camp="${escH(x.camp)}" style="display:inline-flex;align-items:center;gap:4px;border:1px solid var(--br);border-radius:5px;padding:2px 7px;font-size:.68rem;cursor:pointer;background:#fafbff" onclick="openSquadra('${esc(x.sq)}')">
+                <span style="background:${col};border-radius:2px;width:8px;height:8px;flex-shrink:0"></span>
+                ${escH(x.sq)}
+                ${x.pv?pvB(x.pv):''}
+              </span>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>`;
+    }
+
+    document.getElementById('mpt-4').innerHTML=`
+      <div style="font-size:10px;padding:5px 10px;color:var(--mu);border-bottom:0.5px solid var(--br);margin-bottom:6px">
+        Clicca la categoria o il numero per vedere le gare arbitrate in quel campionato
+      </div>
+      <div style="padding:4px">${sqBlocks}${nonIncBlocks}</div>`;
   } catch(e){ document.getElementById('mpt-4').innerHTML='<p style="color:red;padding:10px">Errore squadre: '+e.message+'</p>'; }
 
   // Populate inline trend (4 finestre in riga)
