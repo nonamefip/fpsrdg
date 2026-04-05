@@ -1893,6 +1893,35 @@ function _filterNonInc(containerId,pvSelId,campSelId){
     el.style.display=show?'':'none';
   });
 }
+function _niFilter(niId){
+  const pv=(document.getElementById(niId+'-pv')||{}).value||'';
+  const camp=(document.getElementById(niId+'-camp')||{}).value||'';
+  const body=document.getElementById(niId+'-body');
+  const cnt=document.getElementById(niId+'-cnt');
+  if(!body)return;
+  let visible=0;
+  body.querySelectorAll('tr.ni-row').forEach(tr=>{
+    const trPv=tr.dataset.pv||'';
+    const trCamp=tr.dataset.camp||'';
+    const show=(!pv||trPv===pv)&&(!camp||trCamp===camp);
+    tr.style.display=show?'':'none';
+    if(show)visible++;
+  });
+  if(cnt)cnt.textContent=visible+' squadre';
+}
+function _niSort(niId,col){
+  const body=document.getElementById(niId+'-body');
+  if(!body)return;
+  const rows=[...body.querySelectorAll('tr.ni-row')];
+  const asc=body.dataset['sort'+col]!=='asc';
+  body.dataset['sort'+col]=asc?'asc':'desc';
+  rows.sort((a,b)=>{
+    const ta=a.cells[col]?.textContent?.trim()||'';
+    const tb=b.cells[col]?.textContent?.trim()||'';
+    return asc?ta.localeCompare(tb,'it'):tb.localeCompare(ta,'it');
+  });
+  rows.forEach(r=>body.appendChild(r));
+}
 function pns(s){if(!s)return'';const i=s.toLowerCase().lastIndexOf(' di ');return i>0?s.substring(0,i).trim():s;}
 function bBar(val,max,color,px=120){return`<div class="bw"><div class="bar" style="width:${Math.max(2,val/max*px)}px;background:${color}"></div><span style="font-size:.7rem;color:var(--mu)">${val}</span></div>`;}
 function bProg(entries,max,color='var(--bl)'){
@@ -2364,7 +2393,7 @@ function renderPersonsTable(cid,persons,opts={}){
       <td ${tdAtt} data-val="${nGareOggi}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}"
         title="Gare regionali fatte (Arb+UDC+Oss). Escluse nazionali (colonna 🇮🇹)."
         data-n="${p.nome}" onclick="event.stopPropagation();openPersona(this.dataset.n)">${nGareOggi}</td>
-      <td ${tdAtt} data-val="${nGareArbOggiDisp}" style="text-align:center">${nGareArbOggiDisp?mkLink(nGareArbOggiDisp,1,pvColor):''}</td>
+      <td ${tdAtt} data-val="${nGareArbOggiDisp}" style="text-align:center">${(nGareArbOggiDisp&&(isArb||cid==='arb-list'))?mkLink(nGareArbOggiDisp,1,pvColor):(nGareArbOggiDisp&&isDual?`<span style="color:var(--mu2);font-size:.68rem" title="Gare come arbitro (ruolo secondario)">${nGareArbOggiDisp}</span>`:'')}</td>
       ${isArb?(()=>{
         if(!nGareNaz) return '<td data-val="0" style="text-align:center;color:var(--mu2)">—</td>';
         return `<td data-val="${nGareNaz}" style="text-align:center;background:#fdecea;cursor:pointer" onclick="setNazTab('fuori',document.getElementById('naz-tab-fuori'));showPage('nazionale')" title="Vedi gare nazionali"><span style="font-weight:700;color:#c0392b">🇮🇹 ${nGareNaz}</span></td>`;
@@ -4803,6 +4832,7 @@ function renderSq(){
     var nomeGruppo=getNomeGruppo(canonical);
     // Mostra questa riga solo se è la squadra principale del gruppo o non ha gruppo
     var isGruppoMain=!s.gruppo||s.gruppo===s.nome||nomeGruppo===s.nome;
+    var camps=Object.keys(s.campionati||{});
     var rowBg=wp>50?'background:#f0fff4':wp>0&&wp<50?'background:#fff5f5':'background:#fff';
     var rowBorder=wp>50?'border-left:3px solid var(--green)':wp>0&&wp<50?'border-left:3px solid var(--red)':'border-left:3px solid #eee';
     h+=`<tr style="${rowBg};${rowBorder}">`;
@@ -4821,7 +4851,6 @@ function renderSq(){
     h+=`</tr>`;
 
     // Sotto-righe per campionato
-    var camps=Object.keys(s.campionati||{});
     if(camps.length>1){
       // Ordina per livello
       camps.sort(function(a,b){return livelloC(b)-livelloC(a);});
@@ -4869,9 +4898,9 @@ function sqToggle(grpId){
     if(!r.dataset.sqmember){r.style.display=hidden?'':'none';}
     else if(!hidden){r.style.display='none';}
   });
-  // Update button arrow
+  // Update button arrow — cerca per id sia sqbtn-N che sqbtn-gN
   const idx=grpId.replace('sqg-','');
-  const btn=document.getElementById('sqbtn-'+idx)||document.querySelector(`button[onclick="sqToggle('${grpId}')"]`);
+  const btn=document.getElementById('sqbtn-'+idx)||document.getElementById('sqbtn-g'+idx)||document.querySelector(`button[onclick="sqToggle('${grpId}')"]`);
   if(btn)btn.textContent=hidden?'▼':'▶';
 }
 function sqToggleAll(expand){
@@ -5156,8 +5185,8 @@ function renderGruppi(){
     html+=`<tr style="${rowBg};${rowBorder}" data-prov="${mainProv}">
       <td class="rpos ${num<=3?'g'+num:''}" data-val="${num}">${num}</td>
       <td>
-        <button onclick="sqToggle('sqg-${num}')" style="background:none;border:none;cursor:pointer;font-size:.6rem;color:var(--mu);margin-right:2px" title="Espandi/Comprimi">▶</button>
-        <span class="rn rn-sq" onclick="openSquadra('${esc(main)}')">${escH(canonical)}</span>
+        <button onclick="sqToggle('sqg-${num}')" style="background:none;border:none;cursor:pointer;font-size:.6rem;color:var(--mu);margin-right:2px" id="sqbtn-g${num}" title="Espandi/Comprimi">▶</button>
+        <span class="rn rn-sq" style="cursor:pointer" onclick="sqToggle('sqg-${num}')" title="Clicca per espandere · doppio click per aprire scheda" ondblclick="event.stopPropagation();openSquadra('${esc(main)}')">${escH(canonical)}</span>
         ${isMulti?`<span class="badge" style="background:var(--bl2);color:#fff;margin-left:4px;font-size:.6rem">${members.length}</span>`:''}
       </td>
       <td>${s?.prov?pvB(s.prov):''}</td>
@@ -5201,7 +5230,7 @@ function renderGruppi(){
         <td></td>
         <td style="padding:3px 8px 3px 20px">
           <button onclick="sqToggleMember('sqm-${num}-${esc(m)}')" style="background:none;border:none;cursor:pointer;font-size:.58rem;color:var(--mu);margin-right:2px">▶</button>
-          <span class="rn rn-sq" style="font-size:.8rem" onclick="openSquadra('${esc(m)}')">${escH(m)}</span>
+          <span class="rn rn-sq" style="font-size:.8rem;cursor:pointer" onclick="sqToggleMember('sqm-${num}-${esc(m)}')" title="Clicca per espandere campionati · doppio click per aprire scheda" ondblclick="event.stopPropagation();openSquadra('${esc(m)}')">${escH(m)}</span>
           ${isSelf?`<span style="background:var(--bl3);color:var(--bl2);border-radius:4px;padding:0 5px;font-size:.6rem;font-weight:600;margin-left:4px">stesso nome</span>`:''}
         </td>
         <td>${pvB(sq.prov||'')}</td>
@@ -6650,19 +6679,22 @@ function openPersona(nome,campFilter){
         // Select campionato
         const opts=`<option value="">Tutti i campionati (${squadre.length} squadre)</option>`+sortedCamps.map(c=>`<option value="${c.replace(/"/g,'&quot;')}">${c.replace(/COMITATO REGIONALE SARDEGNA /i,'').replace(/,$/,'').trim()} (${sqByCamp[c].length})</option>`).join('');
         const makeTable=(rows)=>`<table class="rtbl" style="font-size:.73rem;width:100%"><thead><tr>
-            <th>Squadra</th><th style="text-align:center">Gare</th>
+            <th>Squadra</th><th style="text-align:center">Prov.</th><th style="text-align:center">Gare</th>
             <th style="text-align:center;color:var(--green)">V</th>
             <th style="text-align:center;color:var(--red)">P</th>
             <th style="text-align:center">Win%</th>
             <th style="min-width:100px">Barra</th>
           </tr></thead><tbody>${rows}</tbody></table>`;
         const makeRows=(list)=>list.map(({sq,cnt,v,per})=>{
+          const sqd2=SQ[sq];
+          const sqPv=sqd2?.prov||sqd2?.provincia||'';
           const wp=cnt?Math.round(v/cnt*100):0;
           const pV=cnt?Math.round(v/cnt*100):0;
           const pP=cnt?Math.round(per/cnt*100):0;
           const rowBg=v>per?'#f0fff4':per>v?'#fff5f5':'#fff';
           return`<tr style="background:${rowBg}">
             <td><span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></td>
+            <td style="text-align:center">${sqPv?pvB(sqPv):''}</td>
             <td style="text-align:center;font-weight:700">${cnt}</td>
             <td style="text-align:center;font-weight:700;color:var(--green)">${v}</td>
             <td style="text-align:center;color:var(--red)">${per}</td>
@@ -7052,40 +7084,50 @@ function openPersona(nome,campFilter){
       const notMet=sqInCamp.filter(sq=>!sqMet.has(sq.nome));
       notMet.forEach(sq=>nonIncAll.push({sq:sq.nome,pv:sq.prov||'',camp:cn}));
     });
-    // Raggruppa per provincia e campionato per il filtro
+    // Dedup: stessa squadra può apparire in più campionati — mantieni tutte le righe (una per camp)
     const pvSet=[...new Set(nonIncAll.map(x=>x.pv).filter(Boolean))].sort();
-    const campSet=[...new Set(nonIncAll.map(x=>x.camp).filter(Boolean))].sort();
+    const campSet=[...new Set(nonIncAll.map(x=>x.camp).filter(Boolean))].sort((a,b)=>campFipRank(a)-campFipRank(b));
     if(nonIncAll.length){
-      const nonIncId='sq-non-inc-'+Date.now();
-      const nonIncPvId='sq-ni-pv-'+Date.now();
-      const nonIncCampId='sq-ni-camp-'+Date.now();
+      const niId='ni-'+Math.random().toString(36).slice(2,7);
+      const niTblId='ni-tbl-'+niId;
+      // Costruisci righe tabella
+      const niRows=nonIncAll.map(x=>{
+        const col=campColor(x.camp)||'#888';
+        const short=x.camp.replace('COMITATO REGIONALE SARDEGNA ','').replace('Divisione regionale','DR').replace('Under ','U');
+        return`<tr class="ni-row" data-pv="${escH(x.pv)}" data-camp="${escH(x.camp)}">
+          <td><span class="rn rn-sq" style="font-size:.72rem" onclick="openSquadra('${esc(x.sq)}')">${escH(x.sq)}</span></td>
+          <td style="text-align:center">${x.pv?pvB(x.pv):''}</td>
+          <td><span style="background:${col};color:#fff;border-radius:10px;padding:1px 8px;font-size:.6rem;font-weight:600;white-space:nowrap;cursor:pointer" onclick="openCampionato('${esc(x.camp)}')">${escH(short)}</span></td>
+        </tr>`;
+      }).join('');
       nonIncBlocks=`<div style="margin-top:12px;border:1px solid #f0c070;border-radius:8px;overflow:hidden">
-        <div style="background:#fff8e8;padding:7px 12px;display:flex;align-items:center;gap:8px;cursor:pointer" onclick="const b=document.getElementById('${nonIncId}');b.style.display=b.style.display==='none'?'':'none'">
+        <div style="background:#fff8e8;padding:7px 12px;display:flex;align-items:center;gap:8px;cursor:pointer"
+          onclick="const b=document.getElementById('${niId}');const a=this.querySelector('.ni-arr');const isHidden=b.style.display==='none';b.style.display=isHidden?'':'none';a.textContent=isHidden?'▼':'▶'">
           <span style="font-size:.75rem;font-weight:700;color:#8a6200">❌ ${nonIncAll.length} squadre non ancora incontrate</span>
-          <span style="font-size:.65rem;color:var(--mu);margin-left:auto">▼ espandi</span>
+          <span class="ni-arr" style="font-size:.65rem;color:var(--mu);margin-left:auto">▶ espandi</span>
         </div>
-        <div id="${nonIncId}" style="display:none;padding:8px 10px">
+        <div id="${niId}" style="display:none;padding:8px 10px">
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
-            <select id="${nonIncPvId}" onchange="_filterNonInc('${nonIncId}','${nonIncPvId}','${nonIncCampId}')" style="font-size:.68rem;padding:2px 6px;border:1px solid var(--br);border-radius:4px">
+            <select id="${niId}-pv" onchange="_niFilter('${niId}')" style="font-size:.68rem;padding:3px 6px;border:1px solid var(--br);border-radius:4px">
               <option value="">Tutte le province</option>
               ${pvSet.map(pv=>`<option value="${escH(pv)}">${escH(pv)}</option>`).join('')}
             </select>
-            <select id="${nonIncCampId}" onchange="_filterNonInc('${nonIncId}','${nonIncPvId}','${nonIncCampId}')" style="font-size:.68rem;padding:2px 6px;border:1px solid var(--br);border-radius:4px">
+            <select id="${niId}-camp" onchange="_niFilter('${niId}')" style="font-size:.68rem;padding:3px 6px;border:1px solid var(--br);border-radius:4px">
               <option value="">Tutti i campionati</option>
-              ${campSet.map(c=>`<option value="${escH(c)}">${escH(c.replace('Divisione regionale','DR').replace('Under ','U'))}</option>`).join('')}
+              ${campSet.map(c=>`<option value="${escH(c)}">${escH(c.replace('COMITATO REGIONALE SARDEGNA ','').replace('Divisione regionale','DR').replace('Under ','U'))}</option>`).join('')}
             </select>
-            <button onclick="document.getElementById('${nonIncPvId}').value='';document.getElementById('${nonIncCampId}').value='';_filterNonInc('${nonIncId}','${nonIncPvId}','${nonIncCampId}')" style="font-size:.65rem;padding:2px 7px;border:1px solid var(--br);border-radius:4px;background:none;cursor:pointer">↺</button>
+            <span id="${niId}-cnt" style="font-size:.65rem;color:var(--mu)">${nonIncAll.length} squadre</span>
+            <button onclick="document.getElementById('${niId}-pv').value='';document.getElementById('${niId}-camp').value='';_niFilter('${niId}')" style="font-size:.65rem;padding:2px 7px;border:1px solid var(--br);border-radius:4px;background:none;cursor:pointer;margin-left:auto">↺ Reset</button>
           </div>
-          <div id="${nonIncId}-rows" style="display:flex;flex-wrap:wrap;gap:4px">
-            ${nonIncAll.map(x=>{
-              const col=campColor(x.camp)||'#888';
-              const sqd=SQ[x.sq];
-              return`<span class="ni-item" data-pv="${escH(x.pv)}" data-camp="${escH(x.camp)}" style="display:inline-flex;align-items:center;gap:4px;border:1px solid var(--br);border-radius:5px;padding:2px 7px;font-size:.68rem;cursor:pointer;background:#fafbff" onclick="openSquadra('${esc(x.sq)}')">
-                <span style="background:${col};border-radius:2px;width:8px;height:8px;flex-shrink:0"></span>
-                ${escH(x.sq)}
-                ${x.pv?pvB(x.pv):''}
-              </span>`;
-            }).join('')}
+          <div style="overflow-x:auto">
+            <table class="rtbl" id="${niTblId}" style="font-size:.72rem;width:100%">
+              <thead><tr>
+                <th onclick="_niSort('${niId}',0)" style="cursor:pointer">Squadra ↕</th>
+                <th onclick="_niSort('${niId}',1)" style="cursor:pointer;text-align:center">Prov. ↕</th>
+                <th onclick="_niSort('${niId}',2)" style="cursor:pointer">Campionato ↕</th>
+              </tr></thead>
+              <tbody id="${niId}-body">${niRows}</tbody>
+            </table>
           </div>
         </div>
       </div>`;
