@@ -87,69 +87,88 @@ def date_label(gare):
 
 def build_giornate(gare_g):
     """
-    Raggruppa le gare in 'giornate' dove ogni squadra appare max 1 volta.
-    Logica: finestre temporali prima, fallback su turni greedy.
+    Raggruppa le gare in 'giornate' con finestra 7 giorni (weekend FIP).
+    Partite del ven-dom (o recuperi ravvicinati) vanno nella stessa giornata.
+    Ogni squadra appare max 1 volta per giornata.
     """
+    from datetime import datetime, timedelta
+
     gare_sorted = sorted(gare_g, key=lambda x: (x.get("Data",""), x.get("Ora","")))
 
-    # Prima prova: raggruppa per data esatta (se il calendario FIP le allinea)
-    by_date = defaultdict(list)
-    for g in gare_sorted:
-        by_date[g.get("Data","")].append(g)
-
-    # Controlla se raggruppare per data funziona (nessuna squadra doppia per data)
-    date_ok = True
-    for d, gg in by_date.items():
-        squadre_giorno = [g["Squadra Casa"] for g in gg] + [g["Squadra Ospite"] for g in gg]
-        if len(squadre_giorno) != len(set(squadre_giorno)):
-            date_ok = False
-            break
-
-    if date_ok and len(by_date) > 1:
-        giornate = []
-        for d in sorted(by_date.keys()):
-            turno = by_date[d]
-            giornate.append({
-                "n": len(giornate) + 1,
-                "gare": turno,
-                "completa": all(g.get("Risultato") for g in turno),
-                "data_label": fmt_date(d),
-            })
-        return giornate
-
-    # Fallback: algoritmo greedy
     gare_left = list(gare_sorted)
     giornate = []
+    # Punti cumulativi per squadra (per annotare pt progressivi)
+    squadre_all = set(g["Squadra Casa"] for g in gare_sorted) | set(g["Squadra Ospite"] for g in gare_sorted)
+    pt_cum = {sq: 0 for sq in squadre_all}
+
     safety = 0
-    while gare_left and safety < 300:
+    WINDOW_DAYS = 6  # venerdì → domenica + eventuale lunedì
+
+    while gare_left and safety < 500:
         safety += 1
+
+        first_date_str = gare_left[0].get("Data", "")
+        try:
+            first_date = datetime.strptime(first_date_str, "%Y-%m-%d")
+            window_end = first_date + timedelta(days=WINDOW_DAYS)
+        except Exception:
+            first_date = window_end = None
+
         turno = []
         sq_usate = set()
         da_rimuovere = []
+
         for idx, g in enumerate(gare_left):
             c, o = g["Squadra Casa"], g["Squadra Ospite"]
-            if c not in sq_usate and o not in sq_usate:
-                turno.append(g)
-                sq_usate.add(c); sq_usate.add(o)
-                da_rimuovere.append(idx)
+            if c in sq_usate or o in sq_usate:
+                continue
+            # Controlla finestra temporale
+            if window_end:
+                try:
+                    g_date = datetime.strptime(g.get("Data",""), "%Y-%m-%d")
+                    if g_date > window_end:
+                        continue
+                except Exception:
+                    pass
+            turno.append(g)
+            sq_usate.add(c)
+            sq_usate.add(o)
+            da_rimuovere.append(idx)
+
         if not turno:
-            # forza accodamento rimasti
-            giornate.append({
-                "n": len(giornate) + 1,
-                "gare": gare_left[:],
-                "completa": all(g.get("Risultato") for g in gare_left),
-                "data_label": date_label(gare_left),
-            })
-            break
+            # Forza prima gara rimanente
+            turno = [gare_left[0]]
+            da_rimuovere = [0]
+
         da_rimuovere.reverse()
         for idx in da_rimuovere:
             gare_left.pop(idx)
+
+        # Annota punti cumulativi prima di questa giornata
+        for g in turno:
+            g["_pt_cum_casa"] = pt_cum.get(g["Squadra Casa"], 0)
+            g["_pt_cum_osp"]  = pt_cum.get(g["Squadra Ospite"], 0)
+
+        # Aggiorna pt cumulativi con questa giornata
+        for g in turno:
+            if not g.get("Risultato"):
+                continue
+            try:
+                pc, po = int(g["Punti Casa"]), int(g["Punti Ospite"])
+                if pc > po:
+                    pt_cum[g["Squadra Casa"]] = pt_cum.get(g["Squadra Casa"], 0) + 2
+                elif po > pc:
+                    pt_cum[g["Squadra Ospite"]] = pt_cum.get(g["Squadra Ospite"], 0) + 2
+            except Exception:
+                pass
+
         giornate.append({
             "n": len(giornate) + 1,
             "gare": turno,
             "completa": all(g.get("Risultato") for g in turno),
             "data_label": date_label(turno),
         })
+
     return giornate
 
 
