@@ -84,6 +84,10 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'full' }}
         run: python scripts/fip_full_scraper.py
 
+      - name: Costruisce calendari strutturati
+        if: ${{ inputs.mode != 'full' }}
+        run: python scripts/fip_calendar_scraper.py
+
       - name: Salva cache su GitHub
         run: |
           git config user.name "FIP Bot"
@@ -91,6 +95,7 @@ jobs:
           git add cache/fip_sardegna_cache.json || true
           git add cache/fip_national_cache.json || true
           git add cache/fip_sardegna_full_cache.json || true
+          git add cache/fip_calendari.json || true
           git diff --staged --quiet || git commit -m "Cache aggiornata $(date '+%Y-%m-%d %H:%M')"
           git push || true
 
