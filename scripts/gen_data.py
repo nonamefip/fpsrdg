@@ -1005,6 +1005,27 @@ nazionale['squadre_nazionali_sarde'] = squadre_nazionali_out
 # Aggiorna D con i nuovi dati nazionali
 D['nazionale'] = nazionale
 
+
+# ══════════════════════════════════════════════════════════════
+# CALENDARI STRUTTURATI (da fip_calendar_scraper.py)
+# Struttura: fase → girone → giornate + classifica
+# ══════════════════════════════════════════════════════════════
+import os as _os
+CALENDARI_CACHE = 'cache/fip_calendari.json'
+if _os.path.exists(CALENDARI_CACHE):
+    with open(CALENDARI_CACHE, encoding='utf-8') as _f:
+        calendari_raw = json.load(_f)
+    for camp_nome, cal in calendari_raw.items():
+        meta = camp_meta.get(camp_nome, {})
+        cal['gruppo']  = meta.get('gruppo', camp_nome)
+        cal['genere']  = meta.get('genere', 'M')
+        cal['livello'] = meta.get('livello', '')
+    D['calendari'] = calendari_raw
+    print(f"Calendari iniettati: {len(calendari_raw)} campionati")
+else:
+    D['calendari'] = {}
+    print("Calendari non trovati — esegui fip_calendar_scraper.py")
+
 with open('cache/data_v5_new.json','w',encoding='utf-8') as f2:
     json.dump(D,f2,ensure_ascii=False,separators=(',',':'))
 print("✅ data_v5_new.json aggiornato con squadre nazionali sarde")
