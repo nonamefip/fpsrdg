@@ -8406,35 +8406,31 @@ function openCampionato(camp){
           const gironi=[...new Set(gFase.map(g=>g['Girone']||''))];
           gironi.forEach(girone=>{
             const gGir=gFase.filter(g=>g['Girone']===girone);
-            // Costruisce turni con finestra 7gg (weekend FIP = stessa giornata)
+            // Raggruppa per NUMERO GARA FIP (consecutivo per giornata)
+            // Con N squadre ogni giornata ha esattamente N/2 partite
             const squadre=[...new Set(gGir.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]))].filter(Boolean);
-            const gareLeft=[...gGir].sort((a,b)=>a['Data'].localeCompare(b['Data']));
+            const nSq=squadre.length;
+            const garePerTurno=Math.max(1,Math.floor(nSq/2));
+            // Ordina per numero gara: riflette l'ordine giornata FIP esatto
+            const gareSorted=[...gGir].sort((a,b)=>(a['Numero Gara']||'').localeCompare(b['Numero Gara']||''));
             const turni=[];
             const ptCum={};squadre.forEach(sq=>{ptCum[sq]=0;});
-            let safetyBreak=0;
-            while(gareLeft.length>0&&safetyBreak<500){
-              safetyBreak++;
-              const firstDate=new Date(gareLeft[0]['Data']||'2000-01-01');
-              const windowEnd=new Date(firstDate);windowEnd.setDate(windowEnd.getDate()+6);
-              const turno=[];const sqUsate=new Set();const daRimuovere=[];
-              gareLeft.forEach((g,idx)=>{
-                const gDate=new Date(g['Data']||'2000-01-01');
-                if(gDate>windowEnd)return;
-                const c=g['Squadra Casa'],o=g['Squadra Ospite'];
-                if(!sqUsate.has(c)&&!sqUsate.has(o)){turno.push(g);sqUsate.add(c);sqUsate.add(o);daRimuovere.push(idx);}
-              });
-              if(!turno.length&&gareLeft.length){turno.push(gareLeft[0]);daRimuovere.push(0);}
+            const fmtD=d=>{if(!d||d==='?')return'';const[y,m,dd]=d.split('-');const ms=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];return parseInt(dd)+' '+ms[parseInt(m)-1];};
+            // Raggruppa in blocchi fissi di garePerTurno
+            for(let i=0;i<gareSorted.length;i+=garePerTurno){
+              const turno=gareSorted.slice(i,i+garePerTurno);
+              // Annota pt cumulativi prima di questa giornata
               turno.forEach(g=>{g._ptCumCasa=ptCum[g['Squadra Casa']]||0;g._ptCumOsp=ptCum[g['Squadra Ospite']]||0;});
-              daRimuovere.reverse().forEach(i=>gareLeft.splice(i,1));
+              // Aggiorna pt cumulativi
               turno.forEach(g=>{
                 if(!g['Risultato'])return;
                 const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
                 if(pc>po)ptCum[g['Squadra Casa']]=(ptCum[g['Squadra Casa']]||0)+2;
                 else if(po>pc)ptCum[g['Squadra Ospite']]=(ptCum[g['Squadra Ospite']]||0)+2;
               });
-              const dates=[...new Set(turno.map(g=>g['Data']))].sort();
-              const fmtD=d=>{const[y,m,dd]=d.split('-');const ms=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];return parseInt(dd)+' '+ms[parseInt(m)-1];};
-              turno._dateLabel=dates.length===1?fmtD(dates[0]):fmtD(dates[0])+'–'+fmtD(dates[dates.length-1]);
+              // Date label dalle date reali del turno
+              const dates=[...new Set(turno.map(g=>g['Data']).filter(d=>d&&d!=='?'))].sort();
+              turno._dateLabel=dates.length===0?'':dates.length===1?fmtD(dates[0]):fmtD(dates[0])+'–'+fmtD(dates[dates.length-1]);
               turni.push(turno);
             }
             const mid=Math.ceil(turni.length/2);
