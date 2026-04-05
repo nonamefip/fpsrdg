@@ -8413,28 +8413,53 @@ function openCampionato(camp){
             const garePerTurno=Math.max(1,Math.floor(nSq/2));
             // Ordina per numero gara: riflette l'ordine giornata FIP esatto
             const gareSorted=[...gGir].sort((a,b)=>(a['Numero Gara']||'').localeCompare(b['Numero Gara']||''));
-            const turni=[];
-            const ptCum={};squadre.forEach(sq=>{ptCum[sq]=0;});
             const fmtD=d=>{if(!d||d==='?')return'';const[y,m,dd]=d.split('-');const ms=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];return parseInt(dd)+' '+ms[parseInt(m)-1];};
-            // Raggruppa in blocchi fissi di garePerTurno
+
+            // Costruisci i turni in blocchi fissi di garePerTurno (ordine FIP)
+            const tuttiTurni=[];
             for(let i=0;i<gareSorted.length;i+=garePerTurno){
               const turno=gareSorted.slice(i,i+garePerTurno);
-              // Annota pt cumulativi prima di questa giornata
+              const dates=[...new Set(turno.map(g=>g['Data']).filter(d=>d&&d!=='?'))].sort();
+              turno._dateLabel=dates.length===0?'':dates.length===1?fmtD(dates[0]):fmtD(dates[0])+'–'+fmtD(dates[dates.length-1]);
+              tuttiTurni.push(turno);
+            }
+
+            // ── ABBINAMENTO ANDATA/RITORNO ──
+            // Una giornata di ritorno è "speculare" a una di andata se le coppie squadre
+            // sono le stesse ma con casa/ospite invertiti.
+            // Strategia: prima metà = andata (turni ordinali dispari nell'ordine FIP).
+            // Per gironi a doppio round-robin (N-1 turni per andata + N-1 per ritorno),
+            // la giornata k di ritorno corrisponde alla giornata k di andata con squadre invertite.
+            const totalTurni=tuttiTurni.length;
+            const isDoubleRR=totalTurni>=(nSq-1)*2-1&&nSq>2;
+            const andataCount=isDoubleRR?Math.round(totalTurni/2):totalTurni;
+            const turniAndata=tuttiTurni.slice(0,andataCount);
+            const turniRitorno=tuttiTurni.slice(andataCount);
+
+            // Se è doppio RR, abbina ritorno[i] con andata[i] (stesso indice)
+            // Verifica speculare: conta quante coppie coincidono invertite
+            function isSpeculare(ta,tr){
+              if(!ta||!tr)return false;
+              const pairsA=new Set(ta.map(g=>g['Squadra Casa']+'|||'+g['Squadra Ospite']));
+              const matchCount=tr.filter(g=>pairsA.has(g['Squadra Ospite']+'|||'+g['Squadra Casa'])).length;
+              return matchCount>=Math.floor(ta.length*0.6);
+            }
+
+            // Calcola pt cumulativi per le gare dell'intera sequenza FIP
+            const ptCum={};squadre.forEach(sq=>{ptCum[sq]=0;});
+            tuttiTurni.forEach(turno=>{
               turno.forEach(g=>{g._ptCumCasa=ptCum[g['Squadra Casa']]||0;g._ptCumOsp=ptCum[g['Squadra Ospite']]||0;});
-              // Aggiorna pt cumulativi
               turno.forEach(g=>{
                 if(!g['Risultato'])return;
                 const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
                 if(pc>po)ptCum[g['Squadra Casa']]=(ptCum[g['Squadra Casa']]||0)+2;
                 else if(po>pc)ptCum[g['Squadra Ospite']]=(ptCum[g['Squadra Ospite']]||0)+2;
               });
-              // Date label dalle date reali del turno
-              const dates=[...new Set(turno.map(g=>g['Data']).filter(d=>d&&d!=='?'))].sort();
-              turno._dateLabel=dates.length===0?'':dates.length===1?fmtD(dates[0]):fmtD(dates[0])+'–'+fmtD(dates[dates.length-1]);
-              turni.push(turno);
-            }
-            const mid=Math.ceil(turni.length/2);
-            allFasiGironi.push({fase,girone,turni,squadre,mid});
+            });
+
+            const turni=tuttiTurni;
+            const mid=andataCount;
+            allFasiGironi.push({fase,girone,turni,squadre,mid,isDoubleRR,turniAndata,turniRitorno,isSpeculare});
           });
         });
 
@@ -8541,13 +8566,28 @@ function openCampionato(camp){
           }
 
           const mid=fg.mid;
-          const classicHtml='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px">'
-            +'<div><div style="font-size:.65rem;font-weight:600;color:#185fa5;text-transform:uppercase;letter-spacing:.4px;padding:3px 0;border-bottom:2px solid #185fa5;margin-bottom:10px;text-align:center">Andata</div>'
-            +fg.turni.slice(0,mid).map((t,i)=>renderGiornataClassica(t,i+1,false)).join('')
+          // Costruisce la vista classica affiancando giornata N andata ↔ giornata N ritorno
+          // Se isDoubleRR: andata[0]←→ritorno[0], andata[1]←→ritorno[1], ecc.
+          const turniA=fg.turniAndata||fg.turni.slice(0,mid);
+          const turniR=fg.turniRitorno||fg.turni.slice(mid);
+          const maxRows=Math.max(turniA.length,turniR.length);
+          let classicRows='';
+          for(let i=0;i<maxRows;i++){
+            const tA=turniA[i],tR=turniR[i];
+            const colA=tA?renderGiornataClassica(tA,i+1,false):'';
+            const colR=tR?renderGiornataClassica(tR,i+1,true):'';
+            classicRows+='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-bottom:0">'
+              +'<div>'+colA+'</div>'
+              +'<div>'+colR+'</div>'
+              +'</div>';
+          }
+          const classicHtml='<div>'
+            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px">'
+            +'<div style="font-size:.65rem;font-weight:600;color:#185fa5;text-transform:uppercase;letter-spacing:.4px;padding:3px 0;border-bottom:2px solid #185fa5;text-align:center">Andata</div>'
+            +'<div style="font-size:.65rem;font-weight:600;color:#6c3dc8;text-transform:uppercase;letter-spacing:.4px;padding:3px 0;border-bottom:2px solid #6c3dc8;text-align:center">Ritorno</div>'
             +'</div>'
-            +'<div><div style="font-size:.65rem;font-weight:600;color:#6c3dc8;text-transform:uppercase;letter-spacing:.4px;padding:3px 0;border-bottom:2px solid #6c3dc8;margin-bottom:10px;text-align:center">Ritorno</div>'
-            +fg.turni.slice(mid).map((t,i)=>renderGiornataClassica(t,mid+i+1,true)).join('')
-            +'</div></div>';
+            +classicRows
+            +'</div>';
 
           // VISTA GRIGLIA (giornate × squadra) + MATRICE INCROCIATA
           const giornate=fg.turni;
@@ -8661,11 +8701,11 @@ function openCampionato(camp){
               // Casa/Trasferta badge
               const locBg=isCasa?'background:#1e3a6e;':'background:#6a1b9a;';
               const locTx=isCasa?'Casa':'Fuori';
-              gridHtml+='<td style="padding:4px 6px;border-bottom:0.5px solid var(--br);'+borderL+cellBg+cellBor+'cursor:pointer;vertical-align:top;min-width:110px" onclick="closeMo(\'mo-camp\');setTimeout(()=>openGara(\''+num+'\'),80)">'
-                // Badge casa/trasferta
+              gridHtml+='<td style="padding:4px 6px;border-bottom:0.5px solid var(--br);'+borderL+cellBg+cellBor+'cursor:pointer;vertical-align:top;min-width:105px" onclick="closeMo(\'mo-camp\');setTimeout(()=>openGara(\''+num+'\'),80)">'
+                // Icona casa/trasferta + badge V/S (no testo "Casa" ridondante)
                 +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">'
-                +'<span style="'+locBg+'color:#fff;border-radius:3px;padding:1px 5px;font-size:.58rem;font-weight:700">'+locTx+'</span>'
-                +(match['Risultato']?'<span style="font-size:.64rem;font-weight:700;color:'+(myW?'#1a5c2e':'#8b1a1a')+'">'+(myW?'✓ V':'✗ S')+'</span>':'<span style="font-size:.6rem;color:var(--mu)">'+escH(match['Data']||'')+'</span>')
+                +'<span style="font-size:.72rem" title="'+(isCasa?'Casa':'Trasferta')+'">'+(isCasa?'🏠':'✈')+'</span>'
+                +(match['Risultato']?'<span style="font-size:.64rem;font-weight:700;padding:1px 5px;border-radius:3px;background:'+(myW?'#1a5c2e':'#8b1a1a')+';color:#fff">'+(myW?'V':'S')+'</span>':'<span style="font-size:.6rem;color:var(--mu)">'+escH(match['Data']||'')+'</span>')
                 +'</div>'
                 // Nome avversario per esteso
                 +'<div style="font-size:.69rem;font-weight:600;color:var(--tx);white-space:normal;line-height:1.2;margin-bottom:3px">'+escH(avv)+'</div>'
@@ -8714,23 +8754,49 @@ function openCampionato(camp){
 
           // ── MATRICE INCROCIATA squadre×squadre ──
           const allGare=giornate.flatMap(t=>t);
-          // Mappa (casaSq, ospSq) → gara
+          // Mappa (casaSq, ospSq) → gare (ARRAY: in doppio RR ci sono 2 gare per coppia)
+          const matchMapArr={};
+          allGare.forEach(g=>{
+            const k=g['Squadra Casa']+'|||'+g['Squadra Ospite'];
+            if(!matchMapArr[k])matchMapArr[k]=[];
+            matchMapArr[k].push(g);
+          });
+          // Mappa singola per retrocompatibilità (prima gara trovata per coppia)
           const matchMap={};
           allGare.forEach(g=>{
             const k=g['Squadra Casa']+'|||'+g['Squadra Ospite'];
-            matchMap[k]=g;
+            if(!matchMap[k])matchMap[k]=g;
           });
 
+          // Per ogni coppia (sqR,sqC): cerca se si rigiocano nella fase corrente
+          // (cioè esiste gara sqR-sqC O sqC-sqR nell'allGare di questa fase)
+          function coppiaSiRigioca(sqR,sqC){
+            return !!(matchMap[sqR+'|||'+sqC]||matchMap[sqC+'|||'+sqR]);
+          }
+
+          // Mappa gare fase 1 per ogni coppia (per badge F1 e colore)
+          const matchMapF1={};
+          if(isF1){
+            allFasiGironi.filter(x=>/qualific|fase\s*1|prima/i.test(x.fase)).forEach(fgQ=>{
+              fgQ.turni.flatMap(t=>t).forEach(g=>{
+                const k=g['Squadra Casa']+'|||'+g['Squadra Ospite'];
+                if(!matchMapF1[k])matchMapF1[k]=g;
+              });
+            });
+          }
+
+          // Intestazioni colonne: stesso colore del girone di provenienza della squadra (come le righe)
           let matrixHtml='<div style="margin-top:20px;margin-bottom:6px;font-size:.72rem;font-weight:600;color:var(--mu);border-bottom:1px solid var(--br);padding-bottom:6px">📊 Matrice incrociata</div>'
             +'<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:.68rem;min-width:400px">'
             +'<thead><tr>'
             +'<th style="padding:6px 8px;background:var(--tbl-hdr);color:#fff;position:sticky;left:0;z-index:2;min-width:130px;text-align:left">Squadra ↓ vs →</th>'
             +squadre.map(sq=>{
+              // Colore intestazione colonna = colore girone provenienza (uguale a riga)
               const gc=sqGironeColor[sq]||'var(--tbl-hdr)';
               const pos=sqPos1[sq]||0;
               return'<th style="padding:5px 6px;background:'+gc+';color:#fff;text-align:center;min-width:90px;border-left:1px solid rgba(255,255,255,.2);font-weight:600;vertical-align:bottom">'
-                +'<div style="font-size:.62rem;opacity:.7">'+(pos?pos+'°':'')+'</div>'
-                +'<div style="font-size:.65rem;line-height:1.2;white-space:normal">'+escH(sq)+'</div>'
+                +'<div style="font-size:.6rem;opacity:.75;font-weight:400">'+(pos?pos+'°':'')+'</div>'
+                +'<div style="font-size:.64rem;line-height:1.2;white-space:normal;max-width:90px">'+escH(sq)+'</div>'
                 +'</th>';
             }).join('')
             +'</tr></thead><tbody>';
@@ -8739,51 +8805,76 @@ function openCampionato(camp){
             const girColR=sqGironeColor[sqR]||'var(--tbl-hdr)';
             const pos1R=sqPos1[sqR]||0;
             matrixHtml+='<tr style="background:'+(ri%2?'var(--bl5)':'#fff')+'">'
+              // Intestazione riga con bordo colore girone + posizione
               +'<td style="padding:5px 8px;font-weight:600;font-size:.7rem;position:sticky;left:0;z-index:1;background:'+(ri%2?'var(--bl5)':'#fff')+';border-bottom:0.5px solid var(--br);border-left:4px solid '+girColR+';white-space:nowrap">'
-              +'<span style="font-size:.6rem;color:'+girColR+'">'+pos1R+'° </span>'
+              +(pos1R?'<span style="font-size:.6rem;color:'+girColR+';font-weight:700;margin-right:3px">'+pos1R+'°</span>':'')
               +escH(sqR)+'</td>';
             squadre.forEach((sqC,ci)=>{
               if(sqR===sqC){
                 matrixHtml+='<td style="background:#e8e8e8;border:0.5px solid #ccc;text-align:center"><span style="color:#bbb;font-size:.9rem">╲</span></td>';
                 return;
               }
-              // Cerca gara: sqR in casa vs sqC ospite O viceversa
-              const k1=sqR+'|||'+sqC;
-              const k2=sqC+'|||'+sqR;
-              const g=matchMap[k1]||matchMap[k2];
               const girColC=sqGironeColor[sqC]||'';
-              // Sfondo cella: se fase 2 e stessa provenienza girone 1, usa colore girone
+
+              // Cerca gara nella fase corrente: sqR casa vs sqC ospite
+              const gCurr=matchMap[sqR+'|||'+sqC];
+              // Cerca gara F1 tra le stesse due squadre
+              const gF1=isF1?(matchMapF1[sqR+'|||'+sqC]||matchMapF1[sqC+'|||'+sqR]):null;
+              // Stessa provenienza (girone 1ª fase uguale) = erano nello stesso girone F1
               const stessoGirone1=isF1&&girColR&&girColC&&girColR===girColC;
-              if(!g){
-                matrixHtml+='<td style="border:0.5px solid var(--br);text-align:center;color:var(--mu2)">—</td>';
+              // Badge F1: mostra SOLO se avevano già giocato in F1 ma NON si rigiocano in questa fase
+              const haGaraF1=!!gF1;
+              const siRigioca=coppiaSiRigioca(sqR,sqC);
+              const mostraF1Badge=haGaraF1&&!siRigioca;
+              // Se non si rigiocano, la cella mostra i dati F1 con bordo colorato girone
+              if(mostraF1Badge&&!gCurr){
+                // Gara solo in F1, non ripetuta: mostra risultato F1 con sfondo tinta girone
+                const isCasaRF1=gF1['Squadra Casa']===sqR;
+                const pcF1=parseInt(gF1['Punti Casa'])||0,poF1=parseInt(gF1['Punti Ospite'])||0;
+                const myPtsF1=isCasaRF1?pcF1:poF1,avvPtsF1=isCasaRF1?poF1:pcF1;
+                const myWF1=gF1['Risultato']&&myPtsF1>avvPtsF1;
+                const numF1=(gF1['Numero Gara']||'').replace(/'/g,"\\'");
+                const cellBgF1=gF1['Risultato']?(myWF1?girColR+'28':girColR+'15'):girColR+'10';
+                const textColF1=gF1['Risultato']?(myWF1?'#1a5c2e':'#8b1a1a'):'var(--mu)';
+                matrixHtml+='<td style="border:2px solid '+girColR+';background:'+cellBgF1+';text-align:center;cursor:pointer;vertical-align:middle;padding:4px 5px" onclick="closeMo(\'mo-camp\');setTimeout(()=>openGara(\''+numF1+'\'),80)">'
+                  +(gF1['Risultato']
+                    ?'<div style="font-size:.78rem;font-weight:700;color:'+textColF1+'">'+myPtsF1+'–'+avvPtsF1+'</div>'
+                    +'<div style="font-size:.58rem;color:'+textColF1+'">'+(myWF1?'V':'S')+'</div>'
+                    :'<div style="font-size:.62rem;color:var(--mu)">'+escH(gF1['Data']||'–')+'</div>')
+                  +'<div style="font-size:.53rem;font-weight:700;color:'+girColR+';margin-top:1px;letter-spacing:.3px">F1</div>'
+                  +'</td>';
                 return;
               }
-              const isCasaR=g['Squadra Casa']===sqR;
-              const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
-              const myPts=isCasaR?pc:po,avvPts=isCasaR?po:pc;
-              const myW=g['Risultato']&&myPts>avvPts;
-              const num=(g['Numero Gara']||'').replace(/'/g,"\\'");
-              // Sfondo: vittoria verde, sconfitta rossa
-              // Se era già giocata in fase 1 stessa (stessoGirone1) usa tinta del girone
-              let cellBgM,textCol;
-              if(!g['Risultato']){
-                cellBgM=stessoGirone1?girColR+'18':'#f8faff';
-                textCol='var(--mu)';
-              } else if(myW){
-                cellBgM=stessoGirone1?girColR+'30':'#e8f7ee';
-                textCol='#1a5c2e';
-              } else {
-                cellBgM=stessoGirone1?girColR+'18':'#fdf0f0';
-                textCol='#8b1a1a';
+
+              if(!gCurr){
+                // Nessuna gara né in F1 né in questa fase
+                matrixHtml+='<td style="border:0.5px solid var(--br);text-align:center;color:var(--mu2);padding:6px">—</td>';
+                return;
               }
-              const borderM=stessoGirone1?'border:1.5px solid '+girColR+';':'border:0.5px solid var(--br);';
+
+              // Gara nella fase corrente
+              const isCasaR=gCurr['Squadra Casa']===sqR;
+              const pc=parseInt(gCurr['Punti Casa'])||0,po=parseInt(gCurr['Punti Ospite'])||0;
+              const myPts=isCasaR?pc:po,avvPts=isCasaR?po:pc;
+              const myW=gCurr['Risultato']&&myPts>avvPts;
+              const num=(gCurr['Numero Gara']||'').replace(/'/g,"\\'");
+              let cellBgM,textCol;
+              if(!gCurr['Risultato']){
+                cellBgM='#f8faff';textCol='var(--mu)';
+              } else if(myW){
+                cellBgM='#e8f7ee';textCol='#1a5c2e';
+              } else {
+                cellBgM='#fdf0f0';textCol='#8b1a1a';
+              }
+              // Se stessa provenienza e SI rigiocano: bordo colorato + badge F1 come contorno
+              const borderM=(stessoGirone1&&siRigioca)?'border:2px solid '+girColR+';':'border:0.5px solid var(--br);';
               matrixHtml+='<td style="'+borderM+'background:'+cellBgM+';text-align:center;cursor:pointer;vertical-align:middle;padding:4px 5px" onclick="closeMo(\'mo-camp\');setTimeout(()=>openGara(\''+num+'\'),80)">'
-                +'<div style="font-size:.58rem;color:var(--mu2);margin-bottom:1px">'+(isCasaR?'🏠 Casa':'✈ Fuori')+'</div>'
-                +(g['Risultato']
+                +'<div style="font-size:.58rem;color:var(--mu2);margin-bottom:1px">'+(isCasaR?'🏠':'✈')+'</div>'
+                +(gCurr['Risultato']
                   ?'<div style="font-size:.8rem;font-weight:700;color:'+textCol+'">'+myPts+'–'+avvPts+'</div>'
-                  +'<div style="font-size:.6rem;color:'+textCol+'">'+(myW?'V':'S')+'</div>'
-                  :'<div style="font-size:.63rem;color:var(--mu)">'+escH(g['Data']||'–')+'</div>')
-                +(stessoGirone1?'<div style="font-size:.55rem;color:'+girColR+';opacity:.8">● F1</div>':'')
+                  +'<div style="font-size:.58rem;color:'+textCol+'">'+(myW?'V':'S')+'</div>'
+                  :'<div style="font-size:.63rem;color:var(--mu)">'+escH(gCurr['Data']||'–')+'</div>')
+                +((stessoGirone1&&siRigioca)?'<div style="font-size:.53rem;font-weight:700;color:'+girColR+';margin-top:1px;letter-spacing:.3px">F2</div>':'')
                 +'</td>';
             });
             matrixHtml+='</tr>';
@@ -8791,8 +8882,10 @@ function openCampionato(camp){
           matrixHtml+='</tbody></table></div>';
 
           // Legenda matrice
-          matrixHtml+='<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:.63rem;color:var(--mu)">'
-            +(isF1?'<span>● F1 = partita giocata già in 1ª fase · colore = girone provenienza</span>':'')
+          matrixHtml+='<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:.63rem;color:var(--mu);align-items:center">'
+            +'<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#e8f7ee;display:inline-block"></span>Vittoria</span>'
+            +'<span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:#fdf0f0;display:inline-block"></span>Sconfitta</span>'
+            +(isF1?'<span style="display:flex;align-items:center;gap:3px"><span style="font-size:.65rem;font-weight:700;color:#1e6eb5">F1</span> = gara 1ª fase (non ripetuta) · <span style="font-size:.65rem;font-weight:700;color:#1e6eb5">F2</span> = rivincita dalla stessa fase</span>':'')
             +'<span>🏠 Casa · ✈ Fuori</span>'
             +'</div>';
 
@@ -8838,24 +8931,63 @@ function openCampionato(camp){
           const gFase=allCampGare.filter(g=>g['Fase']===fase).sort((a,b)=>a['Data'].localeCompare(b['Data']));
           const gironi=[...new Set(gFase.map(g=>g['Girone']||''))].filter(Boolean);
           if(!gironi.length) return '';
+
+          // Mappa provenienza: cerca fase precedente e posizione/girone per ogni squadra
+          const fasePrevOrder=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi'];
+          const allFasiSorted=[...new Set(allCampGare.map(g=>g['Fase']||'').filter(Boolean))];
+          // Fasi che vengono "prima" di questa fase
+          const idxAttuale=fasePrevOrder.findIndex(fp=>fase.includes(fp));
+          const fasiPrecedenti=allFasiSorted.filter(f=>{
+            if(f===fase)return false;
+            const idxF=fasePrevOrder.findIndex(fp=>f.includes(fp));
+            return idxF>=0&&idxF<idxAttuale;
+          });
+          // Costruisci mappa sq → {pos, girone, fase}
+          const sqProvenienza={};
+          fasiPrecedenti.forEach(fPrec=>{
+            const gPrec=allCampGare.filter(g=>g['Fase']===fPrec);
+            const gironiPrec=[...new Set(gPrec.map(g=>g['Girone']||''))].filter(Boolean);
+            gironiPrec.forEach(gir=>{
+              const gGirP=gPrec.filter(g=>g['Girone']===gir);
+              const sqP={};
+              gGirP.forEach(g=>{
+                [g['Squadra Casa'],g['Squadra Ospite']].forEach(s=>{if(s&&!sqP[s])sqP[s]={v:0,pf:0,ps:0};});
+                if(!g['Risultato'])return;
+                const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+                const sc=g['Squadra Casa'],so=g['Squadra Ospite'];
+                if(sqP[sc]){sqP[sc].pf+=pc;sqP[sc].ps+=po;pc>po?sqP[sc].v++:0;}
+                if(sqP[so]){sqP[so].pf+=po;sqP[so].ps+=pc;po>pc?sqP[so].v++:0;}
+              });
+              const sortedP=Object.entries(sqP).sort((a,b)=>b[1].v-a[1].v||(b[1].pf-b[1].ps)-(a[1].pf-a[1].ps));
+              sortedP.forEach(([sq],i)=>{
+                if(!sqProvenienza[sq]) sqProvenienza[sq]={pos:i+1,girone:gir,fase:fPrec};
+              });
+            });
+          });
+
           function buildCl(gGir){
             const sq={};
             gGir.forEach(g=>{
-              [g['Squadra Casa'],g['Squadra Ospite']].forEach(s=>{if(s&&!sq[s])sq[s]={gare:0,v:0,s:0,pf:0,ps:0};});
+              [g['Squadra Casa'],g['Squadra Ospite']].forEach(s=>{if(s&&!sq[s])sq[s]={gare:0,v:0,s:0,pt:0,pf:0,ps:0};});
               if(!g['Risultato'])return;
               const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
               const sc=g['Squadra Casa'],so=g['Squadra Ospite'];
-              if(sq[sc]){sq[sc].gare++;sq[sc].pf+=pc;sq[sc].ps+=po;pc>po?sq[sc].v++:sq[sc].s++;}
-              if(sq[so]){sq[so].gare++;sq[so].pf+=po;sq[so].ps+=pc;po>pc?sq[so].v++:sq[so].s++;}
+              if(sq[sc]){sq[sc].gare++;sq[sc].pf+=pc;sq[sc].ps+=po;pc>po?(sq[sc].v++,sq[sc].pt+=2):sq[sc].s++;}
+              if(sq[so]){sq[so].gare++;sq[so].pf+=po;sq[so].ps+=pc;po>pc?(sq[so].v++,sq[so].pt+=2):sq[so].s++;}
             });
             return Object.entries(sq).map(([n,s])=>({n,...s,diff:s.pf-s.ps}))
-              .sort((a,b)=>b.v-a.v||b.diff-a.diff||b.pf-a.pf);
+              .sort((a,b)=>b.pt-a.pt||b.diff-a.diff||b.pf-a.pf);
           }
-          const gironiHtml=gironi.map(gi=>{
+
+          const GIRONE_COLORS_T=['#1e6eb5','#2e8b57','#8b1a6e','#c07a00','#5c3db0','#b03030','#1a7a7a','#7a5a1a'];
+          const gironiHtml=gironi.map((gi,giIdx)=>{
             const gGir=gFase.filter(g=>g['Girone']===gi);
             const cl=buildCl(gGir);
             const gareGir=gGir.length,gareFatte=gGir.filter(g=>g['Risultato']).length;
             const pct=gareGir?Math.round(gareFatte/gareGir*100):0;
+            const girColor=GIRONE_COLORS_T[giIdx%GIRONE_COLORS_T.length];
+            // ID univoco per filtro gare
+            const filtId='filt_'+fase.replace(/\W/g,'')+'_'+gi.replace(/\W/g,'');
             return'<div style="margin-bottom:14px;border:0.5px solid '+li.color+'44;border-radius:10px;overflow:hidden">'
               +'<div style="padding:8px 14px;background:'+li.color+'18;border-bottom:0.5px solid '+li.color+'33;display:flex;align-items:center;justify-content:space-between">'
               +'<span style="font-size:.78rem;font-weight:700;color:'+li.color+'">'+escH(gi)+'</span>'
@@ -8863,45 +8995,69 @@ function openCampionato(camp){
               +'<span style="font-size:.65rem;color:var(--mu)">'+gareFatte+'/'+gareGir+' gare</span>'
               +'<div style="width:60px;height:4px;background:#eee;border-radius:2px"><div style="width:'+pct+'%;height:4px;background:'+li.color+';border-radius:2px"></div></div>'
               +'</div></div>'
+              // Classifica con colonna Punti
               +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.7rem">'
               +'<thead><tr style="background:var(--bl5)">'
-              +'<th style="padding:5px 8px;text-align:center">#</th>'
+              +'<th style="padding:5px 8px;text-align:center;width:28px">#</th>'
               +'<th style="padding:5px 8px;text-align:left">Squadra</th>'
+              +'<th style="padding:5px 8px;text-align:center;font-size:.62rem;color:var(--mu)">Prov.</th>'
               +'<th style="padding:5px 8px;text-align:center">G</th>'
               +'<th style="padding:5px 8px;text-align:center;color:var(--green)">V</th>'
               +'<th style="padding:5px 8px;text-align:center;color:var(--red)">S</th>'
               +'<th style="padding:5px 8px;text-align:center">Diff</th>'
               +'<th style="padding:5px 8px;text-align:center">PF</th>'
+              +'<th style="padding:5px 8px;text-align:center;font-weight:700;color:#1e3a6e">Pt</th>'
               +'</tr></thead><tbody>'
               +cl.map((r,i)=>{
                 const pv=SQ[r.n]?.prov||'';
                 const pvClr=PC[pv]||'#888';
                 const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+                const prov=sqProvenienza[r.n];
+                // Etichetta provenienza: "3° Girone Nord A"
+                const provLabel=prov?prov.pos+'° '+escH((prov.girone||'').replace(/girone\s*/i,'G. ')):'–';
                 return'<tr style="border-bottom:0.5px solid var(--br);background:'+(i%2?'#fafbff':'#fff')+'">'
                   +'<td style="padding:5px 8px;text-align:center;font-size:.7rem;color:var(--mu2)">'+(medal||((i+1)+'.'))+'</td>'
                   +'<td style="padding:5px 8px">'
                   +(pv?'<span style="background:'+pvClr+';color:#fff;border-radius:3px;padding:0 4px;font-size:.6rem;margin-right:4px">'+pv+'</span>':'')
                   +'<span class="rn rn-sq" onclick="openSquadra(\''+esc(r.n)+'\')" style="font-size:.72rem;font-weight:'+(i<2?'700':'400')+'">'+escH(r.n.length>24?r.n.slice(0,23)+'…':r.n)+'</span></td>'
+                  // Provenienza girone precedente
+                  +'<td style="text-align:center;padding:4px 6px"><span style="font-size:.59rem;color:var(--mu);white-space:nowrap">'+provLabel+'</span></td>'
                   +'<td style="text-align:center;padding:4px">'+r.gare+'</td>'
                   +'<td style="text-align:center;color:var(--green);font-weight:700;padding:4px">'+r.v+'</td>'
                   +'<td style="text-align:center;color:var(--red);padding:4px">'+r.s+'</td>'
                   +'<td style="text-align:center;font-weight:700;color:'+(r.diff>0?'var(--green)':r.diff<0?'var(--red)':'#888')+';padding:4px">'+(r.diff>0?'+':'')+r.diff+'</td>'
                   +'<td style="text-align:center;color:var(--mu);padding:4px">'+r.pf+'</td>'
+                  +'<td style="text-align:center;font-weight:700;font-size:.75rem;color:#1e3a6e;padding:4px">'+r.pt+'</td>'
                   +'</tr>';
               }).join('')
               +'</tbody></table></div>'
+              // Tutte le gare con filtro squadra + giornata
               +(gareFatte>0
-                ?'<div style="padding:8px 14px;background:#fafbff;border-top:0.5px solid var(--br)">'
-                  +'<div style="font-size:.62rem;font-weight:600;color:var(--mu);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px">Ultime gare</div>'
-                  +gGir.filter(g=>g['Risultato']).slice(-3).reverse().map(g=>{
+                ?'<div style="padding:10px 14px 14px;background:#fafbff;border-top:0.5px solid var(--br)">'
+                  +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px">'
+                  +'<div style="font-size:.62rem;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.3px">Tutte le gare ('+gareFatte+')</div>'
+                  +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+                  +'<select id="'+filtId+'_sq" onchange="filtGare(\''+filtId+'\')" style="font-size:.62rem;padding:2px 6px;border:0.5px solid var(--br);border-radius:4px;background:#fff;color:var(--tx)">'
+                  +'<option value="">Tutte le squadre</option>'
+                  +cl.map(r=>'<option value="'+escH(r.n)+'">'+escH(r.n.length>22?r.n.slice(0,21)+'…':r.n)+'</option>').join('')
+                  +'</select>'
+                  +'<select id="'+filtId+'_gg" onchange="filtGare(\''+filtId+'\')" style="font-size:.62rem;padding:2px 6px;border:0.5px solid var(--br);border-radius:4px;background:#fff;color:var(--tx)">'
+                  +'<option value="">Tutte le giornate</option>'
+                  +[...new Set(gGir.filter(g=>g['Risultato']).map(g=>g['Data']).filter(Boolean))].sort().map((d,di)=>'<option value="'+escH(d)+'">'+escH(d)+'</option>').join('')
+                  +'</select>'
+                  +'</div></div>'
+                  +'<div id="'+filtId+'_list">'
+                  +gGir.filter(g=>g['Risultato']).slice().reverse().map(g=>{
                     const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
                     const num=(g['Numero Gara']||'').replace(/'/g,"\\'");
-                    return'<div style="display:grid;grid-template-columns:1fr 60px 1fr;align-items:center;padding:3px 0;cursor:pointer" onclick="closeMo(\'mo-camp\');setTimeout(()=>openGara(\''+num+'\'),80)">'
-                      +'<span style="font-size:.68rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(g['Squadra Casa'])+'</span>'
-                      +'<span style="text-align:center;font-weight:700;font-size:.78rem">'+pc+'–'+po+'</span>'
-                      +'<span style="font-size:.68rem;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(g['Squadra Ospite'])+'</span>'
+                    const winC=pc>po,winO=po>pc;
+                    return'<div class="'+filtId+'_row" data-sq="'+escH(g['Squadra Casa'])+'|||'+escH(g['Squadra Ospite'])+'" data-gg="'+escH(g['Data']||'')+'" style="display:grid;grid-template-columns:1fr 60px 1fr;align-items:center;padding:4px 0;border-bottom:0.5px solid #eee;cursor:pointer" onclick="closeMo(\'mo-camp\');setTimeout(()=>openGara(\''+num+'\'),80)">'
+                      +'<span style="font-size:.68rem;font-weight:'+(winC?'700':'400')+';color:'+(winC?'#1a5c2e':winO?'#8b1a1a':'var(--tx)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(g['Squadra Casa'])+'</span>'
+                      +'<span style="text-align:center;font-weight:700;font-size:.78rem;background:'+(winC?'#e8f7ee':winO?'#fdf0f0':'#f5f5f5')+';border-radius:4px;padding:2px 4px">'+pc+'–'+po+'</span>'
+                      +'<span style="font-size:.68rem;font-weight:'+(winO?'700':'400')+';color:'+(winO?'#1a5c2e':winC?'#8b1a1a':'var(--tx)')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">'+escH(g['Squadra Ospite'])+'</span>'
                       +'</div>';
                   }).join('')
+                  +'</div>'
                   +'</div>'
                 :'')
               +'</div>';
@@ -8975,10 +9131,79 @@ function openCampionato(camp){
           return'<div style="border:0.5px solid var(--br);border-radius:12px;overflow:hidden"><div style="background:'+color+';padding:12px 18px"><span style="font-size:.88rem;font-weight:500;color:#fff">'+escH(title)+'</span></div><div style="padding:16px">'+roundsHtml+'</div></div>';
         }
 
-        const fasiIntHtml=fasiFaseInt.length
+        // ── CLASSIFICA AGGREGATA F1 + Fase Orologio ──
+        // Se esistono sia Qualificazione (F1) che Fase Orologio, costruisce classifica combinata
+        const fasiF1=fasiAll.filter(f=>/qualific/i.test(f));
+        const fasiOrologio=fasiAll.filter(f=>/orologio/i.test(f));
+        let classiAggregataHtml='';
+        if(fasiF1.length&&fasiOrologio.length){
+          function buildClAgg(fasiList){
+            const sq={};
+            fasiList.forEach(fase=>{
+              allCampGare.filter(g=>g['Fase']===fase).forEach(g=>{
+                [g['Squadra Casa'],g['Squadra Ospite']].forEach(s=>{if(s&&!sq[s])sq[s]={gare:0,v:0,s:0,pt:0,pf:0,ps:0};});
+                if(!g['Risultato'])return;
+                const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+                const sc=g['Squadra Casa'],so=g['Squadra Ospite'];
+                if(sq[sc]){sq[sc].gare++;sq[sc].pf+=pc;sq[sc].ps+=po;pc>po?(sq[sc].v++,sq[sc].pt+=2):sq[sc].s++;}
+                if(sq[so]){sq[so].gare++;sq[so].pf+=po;sq[so].ps+=pc;po>pc?(sq[so].v++,sq[so].pt+=2):sq[so].s++;}
+              });
+            });
+            return Object.entries(sq).map(([n,s])=>({n,...s,diff:s.pf-s.ps})).sort((a,b)=>b.pt-a.pt||b.diff-a.diff||b.pf-a.pf);
+          }
+          const clF1=buildClAgg(fasiF1);
+          const clOro=buildClAgg(fasiOrologio);
+          const clAgg=buildClAgg([...fasiF1,...fasiOrologio]);
+          function renderMiniCl(cl,title,color,colFase){
+            return'<div style="flex:1;min-width:200px">'
+              +'<div style="font-size:.68rem;font-weight:700;color:'+color+';padding:4px 8px;background:'+color+'12;border-bottom:1.5px solid '+color+';border-radius:6px 6px 0 0">'+title+'</div>'
+              +'<table style="width:100%;border-collapse:collapse;font-size:.68rem">'
+              +'<thead><tr style="background:var(--bl5)"><th style="padding:3px 6px;text-align:center;width:24px">#</th>'
+              +'<th style="padding:3px 6px;text-align:left">Squadra</th>'
+              +'<th style="padding:3px 6px;text-align:center;color:var(--green)">V</th>'
+              +'<th style="padding:3px 6px;text-align:center;color:var(--red)">S</th>'
+              +'<th style="padding:3px 6px;text-align:center;font-weight:700;color:#1e3a6e">Pt</th>'
+              +'<th style="padding:3px 6px;text-align:center;font-size:.58rem;color:var(--mu)">fase</th>'
+              +'</tr></thead><tbody>'
+              +cl.map((r,i)=>{
+                const pv=SQ[r.n]?.prov||'';
+                const pvClr=PC[pv]||'#888';
+                const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+                return'<tr style="border-bottom:0.5px solid var(--br);background:'+(i%2?'#fafbff':'#fff')+'">'
+                  +'<td style="text-align:center;color:var(--mu2);padding:3px 5px">'+(medal||(i+1)+'.')+'</td>'
+                  +'<td style="padding:3px 6px">'
+                  +(pv?'<span style="background:'+pvClr+';color:#fff;border-radius:3px;padding:0 3px;font-size:.55rem;margin-right:3px">'+pv+'</span>':'')
+                  +'<span class="rn rn-sq" onclick="openSquadra(\''+esc(r.n)+'\')" style="font-weight:'+(i<3?'700':'400')+'">'+escH(r.n.length>20?r.n.slice(0,19)+'…':r.n)+'</span>'
+                  +'</td>'
+                  +'<td style="text-align:center;color:var(--green);font-weight:700;padding:3px">'+r.v+'</td>'
+                  +'<td style="text-align:center;color:var(--red);padding:3px">'+r.s+'</td>'
+                  +'<td style="text-align:center;font-weight:700;color:#1e3a6e;padding:3px">'+r.pt+'</td>'
+                  +'<td style="text-align:center;padding:3px"><span style="font-size:.55rem;color:var(--mu)">'+escH(colFase)+'</span></td>'
+                  +'</tr>';
+              }).join('')+'</tbody></table></div>';
+          }
+          classiAggregataHtml='<div style="margin-bottom:20px;border:1.5px solid #1565c055;border-radius:12px;overflow:hidden">'
+            +'<div style="background:#1565c0;padding:10px 16px;display:flex;align-items:center;gap:8px">'
+            +'<span style="font-size:1rem">📊</span>'
+            +'<span style="font-size:.86rem;font-weight:600;color:#fff">Classifiche — F1 · Orologio · Aggregata</span>'
+            +'</div>'
+            +'<div style="padding:14px">'
+            +'<div style="display:flex;flex-wrap:wrap;gap:14px">'
+            +renderMiniCl(clF1,'1ª Fase','#1e3a6e','F1')
+            +renderMiniCl(clOro,'Fase Orologio','#6a1b9a','Fo')
+            +renderMiniCl(clAgg,'Aggregata (F1+Fo)','#2e7d32','F1+Fo')
+            +'</div>'
+            +'</div></div>';
+        }
+
+        const fasiIntHtml=(classiAggregataHtml||(fasiFaseInt.length
           ?'<div style="margin-bottom:20px"><div style="font-size:.7rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid var(--br)">Fasi Intermedie</div>'
             +fasiFaseInt.map(f=>renderFaseIntermedia(f)).join('')+'</div>'
-          :'';
+          :''))
+          +(classiAggregataHtml&&fasiFaseInt.length
+            ?'<div style="margin-bottom:20px"><div style="font-size:.7rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:5px;border-bottom:2px solid var(--br)">Fasi Intermedie</div>'
+              +fasiFaseInt.map(f=>renderFaseIntermedia(f)).join('')+'</div>'
+            :'');
         const plHtml=fasiPL.length?renderBracket(buildBracketData(fasiPL),'\uD83C\uDFC6 Fase Playoff','#1e3a6e'):'';
         const poHtml=fasiPO.length?renderBracket(buildBracketData(fasiPO),'\u26A0\uFE0F Playout','#854f0b'):'';
         const bracketHtml=(plHtml&&poHtml)?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'+plHtml+poHtml+'</div>':(plHtml||poHtml);
@@ -13548,6 +13773,20 @@ function campCalView(id,view){
   var vg=document.getElementById(id+'_vgrid');
   if(vc){vc.style.background=view==='classic'?'#e6f1fb':'#fff';vc.style.color=view==='classic'?'#0c447c':'var(--mu)';vc.style.borderColor=view==='classic'?'#185fa5':'var(--br)';}
   if(vg){vg.style.background=view==='grid'?'#e6f1fb':'#fff';vg.style.color=view==='grid'?'#0c447c':'var(--mu)';vg.style.borderColor=view==='grid'?'#185fa5':'var(--br)';}
+}
+
+// Filtro gare in fasi intermedie (squadra + giornata)
+function filtGare(filtId){
+  var sqSel=document.getElementById(filtId+'_sq')?.value||'';
+  var ggSel=document.getElementById(filtId+'_gg')?.value||'';
+  var rows=document.querySelectorAll('.'+filtId+'_row');
+  rows.forEach(function(row){
+    var sqData=row.dataset.sq||'';
+    var ggData=row.dataset.gg||'';
+    var sqOk=!sqSel||(sqData.split('|||').some(function(s){return s===sqSel;}));
+    var ggOk=!ggSel||ggData===ggSel;
+    row.style.display=(sqOk&&ggOk)?'':'none';
+  });
 }
 
 function campCalFaseSwitch(id,faseIdx){
