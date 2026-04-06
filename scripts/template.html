@@ -613,7 +613,7 @@ tr.loss-row td{background:#fdecea!important;}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
-<!-- deploy:2026-04-06 16:15:11 -->
+<!-- deploy:2026-04-06 16:29:07 -->
 </head>
 <body>
 
@@ -2727,7 +2727,7 @@ function renderPersonsTable(cid,persons,opts={}){
   const avgRow=isArb?`<tr data-avg="1" style="background:var(--tbl-hdr);color:#fff;font-style:italic;font-size:.72rem">
     <td class="freeze-col freeze-1" style="background:var(--tbl-hdr);color:#fff;text-align:center">—</td>
     <td class="freeze-col freeze-2" style="background:var(--tbl-hdr);color:#fff;font-style:italic">⌀ Media gruppo</td>
-    <td colspan="3" class="td-ana" style="background:#2c3e50;"></td>
+    <td colspan="${isArb?4:3}" class="td-ana" style="background:#2c3e50;"></td>
     <td class="td-att" style="text-align:center;font-weight:700;color:#90CAF9">${Math.round(sumTot/n)}</td>
     <td class="td-att" style="text-align:center;color:#90CAF9">${Math.round(sumArb/n)}</td>
     <td class="td-att" style="background:#4a1a1a;"></td>
@@ -2792,7 +2792,7 @@ function renderPersonsTable(cid,persons,opts={}){
     ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true,event)" title="Km medi/gara · Shift+click per multiplo" style="cursor:pointer">Km/g</th>
     <th onclick="sT('${tableId}',${19+co+ae},event)" title="Mese con più gare · Shift+click per multiplo" style="cursor:pointer">Top mese</th>
     <th onclick="sT('${tableId}',${20+co+ae},event)" title="Gare con provvedimenti · Shift+click per multiplo" style="cursor:pointer;background:#fff3e0;color:#e67e22">⚠️ Provv.</th>`:''}
-    ${isArb?(()=>{const _ti=28+co+ae;return '<th onclick="sT(\''+tableId+'\',' +_ti+',true,event)" title="Gare nella stessa città" class="th-trs-s" style="cursor:pointer;border-left:2px solid rgba(255,255,255,.3);white-space:nowrap">In sede</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+1)+',true,event)" title="% in sede" class="th-trs-sp" style="cursor:pointer">%</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+2)+',true,event)" title="Gare entro 100km" class="th-trs-c" style="cursor:pointer;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap">≤10km</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+3)+',true,event)" title="% entro 100km" class="th-trs-cp" style="cursor:pointer">%</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+4)+',true,event)" title="Gare oltre 100km" class="th-trs-l" style="cursor:pointer;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap">&gt;100km</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+5)+',true,event)" title="% oltre 100km" class="th-trs-lp" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.3)">%</th>';})():''}
+    ${isArb?(()=>{const _ti=28+co+ae;return '<th onclick="sT(\''+tableId+'\',' +_ti+',true,event)" title="Gare nella stessa città" class="th-trs-s" style="cursor:pointer;border-left:2px solid rgba(255,255,255,.3);white-space:nowrap">In sede</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+1)+',true,event)" title="% in sede" class="th-trs-sp" style="cursor:pointer">%</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+2)+',true,event)" title="Gare entro 100km" class="th-trs-c" style="cursor:pointer;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap">≤100km</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+3)+',true,event)" title="% entro 100km" class="th-trs-cp" style="cursor:pointer">%</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+4)+',true,event)" title="Gare oltre 100km" class="th-trs-l" style="cursor:pointer;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap">&gt;100km</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+5)+',true,event)" title="% oltre 100km" class="th-trs-lp" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.3)">%</th>';})():''}
     ${isArb?`<th onclick="sT('${tableId}',${21+co+ae},true,event)" title="Indice Qualità Arbitrale: somma pesi gare (campionato × fase). Più alto = gare più importanti arbitrate." style="cursor:pointer;background:#1a3a6b;color:#ffd54f;font-weight:700;white-space:nowrap;border-left:2px solid rgba(255,255,255,.2)">⭐ IQA</th>`:''}
     ${isArb?`<th onclick="sT('${tableId}',${22+co+ae},true,event)" title="% copertura gare comitato: singolo conta 1, in coppia conta 0.5" style="cursor:pointer;background:#0a5c36;color:#7effc0;font-weight:700;white-space:nowrap;border-left:2px solid rgba(255,255,255,.2)">% Cop.</th>`:''}
     ${isArb?`<th onclick="sT('${tableId}',${23+co+ae},event)" title="Gettone stimato (base + bonus singolo)" style="cursor:pointer;background:#e8f5e9;color:#2e7d32;font-weight:700;border-left:2px solid #a5d6a7">Gettone</th><th onclick="sT('${tableId}',${24+co+ae},event)" title="Rimborso benzina 0,25€/km (solo 1° arbitro)" style="cursor:pointer;background:#e8f5e9;color:#2e7d32">Benzina</th><th onclick="sT('${tableId}',${25+co+ae},event)" title="Extra km + traghetto + buono spesa" style="cursor:pointer;background:#e8f5e9;color:#2e7d32">Accessorie</th><th onclick="sT('${tableId}',${26+co+ae},event)" title="Totale rimborso stimato" style="cursor:pointer;background:#2e7d32;color:#fff;font-weight:700;border-left:2px solid #1b5e20">Totale €</th>`:''}  </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>
