@@ -1112,6 +1112,18 @@ tr.loss-row td{background:#fdecea!important;}
 <!-- ARBITRI -->
 <div class="ps" id="page-arbitri">
   <div class="st">👨‍⚖️ Classifica Arbitri</div>
+
+  <!-- Classifica per Serie — in alto, aperta di default -->
+  <div style="margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bl);color:#fff;border-radius:8px;user-select:none"
+      onclick="const b=document.getElementById('arb-serie-body');const a=this.querySelector('.serie-arr');const open=b.style.display!=='none';b.style.display=open?'none':'block';a.textContent=open?'▶':'▼';if(!open)renderArbPerSerie()">
+      <span class="serie-arr">▼</span>
+      <span style="font-weight:700;font-size:.88rem">🏅 Classifica Arbitri per Serie</span>
+      <span style="font-size:.65rem;opacity:.6;margin-left:4px">— chi arbitra le categorie più alte · ordine per IQA</span>
+    </div>
+    <div id="arb-serie-body" style="margin-top:8px"></div>
+  </div>
+
   <div class="fb">
     <div class="fg"><label>Cerca</label><input type="text" id="fa-q" placeholder="Nome..." oninput="renderArb()"></div>
     <div class="fg"><label>Cod. FIP</label><input type="text" id="fa-cod" placeholder="Es. 033850" oninput="renderArb()" style="width:90px"></div>
@@ -1135,17 +1147,6 @@ tr.loss-row td{background:#fdecea!important;}
     <div id="sp-grid" style="display:flex;overflow-x:auto;padding:8px 10px;gap:5px;background:var(--bg)"></div>
   </div>
   <div id="arb-list"></div>
-
-  <!-- Classifica per Serie -->
-  <div style="margin-top:24px">
-    <div style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bl);color:#fff;border-radius:8px;user-select:none"
-      onclick="const b=document.getElementById('arb-serie-body');const a=this.querySelector('.arr');b.style.display=b.style.display==='none'?'block':'none';a.textContent=b.style.display==='none'?'▶':'▼';if(b.style.display!=='none')renderArbPerSerie()">
-      <span class="arr">▶</span>
-      <span style="font-weight:700;font-size:.85rem">🏅 Classifica Arbitri per Serie</span>
-      <span style="font-size:.65rem;opacity:.6;margin-left:4px">— chi arbitra le categorie più alte</span>
-    </div>
-    <div id="arb-serie-body" style="display:none;margin-top:8px"></div>
-  </div>
 </div>
 
 <!-- DUAL MENU PORTAL -->
@@ -2491,7 +2492,7 @@ function renderPersonsTable(cid,persons,opts={}){
     <th colspan="${_campCols}" class="th-camp" style="${_GH_ST}">CAMPIONATI</th>
     <th colspan="${_sqCols}" class="th-sq" style="${_GH_ST}">SQUADRE</th>
     <th colspan="${isArb?2:1}" class="th-km" style="${_GH_ST}">PERCORRENZA</th>
-    <th colspan="${isArb?2:0}" style="${_GH_ST};background:#9e3f00;color:#fff">TOP & PROVV.</th>
+    ${isArb?`<th colspan="2" style="${_GH_ST};background:#9e3f00;color:#fff">TOP & PROVV.</th>`:''}
     ${_trsGH}
     <th style="background:var(--tbl-hdr);border:none;padding:0"></th>
     ${_rimbGH}
@@ -2840,8 +2841,7 @@ function renderPersonsTable(cid,persons,opts={}){
 }
 function renderArbPerSerie(){
   const el=document.getElementById('arb-serie-body');
-  if(!el||el.dataset.rendered==='1')return;
-  el.dataset.rendered='1';
+  if(!el)return;
   const allArbs=Object.values(P).filter(p=>p.categoria==='Arbitro'&&(p.n_gare_arbitro||0)>0);
   // Livelli in ordine decrescente di importanza
   const SERIE_LEVELS=[
@@ -2879,13 +2879,13 @@ function renderArbPerSerie(){
         <tbody>${arbsInLv.slice(0,20).map((p,i)=>{
           const medal=i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':`${i+1}. `;
           const pvClr=PC[p.provincia]||'#888';
-          return `<tr style="border-bottom:0.5px solid \${lvDef.color}20;cursor:pointer" onclick="openPersona('\${esc(p.nome)}')">
-            <td style="padding:3px 8px;font-weight:700;color:\${lvDef.color}">\${medal}</td>
-            <td style="padding:3px 8px;font-weight:600;color:var(--bl)">\${escH(p.nome)}</td>
-            <td style="padding:3px 8px;text-align:center;font-weight:800;color:\${lvDef.color}">\${(p.iqa||0).toFixed(1)}</td>
-            <td style="padding:3px 8px;text-align:center">\${p.n_gare_arbitro||0}</td>
-            <td style="padding:3px 8px;text-align:center"><span style="background:\${pvClr};color:#fff;border-radius:3px;padding:1px 6px;font-size:.6rem;font-weight:700">\${p.provincia||'?'}</span></td>
-          </tr>`;
+          return '<tr style="border-bottom:0.5px solid '+lvDef.color+'33;cursor:pointer;transition:background .1s" onmouseover="this.style.background=''+lvDef.color+'18'" onmouseout="this.style.background=''" onclick="openPersona(''+esc(p.nome)+'')">'+
+            '<td style="padding:4px 8px;font-weight:700;color:'+lvDef.color+'">'+medal+'</td>'+
+            '<td style="padding:4px 8px;font-weight:600;color:var(--bl);white-space:nowrap">'+escH(p.nome)+'</td>'+
+            '<td style="padding:4px 8px;text-align:center;font-weight:800;font-size:.85rem;color:'+lvDef.color+'">'+((p.iqa||0).toFixed(1))+'</td>'+
+            '<td style="padding:4px 8px;text-align:center;color:var(--mu)">'+(p.n_gare_arbitro||0)+'</td>'+
+            '<td style="padding:4px 8px;text-align:center"><span style="background:'+pvClr+';color:#fff;border-radius:3px;padding:1px 6px;font-size:.6rem;font-weight:700">'+(p.provincia||'?')+'</span></td>'+
+            '</tr>';
         }).join('')}
         ${arbsInLv.length>20?`<tr><td colspan="5" style="padding:4px 8px;color:var(--mu);font-style:italic;font-size:.65rem">... e altri ${arbsInLv.length-20}</td></tr>`:''}
         </tbody>
@@ -7394,7 +7394,7 @@ function openPersona(nome,campFilter){
           const m=d.slice(0,7);
           if(m!==curMP){monthBP[i]=mesiL2[parseInt(m.slice(5))-1]+' '+m.slice(2,4);curMP=m;}
         });
-        const BW=18;const MAX_H=120;
+        const BW=20;const MAX_H=130;
         const MONTH_SEP=20; // spazio separatore tra mesi
         // Campionati presenti per legenda
         const campsP=[...new Set(datesWithGare.flatMap(d=>garaByDate[d].map(g=>g['Campionato']||g.c||'')))].filter(Boolean).sort((a,b)=>pCampSort(a)-pCampSort(b));
@@ -7444,28 +7444,31 @@ function openPersona(nome,campFilter){
               const ora=g['Ora']||g.ora||'';
               const sq1=g['Squadra Casa']||'';
               const tip=escH(lbl)+(ora?' '+escH(ora):'')+(sq1?' · '+escH(sq1.split(' ').slice(-1)[0]):'');
-              return '<div class="ptl-seg" data-c="'+escH(c)+'" title="'+tip+' ('+d+')" style="display:inline-block;width:'+bw+'px;height:'+h+'px;min-height:4px;background:'+col+';border-radius:2px 2px 0 0;vertical-align:bottom;flex-shrink:0"></div>';
+              return '<div class="ptl-seg" data-c="'+escH(c)+'" title="'+tip+' ('+d+')" style="display:inline-block;width:'+bw+'px;height:'+h+'px;min-height:6px;background:linear-gradient(to top,'+col+','+col+'cc);border-radius:3px 3px 0 0;vertical-align:bottom;flex-shrink:0;cursor:pointer;transition:filter .1s" onmouseover="this.style.filter='brightness(1.3)'" onmouseout="this.style.filter=''"></div>';
             }).join('<div style="display:inline-block;width:1px;flex-shrink:0"></div>');
-            tlBarsP+='<div style="display:inline-flex;align-items:flex-end;flex-shrink:0;width:'+BW+'px;height:'+MAX_H+'px;vertical-align:bottom;gap:0;justify-content:center;'+(isWE3?'background:rgba(230,126,34,0.08);':'')+'" title="'+d+': '+n+'g">'
-              +bars+'</div>';
+            const _isFestTL3=FESTIVI_TL.includes(d);
+            const _dayBg=_isFestTL3?'background:rgba(233,30,99,0.12);':isWE3?'background:rgba(230,126,34,0.10);':'';
+            const _festLabel3=_isFestTL3?'<div style="position:absolute;top:2px;left:0;right:0;text-align:center;font-size:8px">🎉</div>':'';
+            tlBarsP+='<div style="display:inline-flex;align-items:flex-end;flex-shrink:0;width:'+BW+'px;height:'+MAX_H+'px;vertical-align:bottom;gap:0;justify-content:center;position:relative;'+_dayBg+'" title="'+d+': '+n+'g">'
+              +_festLabel3+bars+'</div>';
           }
           // Riga etichette: nome mese a inizio mese, numeri ogni 5 giorni + sab/dom sempre visibili
           let lbl='';let lclr='#aaa';let lfw='400';let lfont='.44rem';
           const isSabRow=(dt.getDay()===6);const isDom2Row=(dt.getDay()===0);
           let dlbl='';let dclr='#bbb';let dfw='400';let dbg='transparent';let dborder='none';
           // Mostra numero solo ogni 7 giorni o a inizio mese, sab/dom con color senza numero per non sovrapporre
-          const showDayNum=(dayN===1||dayN%7===1);
+          const showDayNum=(dayN===1||dayN%5===0);
           if(isSabRow){dlbl=showDayNum?String(dayN):'';dclr='#c05a20';dfw='700';dbg='rgba(192,90,32,0.12)';dborder='none';}
           else if(isDom2Row){dlbl=showDayNum?String(dayN):'';dclr='#c0392b';dfw='800';dbg='rgba(192,57,43,0.14)';dborder='none';}
           else if(dayN===1){dlbl='1';dclr='#1a6bb5';dfw='700';}
           else if(dayN%7===1){dlbl=String(dayN);dclr='#888';dfw='400';}
-          dayRowP+='<div style="display:inline-flex;align-items:center;justify-content:center;width:'+BW+'px;flex-shrink:0;font-size:.52rem;color:'+dclr+';font-weight:'+dfw+';text-align:center;overflow:hidden;white-space:nowrap;background:'+dbg+';border-radius:2px;min-height:14px">'+dlbl+'</div>';
+          dayRowP+='<div style="display:inline-flex;align-items:center;justify-content:center;width:'+BW+'px;flex-shrink:0;font-size:.58rem;color:'+dclr+';font-weight:'+dfw+';text-align:center;overflow:hidden;white-space:nowrap;background:'+dbg+';border-radius:2px;min-height:16px">'+dlbl+'</div>';
           // Riga 2: nome mese (solo a inizio mese)
           if(isNewMonth){
             lbl=mesiLFull[parseInt(m.slice(5))-1];
             lclr='#1a6bb5';lfw='800';lfont='.72rem';
           }
-          monthRowP+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;font-size:'+lfont+';color:'+lclr+';font-weight:'+lfw+';text-align:left;overflow:visible;white-space:nowrap;padding-top:2px;letter-spacing:.2px">'+lbl+'</div>';
+          monthRowP+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;font-size:'+lfont+';color:'+lclr+';font-weight:'+lfw+';text-align:left;overflow:visible;white-space:nowrap;padding-top:3px;letter-spacing:.3px;text-transform:uppercase">'+lbl+'</div>';
         });
         // Legenda cliccabile
         const legendP=campsP.map(c=>{
@@ -7496,7 +7499,8 @@ function openPersona(nome,campFilter){
           return result;
         })();
         return '<div class="card" id="'+uid_tl+'" style="margin-top:10px;overflow:hidden">'
-          +'<div style="font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Timeline stagione — altezza=importanza · colore=categoria · arancio=sab/dom &nbsp;<span style="font-size:.62rem;font-weight:400;color:var(--mu)">🟡=5gg streak 🟠=7gg 🔴=10gg+</span></div>'
+          +'<div style="font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">📅 Timeline stagione <span style="font-size:.62rem;font-weight:400;color:var(--mu)">altezza = importanza del campionato · colore = categoria</span>'
+          +'<span style="display:inline-flex;align-items:center;gap:4px;font-size:.6rem;font-weight:400;color:var(--mu)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f39c12"></span>=5gg <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#e67e22"></span>=7gg <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#e74c3c"></span>=10gg+</span></div>'
           +'<div style="overflow-x:auto;width:100%">'
             +'<div style="white-space:nowrap;line-height:0;vertical-align:bottom;border-bottom:2px solid #b5d4f4;position:relative">'
               +'<div style="position:absolute;top:0;left:0;height:100%;white-space:nowrap;pointer-events:none">'+streakBgP+'</div>'
@@ -7694,11 +7698,12 @@ function openPersona(nome,campFilter){
             const isNewMWeek=isMStart; // la prima settimana del mese ha bordo sinistro blu
             const streak=_streakMap[ds]||0;
             // Sfondo streak (overlay leggero sopra il colore normale)
-            // Streak: colore sfondo progressivo che si sovrappone al colore normale
-            const _streakBgAdd=streak>=10?';background:rgba(231,76,60,0.7) !important;border:2px solid #c0392b !important':
-              streak>=7?';background:rgba(230,126,34,0.6) !important;border:2px solid #e67e22 !important':
-              streak>=5?';background:rgba(243,156,18,0.4) !important;border:2px solid #f39c12 !important':'';
-            const streakGlow=streak>=10?';box-shadow:0 0 8px rgba(231,76,60,.6)':streak>=7?';box-shadow:0 0 5px rgba(230,126,34,.5)':streak>=5?';box-shadow:0 0 3px rgba(243,156,18,.4)':'' ;
+            // Streak: evidenziata come SPESSORE BORDO crescente
+            // 5gg = bordo giallo 3px, 7gg = bordo arancio 5px, 10gg = bordo rosso 7px
+            const _streakColor=streak>=10?'#e74c3c':streak>=7?'#e67e22':streak>=5?'#f39c12':'';
+            const _streakW=streak>=10?7:streak>=7?5:streak>=5?3:0;
+            const _streakBgAdd=streak>=5?`;border:${_streakW}px solid ${_streakColor};box-shadow:0 0 ${_streakW*2}px ${_streakColor}88`:'';
+            const streakGlow='';
             const bg=isToday?'var(--gold)':cnt===0?(isWE?'#ddd8f0':isFest?'#fce4ec':'#e8f4ff'):cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt>=3?'var(--bl)':'#c0392b';
             const clr=(cnt>1||isToday)?'#fff':(isWE?'#5d4037':'var(--mu)');
             const border=isFest?'2px solid #e91e63':isToday?'2.5px solid #e0a800':isDom?'1.5px solid var(--gold)':isSab?'1px solid #ffcc80':isMStart?'2px solid #90caf9':'1px solid transparent';
@@ -7834,8 +7839,8 @@ function openPersona(nome,campFilter){
           <div style="font-size:.8rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Calendario presenze</div>
           <!-- Tab switcher: solo A e B -->
           <div style="display:flex;gap:4px;margin-bottom:8px">
-            <button id="${uid}_btnA" onclick="calSwitch('${uid}','A')" style="font-size:.65rem;padding:2px 10px;border:1px solid var(--br);border-radius:4px;background:var(--bg);color:var(--bl);cursor:pointer">A — Heatmap</button>
-            <button id="${uid}_btnB" onclick="calSwitch('${uid}','B')" style="font-size:.65rem;padding:2px 10px;border:1px solid var(--bl);border-radius:4px;background:var(--bl);color:#fff;cursor:pointer;font-weight:500">B — Strip</button>
+            <button id="${uid}_btnA" onclick="calSwitch('${uid}','A')" style="font-size:.65rem;padding:2px 10px;border:1px solid var(--bl);border-radius:4px;background:var(--bl);color:#fff;cursor:pointer;font-weight:500">A — Heatmap</button>
+            <button id="${uid}_btnB" onclick="calSwitch('${uid}','B')" style="font-size:.65rem;padding:2px 10px;border:1px solid var(--br);border-radius:4px;background:var(--bg);color:var(--bl);cursor:pointer">B — Strip</button>
           </div>
           <!-- Legenda -->
           <div id="${uid}_leg" style="font-size:.6rem;color:var(--mu);margin-bottom:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -7849,8 +7854,8 @@ function openPersona(nome,campFilter){
           </div>
           <div style="font-size:.58rem;color:var(--mu);margin-top:3px;margin-bottom:6px">💡 Clicca un giorno per aprirlo · clicca due giorni <b>diversi</b> per il range · click fuori per annullare</div>
           <!-- Pannelli -->
-          <div id="${uid}_A" style="display:none;width:100%">${calA}</div>
-          <div id="${uid}_B" style="width:100%;box-sizing:border-box">${calB}</div>
+          <div id="${uid}_A" style="width:100%">${calA}</div>
+          <div id="${uid}_B" style="display:none;width:100%;box-sizing:border-box">${calB}</div>
         </div>`;
       })()}
 
@@ -14520,7 +14525,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   Object.keys(SQ).sort().forEach(sq=>{const o=document.createElement('option');o.value=sq;o.textContent=sq;sq1sel.appendChild(o);});
   document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
   document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));});
-  renderHome();renderTutti();renderArb();renderUDC();renderOss();renderSq();
+  renderHome();renderTutti();renderArb();renderArbPerSerie();renderUDC();renderOss();renderSq();
   // Pre-init provvedimenti so data is ready when page is opened
   try{initProvvedimenti();}catch(e){}
   renderGruppi();renderCamp();renderGare();renderProvCards();
