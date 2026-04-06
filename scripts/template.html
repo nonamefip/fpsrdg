@@ -2765,7 +2765,7 @@ function renderPersonsTable(cid,persons,opts={}){
     <th class="th-ana" onclick="sT('${tableId}',2,event)" data-key="prov" data-type="s" style="cursor:pointer" title="Ordina per provincia · Shift+click per multiplo">Prov.</th>
     <th class="th-ana" onclick="sT('${tableId}',3,event)" data-key="citta" data-type="s" style="cursor:pointer" title="Ordina per città · Shift+click per multiplo">Città</th>
     <th class="th-ana" onclick="sT('${tableId}',4,event)" title="Codice FIP · Shift+click per multiplo" data-key="fip" data-type="s" style="cursor:pointer">Cod.</th>
-    ${isArb?`<th class="th-ana" style="cursor:default;border-right:2px solid rgba(255,255,255,.2);padding:2px 4px" title="Livello max campionato arbitrato&#10;&#10;● Bordeaux = Serie C / B Femm&#10;● Arancione = DR1&#10;● Blu = DR2&#10;● Verde = U17+&#10;● Giallo = U15&#10;● Grigio = U14-">Lv</th>`:''}
+    ${isArb?`<th class="th-ana" onclick="sT('${tableId}',2,event)" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2);padding:2px 4px" title="Livello max campionato arbitrato (clicca per ordinare)&#10;&#10;Serie C/B Femm → DR1 → DR2 → U17+ → U15 → U14-&#10;&#10;Serie = bordeaux ● DR1 = arancione ● DR2 = blu&#10;U17+ = verde ● U15 = giallo ● U14- = grigio">Lv ↕</th>`:''}
     ${showCat?`<th onclick="sT('${tableId}',5,event)" style="cursor:pointer" title="Categoria">Cat.</th>`:''}
     <th class="th-att" onclick="sT('${tableId}',${4+co},event)" title="Gare fatte fino ad oggi · Shift+click per multiplo" style="cursor:pointer">Tot.</th>
     <th class="th-att" onclick="sT('${tableId}',${5+co},event)" title="Come arbitro · Shift+click per multiplo" style="cursor:pointer">Arb.</th>
@@ -5245,16 +5245,23 @@ function renderClub(){
     denomsSorted.forEach(([denom,camps])=>{
       const campsSorted=camps.sort((a,b)=>livelloC(b)-livelloC(a));
       const sq=SQ[denom];
+      // Campo di gioco principale per questa denominazione
+      const _gareCasa=(D.gare||[]).filter(g=>g['Squadra Casa']===denom&&g['Campo']);
+      const _campiFreq={};_gareCasa.forEach(g=>{const c=g['Campo']||'';if(c)_campiFreq[c]=(_campiFreq[c]||0)+1;});
+      const _campoPrinc=Object.entries(_campiFreq).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+      const _campoShort=_campoPrinc.split(',')[0].trim();
+
       html+=`<div class="denom-row">
           <div class="denom-name" onclick="openSquadra('${esc(denom)}')" title="Apri scheda squadra">
             ${escH(denom)}
             ${denom===cl.mainName?'<span style="font-size:.58rem;background:var(--bl);color:#fff;border-radius:3px;padding:1px 5px;margin-left:4px">principale</span>':''}
+            ${_campoShort&&denom===cl.mainName?`<span style="font-size:.58rem;color:var(--mu);margin-left:6px" title="${escH(_campoPrinc)}">🏟️ ${escH(_campoShort)}</span>`:''}
           </div>
-          <div class="denom-camps">`;
+          <div class="denom-camps" style="display:table;width:100%;border-collapse:collapse">`;
       campsSorted.forEach(cn=>{
         const col2=campColor(cn)||'#555';
         const shortCn=cn.replace('COMITATO REGIONALE SARDEGNA ','').replace('Divisione regionale','DR').replace('Under ','U');
-        // Calcola statistiche per questa squadra in questo campionato
+        // Statistiche per questa squadra in questo campionato
         const gareSqCamp=(D.gare||[]).filter(g=>g['Campionato']===cn&&g['Risultato']&&(g['Squadra Casa']===denom||g['Squadra Ospite']===denom));
         let sv=0,sp=0;
         gareSqCamp.forEach(g=>{
@@ -5265,15 +5272,38 @@ function renderClub(){
         });
         const sg=gareSqCamp.length;
         const swp=sg?Math.round(sv/sg*100):0;
-        html+=`<div class="camp-stat-row">
-              <span class="camp-badge" style="background:${col2}" onclick="event.stopPropagation();openCampionato('${esc(cn)}')" title="Apri campionato">${escH(shortCn)}</span>
-              <span class="camp-stat">
-                <span>${sg} gare</span>
-                <b style="color:var(--green)">${sv}V</b>
-                <span style="color:var(--red)">${sp}P</span>
-                <span style="color:${swp>50?'var(--green)':swp<40&&sg>0?'var(--red)':'var(--mu)'}">Win ${swp}%</span>
-                <span style="color:var(--mu)">${sv*2} pt</span>
+        // Posizione finale in girone regolare
+        const _allSqCamp=[...new Set((D.gare||[]).filter(g=>g['Campionato']===cn&&g['Risultato']).flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean))];
+        const _pts={};_allSqCamp.forEach(s=>{_pts[s]=0;});
+        (D.gare||[]).filter(g=>g['Campionato']===cn&&g['Risultato']).forEach(g=>{
+          const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+          const casa=g['Squadra Casa'],osp=g['Squadra Ospite'];
+          if(_pts[casa]!==undefined){if(pc>po)_pts[casa]+=2;else if(po>pc)_pts[osp]+=2;}
+        });
+        const _ranked=Object.entries(_pts).sort((a,b)=>b[1]-a[1]);
+        const _pos=_ranked.findIndex(([s])=>s===denom)+1;
+        const _totSq=_ranked.length;
+        const posBadge=_pos>0&&_totSq>0?
+          (_pos===1?`<span title="1° posto finale" style="background:#f9a825;color:#fff;border-radius:3px;padding:1px 5px;font-size:.58rem;font-weight:700;margin-left:4px">🏆1°</span>`:
+           _pos===2?`<span title="2° posto finale" style="background:#90a4ae;color:#fff;border-radius:3px;padding:1px 5px;font-size:.58rem;font-weight:700;margin-left:4px">🥈2°</span>`:
+           _pos===3?`<span title="3° posto finale" style="background:#cd7f32;color:#fff;border-radius:3px;padding:1px 5px;font-size:.58rem;font-weight:700;margin-left:4px">🥉3°</span>`:
+           `<span title="${_pos}° su ${_totSq}" style="background:#e0e0e0;color:#444;border-radius:3px;padding:1px 5px;font-size:.58rem;margin-left:4px">${_pos}°/${_totSq}</span>`
+          ):'';
+        // PP per questo campionato
+        const _ppC=sv*2; // base pt classifica
+        html+=`<div class="camp-stat-row" style="display:table-row">
+              <span style="display:table-cell;padding:3px 6px;vertical-align:middle">
+                <span class="camp-badge" style="background:${col2};cursor:pointer" onclick="event.stopPropagation();openCampionato('${esc(cn)}')" title="Apri campionato">${escH(shortCn)}</span>
+                ${posBadge}
               </span>
+              <span style="display:table-cell;padding:3px 6px;vertical-align:middle;white-space:nowrap;color:var(--mu);font-size:.72rem">${sg}g</span>
+              <span style="display:table-cell;padding:3px 6px;vertical-align:middle;white-space:nowrap">
+                <b style="color:var(--green)">${sv}V</b> <span style="color:var(--red)">${sp}P</span>
+              </span>
+              <span style="display:table-cell;padding:3px 6px;vertical-align:middle;white-space:nowrap">
+                <span style="font-weight:700;color:${swp>50?'var(--green)':swp<40&&sg>0?'var(--red)':'var(--mu)'}">Win ${swp}%</span>
+              </span>
+              <span style="display:table-cell;padding:3px 6px;vertical-align:middle;white-space:nowrap;font-size:.7rem;color:#1565c0;font-weight:700">${_ppC>0?_ppC+'pt':''}</span>
             </div>`;
       });
       html+=`</div></div>`;
@@ -6749,6 +6779,7 @@ function openPersona(nome,campFilter){
     <div class="mts">
       <button class="mt active" onclick="swTabId(this,'mpt-0')">📊 Statistiche</button>
       <button class="mt" onclick="swTabId(this,'mpt-1')">📅 Gare (${allG.length})</button>
+      <button class="mt" onclick="swTabId(this,'mpt-camp')">🏅 Campionati (${topCamp.length})</button>
       <button class="mt" onclick="swTabId(this,'mpt-2')">🤝 Colleghi (${colleghi.length})</button>
       <button class="mt" onclick="swTabId(this,'mpt-3')">🏟️ Campi (${campi.length})</button>
       <button class="mt" onclick="swTabId(this,'mpt-4')">🏆 Squadre (${squadre.length})</button>
@@ -6777,6 +6808,7 @@ function openPersona(nome,campFilter){
         <th onclick="sT('tbl-mpar',6,event)">Casa</th><th>Ris.</th><th onclick="sT('tbl-mpar',7,event)">Ospite</th><th>Ruolo</th><th>Prov.</th><th>Colleghi</th>
       </tr></thead><tbody id="tbl-mpar-body"></tbody></table></div>
     </div>
+    <div class="mtc hidden" id="mpt-camp"></div>
     <div class="mtc hidden" id="mpt-cam"><div style="padding:8px" id="mpt-cam-inner"></div></div>
     <div class="mtc hidden" id="mpt-2" id="mpt-2-inner"></div>
     <div class="mtc hidden" id="mpt-3" id="mpt-3-inner"></div>
@@ -7317,6 +7349,7 @@ function openPersona(nome,campFilter){
         const BG=['#e8f4ff','var(--bl3)','var(--bl2)','var(--bl)','#c0392b'];
         const uid='cal_'+Math.random().toString(36).slice(2,7);
 
+        const todayDs=(typeof D!=='undefined'&&D.generated)?D.generated.slice(0,10):new Date().toISOString().split('T')[0];
         // ── VERSIONE A: Heatmap a blocchi — celle quadrate che riempiono la larghezza ──
         const FESTIVI_CAL=['2025-11-01','2025-12-08','2025-12-25','2025-12-26',
           '2026-01-01','2026-01-06','2026-04-05','2026-04-06','2026-04-25','2026-05-01','2026-06-02'];
@@ -7411,7 +7444,6 @@ function openPersona(nome,campFilter){
 
         // ── VERSIONE B: Strip mensile migliorata — celle che riempiono tutta la larghezza ──
         const calB=(()=>{
-          const todayDs=(typeof D!=='undefined'&&D.generated)?D.generated.slice(0,10):new Date().toISOString().split('T')[0];
           const dayH=52; // celle grandi che riempiono tutta la pagina
           // Header numeri 1-31 — flex puro senza larghezza fissa
           const hdr='<div style="display:flex;gap:0;margin-bottom:3px;padding-left:52px;width:100%">'
@@ -7546,6 +7578,66 @@ function openPersona(nome,campFilter){
   } catch(e){ document.getElementById('mpt-0').innerHTML='<p style="color:red;padding:10px">Errore stats: '+e.message+'</p>'; }
 
 
+
+  // Populate panel Campionati arbitro
+  try {
+    const campsSorted=Object.entries(p.campionati||{}).sort((a,b)=>campFipRank(a[0])-campFipRank(b[0]));
+    const _alAll=livelloArb(p);
+    const campHtml=campsSorted.length?`
+      <div style="padding:8px">
+        <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="background:${_alAll.color};color:#fff;border-radius:6px;padding:4px 12px;font-size:.85rem;font-weight:700">
+            ${_alAll.label} — Livello max
+          </span>
+          <span style="font-size:.75rem;color:var(--mu)">${campsSorted.length} campionat${campsSorted.length===1?'o':'i'} diversi arbitrati</span>
+        </div>
+        <div style="overflow-x:auto">
+        <table class="rtbl" style="font-size:.8rem">
+          <thead><tr style="background:var(--tbl-hdr);color:#fff">
+            <th style="padding:6px 10px;text-align:left">Campionato</th>
+            <th style="padding:6px 8px;text-align:center" title="Gare arbitrate in questo campionato">Gare</th>
+            <th style="padding:6px 8px;text-align:center" title="Vittorie squadra casa">V-C</th>
+            <th style="padding:6px 8px;text-align:center" title="Vittorie squadra ospite">V-O</th>
+            <th style="padding:6px 8px;text-align:center">Win% Casa</th>
+            <th style="padding:6px 8px;text-align:center">Provv.</th>
+            <th style="padding:6px 8px;text-align:center">In singolo</th>
+            <th style="padding:6px 8px;text-align:center">In coppia</th>
+          </tr></thead>
+          <tbody>
+          ${campsSorted.map(([cn,ng],ci)=>{
+            const col=campColor(cn)||'#555';
+            const short=cn.replace('COMITATO REGIONALE SARDEGNA ','').replace(/,$/,'').trim();
+            const gCamp=(p.gare||[]).filter(g=>(g['Campionato']||g.c||'')===cn);
+            const conRis=gCamp.filter(g=>g['Risultato']||g.r);
+            const vcasa=conRis.filter(g=>{const pc=parseInt(g['Punti Casa']||g.pc||0),po=parseInt(g['Punti Ospite']||g.po||0);return pc>po;}).length;
+            const vosp=conRis.filter(g=>{const pc=parseInt(g['Punti Casa']||g.pc||0),po=parseInt(g['Punti Ospite']||g.po||0);return po>pc;}).length;
+            const totG=conRis.length||1;
+            const wpCasa=Math.round(vcasa/totG*100);
+            const nSing=gCamp.filter(g=>pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||'')).length;
+            const nDopp=gCamp.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')).length;
+            const nProvv=(PROVV||[]).filter(pv=>(pv.camp||'')===cn&&[pv.arbitro1,pv.arbitro2].some(a=>{const n=pns(a||'').toLowerCase().trim();return n&&(n===_nomeNorm||n.includes(_nomeNorm));})).length;
+            const rowBg=ci%2===0?'#fff':'#f8faff';
+            return \`<tr style="background:\${rowBg};border-left:3px solid \${col}">
+              <td style="padding:5px 10px">
+                <span style="background:\${col};color:#fff;border-radius:4px;padding:2px 8px;font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap" onclick="openCampionato('\${esc(cn)}')">\${escH(short)}</span>
+              </td>
+              <td style="text-align:center;font-weight:800;color:var(--bl);padding:5px 8px">\${ng}</td>
+              <td style="text-align:center;color:var(--green);font-weight:700;padding:5px 8px">\${vcasa}</td>
+              <td style="text-align:center;color:var(--red);font-weight:700;padding:5px 8px">\${vosp}</td>
+              <td style="text-align:center;padding:5px 8px">
+                <span style="font-weight:700;color:\${wpCasa>=50?'var(--green)':'var(--red)'}">\${conRis.length?wpCasa+'%':'—'}</span>
+              </td>
+              <td style="text-align:center;padding:5px 8px">\${nProvv?'<span style="background:#e67e22;color:#fff;border-radius:10px;padding:1px 7px;font-size:.68rem;font-weight:700">⚠️ '+nProvv+'</span>':'—'}</td>
+              <td style="text-align:center;color:#e17055;font-weight:700;padding:5px 8px">\${nSing||'—'}</td>
+              <td style="text-align:center;color:var(--green);font-weight:700;padding:5px 8px">\${nDopp||'—'}</td>
+            </tr>\`;
+          }).join('')}
+          </tbody>
+        </table>
+        </div>
+      </div>`:'<p class="il" style="padding:12px">Nessun campionato arbitrato.</p>';
+    document.getElementById('mpt-camp').innerHTML=campHtml;
+  } catch(e){ document.getElementById('mpt-camp').innerHTML='<p style="color:red;padding:10px">Errore campionati: '+e.message+'</p>'; }
 
   // Populate panel Cammino safely (keep for backward compat)
   try {
@@ -8728,29 +8820,49 @@ function openSquadra(nome,campFilter){
           const nArbCamp=arbInCamp.size;
           const nSing=gInCamp.filter(g=>pns(g['Arbitro 1']||'')&&!pns(g['Arbitro 2']||'')).length;
           const nDopp=gInCamp.filter(g=>pns(g['Arbitro 1']||'')&&pns(g['Arbitro 2']||'')).length;
-          return`<tr style="font-size:.85rem">
-            <td data-val="${i+1}" class="rpos" style="font-size:1rem;font-weight:800">${i+1}</td>
+          // Posizione finale in girone
+          const _allSqC=[...new Set(gInCamp.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean))];
+          const _ptsC={};_allSqC.forEach(s=>{_ptsC[s]=0;});
+          conRis.forEach(g=>{
+            const pc2=parseInt(g['Punti Casa'])||0,po2=parseInt(g['Punti Ospite'])||0;
+            const casa2=g['Squadra Casa'],osp2=g['Squadra Ospite'];
+            if(_ptsC[casa2]!==undefined){if(pc2>po2)_ptsC[casa2]+=2;else if(po2>pc2)_ptsC[osp2]+=2;}
+          });
+          const _ranked2=Object.entries(_ptsC).sort((a,b)=>b[1]-a[1]);
+          const _pos2=_ranked2.findIndex(([s])=>s===nome)+1;
+          const _tot2=_ranked2.length;
+          const _posTxt=_pos2>0&&_tot2>0?`${_pos2}°/${_tot2}`:'';
+          const _posBg=_pos2===1?'#f9a825':_pos2===2?'#90a4ae':_pos2===3?'#cd7f32':'#e0e0e0';
+          const _posClr=_pos2<=3?'#fff':'#444';
+          const _posIcon=_pos2===1?'🏆':_pos2===2?'🥈':_pos2===3?'🥉':'';
+          // PP per questo campionato (solo vittorie classifica base)
+          const _ppCamp=vInCamp*2;
+          return\`<tr style="font-size:.85rem">
+            <td data-val="\${i+1}" class="rpos" style="font-size:1rem;font-weight:800">\${i+1}</td>
             <td style="min-width:200px">
-              <span style="font-weight:800;font-size:.95rem;cursor:pointer;color:${campColor(c)}" onclick="openCampionato('${esc(c)}')">${escH(c.replace('COMITATO REGIONALE SARDEGNA ',''))}</span>
-              ${sg.length?`<div style="font-size:.65rem;color:var(--mu);margin-top:1px">${sg.join(', ')}</div>`:''}
+              <span style="font-weight:800;font-size:.95rem;cursor:pointer;color:\${campColor(c)}" onclick="openCampionato('\${esc(c)}')">\${escH(c.replace('COMITATO REGIONALE SARDEGNA ',''))}</span>
+              \${sg.length?\`<div style="font-size:.65rem;color:var(--mu);margin-top:1px">\${sg.join(', ')}</div>\`:''}
             </td>
-            <td data-val="${n}" style="font-weight:900;font-size:1.1rem;text-align:center;color:var(--bl)">${n}</td>
-            <td style="text-align:center;font-size:.9rem"><span style="color:var(--green);font-weight:800">${vInCamp}</span><span style="color:var(--mu2);font-size:.7rem">V</span> <span style="color:var(--red)">${sInCamp}</span><span style="color:var(--mu2);font-size:.7rem">P</span></td>
-            <td data-val="${wpCamp}" style="text-align:center;font-weight:800;font-size:.95rem;color:${wpCamp>=50?'var(--green)':'var(--red)'}">${wpCamp}%</td>
-            <td style="text-align:center;font-size:.8rem">${pCasa!==null?`<span style="color:${pCasa>=50?'var(--green)':'var(--red)'}">🏠${pCasa}%</span>`:''}</td>
-            <td style="text-align:center;font-size:.8rem">${pOsp!==null?`<span style="color:${pOsp>=50?'var(--green)':'var(--red)'}">✈️${pOsp}%</span>`:''}</td>
-            <td style="text-align:center;font-size:.75rem;color:var(--mu)"><b>${nArbCamp}</b><span style="font-size:.6rem"> arb.</span>
-              ${nDopp>0?`<div style="font-size:.6rem"><span style="color:var(--green)">${nDopp}×2</span> <span style="color:var(--gold)">${nSing}×1</span></div>`:''}
+            <td data-val="\${n}" style="font-weight:900;font-size:1.1rem;text-align:center;color:var(--bl)">\${n}</td>
+            <td style="text-align:center;font-size:.9rem"><span style="color:var(--green);font-weight:800">\${vInCamp}</span><span style="color:var(--mu2);font-size:.7rem">V</span> <span style="color:var(--red)">\${sInCamp}</span><span style="color:var(--mu2);font-size:.7rem">P</span></td>
+            <td data-val="\${wpCamp}" style="text-align:center;font-weight:800;font-size:.95rem;color:\${wpCamp>=50?'var(--green)':'var(--red)'}">\${wpCamp}%</td>
+            <td style="text-align:center;font-size:.8rem">\${pCasa!==null?\`<span style="color:\${pCasa>=50?'var(--green)':'var(--red)'}">🏠\${pCasa}%</span>\`:''}</td>
+            <td style="text-align:center;font-size:.8rem">\${pOsp!==null?\`<span style="color:\${pOsp>=50?'var(--green)':'var(--red)'}">✈️\${pOsp}%</span>\`:''}</td>
+            <td style="text-align:center;font-size:.75rem;color:var(--mu)"><b>\${nArbCamp}</b><span style="font-size:.6rem"> arb.</span>
+              \${nDopp>0?\`<div style="font-size:.6rem"><span style="color:var(--green)">\${nDopp}×2</span> <span style="color:var(--gold)">\${nSing}×1</span></div>\`:''}
             </td>
-            <td style="font-size:.7rem;color:var(--mu)">${cm.livello||''}</td>
-          </tr>`;
+            <td style="text-align:center;padding:4px 6px">
+              \${_posTxt?'<span style="background:'+_posBg+';color:'+_posClr+';border-radius:4px;padding:2px 7px;font-size:.72rem;font-weight:700">'+_posIcon+_posTxt+'</span>':'—'}
+            </td>
+            <td style="text-align:center;font-size:.75rem;font-weight:700;color:#1565c0">\${_ppCamp>0?_ppCamp+'pt':'—'}</td>
+          </tr>\`;
         }).join('');
         return`<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px;padding:8px;background:var(--bl4);border-radius:8px">
           <div style="font-size:.78rem"><span style="color:var(--mu)">Arbitri usati:</span> <b style="color:var(--bl);font-size:1rem">${nArbTotSq}</b></div>
           <div style="font-size:.78rem"><span style="color:var(--mu)">Gare in coppia:</span> <b style="color:var(--green)">${nGareDoppio}</b></div>
           <div style="font-size:.78rem"><span style="color:var(--mu)">In singolo:</span> <b style="color:var(--gold)">${nGareSingolo}</b></div>
         </div>
-        ${mkTbl(rows,['#','Campionato','G','V/P','Win%','%Casa','%Osp','Arbitri','Livello'],'tbl-mcamp')}`;
+        ${mkTbl(rows,['#','Campionato','G','V/P','Win%','%Casa','%Osp','Arbitri','Posizione','⭐ PP'],'tbl-mcamp')}`;
       })():'<p class="il">Nessun campionato</p>'}
     </div>`;
   // Pannello provvedimenti squadra (aggiunto dinamicamente se presenti)
