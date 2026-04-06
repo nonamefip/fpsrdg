@@ -5050,21 +5050,38 @@ function renderOss(){
   setTimeout(()=>rtblAddFreezeBtns('tbl-oss'),50);
 }
 function livelloArb(p){
-  // Usa livelloC (identico ai campionati reali) per determinare il livello massimo
-  const camps = Object.keys(p.campionati||{});
-  if(!camps.length) return {lv:5, cls:'arb-lv5', label:'—', color:'#78909c'};
-  const maxLvC = Math.max(...camps.map(cn=>livelloC(cn)));
-  let lv;
-  if(maxLvC>=21)      lv=0; // Serie C / B Femm
-  else if(maxLvC>=19) lv=1; // DR1
-  else if(maxLvC>=17) lv=2; // DR2
-  else if(maxLvC>=13) lv=3; // U17+
-  else if(maxLvC>=9)  lv=4; // U15
-  else                lv=5; // U14-
-  const clsMap = ['arb-lv0','arb-lv1','arb-lv2','arb-lv3','arb-lv4','arb-lv5'];
-  const lblMap = ['Serie','DR1','DR2','U17+','U15','U14-'];
-  const colMap = ['#6d1b7b','#e65100','#1565c0','#2e7d32','#f9a825','#78909c'];
-  return {lv, cls:clsMap[lv]||'arb-lv5', label:lblMap[lv]||'U14-', color:colMap[lv]||'#78909c'};
+  // Determina il livello in base al campionato MASCHILE più alto arbitrato
+  // Ordine: C > DR1 > DR2 > U19 > U17+ > U17 > U15+ > U15 > U14 > U13
+  // Se nessun camp maschile, guarda femminile (Serie B = C)
+  const camps=Object.keys(p.campionati||{});
+  if(!camps.length) return{lv:9,cls:'arb-lv5',label:'—',color:'#78909c'};
+  // Funzione che assegna rank numerico al campionato (0=massimo)
+  function rankCamp(cn){
+    const cl=cn.toLowerCase();
+    if(/serie c/i.test(cn)) return 0;
+    if(/serie b/i.test(cn)) return 0; // B Femminile = stesso livello C
+    if(/divisione reg.*1|regionale 1/i.test(cn)) return 1;
+    if(/divisione reg.*2|regionale 2/i.test(cn)) return 2;
+    if(/under 19|u19/i.test(cn)) return 3;
+    if(/under 17.*eccellenza|u17.*eccellenza/i.test(cn)) return 4; // U17+
+    if(/under 17|u17/i.test(cn)) return 5;
+    if(/under 15.*eccellenza|u15.*eccellenza/i.test(cn)) return 6; // U15+
+    if(/under 15|u15/i.test(cn)) return 7;
+    if(/under 14|u14/i.test(cn)) return 8;
+    if(/under 13|u13/i.test(cn)) return 9;
+    return 10;
+  }
+  // Cerca prima campionati maschili (non femminile, non serie b)
+  const maschili=camps.filter(cn=>!/femmin/i.test(cn)&&!/serie b/i.test(cn));
+  const useCamps=maschili.length?maschili:camps; // fallback su tutti se nessun maschile
+  const best=useCamps.reduce((b,cn)=>rankCamp(cn)<rankCamp(b)?cn:b, useCamps[0]);
+  const rank=rankCamp(best);
+  const lblMap=['C','DR1','DR2','U19','U17+','U17','U15+','U15','U14','U13','U14-'];
+  const colMap=['#6d1b7b','#e65100','#1565c0','#4a148c','#1b5e20','#2e7d32','#e65100','#f9a825','#00838f','#b8860b','#78909c'];
+  // cls per CSS (manteniamo compatibilità con arb-lv0..5 usando bucket)
+  const clsBkt=rank<=0?0:rank<=1?1:rank<=2?2:rank<=5?3:rank<=7?4:5;
+  const clsMap=['arb-lv0','arb-lv1','arb-lv2','arb-lv3','arb-lv4','arb-lv5'];
+  return{lv:rank,cls:clsMap[clsBkt],label:lblMap[rank]||'U14-',color:colMap[rank]||'#78909c'};
 }
 function livelloC(cn){
   var campOrdL=['Serie B Femminile','Serie C','Divisione regionale 1','Divisione Regionale 1',
@@ -5257,7 +5274,17 @@ function renderClub(){
             ${denom===cl.mainName?'<span style="font-size:.58rem;background:var(--bl);color:#fff;border-radius:3px;padding:1px 5px;margin-left:4px">principale</span>':''}
             ${_campoShort&&denom===cl.mainName?`<span style="font-size:.58rem;color:var(--mu);margin-left:6px" title="${escH(_campoPrinc)}">🏟️ ${escH(_campoShort)}</span>`:''}
           </div>
-          <div class="denom-camps" style="display:table;width:100%;border-collapse:collapse">`;
+          <table style="width:100%;border-collapse:collapse;font-size:.72rem;margin-top:4px">
+            <thead><tr style="background:#f0f4ff;font-size:.65rem;color:var(--mu)">
+              <th style="padding:3px 6px;text-align:left;font-weight:600">Campionato</th>
+              <th style="padding:3px 6px;text-align:center;font-weight:600">Pos.</th>
+              <th style="padding:3px 6px;text-align:center;font-weight:600">Gare</th>
+              <th style="padding:3px 6px;text-align:center;font-weight:600;color:var(--green)">Vinte</th>
+              <th style="padding:3px 6px;text-align:center;font-weight:600;color:var(--red)">Perse</th>
+              <th style="padding:3px 6px;text-align:center;font-weight:600">Win%</th>
+              <th style="padding:3px 6px;text-align:center;font-weight:600;color:#1565c0">Pt</th>
+            </tr></thead>
+            <tbody>`;
       campsSorted.forEach(cn=>{
         const col2=campColor(cn)||'#555';
         const shortCn=cn.replace('COMITATO REGIONALE SARDEGNA ','').replace('Divisione regionale','DR').replace('Under ','U');
@@ -5291,22 +5318,19 @@ function renderClub(){
           ):'';
         // PP per questo campionato
         const _ppC=sv*2; // base pt classifica
-        html+=`<div class="camp-stat-row" style="display:table-row">
-              <span style="display:table-cell;padding:3px 6px;vertical-align:middle">
-                <span class="camp-badge" style="background:${col2};cursor:pointer" onclick="event.stopPropagation();openCampionato('${esc(cn)}')" title="Apri campionato">${escH(shortCn)}</span>
-                ${posBadge}
-              </span>
-              <span style="display:table-cell;padding:3px 6px;vertical-align:middle;white-space:nowrap;color:var(--mu);font-size:.72rem">${sg}g</span>
-              <span style="display:table-cell;padding:3px 6px;vertical-align:middle;white-space:nowrap">
-                <b style="color:var(--green)">${sv}V</b> <span style="color:var(--red)">${sp}P</span>
-              </span>
-              <span style="display:table-cell;padding:3px 6px;vertical-align:middle;white-space:nowrap">
-                <span style="font-weight:700;color:${swp>50?'var(--green)':swp<40&&sg>0?'var(--red)':'var(--mu)'}">Win ${swp}%</span>
-              </span>
-              <span style="display:table-cell;padding:3px 6px;vertical-align:middle;white-space:nowrap;font-size:.7rem;color:#1565c0;font-weight:700">${_ppC>0?_ppC+'pt':''}</span>
-            </div>`;
+        html+=`<tr style="border-bottom:0.5px solid var(--br)">
+              <td style="padding:3px 6px;vertical-align:middle">
+                <span class="camp-badge" style="background:${col2};cursor:pointer;font-size:.62rem" onclick="event.stopPropagation();openCampionato('${esc(cn)}')" title="${escH(cn)}">${escH(shortCn)}</span>
+              </td>
+              <td style="padding:3px 6px;text-align:center;white-space:nowrap">${posBadge||'—'}</td>
+              <td style="padding:3px 6px;text-align:center;color:var(--mu)">${sg}</td>
+              <td style="padding:3px 6px;text-align:center;font-weight:700;color:var(--green)">${sv}</td>
+              <td style="padding:3px 6px;text-align:center;color:var(--red)">${sp}</td>
+              <td style="padding:3px 6px;text-align:center;font-weight:700;color:${swp>50?'var(--green)':swp<40&&sg>0?'var(--red)':'var(--mu)'}">${swp}%</td>
+              <td style="padding:3px 6px;text-align:center;font-weight:700;color:#1565c0">${_ppC>0?_ppC:''}</td>
+            </tr>`;
       });
-      html+=`</div></div>`;
+      html+=`</tbody></table></div>`;
     });
     html+=`</div></div>`;
   });
@@ -5464,19 +5488,34 @@ function renderSq(){
         var pcasa=cgare.filter(g=>g['Squadra Casa']===s.nome&&parseInt(g['Punti Casa'])<parseInt(g['Punti Ospite'])).length;
         var vosp=cgare.filter(g=>g['Squadra Ospite']===s.nome&&parseInt(g['Punti Ospite'])>parseInt(g['Punti Casa'])).length;
         var posp=cgare.filter(g=>g['Squadra Ospite']===s.nome&&parseInt(g['Punti Ospite'])<parseInt(g['Punti Casa'])).length;
+        // Calcola posizione finale e badge trofeo per sotto-riga
+        var _allSqSub=[...new Set((D.gare||[]).filter(g=>g['Campionato']===cn&&g['Risultato']).flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean))];
+        var _ptsSub={};_allSqSub.forEach(sq=>{_ptsSub[sq]=0;});
+        cgare.forEach(g=>{var pc2=parseInt(g['Punti Casa'])||0,po2=parseInt(g['Punti Ospite'])||0;if(_ptsSub[g['Squadra Casa']]!==undefined){if(pc2>po2)_ptsSub[g['Squadra Casa']]+=2;else if(po2>pc2)_ptsSub[g['Squadra Ospite']]+=2;}});
+        var _rankedSub=Object.entries(_ptsSub).sort((a,b)=>b[1]-a[1]);
+        var _posSub=_rankedSub.findIndex(([sq])=>sq===s.nome)+1;
+        var _totSub=_rankedSub.length;
+        var _posBadgeSub=_posSub>0&&_totSub>0?(_posSub===1?'🏆':_posSub===2?'🥈':_posSub===3?'🥉':'')+`${_posSub}°/${_totSub}`:'';
+        var _posBgSub=_posSub===1?'#f9a825':_posSub===2?'#90a4ae':_posSub===3?'#cd7f32':'#e0e0e0';
+        var _posClrSub=_posSub<=3?'#fff':'#444';
+        var _posIconSub=_posSub===1?'🏆':_posSub===2?'🥈':_posSub===3?'🥉':'';
         h+=`<tr class="sq-sub" data-sqgroup="sqg-${i}" style="display:none;background:${subBg};border-left:3px solid ${col}">`;
         h+=`<td></td>`;
-        h+=`<td style="padding:2px 8px 2px 24px"><span style="background:${col};color:#fff;border-radius:10px;padding:1px 8px;font-size:.6rem;font-weight:600;cursor:pointer" onclick="event.stopPropagation();openCampionato('${esc(cn)}')">${isFemmC?'♀ ':''}${escH(cn)}</span></td>`;
-        h+=`<td></td><td></td><td></td>`;
-        h+=`<td style="text-align:center;font-size:.72rem;font-weight:700;color:#1565c0">${cpt}</td>`;
-        h+=`<td style="text-align:center;font-size:.72rem;font-weight:700">${cg}</td>`;
-        h+=`<td style="text-align:center;font-size:.72rem;font-weight:700;color:var(--green)">${cv}</td>`;
-        h+=`<td style="text-align:center;font-size:.72rem;color:var(--red)">${cp}</td>`;
-        h+=`<td style="text-align:center;font-size:.72rem">${vcasa}</td>`;
-        h+=`<td style="text-align:center;font-size:.72rem">${pcasa}</td>`;
-        h+=`<td style="text-align:center;font-size:.72rem">${vosp}</td>`;
-        h+=`<td style="text-align:center;font-size:.72rem">${posp}</td>`;
-        h+=`<td style="text-align:center;font-size:.72rem;font-weight:700;color:${cwp>50?'var(--green)':cwp<50?'var(--red)':'var(--mu)'}">${cwp}%</td>`;
+        h+=`<td style="padding:2px 8px 2px 24px;white-space:nowrap">
+          <span style="background:${col};color:#fff;border-radius:10px;padding:1px 8px;font-size:.6rem;font-weight:600;cursor:pointer" onclick="event.stopPropagation();openCampionato('${esc(cn)}')">${isFemmC?'♀ ':''}${escH(cn.replace('COMITATO REGIONALE SARDEGNA ','').replace('Divisione regionale','DR').replace('Under ','U'))}</span>
+          ${_posSub>0?`<span style="background:${_posBgSub};color:${_posClrSub};border-radius:3px;padding:1px 5px;font-size:.58rem;font-weight:700;margin-left:4px">${_posIconSub}${_posSub}°/${_totSub}</span>`:''}
+        </td>`;
+        h+=`<td></td>`;// Prov
+        h+=`<td></td>`;// PP
+        h+=`<td data-val="${cpt}" style="text-align:center;font-size:.72rem;font-weight:700;color:#1565c0">${cpt}</td>`;
+        h+=`<td data-val="${cg}" style="text-align:center;font-size:.72rem;font-weight:700">${cg}</td>`;
+        h+=`<td data-val="${cv}" style="text-align:center;font-size:.72rem;font-weight:700;color:var(--green)">${cv}</td>`;
+        h+=`<td data-val="${cp}" style="text-align:center;font-size:.72rem;color:var(--red)">${cp}</td>`;
+        h+=`<td data-val="${vcasa}" style="text-align:center;font-size:.72rem">${vcasa}</td>`;
+        h+=`<td data-val="${pcasa}" style="text-align:center;font-size:.72rem">${pcasa}</td>`;
+        h+=`<td data-val="${vosp}" style="text-align:center;font-size:.72rem">${vosp}</td>`;
+        h+=`<td data-val="${posp}" style="text-align:center;font-size:.72rem">${posp}</td>`;
+        h+=`<td data-val="${cwp}" style="text-align:center;font-size:.72rem;font-weight:700;color:${cwp>50?'var(--green)':cwp<50?'var(--red)':'var(--mu)'}">${cwp}%</td>`;
         h+=`</tr>`;
       });
     }
@@ -7150,8 +7189,8 @@ function openPersona(nome,campFilter){
           const m=d.slice(0,7);
           if(m!==curMP){monthBP[i]=mesiL2[parseInt(m.slice(5))-1]+' '+m.slice(2,4);curMP=m;}
         });
-        const BW=16;const MAX_H=120;
-        const MONTH_SEP=10; // spazio separatore tra mesi
+        const BW=18;const MAX_H=120;
+        const MONTH_SEP=20; // spazio separatore tra mesi
         // Campionati presenti per legenda
         const campsP=[...new Set(datesWithGare.flatMap(d=>garaByDate[d].map(g=>g['Campionato']||g.c||'')))].filter(Boolean).sort((a,b)=>pCampSort(a)-pCampSort(b));
         const uid_tl='ptl_'+p.nome.replace(/\W/g,'_');
@@ -7169,20 +7208,24 @@ function openPersona(nome,campFilter){
           const isNewMonth=(m!==prevMonth);
           // Separatore mensile
           if(isNewMonth&&i>0){
-            tlBarsP+='<div style="display:inline-block;width:'+MONTH_SEP+'px;flex-shrink:0;height:'+MAX_H+'px;vertical-align:bottom;border-left:2px solid #b5d4f4;margin:0 1px"></div>';
+            tlBarsP+='<div style="display:inline-block;width:'+MONTH_SEP+'px;flex-shrink:0;height:'+MAX_H+'px;vertical-align:bottom;border-left:3px solid #1a6bb5;margin:0 2px;background:linear-gradient(to right,rgba(26,107,181,0.08),transparent)"></div>';
             monthRowP+='<div style="display:inline-block;width:'+MONTH_SEP+'px;flex-shrink:0"></div>';
             dayRowP+='<div style="display:inline-block;width:'+MONTH_SEP+'px;flex-shrink:0"></div>';
           }
           prevMonth=m;
           const gs=(garaByDate[d]||[]).slice().sort((x,y)=>pCampSort(x['Campionato']||x.c||'')-pCampSort(y['Campionato']||y.c||''));
+          const FESTIVI_TL=['2025-11-01','2025-12-08','2025-12-25','2025-12-26','2026-01-01','2026-01-06','2026-04-05','2026-04-06','2026-04-25','2026-05-01','2026-06-02'];
           if(!gs.length){
             // Giorno vuoto: piccolo tick — sabato/domenica/festivi evidenziati
             const isWE2=(dt.getDay()===0||dt.getDay()===6);
-            const tickH=isNewMonth?8:dayN%5===0?4:isWE2?3:1;
-            const tickClr=isNewMonth?'#1a6bb5':isWE2?'#e67e22':dayN%5===0?'#b5d4f4':'#dde3f0';
-            const weBg=isWE2?'background:rgba(230,126,34,0.06);':'';
+            const isFestTL=FESTIVI_TL.includes(d);
+            const tickH=isNewMonth?8:isFestTL?6:dayN%5===0?4:isWE2?3:1;
+            const tickClr=isNewMonth?'#1a6bb5':isFestTL?'#e91e63':isWE2?'#e67e22':dayN%5===0?'#b5d4f4':'#dde3f0';
+            const weBg=isFestTL?'background:rgba(233,30,99,0.10);':isWE2?'background:rgba(230,126,34,0.06);':'';
+            const festIcon=isFestTL?'<div style="position:absolute;top:4px;left:50%;transform:translateX(-50%);font-size:8px">🎉</div>':'';
             tlBarsP+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;height:'+MAX_H+'px;vertical-align:bottom;position:relative;'+weBg+'">'
-              +'<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:'+(isWE2?'1.5':'1')+'px;height:'+tickH+'px;background:'+tickClr+'"></div>'
+              +festIcon
+              +'<div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:'+(isFestTL?'2':isWE2?'1.5':'1')+'px;height:'+tickH+'px;background:'+tickClr+'"></div>'
               +'</div>';
           } else {
             const n=gs.length;
@@ -7215,9 +7258,9 @@ function openPersona(nome,campFilter){
           // Riga 2: nome mese (solo a inizio mese)
           if(isNewMonth){
             lbl=mesiLFull[parseInt(m.slice(5))-1];
-            lclr='#1a6bb5';lfw='700';lfont='.65rem';
+            lclr='#1a6bb5';lfw='800';lfont='.72rem';
           }
-          monthRowP+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;font-size:'+lfont+';color:'+lclr+';font-weight:'+lfw+';text-align:left;overflow:visible;white-space:nowrap;padding-top:1px">'+lbl+'</div>';
+          monthRowP+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;font-size:'+lfont+';color:'+lclr+';font-weight:'+lfw+';text-align:left;overflow:visible;white-space:nowrap;padding-top:2px;letter-spacing:.2px">'+lbl+'</div>';
         });
         // Legenda cliccabile
         const legendP=campsP.map(c=>{
@@ -7225,10 +7268,34 @@ function openPersona(nome,campFilter){
           const lbl=c.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim();
           return '<span class="ptl-leg-item" data-c="'+escH(c)+'" data-uid="'+uid_tl+'" onclick="_ptlToggle(this,this.dataset.uid)" style="cursor:pointer;display:inline-block;margin:2px;padding:2px 8px;border-radius:10px;border:2px solid '+col+';background:'+col+';color:#fff;font-size:.62rem;font-weight:600">'+escH(lbl)+'</span>';
         }).join('');
+        // Streak: evidenzia serie di 5+ giorni consecutivi con gare
+        const streakBgP=(()=>{
+          // Per ogni giorno nella timeline, trova quanto dura la streak da quel giorno
+          const dateSet=new Set(datesWithGare);
+          const streakLen={};
+          allDatesP.forEach((d2,i2)=>{
+            if(!dateSet.has(d2)){streakLen[d2]=0;return;}
+            let run=0,j=i2;
+            while(j<allDatesP.length&&dateSet.has(allDatesP[j])){run++;j++;}
+            streakLen[d2]=run;
+          });
+          let result='';let prevM2='';let sepAdded=false;
+          allDatesP.forEach((d2,i2)=>{
+            const m2=d2.slice(0,7);
+            if(m2!==prevM2&&i2>0){result+='<div style="display:inline-block;width:'+MONTH_SEP+'px;flex-shrink:0"></div>';prevM2=m2;}
+            else{prevM2=m2;}
+            const len=streakLen[d2]||0;
+            const bg=len>=10?'rgba(231,76,60,0.18)':len>=7?'rgba(230,126,34,0.15)':len>=5?'rgba(243,156,18,0.12)':'transparent';
+            result+='<div style="display:inline-block;width:'+BW+'px;flex-shrink:0;height:'+MAX_H+'px;vertical-align:bottom;background:'+bg+';pointer-events:none"></div>';
+          });
+          return result;
+        })();
         return '<div class="card" id="'+uid_tl+'" style="margin-top:10px;overflow:hidden">'
-          +'<div style="font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Timeline stagione — altezza=importanza · colore=categoria · arancio=sab/dom</div>'
-          +'<div style="overflow-x:auto">'
-            +'<div style="white-space:nowrap;line-height:0;vertical-align:bottom;border-bottom:2px solid #b5d4f4">'+tlBarsP+'</div>'
+          +'<div style="font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Timeline stagione — altezza=importanza · colore=categoria · arancio=sab/dom &nbsp;<span style="font-size:.62rem;font-weight:400;color:var(--mu)">🟡=5gg streak 🟠=7gg 🔴=10gg+</span></div>'
+          +'<div style="overflow-x:auto;width:100%">'
+            +'<div style="white-space:nowrap;line-height:0;vertical-align:bottom;border-bottom:2px solid #b5d4f4;position:relative">'
+              +'<div style="position:absolute;top:0;left:0;height:100%;white-space:nowrap;pointer-events:none">'+streakBgP+'</div>'
+              +tlBarsP+'</div>'
             +'<div style="white-space:nowrap;margin-top:2px">'+dayRowP+'</div>'
             +'<div style="white-space:nowrap;margin-top:0">'+monthRowP+'</div>'
           +'</div>'
