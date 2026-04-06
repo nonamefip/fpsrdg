@@ -693,7 +693,10 @@ def serialize_persons():
                 'a':ga['Squadra Ospite'],'r':ga.get('Risultato',''),'pc':ga.get('Punti Casa',''),
                 'po':ga.get('Punti Ospite',''),'campo':ga.get('Campo',''),
                 'num':ga.get('Numero Gara',''),'girone':ga.get('Girone',''),'ruolo':ga.get('_ruolo',''),
-                'f':ga.get('Fase',''),'iqa':ga.get('_peso_iqa',0)}
+                'f':ga.get('Fase',''),'iqa':ga.get('_peso_iqa',0),
+                'Data':ga['Data'],'Ora':ga.get('Ora',''),'Campo':ga.get('Campo',''),
+                'Arbitro 1':ga.get('Arbitro 1',''),'Arbitro 2':ga.get('Arbitro 2',''),
+                'Campionato':ga['Campionato']}
                for ga in p['gare_arbitro']],
             'gare_udc':[{'d':ga['Data'],'c':ga['Campionato'],'h':ga['Squadra Casa'],
                 'a':ga['Squadra Ospite'],'r':ga.get('Risultato',''),'campo':ga.get('Campo',''),
