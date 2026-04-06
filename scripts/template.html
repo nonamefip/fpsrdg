@@ -1179,7 +1179,7 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="fg"><label>Cerca</label><input type="text" id="fs-q" placeholder="Nome..." oninput="renderSq()"></div>
     <div class="fg"><label>Provincia</label><select id="fs-pv" onchange="renderSq()"><option value="">Tutte</option></select></div>
     <div class="fg"><label>Campionato</label><select id="fs-camp" onchange="renderSq()"><option value="">Tutti</option></select></div>
-    <div class="fg"><label>Ordina</label><select id="fs-sort" onchange="renderSq()"><option value="n_gare">Gare ↓</option><option value="vinte">Vittorie ↓</option><option value="nome">Nome A→Z</option><option value="prov">Provincia</option></select></div>
+    <div class="fg"><label>Ordina</label><select id="fs-sort" onchange="renderSq()"><option value="pp">⭐ PP (Prestazione)</option><option value="n_gare">Gare ↓</option><option value="vinte">Vittorie ↓</option><option value="nome">Nome A→Z</option><option value="prov">Provincia</option></select></div>
     <div class="fg"><label>Genere</label><select id="fs-femm" onchange="renderSq()"><option value="">Tutti</option><option value="M">👦 Maschile</option><option value="F">👩 Femminile</option></select></div>
     <div class="fg" style="align-items:center"><label><input type="checkbox" id="fs-grp" onchange="renderSq()" style="margin-right:4px">Solo canoniche</label></div>
     <button class="btn b-gr" onclick="resetF('fs-q','fs-pv','fs-camp');renderSq()">↺</button>
@@ -2623,7 +2623,7 @@ function renderPersonsTable(cid,persons,opts={}){
       <td class="freeze-col freeze-2" data-val="${escH(p.nome)}" style="white-space:nowrap;background:${hasImminente?'#fffbeb':'#fff'}">
         <div style="display:flex;align-items:center;gap:2px">
           <span class="act-dot ${actCls}" title="${actTip}"></span>
-          ${isArb?(()=>{const _al=livelloArb(p);return `<span class="arb-lv-dot" style="background:${_al.color}" title="Livello max: ${_al.label}"></span>`;})():''}
+          ${isArb?(()=>{const _al=livelloArb(p);return `<span style="background:${_al.color};color:#fff;border-radius:3px;padding:1px 5px;font-size:.58rem;font-weight:700;letter-spacing:.3px;margin-right:2px" title="Livello max arbitrato: ${_al.label}">${_al.label}</span>`;})():''}
           <span style="font-weight:700;cursor:pointer;color:${pvColor}" data-n="${p.nome}"
             onclick="event.stopPropagation();openPersona(this.dataset.n)">${escH(p.nome)}</span>
           ${sexDot}${dualHtml}${nazBadge}
@@ -5283,6 +5283,55 @@ function renderClub(){
   document.getElementById('club-list').innerHTML=html;
 }
 
+// ── Calcola Punteggio Prestazione Stagionale per una squadra ──
+function calcPP(sqNome){
+  // Raccoglie tutti gli alias del gruppo
+  const aliases=AG[sqNome]||[sqNome];
+  let pp=0;
+  const badges=[];
+  aliases.forEach(alias=>{
+    const sq=SQ[alias];if(!sq)return;
+    Object.keys(sq.campionati||{}).forEach(cn=>{
+      const meta=CAMP_META[cn]||{};
+      const sk=((meta.sort_key||[99])[0]);
+      // Moltiplicatore per livello campionato
+      const mul=sk<=2?4:sk<=4?3:sk<=7?2:1;
+      // Cerca fasi eliminate per questa squadra in questo campionato
+      const gareCamp=(D.gare||[]).filter(g=>g['Campionato']===cn&&g['Risultato']&&
+        (g['Squadra Casa']===alias||g['Squadra Ospite']===alias));
+      // Vittorie e sconfitta classifica
+      let sv=0,sg=gareCamp.length;
+      gareCamp.forEach(g=>{
+        const isCasa=g['Squadra Casa']===alias;
+        const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;
+        const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;
+        if(pc>po)sv++;
+      });
+      pp+=sv*2; // punti classifica base
+      // Fasi elimiatorie: cerca nelle fasi del campionato
+      const fasi=[...new Set(gareCamp.map(g=>g['Fase']||'').filter(Boolean))];
+      fasi.forEach(fase=>{
+        const fl=fase.toLowerCase();
+        const gFase=gareCamp.filter(g=>(g['Fase']||'')===fase);
+        const vFase=gFase.filter(g=>{const isCasa=g['Squadra Casa']===alias;const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;return pc>po;}).length;
+        const pFase=gFase.filter(g=>{const isCasa=g['Squadra Casa']===alias;const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;return po>pc;}).length;
+        const isFinale=fl.includes('final')&&!fl.includes('semi')&&!fl.includes('quart');
+        const isSemi=fl.includes('semi');
+        const isQuarti=fl.includes('quart')||fl.includes('playoff');
+        if(isFinale){
+          if(vFase>pFase){pp+=100*mul;badges.push({icon:'🏆',lbl:'Campione',col:'#f9a825',mul});}
+          else if(pFase>0){pp+=50*mul;badges.push({icon:'🥈',lbl:'Finale',col:'#90a4ae',mul});}
+        } else if(isSemi){
+          pp+=25*mul;badges.push({icon:'🥉',lbl:'Semifinale',col:'#cd7f32',mul});
+        } else if(isQuarti){
+          pp+=10*mul;
+        }
+      });
+    });
+  });
+  return{pp:Math.round(pp),badges};
+}
+
 function renderSq(){
   const q=document.getElementById('fs-q').value.toLowerCase();
   const pv=document.getElementById('fs-pv').value;
@@ -5297,21 +5346,25 @@ function renderSq(){
   if(femm==='F')sqs=sqs.filter(s=>s.is_femminile);
   if(femm==='M')sqs=sqs.filter(s=>!s.is_femminile);
   if(raggruppa)sqs=sqs.filter(s=>!s.gruppo||s.gruppo===s.nome||!SQ[s.gruppo]||s.gruppo===s.nome);
-  sqs.sort((a,b)=>sort==='vinte'?b.vinte-a.vinte:sort==='nome'?a.nome.localeCompare(b.nome,'it'):sort==='prov'?(a.prov||'').localeCompare(b.prov||''):b.n_gare-a.n_gare);
+  // Precalcola PP per il sorting
+  sqs.forEach(s=>{const r=calcPP(s.nome);s._pp=r.pp;s._ppBadges=r.badges;});
+  sqs.sort((a,b)=>sort==='vinte'?b.vinte-a.vinte:sort==='nome'?a.nome.localeCompare(b.nome,'it'):sort==='prov'?(a.prov||'').localeCompare(b.prov||''):sort==='pp'?(b._pp||0)-(a._pp||0):b.n_gare-a.n_gare);
 
+  const TH='cursor:pointer;white-space:nowrap;';
   let h=`<p class="il">${sqs.length} squadre &nbsp;<button class="btn" style="font-size:.65rem;padding:2px 8px" onclick="sqToggleAll(true)">▼ Espandi tutto</button> <button class="btn" style="font-size:.65rem;padding:2px 8px" onclick="sqToggleAll(false)">▲ Contrai tutto</button></p><div style="overflow-x:auto"><table class="rtbl" id="tbl-sq"><thead><tr>`;
-  h+=`<th onclick="sT('tbl-sq',0,event)" style="cursor:pointer">#</th>`;
-  h+=`<th onclick="sT('tbl-sq',1,event)" style="cursor:pointer">Squadra / Campionati</th>`;
-  h+=`<th onclick="sT('tbl-sq',2,event)" style="cursor:pointer">Prov.</th>`;
-  h+=`<th onclick="sT('tbl-sq',3,event)" style="cursor:pointer;color:#1565c0;font-weight:800" title="Punti classifica totali">Pt</th>`;
-  h+=`<th onclick="sT('tbl-sq',4,event)" style="cursor:pointer">Gare</th>`;
-  h+=`<th onclick="sT('tbl-sq',5,event)" style="cursor:pointer;color:var(--green)">Vinte</th>`;
-  h+=`<th onclick="sT('tbl-sq',6,event)" style="cursor:pointer;color:var(--red)">Perse</th>`;
-  h+=`<th onclick="sT('tbl-sq',7,event)" style="cursor:pointer">V-Casa</th>`;
-  h+=`<th onclick="sT('tbl-sq',8,event)" style="cursor:pointer">P-Casa</th>`;
-  h+=`<th onclick="sT('tbl-sq',9,event)" style="cursor:pointer">V-Osp</th>`;
-  h+=`<th onclick="sT('tbl-sq',10,event)" style="cursor:pointer">P-Osp</th>`;
-  h+=`<th onclick="sT('tbl-sq',11,event)" style="cursor:pointer">Win%</th>`;
+  h+=`<th onclick="sT('tbl-sq',0,event)" style="${TH}">#</th>`;
+  h+=`<th onclick="sT('tbl-sq',1,event)" style="${TH}">Squadra</th>`;
+  h+=`<th onclick="sT('tbl-sq',2,event)" style="${TH}">Prov.</th>`;
+  h+=`<th onclick="sT('tbl-sq',3,event)" style="${TH};color:#f9a825;font-weight:800;background:#1a2f5a" title="Punteggio Prestazione Stagionale: vittorie classifica + bonus fasi eliminatorie (scalato per livello campionato). 🏆Campione=100×lv 🥈Finale=50×lv 🥉Semifinale=25×lv +2/vittoria">⭐ PP</th>`;
+  h+=`<th onclick="sT('tbl-sq',4,event)" style="${TH};color:#1565c0;font-weight:800" title="Punti classifica totali (2×vittorie)">Pt</th>`;
+  h+=`<th onclick="sT('tbl-sq',5,event)" style="${TH}">Gare</th>`;
+  h+=`<th onclick="sT('tbl-sq',6,event)" style="${TH};color:var(--green)">Vinte</th>`;
+  h+=`<th onclick="sT('tbl-sq',7,event)" style="${TH};color:var(--red)">Perse</th>`;
+  h+=`<th onclick="sT('tbl-sq',8,event)" style="${TH}">V-Casa</th>`;
+  h+=`<th onclick="sT('tbl-sq',9,event)" style="${TH}">P-Casa</th>`;
+  h+=`<th onclick="sT('tbl-sq',10,event)" style="${TH}">V-Osp</th>`;
+  h+=`<th onclick="sT('tbl-sq',11,event)" style="${TH}">P-Osp</th>`;
+  h+=`<th onclick="sT('tbl-sq',12,event)" style="${TH}">Win%</th>`;
   h+=`</tr></thead><tbody>`;
 
   // Funzione per trovare il nome della squadra con campionato di livello più alto nel gruppo
@@ -5340,10 +5393,17 @@ function renderSq(){
     var camps=Object.keys(s.campionati||{});
     var rowBg=wp>50?'background:#f0fff4':wp>0&&wp<50?'background:#fff5f5':'background:#fff';
     var rowBorder=wp>50?'border-left:3px solid var(--green)':wp>0&&wp<50?'border-left:3px solid var(--red)':'border-left:3px solid #eee';
+    const ppData=s._ppBadges||[];
+    const ppScore=s._pp||0;
+    const ppBadgeHtml=ppData.slice(0,3).map(b=>`<span title="${b.lbl} (×${b.mul})" style="font-size:.7rem">${b.icon}</span>`).join('');
+    const ppColor=ppScore>=200?'#f9a825':ppScore>=100?'#e67e22':ppScore>=50?'#2e7d32':'var(--mu)';
     h+=`<tr style="${rowBg};${rowBorder}">`;
     h+=`<td class="rpos ${i===0?'g1':i===1?'g2':i===2?'g3':''}" data-val="${i+1}">${i+1}</td>`;
     h+=`<td><span class="rn rn-sq" onclick="openSquadra('${esc(s.nome)}')" style="cursor:pointer">${escH(nomeGruppo!==s.nome?nomeGruppo:s.nome)}</span> ${camps.length>1?`<button onclick="sqToggle('sqg-${i}')" style="background:none;border:1px solid #ccc;border-radius:3px;padding:0 4px;font-size:.6rem;cursor:pointer;color:var(--mu)" id="sqbtn-${i}" title="Espandi/Contrai campionati">▶</button>`:''}</td>`;
     h+=`<td>${pvB(s.prov)}</td>`;
+    h+=`<td data-val="${ppScore}" style="text-align:center;font-weight:800;color:${ppColor};background:${ppScore>=100?'#1a2f5a':'transparent'};white-space:nowrap" title="PP: ${ppScore} — ${ppData.map(b=>b.icon+b.lbl).join(', ')||'Solo risultati'}">`;
+    h+=ppScore>0?`<span style="color:${ppScore>=100?'#ffd54f':ppColor};font-size:.85rem">${ppScore}</span>${ppBadgeHtml?` ${ppBadgeHtml}`:''}`:'-';
+    h+=`</td>`;
     h+=`<td data-val="${ptGlob}" style="text-align:center;font-weight:800;color:#1565c0;cursor:pointer" onclick="openSquadra('${esc(s.nome)}')" title="Apri classifica">${ptGlob}</td>`;
     h+=`<td data-val="${s.n_gare}" style="cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)" title="Vedi gare"><b style="color:var(--bl);text-decoration:underline">${s.n_gare}</b></td>`;
     h+=`<td data-val="${s.vinte||0}" style="font-weight:700;color:var(--green);cursor:pointer" onclick="openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)">${s.vinte||0}</td>`;
@@ -7058,7 +7118,7 @@ function openPersona(nome,campFilter){
           const m=d.slice(0,7);
           if(m!==curMP){monthBP[i]=mesiL2[parseInt(m.slice(5))-1]+' '+m.slice(2,4);curMP=m;}
         });
-        const BW=13;const MAX_H=130;
+        const BW=16;const MAX_H=120;
         const MONTH_SEP=10; // spazio separatore tra mesi
         // Campionati presenti per legenda
         const campsP=[...new Set(datesWithGare.flatMap(d=>garaByDate[d].map(g=>g['Campionato']||g.c||'')))].filter(Boolean).sort((a,b)=>pCampSort(a)-pCampSort(b));
@@ -7113,11 +7173,13 @@ function openPersona(nome,campFilter){
           let lbl='';let lclr='#aaa';let lfw='400';let lfont='.44rem';
           const isSabRow=(dt.getDay()===6);const isDom2Row=(dt.getDay()===0);
           let dlbl='';let dclr='#bbb';let dfw='400';let dbg='transparent';let dborder='none';
-          if(isSabRow){dlbl=String(dayN);dclr='#c05a20';dfw='700';dbg='rgba(192,90,32,0.10)';dborder='1px solid rgba(192,90,32,0.2)';}
-          else if(isDom2Row){dlbl=String(dayN);dclr='#c0392b';dfw='800';dbg='rgba(192,57,43,0.12)';dborder='1px solid rgba(192,57,43,0.3)';}
-          else if(dayN===1){dlbl=String(dayN);dclr='#1a6bb5';dfw='700';}
-          else if(dayN%5===0){dlbl=String(dayN);dclr='#888';dfw='400';}
-          dayRowP+='<div style="display:inline-flex;align-items:center;justify-content:center;width:'+BW+'px;flex-shrink:0;font-size:'+(isSabRow||isDom2Row?'.55':'.44')+'rem;color:'+dclr+';font-weight:'+dfw+';text-align:center;overflow:visible;white-space:nowrap;background:'+dbg+';border-radius:2px;border:'+dborder+';min-height:14px">'+dlbl+'</div>';
+          // Mostra numero solo ogni 7 giorni o a inizio mese, sab/dom con color senza numero per non sovrapporre
+          const showDayNum=(dayN===1||dayN%7===1);
+          if(isSabRow){dlbl=showDayNum?String(dayN):'';dclr='#c05a20';dfw='700';dbg='rgba(192,90,32,0.12)';dborder='none';}
+          else if(isDom2Row){dlbl=showDayNum?String(dayN):'';dclr='#c0392b';dfw='800';dbg='rgba(192,57,43,0.14)';dborder='none';}
+          else if(dayN===1){dlbl='1';dclr='#1a6bb5';dfw='700';}
+          else if(dayN%7===1){dlbl=String(dayN);dclr='#888';dfw='400';}
+          dayRowP+='<div style="display:inline-flex;align-items:center;justify-content:center;width:'+BW+'px;flex-shrink:0;font-size:.52rem;color:'+dclr+';font-weight:'+dfw+';text-align:center;overflow:hidden;white-space:nowrap;background:'+dbg+';border-radius:2px;min-height:14px">'+dlbl+'</div>';
           // Riga 2: nome mese (solo a inizio mese)
           if(isNewMonth){
             lbl=mesiLFull[parseInt(m.slice(5))-1];
@@ -7255,29 +7317,97 @@ function openPersona(nome,campFilter){
         const BG=['#e8f4ff','var(--bl3)','var(--bl2)','var(--bl)','#c0392b'];
         const uid='cal_'+Math.random().toString(36).slice(2,7);
 
-        // ── VERSIONE A: Heatmap GitHub-style (colonne=settimane, righe=Lun→Dom) ──
-        const calA=mesi.map(m=>{
-          const giorni=mesiGiorniMap[m];
+        // ── VERSIONE A: Heatmap a blocchi — celle quadrate che riempiono la larghezza ──
+        const FESTIVI_CAL=['2025-11-01','2025-12-08','2025-12-25','2025-12-26',
+          '2026-01-01','2026-01-06','2026-04-05','2026-04-06','2026-04-25','2026-05-01','2026-06-02'];
+        const _DAYS_LBL=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+        // Costruiamo una griglia continua: 7 righe (Lun→Dom), colonne=settimane di tutta la stagione
+        // Raccogliamo tutti i giorni della stagione in ordine
+        const allDaysFlat=[];
+        mesi.forEach(m=>{
           const[y,mo]=m.split('-');
-          const label=mesiL[parseInt(mo)-1]+' '+y.slice(2);
           const dInM=new Date(parseInt(y),parseInt(mo),0).getDate();
-          const firstDow=new Date(parseInt(y),parseInt(mo)-1,1).getDay();
-          const pad=firstDow===0?6:firstDow-1;
-          const cells=Array(pad).fill(`<div style="width:12px;height:12px;"></div>`);
-          for(let d=1;d<=dInM;d++){
-            const ds=`${m}-${d<10?'0':''}${d}`;
-            const cnt=giorni[ds]||0;
+          for(let d=1;d<=dInM;d++) allDaysFlat.push(`${m}-${d<10?'0':''}${d}`);
+        });
+        // Prima data e padding iniziale
+        const _firstDs=allDaysFlat[0];
+        const _firstDow=new Date(_firstDs+'T12:00').getDay(); // 0=dom
+        const _padStart=_firstDow===0?6:_firstDow-1; // giorni da skippare (Lun=0)
+        const totalCells=_padStart+allDaysFlat.length;
+        const numWeeks=Math.ceil(totalCells/7);
+        // Costruiamo matrice 7×numWeeks
+        const matrix=Array.from({length:7},()=>Array(numWeeks).fill(null));
+        allDaysFlat.forEach((ds,idx)=>{
+          const pos=_padStart+idx;
+          const row=pos%7; // 0=Lun, 6=Dom
+          const col=Math.floor(pos/7);
+          matrix[row][col]={ds};
+        });
+        // Colonne con intestazione mese
+        const monthStartCols={};
+        allDaysFlat.forEach((ds,idx)=>{
+          const pos=_padStart+idx;
+          const col=Math.floor(pos/7);
+          const isFirst=idx===0||(idx>0&&allDaysFlat[idx].slice(0,7)!==allDaysFlat[idx-1].slice(0,7));
+          if(isFirst) monthStartCols[col]=mesiL[parseInt(ds.slice(5,7))-1]+' '+ds.slice(2,4);
+        });
+        // Calcola dimensione cella: larghezza container / numWeeks
+        // Usiamo CSS calc per celle responsive
+        const cellSz=Math.max(14, Math.min(28, Math.floor(900/numWeeks)));
+        // Header mesi
+        const monthHdr=Array.from({length:numWeeks},(_,c)=>{
+          const lbl=monthStartCols[c]||'';
+          return`<div style="width:${cellSz}px;flex-shrink:0;font-size:.58rem;font-weight:${lbl?700:400};color:${lbl?'var(--bl)':'transparent'};white-space:nowrap;overflow:visible;text-align:left">${lbl||'·'}</div>`;
+        }).join('');
+        // Righe Lun→Dom
+        const rowsHtml=matrix.map((row,ri)=>{
+          const dlbl=_DAYS_LBL[ri];
+          const showLbl=(ri%2===0); // Lun, Mer, Ven, Dom
+          const cells=row.map((cell,ci)=>{
+            if(!cell) return`<div style="width:${cellSz}px;height:${cellSz}px;flex-shrink:0;background:#f0f2f7;border-radius:3px;opacity:.3"></div>`;
+            const{ds}=cell;
+            const cnt=(mesiGiorniMap[ds.slice(0,7)]||{})[ds]||0;
             const dow=new Date(ds+'T12:00').getDay();
-            const isDom=dow===0;
-            const bg=cnt===0?'#e8f4ff':cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt===3?'var(--bl)':'#c0392b';
-            const clr=cnt>1?'#fff':'var(--mu)';
-            cells.push(`<div title="${ds}: ${cnt} gare" style="width:12px;height:12px;background:${bg};border-radius:2px;${isDom?'outline:1.5px solid var(--gold);outline-offset:-1px;':''}cursor:${cnt>0?'pointer':'default'};font-size:.45rem;display:flex;align-items:center;justify-content:center;color:${clr};font-weight:700" ${cnt>0?`onclick="openGiornoModal('${ds}')"`:''}">${cnt>0?cnt:''}</div>`);
-          }
-          return`<div style="flex-shrink:0">
-            <div style="font-size:.6rem;font-weight:700;color:var(--bl);margin-bottom:2px;text-align:center">${label}</div>
-            <div style="display:grid;grid-template-rows:repeat(7,12px);grid-auto-flow:column;gap:2px">${cells.join('')}</div>
+            const isDom=dow===0;const isSab=dow===6;const isWE=isDom||isSab;
+            const isFest=FESTIVI_CAL.includes(ds);
+            const isToday=ds===todayDs;
+            const bg=isToday?'var(--gold)':cnt===0?(isWE?'#ddd8f0':isFest?'#fce4ec':'#e8f4ff'):cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt>=3?'var(--bl)':'#c0392b';
+            const clr=(cnt>1||isToday)?'#fff':(isWE?'#5d4037':'var(--mu)');
+            const border=isFest?'2px solid #e91e63':isToday?'2.5px solid #e0a800':isDom?'1.5px solid var(--gold)':isSab?'1px solid #ffcc80':'1px solid transparent';
+            const festIcon=isFest&&cnt===0?'🎉':'';
+            const tipFest=isFest?' 🎉 Festivo':'';
+            return`<div data-cal-ds="${ds}" onclick="calDayClick('${ds}',${cnt})" 
+              onmouseover="if(${cnt}>0||${isToday?1:0})this.style.transform='scale(1.15)'"
+              onmouseout="this.style.transform=''"
+              title="${ds}${isToday?' — OGGI':''}${tipFest}: ${cnt} gar${cnt===1?'a':'e'}"
+              style="width:${cellSz}px;height:${cellSz}px;flex-shrink:0;background:${bg};border-radius:3px;border:${border};
+                display:flex;align-items:center;justify-content:center;font-size:${cnt>=10?'.5rem':cellSz>=20?'.65rem':'.5rem'};
+                font-weight:800;color:${clr};cursor:${cnt>0||isToday?'pointer':'default'};
+                transition:transform .1s;box-shadow:${cnt>0?'0 1px 3px rgba(0,0,50,.15)':'none'}"
+            >${festIcon||(cnt>0?cnt:(isToday?'●':''))}</div>`;
+          }).join('');
+          return`<div style="display:flex;align-items:center;gap:2px;margin-bottom:2px">
+            <div style="width:28px;font-size:.58rem;color:var(--mu);font-weight:${showLbl?600:400};opacity:${showLbl?1:.4};text-align:right;padding-right:4px;flex-shrink:0">${showLbl?dlbl:''}</div>
+            ${cells}
           </div>`;
         }).join('');
+        const calA=`<div style="overflow-x:auto;width:100%">
+          <div style="display:flex;align-items:center;gap:2px;margin-bottom:3px;padding-left:32px">
+            ${monthHdr}
+          </div>
+          ${rowsHtml}
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.6rem;color:var(--mu);flex-wrap:wrap;padding-left:32px">
+            <span><span style="display:inline-block;width:10px;height:10px;background:#e8f4ff;border:1px solid #ccc;margin-right:3px"></span>0</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:var(--bl3);margin-right:3px"></span>1</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:var(--bl2);margin-right:3px"></span>2</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:var(--bl);margin-right:3px"></span>3</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#c0392b;margin-right:3px"></span>4+</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#ddd8f0;border:1px solid #ffcc80;margin-right:3px"></span>Sab/Dom</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border:1.5px solid var(--gold);background:#e8f4ff;margin-right:3px"></span>Dom</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border:2px solid #e91e63;background:#fce4ec;margin-right:3px"></span>🎉 Festivo</span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:var(--gold);margin-right:3px"></span>Oggi</span>
+          </div>
+        </div>`;
 
         // ── VERSIONE B: Strip mensile migliorata — celle che riempiono tutta la larghezza ──
         const calB=(()=>{
@@ -7285,7 +7415,8 @@ function openPersona(nome,campFilter){
           const dayH=52; // celle grandi che riempiono tutta la pagina
           // Header numeri 1-31 — flex puro senza larghezza fissa
           const hdr='<div style="display:flex;gap:0;margin-bottom:3px;padding-left:52px;width:100%">'
-            +Array.from({length:31},(_,i)=>`<div style="flex:1;font-size:.65rem;font-weight:700;color:var(--bl);text-align:center;min-width:0">${i+1}</div>`).join('')
+            +Array.from({length:31},(_,i)=>`<div style="flex:1;font-size:.6rem;font-weight:600;color:var(--mu);text-align:center;min-width:0" title="Giorno ${i+1}">${i+1}</div>`).join('')
+            +'<div style="width:38px;flex-shrink:0;font-size:.58rem;color:var(--mu);padding-left:4px">Tot.</div>'
             +'</div>';
           const rows=mesi.map(m=>{
             const giorni=mesiGiorniMap[m];
@@ -7301,28 +7432,33 @@ function openPersona(nome,campFilter){
               const dow=new Date(ds+'T12:00').getDay();
               const isWE=(dow===0||dow===6);
               const isToday=ds===todayDs;
-              const bg=isToday?'var(--gold)':cnt===0?(isWE?'#daeeff':'#e8f4ff'):cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt>=3?'var(--bl)':'#c0392b';
-              const clr=(cnt>1||isToday)?'#fff':'var(--mu)';
-              const outline=isToday?'outline:2.5px solid #e0a800;outline-offset:-1px;':'';
+              const FEST_B=['2025-11-01','2025-12-08','2025-12-25','2025-12-26',
+                '2026-01-01','2026-01-06','2026-04-05','2026-04-06','2026-04-25','2026-05-01','2026-06-02'];
+              const isFestB=FEST_B.includes(ds);
+              const bg=isToday?'var(--gold)':cnt===0?(isFestB?'#fce4ec':isWE?'#daeeff':'#e8f4ff'):cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt>=3?'var(--bl)':'#c0392b';
+              const clr=(cnt>1||isToday)?'#fff':(isFestB&&cnt===0?'#c2185b':'var(--mu)');
+              const border=isFestB&&cnt===0?'2px solid #e91e63':isToday?'outline:2.5px solid #e0a800;outline-offset:-1px;':'';
               const isDom=dow===0;const isSab=dow===6;
               const weSep=isDom?'border-left:2.5px solid #e67e22;':isSab?'border-left:1.5px solid #aac6e8;':'';
+              const extraStyle=isToday?'outline:2.5px solid #e0a800;outline-offset:-1px;':(isFestB&&cnt===0?'border:2px solid #e91e63;':'');
               tot+=cnt;
-              return`<div data-cal-ds="${ds}" title="${ds}${isToday?' — OGGI':''}: ${cnt} gar${cnt===1?'a':'e'}" 
-                style="flex:1;min-width:0;height:${dayH}px;border-radius:3px;background:${bg};${weSep}${outline}
+              const tipExtra=isFestB?' 🎉 Festivo':'';
+              return`<div data-cal-ds="${ds}" title="${ds}${isToday?' — OGGI':''}${tipExtra}: ${cnt} gar${cnt===1?'a':'e'}" 
+                style="flex:1;min-width:0;height:${dayH}px;border-radius:3px;background:${bg};${weSep}${extraStyle}
                   display:flex;align-items:center;justify-content:center;flex-direction:column;
                   cursor:${cnt>0||isToday?'pointer':'default'};font-size:${cnt>=10?'.6rem':'.72rem'};font-weight:800;color:${clr};
                   transition:transform .1s;box-shadow:${cnt>0?'0 1px 3px rgba(0,0,50,.15)':'none'}" 
                 onclick="calDayClick('${ds}',${cnt})"
                 onmouseover="if(${cnt}>0)this.style.transform='scale(1.10)'"
                 onmouseout="this.style.transform=''">
-                <div>${cnt>0?cnt:(isToday?'●':'')}</div>
+                <div>${(isFestB&&cnt===0)?'🎉':cnt>0?cnt:(isToday?'●':'')}</div>
                 ${isToday?'<div style="font-size:.42rem;line-height:1;opacity:.8">OGG</div>':''}
               </div>`;
             }).join('');
             return`<div style="display:flex;align-items:center;gap:1px;padding:2px 0;border-bottom:1px solid var(--br)">
               <div style="width:52px;font-size:.72rem;font-weight:700;color:var(--bl);flex-shrink:0;padding-right:4px;text-align:right;line-height:1.3">${label}</div>
               <div style="display:flex;gap:2px;flex:1;min-width:0">${cells}</div>
-              <div style="font-size:.78rem;font-weight:800;color:var(--bl);margin-left:6px;flex-shrink:0;width:26px;text-align:right">${tot||''}</div>
+              <div style="font-size:.68rem;font-weight:700;color:var(--mu);margin-left:6px;flex-shrink:0;width:38px;text-align:right" title="Totale gare del mese">${tot?tot+'g':''}</div>
             </div>`;
           }).join('');
           return`<div style="overflow:hidden;width:100%;box-sizing:border-box">${hdr}${rows}</div>`;
@@ -15272,4 +15408,4 @@ function renderNazArbExt(){
 })();
 </script>
 </body></html>
-<!-- deploy:2026-04-06 18:04:39.771300 -->
+<!-- deploy:2026-04-06 16:57:10.159625 -->
