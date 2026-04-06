@@ -2877,9 +2877,12 @@ function renderArbPerSerie(){
           <th style="padding:4px 8px;text-align:center;font-weight:600">Prov.</th>
         </tr></thead>
         <tbody>${arbsInLv.slice(0,20).map((p,i)=>{
-          const medal=i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':`${i+1}. `;
+          const medal=i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':(i+1)+'. ';
           const pvClr=PC[p.provincia]||'#888';
-          return '<tr style="border-bottom:0.5px solid '+lvDef.color+'33;cursor:pointer;transition:background .1s" onmouseover="this.style.background=''+lvDef.color+'18'" onmouseout="this.style.background=''" onclick="openPersona(''+esc(p.nome)+'')">'+
+          const _trOv='this.style.background="'+lvDef.color+'18"';
+          const _trOu='this.style.background=""';
+          const _trCl='openPersona("'+esc(p.nome)+'")';
+          return '<tr style="border-bottom:0.5px solid '+lvDef.color+'33;cursor:pointer;transition:background .1s" onmouseover="'+_trOv+'" onmouseout="'+_trOu+'" onclick="'+_trCl+'">'+
             '<td style="padding:4px 8px;font-weight:700;color:'+lvDef.color+'">'+medal+'</td>'+
             '<td style="padding:4px 8px;font-weight:600;color:var(--bl);white-space:nowrap">'+escH(p.nome)+'</td>'+
             '<td style="padding:4px 8px;text-align:center;font-weight:800;font-size:.85rem;color:'+lvDef.color+'">'+((p.iqa||0).toFixed(1))+'</td>'+
@@ -7444,7 +7447,7 @@ function openPersona(nome,campFilter){
               const ora=g['Ora']||g.ora||'';
               const sq1=g['Squadra Casa']||'';
               const tip=escH(lbl)+(ora?' '+escH(ora):'')+(sq1?' · '+escH(sq1.split(' ').slice(-1)[0]):'');
-              return '<div class="ptl-seg" data-c="'+escH(c)+'" title="'+tip+' ('+d+')" style="display:inline-block;width:'+bw+'px;height:'+h+'px;min-height:6px;background:linear-gradient(to top,'+col+','+col+'cc);border-radius:3px 3px 0 0;vertical-align:bottom;flex-shrink:0;cursor:pointer;transition:filter .1s" onmouseover="this.style.filter='brightness(1.3)'" onmouseout="this.style.filter=''"></div>';
+              return '<div class="ptl-seg" data-c="'+escH(c)+'" title="'+tip+' ('+d+')" style="display:inline-block;width:'+bw+'px;height:'+h+'px;min-height:6px;background:linear-gradient(to top,'+col+','+col+'cc);border-radius:3px 3px 0 0;vertical-align:bottom;flex-shrink:0;cursor:pointer;transition:filter .1s" onmouseover="this.style.filter=&quot;brightness(1.3)&quot;" onmouseout="this.style.filter=&quot;&quot;"></div>';
             }).join('<div style="display:inline-block;width:1px;flex-shrink:0"></div>');
             const _isFestTL3=FESTIVI_TL.includes(d);
             const _dayBg=_isFestTL3?'background:rgba(233,30,99,0.12);':isWE3?'background:rgba(230,126,34,0.10);':'';
