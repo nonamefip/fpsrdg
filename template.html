@@ -2056,7 +2056,9 @@ function calcTrasferte(p){
 }
 
 function openTrsGareModal(nomePers,tipo){
-  const p=P[nomePers]||Object.values(P).find(x=>esc(x.nome)===nomePers);
+  // nomePers viene da dataset.pnome (escH = HTML entities), decode prima di cercare
+  const decoded=nomePers.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+  const p=P[decoded]||Object.values(P).find(x=>x.nome===decoded)||Object.values(P).find(x=>x.nome.toUpperCase()===decoded.toUpperCase());
   if(!p)return;
   const pvCoord={CA:[39.22,9.12],SS:[40.73,8.56],NU:[40.32,9.33],OR:[39.90,8.59],SU:[39.37,8.78]};
   const home=pvCoord[p.provincia];
@@ -2547,7 +2549,7 @@ function renderPersonsTable(cid,persons,opts={}){
   // Intestazioni gruppo: usa colspan esatti basati sulle colonne reali
   // Colonne reali per isArb=true, showCat=false:
   // 2(vuoto) + 3(ana) + 10(att: Tot,Arb,UDC,Oss,Gg,4g,3g,2g,1g,Med/g) + 2(fare) + 3(camp) + 3(sq) + 2(km) + 1(top)
-  const _attCols=isArb?11:5;
+  const _attCols=isArb?9:5;
   const _sqCols=3;
   const _campCols=3;
   const _kmCols=isArb?2:1;
@@ -2901,9 +2903,7 @@ function renderPersonsTable(cid,persons,opts={}){
     <th class="th-sq" onclick="sT('${tableId}',${15+co+ae},event)" title="Gare in coppia · Shift+click per multiplo" style="cursor:pointer">Dopp.</th>
     <th class="th-sq" onclick="sT('${tableId}',${16+co+ae},event)" title="Squadre diverse · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Sqd.</th>
     <th class="th-km" onclick="sT('${tableId}',${17+co+ae},true,event)" title="Km stimati · Shift+click per multiplo" style="cursor:pointer">&#128664; Km</th>
-    ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true,event)" title="Km medi/gara · Shift+click per multiplo" style="cursor:pointer">Km/g</th>
-    <th onclick="sT('${tableId}',${19+co+ae},event)" title="Mese con più gare · Shift+click per multiplo" style="cursor:pointer">Top mese</th>
-    <th onclick="sT('${tableId}',${20+co+ae},event)" title="Gare con provvedimenti · Shift+click per multiplo" style="cursor:pointer;background:#fff3e0;color:#e67e22">⚠️ Provv.</th>`:''}
+    ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true,event)" title="Km medi/gara · Shift+click per multiplo" style="cursor:pointer">Km/g</th>`:''}
     ${isArb?(()=>{const _ti=28+co+ae;return '<th onclick="sT(\''+tableId+'\',' +_ti+',true,event)" title="Gare nella stessa città" class="th-trs-s" style="cursor:pointer;border-left:2px solid rgba(255,255,255,.3);white-space:nowrap">In sede</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+1)+',true,event)" title="% in sede" class="th-trs-sp" style="cursor:pointer">%</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+2)+',true,event)" title="Gare entro 100km" class="th-trs-c" style="cursor:pointer;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap">≤100km</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+3)+',true,event)" title="% entro 100km" class="th-trs-cp" style="cursor:pointer">%</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+4)+',true,event)" title="Gare oltre 100km" class="th-trs-l" style="cursor:pointer;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap">&gt;100km</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+5)+',true,event)" title="% oltre 100km" class="th-trs-lp" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.3)">%</th>';})():''}
     ${isArb?`<th onclick="sT('${tableId}',${21+co+ae},true,event)" title="Indice Qualità Arbitrale: somma pesi gare (campionato × fase). Più alto = gare più importanti arbitrate." style="cursor:pointer;background:#1a3a6b;color:#ffd54f;font-weight:700;white-space:nowrap;border-left:2px solid rgba(255,255,255,.2)">⭐ IQA</th>`:''}
     ${isArb?`<th onclick="sT('${tableId}',${22+co+ae},true,event)" title="% copertura gare comitato: singolo conta 1, in coppia conta 0.5" style="cursor:pointer;background:#0a5c36;color:#7effc0;font-weight:700;white-space:nowrap;border-left:2px solid rgba(255,255,255,.2)">% Cop.</th>`:''}
@@ -2997,8 +2997,7 @@ function renderArbPerSerie(filterPvSerie){
           const gc=gareInCat(p,lvDef.lv);
           const _ov='this.style.background="'+lvDef.color+'18"';
           const _ou='this.style.background=""';
-          const _cl='openPersona("'+esc(p.nome)+'")';
-          return '<tr data-iqa="'+(p.iqa||0)+'" data-gare="'+(p.n_gare_arbitro||0)+'" data-garecat="'+gc+'" data-nome="'+escH(p.nome)+'" data-prov="'+(p.provincia||'')+'" style="border-bottom:0.5px solid '+lvDef.color+'33;cursor:pointer;transition:background .1s" onmouseover="'+_ov+'" onmouseout="'+_ou+'" onclick="'+_cl+'" title="Apri scheda di '+escH(p.nome)+'">'+
+          return '<tr data-iqa="'+(p.iqa||0)+'" data-gare="'+(p.n_gare_arbitro||0)+'" data-garecat="'+gc+'" data-nome="'+escH(p.nome)+'" data-prov="'+(p.provincia||'')+'" style="border-bottom:0.5px solid '+lvDef.color+'33;cursor:pointer;transition:background .1s" onmouseover="'+_ov+'" onmouseout="'+_ou+'" onclick="openPersona(this.dataset.nome)" title="Apri scheda di '+escH(p.nome)+'">'+
             '<td style="padding:4px 8px;font-weight:700;color:'+lvDef.color+'">'+medal+'</td>'+
             '<td style="padding:4px 8px;font-weight:600;color:var(--bl);white-space:nowrap">'+escH(p.nome)+'</td>'+
             '<td style="padding:4px 8px;text-align:center;font-weight:800;font-size:.85rem;color:'+lvDef.color+'">'+((p.iqa||0).toFixed(1))+'</td>'+
@@ -7293,12 +7292,12 @@ function openPersona(nome,campFilter){
         <div class="sc" style="background:#1a0040;border-color:#6a1b9a"><div class="sv" style="color:#e040fb">${_lvqMedal}${_lvqRankMe}°</div><div class="sv" style="font-size:.58rem;color:#6a1b9a">${_lvqTotMe} arb.</div><div class="sl" style="color:#ce93d8">🎖 Lv-Q</div></div>
       </div>
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">🚗 Km & Trasferte</div>
-      <div class="scs" style="margin-bottom:14px">
+      <div class="scs" style="margin-bottom:14px" data-pnome="${escH(p.nome)}">
         ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div>${rankBadge(km,'km_stimati'||0)}<div class="sl">Km stimati</div></div>`:''}
         ${kmGara>0?`<div class="sc"><div class="sv">${kmGara}</div><div class="sl">Km/gara</div></div>`:''}
-        <div class="sc" style="background:#1565c0;border-color:#90caf9;cursor:pointer" onclick="openTrsGareModal(${JSON.stringify(esc(p.nome))},'sede')" title="Clicca per vedere le gare in sede"><div class="sv" style="color:#bbdefb">${_trsP.inSede||0}</div><div class="sl" style="color:#90caf9">In sede ↗</div></div>
-        <div class="sc" style="background:#1b5e20;border-color:#81c784;cursor:pointer" onclick="openTrsGareModal(${JSON.stringify(esc(p.nome))},'corta')" title="Clicca per vedere le gare ≤100km"><div class="sv" style="color:#a5d6a7">${_trsP.corta||0}</div>${rankBadgeDyn(_trsP.corta||0,_trsArr)}<div class="sl" style="color:#81c784">≤100km ↗</div></div>
-        <div class="sc" style="background:#b71c1c;border-color:#ef9a9a;cursor:pointer" onclick="openTrsGareModal(${JSON.stringify(esc(p.nome))},'lunga')" title="Clicca per vedere le gare >100km"><div class="sv" style="color:#ffcdd2">${_trsP.lunga||0}</div><div class="sl" style="color:#ef9a9a">&gt;100km ↗</div></div>
+        <div class="sc" style="background:#1565c0;border-color:#90caf9;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'sede')" title="Clicca per vedere le gare in sede"><div class="sv" style="color:#bbdefb">${_trsP.inSede||0}</div><div class="sl" style="color:#90caf9">In sede ↗</div></div>
+        <div class="sc" style="background:#1b5e20;border-color:#81c784;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'corta')" title="Clicca per vedere le gare ≤100km"><div class="sv" style="color:#a5d6a7">${_trsP.corta||0}</div>${rankBadgeDyn(_trsP.corta||0,_trsArr)}<div class="sl" style="color:#81c784">≤100km ↗</div></div>
+        <div class="sc" style="background:#b71c1c;border-color:#ef9a9a;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'lunga')" title="Clicca per vedere le gare >100km"><div class="sv" style="color:#ffcdd2">${_trsP.lunga||0}</div><div class="sl" style="color:#ef9a9a">&gt;100km ↗</div></div>
       </div>
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">💶 Rimborsi stimati</div>
       <div class="scs" style="margin-bottom:14px">
