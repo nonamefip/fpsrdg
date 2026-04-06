@@ -4756,6 +4756,7 @@ function openGiornoModal(ds){
 
 // ── Selezione range calendario ──────────────────────────────────────────────
 let _calRangeStart=null;
+let _calCurrentArb=''; // nome arbitro corrente per filtro calendario
 // Click fuori dal calendario cancella la selezione
 document.addEventListener('click',function(ev){
   if(_calRangeStart&&!ev.target.closest('[data-cal-ds]')&&!ev.target.closest('#cal-range-hint')){
@@ -4764,38 +4765,67 @@ document.addEventListener('click',function(ev){
     const h=document.getElementById('cal-range-hint');if(h)h.remove();
   }
 },{capture:true,passive:true});
+function _calHighlightRange(start,hover){
+  // Evidenzia le celle nel range start→hover durante la selezione
+  const d1=start<hover?start:hover;
+  const d2=start<hover?hover:start;
+  document.querySelectorAll('[data-cal-ds]').forEach(el=>{
+    const d=el.dataset.calDs;
+    if(d===start){el.style.outline='2.5px solid #e74c3c';el.style.outlineOffset='-1px';el.style.background='';}
+    else if(d>=d1&&d<=d2){el.style.background='rgba(231,76,60,0.25)';el.style.outline='';}
+    else{el.style.outline='';el.style.background='';}
+  });
+}
+function calDayHover(ds){
+  if(_calRangeStart&&ds!==_calRangeStart){
+    _calHighlightRange(_calRangeStart,ds);
+    const d1=_calRangeStart<ds?_calRangeStart:ds;
+    const d2=_calRangeStart<ds?ds:_calRangeStart;
+    const hint=document.getElementById('cal-range-hint');
+    if(hint){const ndays=Math.round((new Date(d2)-new Date(d1))/86400000)+1;hint.textContent='📅 '+d1+' → '+d2+' ('+ndays+' giorni)'+(_calCurrentArb?' · solo '+_calCurrentArb:'');}
+  }
+}
 function calDayClick(ds, cnt){
   if(!_calRangeStart){
     // Primo click: seleziona giorno di inizio
     _calRangeStart=ds;
-    // Evidenzia visivamente
     document.querySelectorAll('[data-cal-ds]').forEach(el=>{
       el.style.outline=el.dataset.calDs===ds?'2.5px solid #e74c3c':'';
       el.style.outlineOffset='-1px';
     });
-    // Mostra hint
     let hint=document.getElementById('cal-range-hint');
     if(!hint){hint=document.createElement('div');hint.id='cal-range-hint';hint.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#2c3e6b;color:#fff;border-radius:8px;padding:8px 16px;font-size:.75rem;z-index:9999;pointer-events:none';document.body.appendChild(hint);}
-    hint.textContent='📅 '+ds+' selezionato — clicca un 2° giorno per il range · click fuori per annullare';
+    hint.textContent='📅 '+ds+' — clicca un 2° giorno per il range · fuori per annullare'+(_calCurrentArb?' [solo '+_calCurrentArb+']':'');
   } else {
-    // Secondo click: apri range o singolo
     const d1=_calRangeStart<ds?_calRangeStart:ds;
     const d2=_calRangeStart<ds?ds:_calRangeStart;
     _calRangeStart=null;
-    document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';});
+    document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';});
     const hint=document.getElementById('cal-range-hint');if(hint)hint.remove();
     if(d1===d2){
-      if(cnt>0) openGiornoModal(d1);
+      // Singolo giorno: apri modal filtrato per arbitro
+      if(_calCurrentArb){
+        // Filtra gare del giorno per questo arbitro
+        const allGD=[...(D.gare||[]),...(D.gare_future||[])].filter(g=>g['Data']===d1&&['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].some(f=>pns(g[f]||'')===_calCurrentArb));
+        if(allGD.length>0) openGiornoModal(d1);
+        else if(cnt>0) openGiornoModal(d1);
+      } else if(cnt>0){
+        openGiornoModal(d1);
+      }
     } else {
-      openGiornoRange(d1,d2);
+      openGiornoRange(d1,d2,_calCurrentArb);
     }
   }
 }
 
-function openGiornoRange(d1,d2){
+function openGiornoRange(d1,d2,arbFilter){
   try{
+    const _arbF=arbFilter||_calCurrentArb||'';
     const allGare=[...(D.gare||[]),...(D.gare_future||[])];
-    const rangeGare=allGare.filter(g=>g['Data']>=d1&&g['Data']<=d2);
+    let rangeGare=allGare.filter(g=>g['Data']>=d1&&g['Data']<=d2);
+    if(_arbF){
+      rangeGare=rangeGare.filter(g=>['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].some(f=>pns(g[f]||'')===_arbF));
+    }
     const seenIds=new Set();
     const gare=rangeGare.filter(g=>{
       const k=g['Numero Gara']||(g['Squadra Casa']+g['Squadra Ospite']+g['Campionato']+g['Data']);
@@ -6808,6 +6838,7 @@ function openPersona(nome,campFilter){
     nome=tmp.value;
   }
   const p=P[nome];if(!p)return;
+  _calCurrentArb=nome; // per filtro calendario nella scheda
   _navPush(()=>openPersona(nome,campFilter));_updateBackBtn();
   const isDual=(p.categorie||[]).length>1;
   const icon=p.categoria==='Arbitro'?'👨‍⚖️':p.categoria==='UDC'?'📋':'🔭';
@@ -6980,45 +7011,70 @@ function openPersona(nome,campFilter){
     const km=_rimbP.km;
     const kmGara=km>0&&(p.n_gare_arbitro||allG.length)>0?Math.round(km/(p.n_gare_arbitro||allG.length)):0;
     const rGettoneP=_rimbP.gettone, rBenzinaP=_rimbP.benzina, rAccessorieP=_rimbP.accessorie, rTotaleP=_rimbP.totale;
+    // Trasferte, IQA, copertura, gare future
+    const _trsP=calcTrasferte(p);
+    const _nFutP=(D.gare_future||[]).filter(g=>['Arbitro 1','Arbitro 2'].some(f=>pns(g[f]||'')===nome)).length;
+    const _totPrevP=(p.n_gare_arbitro||0)+_nFutP;
+    const _iqaP=p.iqa||0;
+    const _now0=new Date().toISOString().split('T')[0];
+    const _totComP=(D.gare||[]).filter(g=>(g['Data']||'')<=_now0).length||1;
+    const _nSingP=p.n_singolo||0;
+    const _nDoppP=(p.n_gare_arbitro||0)-_nSingP;
+    const _copPct=Math.round((_nSingP+_nDoppP*0.5)/_totComP*100*10)/10;
+    // rankBadge per metriche calcolate
+    function rankBadgeDyn(val,arr){
+      if(!arr.length)return'';
+      const sorted=arr.slice().sort((a,b)=>b-a);
+      const pos=sorted.findIndex(v=>v<=val)+1;
+      const tot=arr.length;
+      const clr=pos===1?'#f1c40f':pos<=3?'#e67e22':pos<=Math.ceil(tot*0.1)?'#27ae60':'var(--mu)';
+      const medal=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':'';
+      return'<div style="font-size:.52rem;color:'+clr+';font-weight:700;line-height:1;margin-top:1px">'+medal+'#'+pos+'/'+tot+'</div>';
+    }
+    const _iqaArr=allArbs.map(x=>x.iqa||0);
+    const _kmArr=allArbs.map(x=>calcKmArb(x));
+    const _trsArr=allArbs.map(x=>calcTrasferte(x).corta||0);
     document.getElementById('mpt-0').innerHTML=`
       ${isDual?`<div class="dual-role-notice">⚡ Ruolo doppio: ${(p.categorie||[]).join(' + ')}. Usa le tab dedicate.</div>`:''}
-      <div class="scs">
+      <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">📊 Attività</div>
+      <div class="scs" style="margin-bottom:14px">
         <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()" title="Vedi tutte le gare"><div class="sv">${allG.length}</div>${rankBadge(allG.length,'n_gare')}<div class="sl">Gare totali ↗</div></div>
-        ${p.n_gare_arbitro?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()" title="Vedi gare come arbitro"><div class="sv">${p.n_gare_arbitro}</div>${rankBadge(p.n_gare_arbitro,'n_gare_arbitro')}<div class="sl">Come Arbitro ↗</div></div>`:''}
-        ${p.n_gare_arbitro?`<div class="sc"><div class="sv" style="color:#e17055">${p.n_singolo||0}</div>${rankBadge(p.n_singolo||0,'n_singolo')}<div class="sl">In singolo</div></div>`:''}
-        ${p.n_gare_udc?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()"><div class="sv">${p.n_gare_udc}</div><div class="sl">Come UDC ↗</div></div>`:''}
-        ${p.n_gare_osservatore?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()"><div class="sv">${p.n_gare_osservatore}</div><div class="sl">Come Oss. ↗</div></div>`:''}
+        ${p.n_gare_arbitro?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()"><div class="sv">${p.n_gare_arbitro}</div>${rankBadge(p.n_gare_arbitro,'n_gare_arbitro')}<div class="sl">Come Arbitro ↗</div></div>`:''}
+        ${p.n_gare_arbitro?`<div class="sc"><div class="sv" style="color:#e17055">${_nSingP}</div>${rankBadge(_nSingP,'n_singolo')}<div class="sl">In singolo</div></div>`:''}
+        ${p.n_gare_arbitro?`<div class="sc"><div class="sv">${_nDoppP}</div><div class="sl">In coppia</div></div>`:''}
+        ${p.n_gare_udc?`<div class="sc"><div class="sv">${p.n_gare_udc}</div><div class="sl">Come UDC</div></div>`:''}
+        ${p.n_gare_osservatore?`<div class="sc"><div class="sv">${p.n_gare_osservatore}</div><div class="sl">Come Oss.</div></div>`:''}
         <div class="sc"><div class="sv">${nGiorni}</div>${rankBadge(nGiorni,'n_giorni'||0)}<div class="sl">Giorni</div></div>
         <div class="sc gold"><div class="sv">${(allG.length/Math.max(nGiorni,1)).toFixed(1)}</div><div class="sl">Media/g</div></div>
         <div class="sc"><div class="sv">${maxGday}</div><div class="sl">Max/g</div></div>
-        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[2]?.click()" title="Vedi cammino"><div class="sv">${topCamp.length}</div>${rankBadge(topCamp.length,'n_campionati'||0)}<div class="sl">Campionati ↗</div></div>
-        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[3]?.click()" title="Vedi colleghi"><div class="sv">${colleghi.length}</div>${rankBadge(colleghi.length,'n_colleghi'||0)}<div class="sl">Colleghi ↗</div></div>
-        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[4]?.click()" title="Vedi campi"><div class="sv">${campi.length}</div>${rankBadge(campi.length,'n_campi'||0)}<div class="sl">Campi ↗</div></div>
+        ${_nFutP>0?`<div class="sc" style="background:#fff3e0;border-color:#ffe082"><div class="sv" style="color:#e67e22">${_nFutP}</div><div class="sl">Da fare</div></div>`:''}
+        ${_nFutP>0?`<div class="sc"><div class="sv">${_totPrevP}</div><div class="sl">Tot.prev.</div></div>`:''}
+      </div>
+      <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">🏅 Qualità & Copertura</div>
+      <div class="scs" style="margin-bottom:14px">
+        <div class="sc" style="background:#1a3a6b;border-color:#ffd54f"><div class="sv" style="color:#ffd54f">${_iqaP.toFixed(1)}</div>${rankBadgeDyn(_iqaP,_iqaArr)}<div class="sl" style="color:#b0bec5">⭐ IQA</div></div>
+        <div class="sc" style="background:#0a5c36;border-color:#69f0ae"><div class="sv" style="color:#69f0ae">${_copPct}%</div><div class="sl" style="color:#a5d6a7">% Cop.</div></div>
+        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[2]?.click()"><div class="sv">${topCamp.length}</div>${rankBadge(topCamp.length,'n_campionati'||0)}<div class="sl">Campionati ↗</div></div>
+        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[3]?.click()"><div class="sv">${colleghi.length}</div>${rankBadge(colleghi.length,'n_colleghi'||0)}<div class="sl">Colleghi ↗</div></div>
+        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[4]?.click()"><div class="sv">${campi.length}</div>${rankBadge(campi.length,'n_campi'||0)}<div class="sl">Campi ↗</div></div>
+        ${(p.n_provv||0)>0?`<div class="sc" style="background:#fff3e0;border-color:#ffe082"><div class="sv" style="color:#e67e22">${p.n_provv}</div><div class="sl">⚠️ Provv.</div></div>`:''}
+      </div>
+      <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">🚗 Km & Trasferte</div>
+      <div class="scs" style="margin-bottom:14px">
         ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div>${rankBadge(km,'km_stimati'||0)}<div class="sl">Km stimati</div></div>`:''}
         ${kmGara>0?`<div class="sc"><div class="sv">${kmGara}</div><div class="sl">Km/gara</div></div>`:''}
+        <div class="sc" style="background:#1565c0;border-color:#90caf9"><div class="sv" style="color:#bbdefb">${_trsP.inSede||0}</div><div class="sl" style="color:#90caf9">In sede</div></div>
+        <div class="sc" style="background:#1b5e20;border-color:#81c784"><div class="sv" style="color:#a5d6a7">${_trsP.corta||0}</div>${rankBadgeDyn(_trsP.corta||0,_trsArr)}<div class="sl" style="color:#81c784">≤100km</div></div>
+        <div class="sc" style="background:#b71c1c;border-color:#ef9a9a"><div class="sv" style="color:#ffcdd2">${_trsP.lunga||0}</div><div class="sl" style="color:#ef9a9a">&gt;100km</div></div>
       </div>
-      ${(p.categoria==='Arbitro'||p.categorie?.includes('Arbitro'))?`<div class="card" style="margin-bottom:10px;background:#f1f8e9;border:1px solid #a5d6a7">
-        <div class="card-title" style="color:#2e7d32">💶 Rimborsi stimati stagione</div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
-          <div style="flex:1;min-width:100px;background:#fff;border:1px solid #c8e6c9;border-radius:6px;padding:8px 12px;text-align:center">
-            <div style="font-size:1.1rem;font-weight:800;color:#2e7d32">€ ${rGettoneP}</div>
-            <div style="font-size:.68rem;color:#555;margin-top:2px">Gettone</div>
-          </div>
-          <div style="flex:1;min-width:100px;background:#fff;border:1px solid #c8e6c9;border-radius:6px;padding:8px 12px;text-align:center">
-            <div style="font-size:1.1rem;font-weight:800;color:#1b5e20">€ ${rBenzinaP.toFixed(2)}</div>
-            <div style="font-size:.68rem;color:#555;margin-top:2px">Benzina</div>
-          </div>
-          <div style="flex:1;min-width:100px;background:#fff;border:1px solid #c8e6c9;border-radius:6px;padding:8px 12px;text-align:center">
-            <div style="font-size:1.1rem;font-weight:800;color:#33691e">€ ${rAccessorieP.toFixed(2)}</div>
-            <div style="font-size:.68rem;color:#555;margin-top:2px">Accessorie</div>
-          </div>
-          <div style="flex:2;min-width:140px;background:#2e7d32;border-radius:6px;padding:8px 12px;text-align:center">
-            <div style="font-size:1.4rem;font-weight:900;color:#fff">€ ${rTotaleP.toFixed(2)}</div>
-            <div style="font-size:.7rem;color:#a5d6a7;margin-top:2px">Totale stimato</div>
-          </div>
-        </div>
-        <div style="font-size:.63rem;color:#888;margin-top:6px">* Stima basata su gettoni, benzina 0,25€/km (solo 1° arb), extra >100km, traghetto/buono Maddalena-Carloforte</div>
-      </div>`:''}
+      <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">💶 Rimborsi stimati</div>
+      <div class="scs" style="margin-bottom:14px">
+        <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#2e7d32">€ ${rGettoneP}</div><div class="sl">Gettone</div></div>
+        <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#1b5e20">€ ${rBenzinaP.toFixed(0)}</div><div class="sl">Benzina</div></div>
+        <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#33691e">€ ${rAccessorieP.toFixed(0)}</div><div class="sl">Accessorie</div></div>
+        <div class="sc" style="background:#2e7d32;border-color:#1b5e20"><div class="sv" style="color:#fff;font-size:1.2rem">€ ${rTotaleP.toFixed(0)}</div><div class="sl" style="color:#a5d6a7">Totale €</div></div>
+      </div>
+      <!-- Rimborsi già mostrati nei quadratini sopra -->
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
         ${streakCur>=2||streakMax>=3?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
           <div class="card-title">🔥 Streak <span style="font-size:.6rem;font-weight:400;color:var(--mu)">(gare arbitrate senza interruzione di 2+ giorni)</span></div>
@@ -7563,6 +7619,7 @@ function openPersona(nome,campFilter){
             const isFest=FESTIVI_CAL.includes(ds);
             const isToday=ds===todayDs;
             const isMStart=ds.slice(8)==='01';
+            const isNewMWeek=isMStart; // la prima settimana del mese ha bordo sinistro blu
             const streak=_streakMap[ds]||0;
             // Sfondo streak (overlay leggero sopra il colore normale)
             const streakGlow=streak>=10?';box-shadow:inset 0 0 0 2px #e74c3c,0 0 6px rgba(231,76,60,.5)':streak>=7?';box-shadow:inset 0 0 0 2px #e67e22,0 0 4px rgba(230,126,34,.4)':streak>=5?';box-shadow:inset 0 0 0 1px #f39c12':'' ;
@@ -7571,13 +7628,13 @@ function openPersona(nome,campFilter){
             const border=isFest?'2px solid #e91e63':isToday?'2.5px solid #e0a800':isDom?'1.5px solid var(--gold)':isSab?'1px solid #ffcc80':isMStart?'2px solid #90caf9':'1px solid transparent';
             const festIcon=isFest&&cnt===0?'🎉':'';
             return`<div data-cal-ds="${ds}" onclick="calDayClick('${ds}',${cnt})"
-              onmouseover="this.style.transform='scale(1.2)'"
+              onmouseover="calDayHover('${ds}');this.style.transform='scale(1.15)'"
               onmouseout="this.style.transform=''"
               title="${ds}${isToday?' — OGGI':''}${isFest?' 🎉 Festivo':''}${streak>=5?' 🔥 Streak '+streak+'gg':''}: ${cnt} gar${cnt===1?'a':'e'}"
               style="flex:1;min-width:10px;aspect-ratio:1;background:${bg};border-radius:3px;border:${border};
                 display:flex;align-items:center;justify-content:center;font-size:.55rem;
                 font-weight:800;color:${clr};cursor:${cnt>0||isToday?'pointer':'default'};
-                transition:transform .1s;margin:1px${streakGlow}"
+                transition:transform .1s;margin:1px${streakGlow};${isMStart?"margin-left:6px;":""}"
             >${festIcon||(cnt>0?cnt:(isToday?'●':''))}</div>`;
           }).join('');
           return`<div style="display:flex;align-items:stretch;width:100%;margin-bottom:2px">
@@ -7644,7 +7701,7 @@ function openPersona(nome,campFilter){
                   cursor:${cnt>0||isToday?'pointer':'default'};font-size:${cnt>=10?'.6rem':'.72rem'};font-weight:800;color:${clr};
                   transition:transform .1s;box-shadow:${cnt>0?'0 1px 3px rgba(0,0,50,.15)':'none'}" 
                 onclick="calDayClick('${ds}',${cnt})"
-                onmouseover="if(${cnt}>0)this.style.transform='scale(1.10)'"
+                onmouseover="calDayHover('${ds}');if(${cnt}>0)this.style.transform='scale(1.10)'"
                 onmouseout="this.style.transform=''">
                 <div>${(isFestB&&cnt===0)?'🎉':cnt>0?cnt:(isToday?'●':'')}</div>
                 ${isToday?'<div style="font-size:.42rem;line-height:1;opacity:.8">OGG</div>':''}
