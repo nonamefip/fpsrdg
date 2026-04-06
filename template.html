@@ -1121,7 +1121,7 @@ tr.loss-row td{background:#fdecea!important;}
       <span style="font-weight:700;font-size:.88rem">🏅 Classifica Arbitri per Serie</span>
       <span style="font-size:.65rem;opacity:.6;margin-left:4px">— chi arbitra le categorie più alte · ordine per IQA</span>
     </div>
-    <div id="arb-serie-body" style="margin-top:8px"></div>
+    <div id="arb-serie-body" style="margin-top:8px;display:block"></div>
   </div>
 
   <div class="fb">
@@ -2479,7 +2479,7 @@ function renderPersonsTable(cid,persons,opts={}){
   const _sqCols=3;
   const _campCols=3;
   const _kmCols=isArb?2:1;
-  const _trsCols=6;
+  const _trsCols=isArb?8:6;
   const _topCols=isArb?1:0;
   const _GH_ST='text-align:center;font-size:.62rem;font-weight:700;padding:5px 6px;letter-spacing:.4px;border-bottom:2px solid rgba(255,255,255,.2)';
   const _trsGH=isArb?(('<th colspan="'+_trsCols+'" style="'+_GH_ST+';background:#0d47a1;color:#fff">TRASFERTE</th>')):'';
@@ -2492,7 +2492,6 @@ function renderPersonsTable(cid,persons,opts={}){
     <th colspan="${_campCols}" class="th-camp" style="${_GH_ST}">CAMPIONATI</th>
     <th colspan="${_sqCols}" class="th-sq" style="${_GH_ST}">SQUADRE</th>
     <th colspan="${isArb?2:1}" class="th-km" style="${_GH_ST}">PERCORRENZA</th>
-    ${isArb?`<th colspan="2" style="${_GH_ST};background:#9e3f00;color:#fff">TOP & PROVV.</th>`:''}
     ${_trsGH}
     <th style="background:var(--tbl-hdr);border:none;padding:0"></th>
     ${_rimbGH}
@@ -2868,21 +2867,21 @@ function renderArbPerSerie(){
         <span>${lvDef.label}</span>
         <span style="opacity:.7;font-size:.65rem">${arbsInLv.length} arbitri</span>
       </div>
-      <table style="width:100%;border-collapse:collapse;font-size:.72rem">
-        <thead><tr style="border-bottom:1px solid ${lvDef.color}30;background:${lvDef.color}15">
-          <th style="padding:4px 8px;text-align:left;font-weight:600">#</th>
-          <th style="padding:4px 8px;text-align:left;font-weight:600">Arbitro</th>
-          <th style="padding:4px 8px;text-align:center;font-weight:600;color:${lvDef.color}">⭐ IQA</th>
-          <th style="padding:4px 8px;text-align:center;font-weight:600">Gare</th>
-          <th style="padding:4px 8px;text-align:center;font-weight:600">Prov.</th>
+      <table style="width:100%;border-collapse:collapse;font-size:.72rem" id="sertbl-${lvDef.lv}">
+        <thead><tr style="border-bottom:1px solid ${lvDef.color}30;background:${lvDef.color}15;cursor:pointer">
+          <th style="padding:4px 8px;text-align:left;font-weight:600" onclick="_sortSerieCard('${lvDef.lv}','rank')"># ↕</th>
+          <th style="padding:4px 8px;text-align:left;font-weight:600" onclick="_sortSerieCard('${lvDef.lv}','nome')">Arbitro ↕</th>
+          <th style="padding:4px 8px;text-align:center;font-weight:600;color:${lvDef.color}" onclick="_sortSerieCard('${lvDef.lv}','iqa')">⭐ IQA ↕</th>
+          <th style="padding:4px 8px;text-align:center;font-weight:600" onclick="_sortSerieCard('${lvDef.lv}','gare')">Gare ↕</th>
+          <th style="padding:4px 8px;text-align:center;font-weight:600" onclick="_sortSerieCard('${lvDef.lv}','prov')">Prov. ↕</th>
         </tr></thead>
-        <tbody>${arbsInLv.slice(0,20).map((p,i)=>{
+        <tbody id="serbody-${lvDef.lv}">${arbsInLv.map((p,i)=>{
           const medal=i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':(i+1)+'. ';
           const pvClr=PC[p.provincia]||'#888';
-          const _trOv='this.style.background="'+lvDef.color+'18"';
-          const _trOu='this.style.background=""';
-          const _trCl='openPersona("'+esc(p.nome)+'")';
-          return '<tr style="border-bottom:0.5px solid '+lvDef.color+'33;cursor:pointer;transition:background .1s" onmouseover="'+_trOv+'" onmouseout="'+_trOu+'" onclick="'+_trCl+'">'+
+          const _ov='this.style.background=&quot;'+lvDef.color+'18&quot;';
+          const _ou='this.style.background=&quot;&quot;';
+          const _cl='openPersona(&quot;'+esc(p.nome)+'&quot;)';
+          return '<tr data-iqa="'+(p.iqa||0)+'" data-gare="'+(p.n_gare_arbitro||0)+'" data-nome="'+escH(p.nome)+'" data-prov="'+(p.provincia||'')+'" style="border-bottom:0.5px solid '+lvDef.color+'33;cursor:pointer;transition:background .1s" onmouseover="'+_ov+'" onmouseout="'+_ou+'" onclick="'+_cl+'">'+
             '<td style="padding:4px 8px;font-weight:700;color:'+lvDef.color+'">'+medal+'</td>'+
             '<td style="padding:4px 8px;font-weight:600;color:var(--bl);white-space:nowrap">'+escH(p.nome)+'</td>'+
             '<td style="padding:4px 8px;text-align:center;font-weight:800;font-size:.85rem;color:'+lvDef.color+'">'+((p.iqa||0).toFixed(1))+'</td>'+
@@ -2890,13 +2889,30 @@ function renderArbPerSerie(){
             '<td style="padding:4px 8px;text-align:center"><span style="background:'+pvClr+';color:#fff;border-radius:3px;padding:1px 6px;font-size:.6rem;font-weight:700">'+(p.provincia||'?')+'</span></td>'+
             '</tr>';
         }).join('')}
-        ${arbsInLv.length>20?`<tr><td colspan="5" style="padding:4px 8px;color:var(--mu);font-style:italic;font-size:.65rem">... e altri ${arbsInLv.length-20}</td></tr>`:''}
         </tbody>
       </table>
     </div>`;
   });
   html+='</div>';
   el.innerHTML=html;
+}
+function _sortSerieCard(lv,col){
+  const tbody=document.getElementById('serbody-'+lv);
+  if(!tbody)return;
+  const rows=[...tbody.querySelectorAll('tr')];
+  const asc=tbody.dataset.sortCol===col&&tbody.dataset.sortDir==='asc';
+  tbody.dataset.sortCol=col;tbody.dataset.sortDir=asc?'desc':'asc';
+  rows.sort((a,b)=>{
+    let av,bv;
+    if(col==='iqa'){av=parseFloat(a.dataset.iqa||0);bv=parseFloat(b.dataset.iqa||0);return asc?av-bv:bv-av;}
+    if(col==='gare'){av=parseInt(a.dataset.gare||0);bv=parseInt(b.dataset.gare||0);return asc?av-bv:bv-av;}
+    if(col==='nome'){av=(a.dataset.nome||'');bv=(b.dataset.nome||'');return asc?bv.localeCompare(av):av.localeCompare(bv);}
+    if(col==='prov'){av=(a.dataset.prov||'');bv=(b.dataset.prov||'');return asc?bv.localeCompare(av):av.localeCompare(bv);}
+    return 0;
+  });
+  rows.forEach(r=>tbody.appendChild(r));
+  // re-number
+  rows.forEach((r,i)=>{const td=r.querySelector('td:first-child');if(td)td.textContent=(i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':(i+1)+'. ');});
 }
 function toggleSection(wrId,togId){
   const wr=document.getElementById(wrId),tog=document.getElementById(togId);
@@ -4779,6 +4795,8 @@ function openGiornoModal(ds){
         <button class="mbtn" onclick="document.getElementById('dyn-mo-giorno')?.remove()">✕</button></div>
         <div class="mbody">${bodyHtml}</div>
       </div>`;
+    document.querySelectorAll('#dyn-mo-giorno,#dyn-mo-range').forEach(m=>m.remove());
+    modal.style.zIndex='99999999';
     modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
     document.body.appendChild(modal);
 
@@ -4963,9 +4981,10 @@ function openGiornoRange(d1,d2,arbFilter){
         </table>
       </div>`;
 
-    const old=document.getElementById('dyn-mo-range');if(old)old.remove();
+    document.querySelectorAll('#dyn-mo-range,#dyn-mo-giorno').forEach(m=>m.remove());
     const modal=document.createElement('div');
     modal.id='dyn-mo-range';modal.className='mo open';
+    modal.style.zIndex='99999999';
     modal.innerHTML=`
       <div class="mbox" style="width:min(98vw,1400px);height:min(92vh,900px);resize:both;overflow:hidden;min-width:600px;display:flex;flex-direction:column">
         <div class="mhd" style="cursor:move"><span>📅</span><h3>${escH(titleStr)}</h3>
@@ -4974,6 +4993,9 @@ function openGiornoRange(d1,d2,arbFilter){
         <div class="mbody">${bodyHtml}</div>
       </div>`;
     modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+    document.querySelectorAll('#dyn-mo-giorno,#dyn-mo-range').forEach(m=>m.remove());
+    document.body.appendChild(modal);
+    modal.style.zIndex='99999999';
     document.body.appendChild(modal);
     const box=modal.querySelector('.mbox'),head=modal.querySelector('.mhd');
     let drag=false,ox=0,oy=0;
@@ -7109,6 +7131,17 @@ function openPersona(nome,campFilter){
     const _iqaArr=allArbs.map(x=>x.iqa||0);
     const _kmArr=allArbs.map(x=>calcKmArb(x));
     const _trsArr=allArbs.map(x=>calcTrasferte(x).corta||0);
+    // Livello, Q rank, LvQ rank per mpt-0
+    const _lvMe=livelloArb(p);
+    const _iqaSorted=allArbs.slice().sort((a,b)=>(b.iqa||0)-(a.iqa||0));
+    const _qRankMe=_iqaSorted.findIndex(x=>x.nome===p.nome)+1;
+    const _qTotMe=_iqaSorted.length;
+    const _lvScore=x=>(10-livelloArb(x).lv)*10000+(x.iqa||0);
+    const _lvqSorted=allArbs.slice().sort((a,b)=>_lvScore(b)-_lvScore(a));
+    const _lvqRankMe=_lvqSorted.findIndex(x=>x.nome===p.nome)+1;
+    const _lvqTotMe=_lvqSorted.length;
+    const _qMedal=_qRankMe===1?"🥇":_qRankMe===2?"🥈":_qRankMe===3?"🥉":"";
+    const _lvqMedal=_lvqRankMe===1?"🥇":_lvqRankMe===2?"🥈":_lvqRankMe===3?"🥉":"";
     document.getElementById('mpt-0').innerHTML=`
       ${isDual?`<div class="dual-role-notice">⚡ Ruolo doppio: ${(p.categorie||[]).join(' + ')}. Usa le tab dedicate.</div>`:''}
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">📊 Attività</div>
@@ -7133,6 +7166,9 @@ function openPersona(nome,campFilter){
         <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[3]?.click()"><div class="sv">${colleghi.length}</div>${rankBadge(colleghi.length,'n_colleghi'||0)}<div class="sl">Colleghi ↗</div></div>
         <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[4]?.click()"><div class="sv">${campi.length}</div>${rankBadge(campi.length,'n_campi'||0)}<div class="sl">Campi ↗</div></div>
         ${(p.n_provv||0)>0?`<div class="sc" style="background:#fff3e0;border-color:#ffe082"><div class="sv" style="color:#e67e22">${p.n_provv}</div><div class="sl">⚠️ Provv.</div></div>`:''}
+        <div class="sc" style="background:${_lvMe.color}22;border-color:${_lvMe.color}"><div class="sv" style="color:${_lvMe.color};font-size:.75rem;font-weight:900">${_lvMe.label}</div><div class="sl">Livello</div></div>
+        <div class="sc" style="background:#2c0066;border-color:#9c27b0" title="Classifica Qualità IQA su tutti gli arbitri"><div class="sv" style="color:#ce93d8">${_qMedal}${_qRankMe}°</div><div class="sv" style="font-size:.6rem;color:#9c27b0">${_qTotMe} arb.</div><div class="sl" style="color:#b39ddb">🏅 Q</div></div>
+        <div class="sc" style="background:#1a0040;border-color:#6a1b9a" title="Classifica Livello+Qualità: tiene conto del campionato massimo arbitrato"><div class="sv" style="color:#e040fb">${_lvqMedal}${_lvqRankMe}°</div><div class="sv" style="font-size:.6rem;color:#6a1b9a">${_lvqTotMe} arb.</div><div class="sl" style="color:#ce93d8">🎖 Lv-Q</div></div>
       </div>
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">🚗 Km & Trasferte</div>
       <div class="scs" style="margin-bottom:14px">
@@ -7447,7 +7483,7 @@ function openPersona(nome,campFilter){
               const ora=g['Ora']||g.ora||'';
               const sq1=g['Squadra Casa']||'';
               const tip=escH(lbl)+(ora?' '+escH(ora):'')+(sq1?' · '+escH(sq1.split(' ').slice(-1)[0]):'');
-              return '<div class="ptl-seg" data-c="'+escH(c)+'" title="'+tip+' ('+d+')" style="display:inline-block;width:'+bw+'px;height:'+h+'px;min-height:6px;background:linear-gradient(to top,'+col+','+col+'cc);border-radius:3px 3px 0 0;vertical-align:bottom;flex-shrink:0;cursor:pointer;transition:filter .1s" onmouseover="this.style.filter=&quot;brightness(1.3)&quot;" onmouseout="this.style.filter=&quot;&quot;"></div>';
+              return '<div class="ptl-seg" data-c="'+escH(c)+'" title="'+tip+' ('+d+')" style="display:inline-block;width:'+bw+'px;height:'+h+'px;min-height:6px;background:linear-gradient(to top,'+col+','+col+'cc);border-radius:3px 3px 0 0;vertical-align:bottom;flex-shrink:0;cursor:pointer;transition:filter .1s" onmouseover="this.style.filter=\\'brightness(1.3)\\'" onmouseout="this.style.filter=\\'\\'"></div>';
             }).join('<div style="display:inline-block;width:1px;flex-shrink:0"></div>');
             const _isFestTL3=FESTIVI_TL.includes(d);
             const _dayBg=_isFestTL3?'background:rgba(233,30,99,0.12);':isWE3?'background:rgba(230,126,34,0.10);':'';
@@ -7669,8 +7705,9 @@ function openPersona(nome,campFilter){
           let h='';
           for(let c=0;c<numWeeks;c++){
             const lbl=monthStartCols[c]||'';
-            const isMStart=!!monthStartCols[c];
-            h+=`<div style="flex:1;min-width:10px;font-size:.65rem;font-weight:${lbl?800:400};color:${lbl?'var(--bl)':'transparent'};white-space:nowrap;overflow:visible;text-align:left;padding-left:${isMStart?4:2}px;${isMStart?'border-left:2.5px solid #1a6bb5;margin-left:-1px;':''}line-height:1.2">${lbl||''}</div>`;
+            const isMStart=!!monthStartCols[c]&&c>0;
+            if(isMStart) h+='<div style="flex:0;width:10px;min-width:10px"></div>';
+            h+=`<div style="flex:1;min-width:10px;font-size:.65rem;font-weight:${lbl?800:400};color:${lbl?'var(--bl)':'transparent'};white-space:nowrap;overflow:visible;text-align:left;padding-left:${isMStart?5:2}px;${isMStart?'border-left:3px solid #1a6bb5;':''}line-height:1.2">${lbl||''}</div>`;
           }
           return h;
         })();
@@ -7690,7 +7727,9 @@ function openPersona(nome,campFilter){
           const dlbl=_DAYS_LBL[ri];
           const showLbl=(ri%2===0);
           const cells=row.map((cell,ci)=>{
-            if(!cell) return`<div style="flex:1;min-width:10px;aspect-ratio:1;background:#f0f2f7;border-radius:3px;opacity:.3;margin:1px"></div>`;
+            const _isMStartCol=!!monthStartCols[ci]&&ci>0;
+            const _spacer=_isMStartCol?'<div style="flex:0;width:10px;min-width:10px"></div>':'';
+            if(!cell) return _spacer+`<div style="flex:1;min-width:10px;aspect-ratio:1;background:#f0f2f7;border-radius:3px;opacity:.3;margin:1px"></div>`;
             const{ds}=cell;
             const cnt=(mesiGiorniMap[ds.slice(0,7)]||{})[ds]||0;
             const dow=new Date(ds+'T12:00').getDay();
@@ -7711,14 +7750,14 @@ function openPersona(nome,campFilter){
             const clr=(cnt>1||isToday)?'#fff':(isWE?'#5d4037':'var(--mu)');
             const border=isFest?'2px solid #e91e63':isToday?'2.5px solid #e0a800':isDom?'1.5px solid var(--gold)':isSab?'1px solid #ffcc80':isMStart?'2px solid #90caf9':'1px solid transparent';
             const festIcon=isFest&&cnt===0?'🎉':'';
-            return`<div data-cal-ds="${ds}" onclick="calDayClick('${ds}',${cnt})"
+            return _spacer+`<div data-cal-ds="${ds}" onclick="calDayClick('${ds}',${cnt})"
               onmouseover="calDayHover('${ds}');this.style.transform='scale(1.15)'"
               onmouseout="this.style.transform=''"
               title="${ds}${isToday?' — OGGI':''}${isFest?' 🎉 Festivo':''}${streak>=5?' 🔥 Streak '+streak+'gg':''}: ${cnt} gar${cnt===1?'a':'e'}"
               style="flex:1;min-width:10px;aspect-ratio:1;background:${bg};border-radius:3px;border:${border};
                 display:flex;align-items:center;justify-content:center;font-size:.55rem;
                 font-weight:800;color:${clr};cursor:${cnt>0||isToday?'pointer':'default'};
-                transition:transform .1s;margin:1px;${isMStart?"margin-left:6px;":""}${streakGlow}${_streakBgAdd}"
+                transition:transform .1s;margin:1px;${streakGlow}${_streakBgAdd}"
             >${festIcon||(cnt>0?cnt:(isToday?'●':''))}</div>`;
           }).join('');
           return`<div style="display:flex;align-items:stretch;width:100%;margin-bottom:2px">
