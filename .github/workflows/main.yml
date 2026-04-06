@@ -5,22 +5,23 @@ on:
     branches: [ main ]
     paths:
       - 'scripts/template.html'
+      - 'cache/data_v5_new.json'
   workflow_dispatch:
     inputs:
       mode:
-        description: 'Modalità scraper'
+        description: 'Modalita scraper'
         required: false
         default: 'normal'
         type: choice
         options:
-          - normal         # aggiornamento giornaliero (default anche per deploy.bat)
-          - full-refresh   # riscarica tutto dall'inizio
-          - all-provv      # riscarica TUTTI i provvedimenti mancanti
-          - reprovv        # provvedimenti ultimi 21gg
-          - national       # solo scraper nazionale
-          - full           # scarica TUTTE le gare Sardegna giorno per giorno (cache separata)
+          - normal
+          - full-refresh
+          - all-provv
+          - reprovv
+          - national
+          - full
   schedule:
-    - cron: '30 2 * * *'   # ogni notte alle 2:30
+    - cron: '30 2 * * *'
 
 permissions:
   contents: write
@@ -28,8 +29,37 @@ permissions:
   id-token: write
 
 jobs:
-  build:
+
+  deploy-template-only:
+    name: Deploy template (solo build)
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Installa dipendenze minime
+        run: pip install --quiet requests
+      - name: Genera dashboard HTML
+        run: python scripts/build.py
+      - name: Deploy su GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          publish_branch: gh-pages
+
+  build-full:
+    name: Build completo (scraper + deploy)
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
     env:
       PYTHONUNBUFFERED: "1"
     steps:
@@ -37,12 +67,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Cache dipendenze Python
         uses: actions/cache@v4
         with:
@@ -50,44 +78,34 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-
       - name: Installa dipendenze
         run: pip install -r requirements.txt
-
       - name: Scarica dati FIP (normale)
         if: >
-          github.event_name == 'push' ||
           github.event_name == 'schedule' ||
           (github.event_name == 'workflow_dispatch' && inputs.mode == 'normal')
         run: python scripts/fip_scraper.py --refresh-days 7
-
       - name: Scarica dati FIP (full-refresh)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'full-refresh' }}
         run: python scripts/fip_scraper.py --full-refresh
-
       - name: Scarica dati FIP (all-provv)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'all-provv' }}
         run: python scripts/fip_scraper.py --all-provv
-
       - name: Scarica dati FIP (reprovv)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'reprovv' }}
         run: python scripts/fip_scraper.py --reprovv
-
       - name: Scarica dati nazionali
         if: >
           github.event_name == 'schedule' ||
           (github.event_name == 'workflow_dispatch' && inputs.mode == 'national') ||
           (github.event_name == 'workflow_dispatch' && inputs.mode == 'normal')
         run: python scripts/fip_national_scraper.py
-
-      - name: Scarica TUTTE le gare Sardegna (full - cache separata)
+      - name: Scarica TUTTE le gare Sardegna (full)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'full' }}
         run: python scripts/fip_full_scraper.py
-
       - name: Costruisce calendari strutturati
         if: ${{ inputs.mode != 'full' }}
         run: python scripts/fip_calendar_scraper.py
-
       - name: Salva cache su GitHub
         run: |
           git config user.name "FIP Bot"
@@ -98,22 +116,18 @@ jobs:
           git add cache/fip_calendari.json || true
           git diff --staged --quiet || git commit -m "Cache aggiornata $(date '+%Y-%m-%d %H:%M')"
           git push || true
-
       - name: Genera dati JSON
         if: ${{ inputs.mode != 'full' }}
         run: python scripts/gen_data.py
-
       - name: Salva JSON su GitHub
         if: ${{ inputs.mode != 'full' }}
         run: |
           git add cache/data_v5_new.json || true
           git diff --staged --quiet || git commit -m "Dati aggiornati $(date '+%Y-%m-%d %H:%M')"
           git push || true
-
       - name: Genera dashboard HTML
         if: ${{ inputs.mode != 'full' }}
         run: python scripts/build.py
-
       - name: Deploy su GitHub Pages
         if: ${{ inputs.mode != 'full' }}
         uses: peaceiris/actions-gh-pages@v4
