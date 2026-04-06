@@ -1713,7 +1713,7 @@ const CAMPO_GPS={"Palestra Coni, Via Lazio 08100 NUORO ( NU)": {"lat": 40.321, "
 const GARE=D.gare||[],P=D.persons,SQ=D.squads,PV=D.province||{},CS=D.camp_stats||{},H2H=D.h2h||{};
 const CAMPS=D.campionati||[],AG=D.all_groups||{},SG=D.squad_groups||{};
 const CALENDARI=D.calendari||{}; // Calendari strutturati per fase/girone (da fip_calendar_scraper.py)
-const _SQUAD_ALIASES={{
+const _SQUAD_ALIASES={
   'PALL. NUORO LAKERS':'PALL. NUORO','SIRIUS PALL. NUORO':'PALL. NUORO','PALL. NUORO A':'PALL. NUORO',
   'NUOVO BASKET SPURS':'NUOVO BASKET A.S.D.',
   'CMB WILLIAM AUTO':'CMB MARRUBIU',
@@ -1726,7 +1726,7 @@ const _SQUAD_ALIASES={{
   'BASKET 90 SUNS':'A.S.DIL. BASKET 90','BASKET 90 CORAL CLIPPERS':'A.S.DIL. BASKET 90',
   'S.ORSOLA TEAM ANGEDRAS':'S.ORSOLA',
   'TISSITTIRI NUGGETS':'ASD SPORTISSI'
-}};
+};
 const AG_EXT=(()=>{
   const ext=JSON.parse(JSON.stringify(AG));
   Object.entries(_SQUAD_ALIASES).forEach(([alias,can])=>{
