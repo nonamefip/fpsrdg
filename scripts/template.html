@@ -613,7 +613,7 @@ tr.loss-row td{background:#fdecea!important;}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
-<!-- deploy:2026-04-06 16:29:07 -->
+<!-- deploy:2026-04-06 16:31:07 -->
 </head>
 <body>
 
@@ -5037,23 +5037,21 @@ function renderOss(){
   setTimeout(()=>rtblAddFreezeBtns('tbl-oss'),50);
 }
 function livelloArb(p){
-  // Restituisce il livello massimo (0=alto) tra tutti i campionati arbitrati
-  // e la relativa classe CSS
+  // Usa livelloC (identico ai campionati reali) per determinare il livello massimo
   const camps = Object.keys(p.campionati||{});
-  if(!camps.length) return {lv:5, cls:'arb-lv5', label:'—'};
-  const maxLv = Math.min(...camps.map(cn=>{
-    const cn_l = cn.toLowerCase();
-    if(/serie.b.femm|serie.b |b.femm/i.test(cn)||/serie.c/i.test(cn)) return 0;
-    if(/regionale.1|divisione.1|dr1/i.test(cn)) return 1;
-    if(/regionale.2|divisione.2|dr2/i.test(cn)) return 2;
-    if(/under.1[7-9]|u1[7-9]|19.masch|17.masch|17.femm|19.femm/i.test(cn)) return 3;
-    if(/under.1[45]|u1[45]|15.masch|15.femm|14.masch.*ecc/i.test(cn)) return 4;
-    return 5;
-  }));
+  if(!camps.length) return {lv:5, cls:'arb-lv5', label:'—', color:'#78909c'};
+  const maxLvC = Math.max(...camps.map(cn=>livelloC(cn)));
+  let lv;
+  if(maxLvC>=21)      lv=0; // Serie C / B Femm
+  else if(maxLvC>=19) lv=1; // DR1
+  else if(maxLvC>=17) lv=2; // DR2
+  else if(maxLvC>=13) lv=3; // U17+
+  else if(maxLvC>=9)  lv=4; // U15
+  else                lv=5; // U14-
   const clsMap = ['arb-lv0','arb-lv1','arb-lv2','arb-lv3','arb-lv4','arb-lv5'];
   const lblMap = ['Serie','DR1','DR2','U17+','U15','U14-'];
   const colMap = ['#6d1b7b','#e65100','#1565c0','#2e7d32','#f9a825','#78909c'];
-  return {lv:maxLv, cls:clsMap[maxLv]||'arb-lv5', label:lblMap[maxLv]||'U14-', color:colMap[maxLv]||'#78909c'};
+  return {lv, cls:clsMap[lv]||'arb-lv5', label:lblMap[lv]||'U14-', color:colMap[lv]||'#78909c'};
 }
 function livelloC(cn){
   var campOrdL=['Serie B Femminile','Serie C','Divisione regionale 1','Divisione Regionale 1',
@@ -5095,18 +5093,43 @@ function _levenshtein(a,b){
 
 function buildClubGroups(){
   const sqs = Object.values(SQ);
-  // Prima usa il campo gruppo se disponibile (dal dato FIP)
-  const fipGroups = {};
+
+  // Raggruppa: prima per s.gruppo (FIP), poi per somiglianza nome (_simKey + levenshtein)
+  // union-find semplice
+  const parent = {};
+  sqs.forEach(s=>{ parent[s.nome]=s.nome; });
+  function find(x){ return parent[x]===x?x:(parent[x]=find(parent[x])); }
+  function union(a,b){ parent[find(a)]=find(b); }
+
+  // 1) Raggruppa per campo gruppo FIP
+  sqs.forEach(s=>{ if(s.gruppo && s.gruppo!==s.nome && parent[s.gruppo]!==undefined) union(s.nome, s.gruppo); });
+
+  // 2) Raggruppa per somiglianza nome (_simKey): stessa chiave normalizzata → stesso club
+  const bySimKey = {};
   sqs.forEach(s=>{
-    const g = s.gruppo || s.nome;
-    if(!fipGroups[g]) fipGroups[g]=[];
-    fipGroups[g].push(s.nome);
+    const k = _simKey(s.nome);
+    if(!k) return;
+    if(!bySimKey[k]) bySimKey[k]=s.nome;
+    else union(s.nome, bySimKey[k]);
   });
 
-  // Poi raggruppa per somiglianza nome e stessa palestra/città
-  const clubs = {}; // chiave=nome principale → {sqs:[], palestra, prov}
+  // 3) Ulteriore pass: levenshtein sui simKey (distanza <=2, chiave >=4 char) → stesso club
+  const simEntries = Object.entries(bySimKey);
+  for(let i=0;i<simEntries.length;i++){
+    const [ki,ri]=simEntries[i];
+    if(ki.length<4) continue;
+    for(let j=i+1;j<simEntries.length;j++){
+      const [kj,rj]=simEntries[j];
+      if(kj.length<4) continue;
+      const maxL=Math.max(ki.length,kj.length);
+      if(_levenshtein(ki,kj)<=Math.max(1,Math.floor(maxL*0.2))) union(ri,rj);
+    }
+  }
+
+  // Costruisci clubs dalle radici
+  const clubs = {};
   sqs.forEach(s=>{
-    const key = s.gruppo || s.nome;
+    const key = find(s.nome);
     if(!clubs[key]){
       clubs[key]={
         names:new Set(),
