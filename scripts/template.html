@@ -2471,7 +2471,7 @@ function renderPersonsTable(cid,persons,opts={}){
   const _topCols=isArb?1:0;
   const _GH_ST='text-align:center;font-size:.62rem;font-weight:700;padding:5px 6px;letter-spacing:.4px;border-bottom:2px solid rgba(255,255,255,.2)';
   const _trsGH=isArb?(('<th colspan="'+_trsCols+'" style="'+_GH_ST+';background:#0d47a1;color:#fff">TRASFERTE</th>')):'';
-  const _rimbGH=isArb?('<th class="th-att" style="'+_GH_ST+';background:#d35400;color:#fff">PROVV.</th><th style="'+_GH_ST+';background:#922b21;color:#fff">NAZ.</th><th style="'+_GH_ST+';background:#0a5c36;color:#7effc0">COV.</th><th colspan="4" style="'+_GH_ST+';background:#2e7d32;color:#fff">RIMBORSI STIMATI €</th>'):'';
+  const _rimbGH=isArb?('<th style="'+_GH_ST+';background:#0a5c36;color:#7effc0">COV.</th><th colspan="4" style="'+_GH_ST+';background:#2e7d32;color:#fff">RIMBORSI STIMATI €</th>'):'';
   const groupHeaderHtml=isArb?`<tr style="pointer-events:none;border-bottom:2px solid rgba(255,255,255,.15)">
     <th colspan="2" style="background:var(--tbl-hdr);border:none;padding:0"></th>
     <th colspan="${isArb?4:3}" class="th-ana" style="${_GH_ST}">ANAGRAFICA</th>
@@ -2479,9 +2479,10 @@ function renderPersonsTable(cid,persons,opts={}){
     <th colspan="${isArb?3:2}" class="th-fare" style="${_GH_ST}">DA COMPLETARE</th>
     <th colspan="${_campCols}" class="th-camp" style="${_GH_ST}">CAMPIONATI</th>
     <th colspan="${_sqCols}" class="th-sq" style="${_GH_ST}">SQUADRE</th>
-    <th colspan="${_kmCols}" class="th-km" style="${_GH_ST}">PERCORRENZA</th>
+    <th colspan="${isArb?3:1}" class="th-km" style="${_GH_ST}">PERCORRENZA</th>
+    <th style="${_GH_ST};background:#d35400;color:#fff">PROVV.</th>
     ${_trsGH}
-    <th style="background:var(--tbl-hdr);border:none;padding:0" colspan="${_topCols}"></th>
+    <th style="background:var(--tbl-hdr);border:none;padding:0"></th>
     ${_rimbGH}
   </tr>`:'';
 
@@ -2814,6 +2815,9 @@ const SP_ARB_COLS=[
   {key:'n_gare_osservatore',lbl:'Oss.'},{key:'_nG',lbl:'Giorni'},{key:'_camp',lbl:'Camp.'},
   {key:'_sing',lbl:'Sing.'},{key:'_dopp',lbl:'Dopp.'},{key:'_campi',lbl:'Campi'},
   {key:'_coll',lbl:'Colleghi'},{key:'_km',lbl:'Km'},{key:'_kmg',lbl:'Km/g'},
+  {key:'_trsS',lbl:'In sede'},{key:'_trsC',lbl:'≤100km'},{key:'_trsL',lbl:'>100km'},
+  {key:'_iqa',lbl:'⭐ IQA'},{key:'_cop',lbl:'% Cop.'},{key:'_provv',lbl:'⚠️ Provv.'},
+  {key:'_gettone',lbl:'Gettone'},{key:'_benzina',lbl:'Benzina'},{key:'_rimbtot',lbl:'Totale €'},
 ];
 
 function _spVal(p,key){
@@ -2825,6 +2829,15 @@ function _spVal(p,key){
   if(key==='_coll')return Object.keys(p.colleghi||{}).length;
   if(key==='_km')return calcKmArb(p);
   if(key==='_kmg'){const km=calcKmArb(p);const g=p.n_gare_arbitro||p.n_gare||0;return g>0?Math.round(km/g):0;}
+  if(key==='_trsS'){const t=calcTrasferte(p);return t.inSede||0;}
+  if(key==='_trsC'){const t=calcTrasferte(p);return t.corta||0;}
+  if(key==='_trsL'){const t=calcTrasferte(p);return t.lunga||0;}
+  if(key==='_iqa')return p.iqa||0;
+  if(key==='_cop'){const tot=p.n_gare_arbitro||0;if(!tot)return 0;const allA=Object.values(P).filter(x=>x.categoria==='Arbitro');const totAll=allA.reduce((s,x)=>s+(x.n_gare_arbitro||0)+(x.n_gare_udc||0)*(0.5),0)||1;return Math.round((((p.n_singolo||0)*1+((p.n_gare_arbitro||0)-(p.n_singolo||0))*0.5)/totAll)*100*10)/10;}
+  if(key==='_provv'){return(p.n_provv||0);}
+  if(key==='_gettone'){const r=calcRimborsiArb(p);return Math.round(r.gettone||0);}
+  if(key==='_benzina'){const r=calcRimborsiArb(p);return Math.round(r.benzina||0);}
+  if(key==='_rimbtot'){const r=calcRimborsiArb(p);return Math.round(r.totale||0);}
   return p[key]||0;
 }
 
@@ -7269,7 +7282,7 @@ function openPersona(nome,campFilter){
         // ── VERSIONE B: Strip mensile migliorata — celle che riempiono tutta la larghezza ──
         const calB=(()=>{
           const todayDs=(typeof D!=='undefined'&&D.generated)?D.generated.slice(0,10):new Date().toISOString().split('T')[0];
-          const dayH=42; // celle più alte per leggibilità (screen 8)
+          const dayH=52; // celle grandi che riempiono tutta la pagina
           // Header numeri 1-31 — flex puro senza larghezza fissa
           const hdr='<div style="display:flex;gap:0;margin-bottom:3px;padding-left:52px;width:100%">'
             +Array.from({length:31},(_,i)=>`<div style="flex:1;font-size:.65rem;font-weight:700;color:var(--bl);text-align:center;min-width:0">${i+1}</div>`).join('')
@@ -7357,8 +7370,8 @@ function openPersona(nome,campFilter){
           <div style="font-size:.8rem;font-weight:700;color:var(--bl);margin-bottom:6px">📅 Calendario presenze</div>
           <!-- Tab switcher: solo A e B -->
           <div style="display:flex;gap:4px;margin-bottom:8px">
-            <button id="${uid}_btnA" onclick="calSwitch('${uid}','A')" style="font-size:.65rem;padding:2px 10px;border:1px solid var(--bl);border-radius:4px;background:var(--bl);color:#fff;cursor:pointer;font-weight:500">A — Heatmap</button>
-            <button id="${uid}_btnB" onclick="calSwitch('${uid}','B')" style="font-size:.65rem;padding:2px 10px;border:1px solid var(--br);border-radius:4px;background:var(--bg);color:var(--bl);cursor:pointer">B — Strip</button>
+            <button id="${uid}_btnA" onclick="calSwitch('${uid}','A')" style="font-size:.65rem;padding:2px 10px;border:1px solid var(--br);border-radius:4px;background:var(--bg);color:var(--bl);cursor:pointer">A — Heatmap</button>
+            <button id="${uid}_btnB" onclick="calSwitch('${uid}','B')" style="font-size:.65rem;padding:2px 10px;border:1px solid var(--bl);border-radius:4px;background:var(--bl);color:#fff;cursor:pointer;font-weight:500">B — Strip</button>
           </div>
           <!-- Legenda -->
           <div id="${uid}_leg" style="font-size:.6rem;color:var(--mu);margin-bottom:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -7372,8 +7385,8 @@ function openPersona(nome,campFilter){
           </div>
           <div style="font-size:.58rem;color:var(--mu);margin-top:3px">💡 Clicca un giorno per aprirlo · Clicca due giorni diversi per aprire un range di date</div>
           <!-- Pannelli -->
-          <div id="${uid}_A" style="width:100%;overflow-x:auto"><div style="display:flex;flex-wrap:wrap;gap:8px">${calA}</div></div>
-          <div id="${uid}_B" style="display:none;width:100%;box-sizing:border-box">${calB}</div>
+          <div id="${uid}_A" style="display:none;width:100%;overflow-x:auto"><div style="display:flex;flex-wrap:wrap;gap:8px">${calA}</div></div>
+          <div id="${uid}_B" style="width:100%;box-sizing:border-box">${calB}</div>
         </div>`;
       })()}
 
@@ -15259,4 +15272,4 @@ function renderNazArbExt(){
 })();
 </script>
 </body></html>
-<!-- deploy:2026-04-06 17:46:03.481730 -->
+<!-- deploy:2026-04-06 18:04:39.771300 -->
