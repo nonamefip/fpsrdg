@@ -926,6 +926,73 @@ for g in gare_in_sardegna:
 nazionale['arbitri_non_sardi_in_rsa'] = sorted(arb_non_sardi.values(), key=lambda x:-x['n_gare'])
 print(f"Arbitri non sardi in Sardegna: {len(nazionale['arbitri_non_sardi_in_rsa'])}")
 
+
+# ── CALCOLO KM STRADALI VIA OSRM ─────────────────────────────────────────────
+# Calcola km stradali da ogni capoluogo di provincia a ogni campo nel CAMPO_GPS
+# Usa OSRM (OpenStreetMap routing, gratuito). Fallback: Haversine x1.4
+import urllib.request as _ur, math as _math, time as _time
+
+def _haversine(lat1,lng1,lat2,lng2):
+    R=6371; dL=(lat2-lat1)*_math.pi/180; dl=(lng2-lng1)*_math.pi/180
+    a=_math.sin(dL/2)**2+_math.cos(lat1*_math.pi/180)*_math.cos(lat2*_math.pi/180)*_math.sin(dl/2)**2
+    return round(2*R*_math.asin(_math.sqrt(a)))
+
+def _osrm_km(lat1,lng1,lat2,lng2):
+    url=f"https://router.project-osrm.org/route/v1/driving/{lng1},{lat1};{lng2},{lat2}?overview=false"
+    try:
+        req=_ur.Request(url,headers={"User-Agent":"fpsrdg-deploy/2.0"})
+        with _ur.urlopen(req,timeout=8) as r:
+            data=json.loads(r.read())
+        if data.get("code")=="Ok":
+            return round(data["routes"][0]["distance"]/1000)
+    except:
+        pass
+    return None
+
+# Coordinate capoluoghi di provincia
+_PROV_COORD = {
+    "SS":(40.7259,8.5556),"CA":(39.2238,9.1217),"NU":(40.3223,9.3311),
+    "OR":(39.9036,8.5915),"SU":(39.3110,9.0150),"OT":(40.9164,9.5379),
+}
+
+# Leggi CAMPO_GPS dal template HTML
+import re as _re
+_template_path = "scripts/template.html"
+_campo_gps_raw = {}
+try:
+    with open(_template_path, encoding="utf-8") as _tf:
+        _tm = _re.search(r"const CAMPO_GPS=(\{.*?\});", _tf.read(), _re.DOTALL)
+    if _tm:
+        _campo_gps_raw = json.loads(_tm.group(1))
+        print(f"CAMPO_GPS caricato dal template: {len(_campo_gps_raw)} campi")
+except Exception as _e:
+    print(f"Attenzione: impossibile leggere CAMPO_GPS dal template: {_e}")
+
+# Estrai lista campi unici dalle gare con coordinate GPS
+_campi_unici = {}
+for g in RAW:
+    campo = g.get("Campo","").strip()
+    if campo and campo not in _campi_unici and campo in _campo_gps_raw:
+        _campi_unici[campo] = (_campo_gps_raw[campo]["lat"], _campo_gps_raw[campo]["lng"])
+
+print(f"Calcolo km OSRM per {len(_campi_unici)} campi x {len(_PROV_COORD)} province...")
+_campo_km = {}
+_osrm_ok = 0; _osrm_fb = 0
+for _nome, (_clat,_clng) in _campi_unici.items():
+    _entry = {}
+    for _pv,(_plat,_plng) in _PROV_COORD.items():
+        _km = _osrm_km(_plat,_plng,_clat,_clng)
+        if _km is not None:
+            _entry[_pv] = _km; _osrm_ok+=1
+        else:
+            _entry[_pv] = round(_haversine(_plat,_plng,_clat,_clng)*1.4); _osrm_fb+=1
+        _time.sleep(0.2)
+    _campo_km[_nome] = _entry
+
+print(f"  OSRM: {_osrm_ok} ok, {_osrm_fb} fallback Haversine×1.4")
+D["campo_km"] = _campo_km
+# ── FINE CALCOLO KM OSRM ────────────────────────────────────────────────────
+
 D['nazionale'] = nazionale
 
 with open('cache/data_v5_new.json','w',encoding='utf-8') as f:

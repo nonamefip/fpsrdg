@@ -1780,19 +1780,20 @@ function genderDot(nome){
 // ── GETTONE PER CAMPIONATO ────────────────────────────────────────────────
 function gettonePerCamp(campionato, isSingolo){
   const c=(campionato||'').toLowerCase();
-  // Serie C / Serie B Fem → 50€, mai singolo
   if(/serie c/i.test(c)||/serie b/i.test(c)) return 50;
-  // DR1 → 30€, mai singolo
-  if(/divisione regionale 1|div.*reg.*1/i.test(c)) return 30;
-  // Eccellenza → 25€ base, +5 singolo
-  if(/eccellenza/i.test(c)) return isSingolo ? 30 : 25;
-  // DR2 → 20€ base, +5 singolo
-  if(/divisione regionale 2|div.*reg.*2/i.test(c)) return isSingolo ? 25 : 20;
-  // U19 / U17 / U15 → 20€ base, +5 singolo
-  if(/under 19|under 17|under 15|u19|u17|u15/i.test(c)) return isSingolo ? 25 : 20;
-  // U14 / U13 → 18€, nessun bonus singolo
+  if(/divisione regionale 1|div.*reg.*1/i.test(c)) return 30;
+  if(/eccellenza/i.test(c)) return 25;
+  if(/divisione regionale 2|div.*reg.*2/i.test(c)) return isSingolo ? 25 : 20;
+  if(/under 17.*gold|u17.*gold/i.test(c)) return isSingolo ? 25 : 20;
+  if(/under 19.*gold|u19.*gold/i.test(c)) return isSingolo ? 25 : 20;
+  if(/under 17.*fem|u17.*fem/i.test(c)) return 25;
+  if(/under 17|u17/i.test(c)) return 25;
+  if(/under 15.*ecc|u15.*ecc/i.test(c)) return 25;
+  if(/under 15.*fem|u15.*fem/i.test(c)) return 20;
+  if(/under 15|u15/i.test(c)) return 25;
+  if(/under 19.*fem|u19.*fem/i.test(c)) return isSingolo ? 25 : 21;
+  if(/under 19|u19/i.test(c)) return isSingolo ? 25 : 20;
   if(/under 14|under 13|u14|u13/i.test(c)) return 18;
-  // Default → 20€
   return isSingolo ? 25 : 20;
 }
 
@@ -1815,9 +1816,7 @@ function calcRimborsiArb(p){
   const TRAGHETTO_CITTA=['LA MADDALENA','CARLOFORTE'];
   const TRAGHETTO_MEDIO=7.90; // €, costo medio stimato stagione 2025-26
   const BUONO_SPESA=15.00;    // € fisso per Maddalena/Carloforte
-  const BENZINA_KM=0.24;      // €/km
-  const EXTRA_KM=10.00;       // € se tratta >100 km
-  const EXTRA_SOGLIA=100;     // km
+  const BENZINA_KM=0.25;      // €/km
 
   // Raggruppa gare per giorno, in ordine di ora
   const byDay={};
@@ -1864,10 +1863,21 @@ function calcRimborsiArb(p){
     coordCampi.forEach(c=>{if(c)coords.push(c);});
     coords.push(home);
 
-    // Km totali giorno (A/R completo)
+    // Km totali giorno (A/R completo) — usa campo_km OSRM se disponibile, fallback Haversine
+    const _campKm=D.campo_km||{};
+    const _pvHome=p.provincia||'SS';
     let kmGiorno=0;
-    for(let i=0;i<coords.length-1;i++){
-      if(coords[i]&&coords[i+1]) kmGiorno+=haversineKm(coords[i][0],coords[i][1],coords[i+1][0],coords[i+1][1]);
+    if(campiOrdinati.length===1){
+      // Gara singola: usa lookup diretto se disponibile
+      const _ck=_campKm[campiOrdinati[0]];
+      if(_ck&&_ck[_pvHome]) kmGiorno=_ck[_pvHome]*2;
+      else for(let i=0;i<coords.length-1;i++){
+        if(coords[i]&&coords[i+1]) kmGiorno+=haversineKm(coords[i][0],coords[i][1],coords[i+1][0],coords[i+1][1]);
+      }
+    } else {
+      for(let i=0;i<coords.length-1;i++){
+        if(coords[i]&&coords[i+1]) kmGiorno+=haversineKm(coords[i][0],coords[i][1],coords[i+1][0],coords[i+1][1]);
+      }
     }
 
     // Attribuisci km e rimborsi a ciascuna gara del giorno
@@ -1913,9 +1923,10 @@ function calcRimborsiArb(p){
         totBenzina+=Math.round(kmGara*BENZINA_KM*100)/100;
       }
 
-      // Accessorie: extra km >100 (entrambi gli arbitri), traghetto+buono (solo 1° arb)
+      // Accessorie: extra km se fuori sede (DR2=12€, altri=10€), traghetto+buono (solo 1° arb)
+      const EXTRA_KM_GARA=/divisione regionale 2|div.*reg.*2/i.test(g['Campionato']||g.c||'')?12:10;
       let acc=0;
-      if(!inCitta&&kmGara>EXTRA_SOGLIA) acc+=EXTRA_KM;
+      if(!inCitta&&kmGara>0) acc+=EXTRA_KM_GARA;
       if(isArb1&&TRAGHETTO_CITTA.includes(city)){
         acc+=TRAGHETTO_MEDIO+BUONO_SPESA;
       } else if(!isArb1&&TRAGHETTO_CITTA.includes(city)){
@@ -2586,7 +2597,7 @@ function renderPersonsTable(cid,persons,opts={}){
       })():''}
       ${isArb?`
       <td data-val="${rGettone}" style="text-align:right;font-size:.78rem;font-weight:700;color:#2e7d32;background:#f1f8e9;padding:4px 6px" title="Gettone stimato (base + bonus singolo)">€ ${rGettone}</td>
-      <td data-val="${rBenzina}" style="text-align:right;font-size:.78rem;color:#1b5e20;background:#f1f8e9;padding:4px 6px" title="Rimborso benzina 0,24€/km (solo 1° arbitro)">${rBenzina>0?'€ '+rBenzina.toFixed(2):'—'}</td>
+      <td data-val="${rBenzina}" style="text-align:right;font-size:.78rem;color:#1b5e20;background:#f1f8e9;padding:4px 6px" title="Rimborso benzina 0,25€/km (solo 1° arbitro)">${rBenzina>0?'€ '+rBenzina.toFixed(2):'—'}</td>
       <td data-val="${rAccessorie}" style="text-align:right;font-size:.78rem;color:#33691e;background:#f1f8e9;padding:4px 6px" title="Extra km >100 + traghetto + buono spesa">${rAccessorie>0?'€ '+rAccessorie.toFixed(2):'—'}</td>
       <td data-val="${rTotale}" style="text-align:right;font-size:.82rem;font-weight:800;color:#fff;background:#2e7d32;padding:4px 8px;border-left:2px solid #1b5e20" title="Totale rimborso stimato">€ ${rTotale.toFixed(2)}</td>
       `:''}    </tr>`;
@@ -2661,7 +2672,7 @@ function renderPersonsTable(cid,persons,opts={}){
     <th onclick="sT('${tableId}',${20+co+ae},event)" title="Gare con provvedimenti · Shift+click per multiplo" style="cursor:pointer;background:#fff3e0;color:#e67e22">⚠️ Provv.</th>`:''}
     ${isArb?`<th onclick="sT('${tableId}',${21+co+ae},true,event)" title="Indice Qualità Arbitrale: somma pesi gare (campionato × fase). Più alto = gare più importanti arbitrate." style="cursor:pointer;background:#1a3a6b;color:#ffd54f;font-weight:700;white-space:nowrap;border-left:2px solid rgba(255,255,255,.2)">⭐ IQA</th>`:''}
     ${isArb?`<th onclick="sT('${tableId}',${22+co+ae},true,event)" title="% copertura gare comitato: singolo conta 1, in coppia conta 0.5" style="cursor:pointer;background:#0a5c36;color:#7effc0;font-weight:700;white-space:nowrap;border-left:2px solid rgba(255,255,255,.2)">% Cop.</th>`:''}
-    ${isArb?`<th onclick="sT('${tableId}',${23+co+ae},event)" title="Gettone stimato (base + bonus singolo)" style="cursor:pointer;background:#e8f5e9;color:#2e7d32;font-weight:700;border-left:2px solid #a5d6a7">Gettone</th><th onclick="sT('${tableId}',${24+co+ae},event)" title="Rimborso benzina 0,24€/km (solo 1° arbitro)" style="cursor:pointer;background:#e8f5e9;color:#2e7d32">Benzina</th><th onclick="sT('${tableId}',${25+co+ae},event)" title="Extra km + traghetto + buono spesa" style="cursor:pointer;background:#e8f5e9;color:#2e7d32">Accessorie</th><th onclick="sT('${tableId}',${26+co+ae},event)" title="Totale rimborso stimato" style="cursor:pointer;background:#2e7d32;color:#fff;font-weight:700;border-left:2px solid #1b5e20">Totale €</th>`:''}  </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>
+    ${isArb?`<th onclick="sT('${tableId}',${23+co+ae},event)" title="Gettone stimato (base + bonus singolo)" style="cursor:pointer;background:#e8f5e9;color:#2e7d32;font-weight:700;border-left:2px solid #a5d6a7">Gettone</th><th onclick="sT('${tableId}',${24+co+ae},event)" title="Rimborso benzina 0,25€/km (solo 1° arbitro)" style="cursor:pointer;background:#e8f5e9;color:#2e7d32">Benzina</th><th onclick="sT('${tableId}',${25+co+ae},event)" title="Extra km + traghetto + buono spesa" style="cursor:pointer;background:#e8f5e9;color:#2e7d32">Accessorie</th><th onclick="sT('${tableId}',${26+co+ae},event)" title="Totale rimborso stimato" style="cursor:pointer;background:#2e7d32;color:#fff;font-weight:700;border-left:2px solid #1b5e20">Totale €</th>`:''}  </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>
   <div style="font-size:.62rem;color:var(--mu);padding:4px 0;margin-top:2px">💡 <b>Shift+click</b> su un'intestazione per aggiungere un secondo livello di ordinamento</div>`;
 }
 function toggleSection(wrId,togId){
@@ -6438,7 +6449,7 @@ function openPersona(nome,campFilter){
             <div style="font-size:.7rem;color:#a5d6a7;margin-top:2px">Totale stimato</div>
           </div>
         </div>
-        <div style="font-size:.63rem;color:#888;margin-top:6px">* Stima basata su gettoni, benzina 0,24€/km (solo 1° arb), extra >100km, traghetto/buono Maddalena-Carloforte</div>
+        <div style="font-size:.63rem;color:#888;margin-top:6px">* Stima basata su gettoni, benzina 0,25€/km (solo 1° arb), extra >100km, traghetto/buono Maddalena-Carloforte</div>
       </div>`:''}
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
         ${streakCur>=2||streakMax>=3?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
