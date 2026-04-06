@@ -15671,8 +15671,8 @@ function renderNazSqNaz(){
           const diffA=(a.pf||0)-(a.ps||0); const diffB=(b.pf||0)-(b.ps||0);
           return diffB-diffA;
         });
-        return \`<div style="background:#f8faff;border:1px solid #dde8f5;border-radius:8px;padding:10px 14px;min-width:260px;flex:1">
-          <div style="font-size:.72rem;font-weight:800;color:#1a3a6b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">\${escH(campShort)}</div>
+        return `<div style="background:#f8faff;border:1px solid #dde8f5;border-radius:8px;padding:10px 14px;min-width:260px;flex:1">
+          <div style="font-size:.72rem;font-weight:800;color:#1a3a6b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">${escH(campShort)}</div>
           <table style="width:100%;border-collapse:collapse;font-size:.72rem">
             <thead><tr style="color:var(--mu);font-size:.65rem">
               <th style="text-align:left;padding:2px 4px">#</th>
@@ -15683,25 +15683,25 @@ function renderNazSqNaz(){
               <th style="text-align:center;padding:2px 4px">Pt</th>
               <th style="text-align:center;padding:2px 4px">+/-</th>
             </tr></thead><tbody>
-            \${sorted.map((sq,i)=>{
+            ${sorted.map((sq,i)=>{
               const tot=sq.gare.filter(g=>g.c===camp).length||sq.gare.length;
               const v=sq.gare.filter(g=>g.c===camp&&g.r).reduce((acc,g)=>{const pts=g.r.split('-').map(x=>parseInt(x)||0);if(pts.length!==2)return acc;const [pc,po]=g.ruolo==='casa'?pts:[pts[1],pts[0]];return acc+(pc>po?1:0);},0)||sq.v;
               const p=sq.gare.filter(g=>g.c===camp&&g.r).reduce((acc,g)=>{const pts=g.r.split('-').map(x=>parseInt(x)||0);if(pts.length!==2)return acc;const [pc,po]=g.ruolo==='casa'?pts:[pts[1],pts[0]];return acc+(po>pc?1:0);},0)||sq.p;
               const pt=v*2+((sq.n||0));
               const diff=(sq.pf||0)-(sq.ps||0);
-              return \`<tr style="border-bottom:1px solid #eee;\${i===0?'background:#f0f7e6':''}">
-                <td style="padding:3px 4px;font-weight:\${i===0?800:400};color:\${i===0?'var(--green)':'var(--mu2)'}">\${i+1}</td>
-                <td style="padding:3px 4px;font-weight:700;cursor:pointer;color:var(--bl2)" onclick="openSquadra('\${esc(sq.nome)}')">\${escH(sq.nome.length>22?sq.nome.slice(0,22)+'…':sq.nome)}</td>
-                <td style="text-align:center;padding:3px 4px">\${tot}</td>
-                <td style="text-align:center;padding:3px 4px;font-weight:700;color:var(--green)">\${v}</td>
-                <td style="text-align:center;padding:3px 4px;color:var(--red)">\${p}</td>
-                <td style="text-align:center;padding:3px 4px;font-weight:800;color:\${pt>0?'var(--bl)':'var(--mu2)'}">\${pt}</td>
-                <td style="text-align:center;padding:3px 4px;font-size:.65rem;color:\${diff>0?'var(--green)':diff<0?'var(--red)':'var(--mu2)'}">\${diff>0?'+':''}\${diff}</td>
-              </tr>\`;
+              return `<tr style="border-bottom:1px solid #eee;${i===0?'background:#f0f7e6':''}">
+                <td style="padding:3px 4px;font-weight:${i===0?800:400};color:${i===0?'var(--green)':'var(--mu2)'}">${i+1}</td>
+                <td style="padding:3px 4px;font-weight:700;cursor:pointer;color:var(--bl2)" onclick="openSquadra('${esc(sq.nome)}')">${escH(sq.nome.length>22?sq.nome.slice(0,22)+'…':sq.nome)}</td>
+                <td style="text-align:center;padding:3px 4px">${tot}</td>
+                <td style="text-align:center;padding:3px 4px;font-weight:700;color:var(--green)">${v}</td>
+                <td style="text-align:center;padding:3px 4px;color:var(--red)">${p}</td>
+                <td style="text-align:center;padding:3px 4px;font-weight:800;color:${pt>0?'var(--bl)':'var(--mu2)'}">${pt}</td>
+                <td style="text-align:center;padding:3px 4px;font-size:.65rem;color:${diff>0?'var(--green)':diff<0?'var(--red)':'var(--mu2)'}">${diff>0?'+':''}${diff}</td>
+              </tr>`;
             }).join('')}
             </tbody>
           </table>
-        </div>\`;
+        </div>`;
       }).join('')}
       </div>
     </div>`;
@@ -15723,19 +15723,19 @@ function renderNazSqNaz(){
       const rowId='naz-sqnaz-'+i;
       window._nazGareCache[rowId]=sq.gare;
       const camps=[...new Set(sq.gare.map(g=>g.c||''))].map(c=>c.replace('COMITATO REGIONALE ','').replace('COMITATO NAZIONALE ','')).filter(Boolean).join(', ');
-      return \`<tr>
-        <td style="text-align:center">\${i+1}</td>
-        <td style="font-weight:700;cursor:pointer;color:var(--bl2)" onclick="openSquadra('\${esc(sq.nome)}')">\${escH(sq.nome)}</td>
-        <td style="text-align:center;font-weight:800;color:var(--bl);font-size:1.05rem">\${tot}</td>
-        <td style="text-align:center;font-weight:700;color:var(--green)">\${sq.v||0}</td>
-        <td style="text-align:center;color:var(--red)">\${sq.p||0}</td>
-        <td style="text-align:center;font-weight:800;color:var(--bl)">\${pt}</td>
-        <td style="text-align:center;font-size:.72rem;color:\${diff>0?'var(--green)':diff<0?'var(--red)':'var(--mu2)'}">\${diff>0?'+':''}\${diff}</td>
-        <td style="text-align:center;font-weight:700;color:\${wp>=50?'var(--green)':'var(--red)'}">\${wp}%</td>
-        <td style="font-size:.68rem;color:#555">\${escH(camps)}</td>
-        <td style="text-align:center"><button style="font-size:.7rem;padding:2px 8px;background:var(--bl);color:#fff;border:none;border-radius:4px;cursor:pointer" onclick="toggleNazDetail('\${rowId}')">▼ Gare</button></td>
+      return `<tr>
+        <td style="text-align:center">${i+1}</td>
+        <td style="font-weight:700;cursor:pointer;color:var(--bl2)" onclick="openSquadra('${esc(sq.nome)}')">${escH(sq.nome)}</td>
+        <td style="text-align:center;font-weight:800;color:var(--bl);font-size:1.05rem">${tot}</td>
+        <td style="text-align:center;font-weight:700;color:var(--green)">${sq.v||0}</td>
+        <td style="text-align:center;color:var(--red)">${sq.p||0}</td>
+        <td style="text-align:center;font-weight:800;color:var(--bl)">${pt}</td>
+        <td style="text-align:center;font-size:.72rem;color:${diff>0?'var(--green)':diff<0?'var(--red)':'var(--mu2)'}">${diff>0?'+':''}${diff}</td>
+        <td style="text-align:center;font-weight:700;color:${wp>=50?'var(--green)':'var(--red)'}">${wp}%</td>
+        <td style="font-size:.68rem;color:#555">${escH(camps)}</td>
+        <td style="text-align:center"><button style="font-size:.7rem;padding:2px 8px;background:var(--bl);color:#fff;border:none;border-radius:4px;cursor:pointer" onclick="toggleNazDetail('${rowId}')">▼ Gare</button></td>
       </tr>
-      <tr id="\${rowId}-detail" style="display:none;background:#fafafa"><td colspan="10" style="padding:8px 14px"></td></tr>\`;
+      <tr id="${rowId}-detail" style="display:none;background:#fafafa"><td colspan="10" style="padding:8px 14px"></td></tr>`;
     }).join('')}
     </tbody></table></div>`;
   el.innerHTML=html;
