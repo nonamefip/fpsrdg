@@ -1117,11 +1117,11 @@ tr.loss-row td{background:#fdecea!important;}
   <div style="margin-bottom:16px">
     <div style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;background:var(--bl);color:#fff;border-radius:8px;user-select:none"
       onclick="const b=document.getElementById('arb-serie-body');const a=this.querySelector('.serie-arr');const open=b.style.display!=='none';b.style.display=open?'none':'block';a.textContent=open?'▶':'▼';if(!open)renderArbPerSerie()">
-      <span class="serie-arr">▼</span>
+      <span class="serie-arr">▶</span>
       <span style="font-weight:700;font-size:.88rem">🏅 Classifica Arbitri per Serie</span>
       <span style="font-size:.65rem;opacity:.6;margin-left:4px">— chi arbitra le categorie più alte · ordine per IQA</span>
     </div>
-    <div id="arb-serie-body" style="margin-top:8px;display:block"></div>
+    <div id="arb-serie-body" style="margin-top:8px;display:none"></div>
   </div>
 
   <div class="fb">
@@ -2055,6 +2055,78 @@ function calcTrasferte(p){
   return{inSede,corta,lunga,tot:inSede+corta+lunga};
 }
 
+function openTrsGareModal(nomePers,tipo){
+  const p=P[nomePers]||Object.values(P).find(x=>esc(x.nome)===nomePers);
+  if(!p)return;
+  const pvCoord={CA:[39.22,9.12],SS:[40.73,8.56],NU:[40.32,9.33],OR:[39.90,8.59],SU:[39.37,8.78]};
+  const home=pvCoord[p.provincia];
+  if(!home){alert('Coordinate provincia non disponibili');return;}
+  const _cgf=(nome)=>{
+    if(!nome)return null;
+    let g=CAMPO_GPS[nome];if(g)return[g.lat,g.lng];
+    const k2=Object.keys(CAMPO_GPS).find(k=>k.toUpperCase()===nome.toUpperCase());if(k2)return[CAMPO_GPS[k2].lat,CAMPO_GPS[k2].lng];
+    const base=nome.split(',')[0].trim().toUpperCase();
+    const k3=Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===base);if(k3)return[CAMPO_GPS[k3].lat,CAMPO_GPS[k3].lng];
+    return null;
+  };
+  const titoli={sede:'🏠 Gare in sede',corta:'🟢 Gare ≤100km',lunga:'🔴 Gare >100km'};
+  const colori={sede:'#1565c0',corta:'#1b5e20',lunga:'#b71c1c'};
+  const matched=[];
+  (p.gare_arbitro||p.gare||[]).forEach(g=>{
+    const campo=g['Campo']||g.campo||'';
+    const gps=CAMPO_GPS[campo]||CAMPO_GPS[Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===(campo||'').split(',')[0].trim().toUpperCase())||'']||null;
+    const inCitta=gps&&Math.abs(gps.lat-home[0])<0.05&&Math.abs(gps.lng-home[1])<0.05;
+    let kmG=0;
+    if(!inCitta){
+      const gC=_cgf(campo);
+      if(gC)kmG=haversineKm(home[0],home[1],gC[0],gC[1])*2;
+    }
+    const cat=inCitta?'sede':kmG>100?'lunga':'corta';
+    if(cat===tipo)matched.push({g,kmG:inCitta?0:Math.round(kmG)});
+  });
+  matched.sort((a,b)=>(a.g['Data']||'').localeCompare(b.g['Data']||''));
+  const col=colori[tipo]||'#333';
+  const rows=matched.map(({g,kmG})=>{
+    const data=g['Data']||'—';
+    const ora=g['Ora']||'';
+    const campo=g['Campo']||'—';
+    const camp=(g['Campionato']||'').replace('COMITATO REGIONALE SARDEGNA ','');
+    const sq1=g['Squadra 1']||g['squadra1']||'';
+    const sq2=g['Squadra 2']||g['squadra2']||'';
+    return `<tr style="border-bottom:1px solid #eee">
+      <td style="padding:5px 8px;white-space:nowrap;font-size:.72rem">${data}${ora?' '+ora:''}</td>
+      <td style="padding:5px 8px;font-size:.7rem;color:#555">${camp}</td>
+      <td style="padding:5px 8px;font-size:.72rem;font-weight:600">${escH(sq1)} - ${escH(sq2)}</td>
+      <td style="padding:5px 8px;font-size:.7rem;color:#555">${campo}</td>
+      <td style="padding:5px 8px;text-align:right;font-weight:700;color:${col}">${kmG>0?kmG+' km':'—'}</td>
+    </tr>`;
+  }).join('');
+  const mo=document.createElement('div');
+  mo.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999999;display:flex;align-items:center;justify-content:center;padding:16px';
+  mo.innerHTML=`<div style="background:#fff;border-radius:10px;max-width:760px;width:100%;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+    <div style="background:${col};color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+      <b style="font-size:.9rem">${titoli[tipo]} — ${escH(p.nome)} (${matched.length} gare)</b>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:1rem">✕</button>
+    </div>
+    <div style="overflow-y:auto;flex:1">
+      <table style="width:100%;border-collapse:collapse">
+        <thead style="position:sticky;top:0;background:#f5f5f5">
+          <tr>
+            <th style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd">Data</th>
+            <th style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd">Campionato</th>
+            <th style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd">Partita</th>
+            <th style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd">Campo</th>
+            <th style="padding:6px 8px;text-align:right;font-size:.72rem;border-bottom:2px solid #ddd">Km (A/R)</th>
+          </tr>
+        </thead>
+        <tbody>${rows||'<tr><td colspan="5" style="padding:20px;text-align:center;color:#999">Nessuna gara trovata</td></tr>'}</tbody>
+      </table>
+    </div>
+  </div>`;
+  mo.addEventListener('click',e=>{if(e.target===mo)mo.remove();});
+  document.body.appendChild(mo);
+}
+
 function campColor(cn){const cm=CAMP_META[cn]||{};return _CCLR[cm.gruppo]||'#636e72';}
 const CAMP_DATA=D.camp_data||{};
 const PC={CA:'#d63031',SS:'#0984e3',SU:'#6c5ce7',OR:'#00b894',NU:'#e17055'};
@@ -2838,10 +2910,14 @@ function renderPersonsTable(cid,persons,opts={}){
     ${isArb?`<th onclick="sT('${tableId}',${23+co+ae},event)" title="Gettone stimato (base + bonus singolo)" style="cursor:pointer;background:#e8f5e9;color:#2e7d32;font-weight:700;border-left:2px solid #a5d6a7">Gettone</th><th onclick="sT('${tableId}',${24+co+ae},event)" title="Rimborso benzina 0,25€/km (solo 1° arbitro)" style="cursor:pointer;background:#e8f5e9;color:#2e7d32">Benzina</th><th onclick="sT('${tableId}',${25+co+ae},event)" title="Extra km + traghetto + buono spesa" style="cursor:pointer;background:#e8f5e9;color:#2e7d32">Accessorie</th><th onclick="sT('${tableId}',${26+co+ae},event)" title="Totale rimborso stimato" style="cursor:pointer;background:#2e7d32;color:#fff;font-weight:700;border-left:2px solid #1b5e20">Totale €</th>`:''}  </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>
   <div style="font-size:.62rem;color:var(--mu);padding:4px 0;margin-top:2px">💡 <b>Shift+click</b> su un'intestazione per aggiungere un secondo livello di ordinamento</div>`;
 }
-function renderArbPerSerie(){
+function renderArbPerSerie(filterPvSerie){
   const el=document.getElementById('arb-serie-body');
   if(!el)return;
   const allArbs=Object.values(P).filter(p=>p.categoria==='Arbitro'&&(p.n_gare_arbitro||0)>0);
+  // Raccogli tutte le province per il filtro globale
+  const allProvs=[...new Set(allArbs.map(p=>p.provincia||'').filter(Boolean))].sort();
+  const selPv=filterPvSerie||document.getElementById('serie-pv-filter')?.value||'';
+  const filteredArbs=selPv?allArbs.filter(p=>(p.provincia||'')=== selPv):allArbs;
   // Livelli in ordine decrescente di importanza
   const SERIE_LEVELS=[
     {label:'🟣 Serie C / B Femm.',lv:0,color:'#6d1b7b',bg:'#f3e5f5'},
@@ -2855,42 +2931,85 @@ function renderArbPerSerie(){
     {label:'🩵 U14',lv:8,color:'#00838f',bg:'#e0f7fa'},
     {label:'⬛ U13 e inf.',lv:9,color:'#b8860b',bg:'#fafafa'},
   ];
-  let html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-top:4px">';
+  // Helper: calcola gare in una categoria specifica per un arbitro
+  function gareInCat(p,lv){
+    // Trova i campionati che corrispondono al livello lv
+    return Object.entries(p.campionati||{}).filter(([cn])=>{
+      const camps=Object.keys(p.campionati||{});
+      const maschili=camps.filter(c=>!/femmin/i.test(c)&&!/serie b/i.test(c));
+      const useCamps=maschili.length?maschili:camps;
+      function rankCamp(cn){
+        if(/serie c/i.test(cn)) return 0;
+        if(/serie b/i.test(cn)) return 0;
+        if(/divisione reg.*1|regionale 1/i.test(cn)) return 1;
+        if(/divisione reg.*2|regionale 2/i.test(cn)) return 2;
+        if(/under 19|u19/i.test(cn)) return 3;
+        if(/under 17.*eccellenza|u17.*eccellenza/i.test(cn)) return 4;
+        if(/under 17|u17/i.test(cn)) return 5;
+        if(/under 15.*eccellenza|u15.*eccellenza/i.test(cn)) return 6;
+        if(/under 15|u15/i.test(cn)) return 7;
+        if(/under 14|u14/i.test(cn)) return 8;
+        if(/under 13|u13/i.test(cn)) return 9;
+        return 10;
+      }
+      const best=useCamps.reduce((b,c)=>rankCamp(c)<rankCamp(b)?c:b,useCamps[0]);
+      const bestLv=rankCamp(best);
+      return bestLv===lv && rankCamp(cn)===lv;
+    }).reduce((sum,[,n])=>sum+(n||0),0);
+  }
+
+  // Barra filtro province
+  let html=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:6px 10px;background:#f0f4ff;border-radius:6px;border:1px solid #d0d8f0">
+    <span style="font-size:.72rem;font-weight:700;color:var(--bl)">🗺 Filtra provincia:</span>
+    <select id="serie-pv-filter" onchange="renderArbPerSerie()" style="font-size:.72rem;padding:2px 8px;border-radius:4px;border:1px solid #bcc6e0;background:#fff;color:var(--tx)">
+      <option value="">Tutte</option>
+      ${allProvs.map(pv=>`<option value="${pv}"${selPv===pv?' selected':''}>${pv}</option>`).join('')}
+    </select>
+    ${selPv?`<span style="font-size:.68rem;color:var(--mu)">— filtrati su <b>${selPv}</b></span>`:''}
+  </div>`;
+
+  html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;margin-top:4px">';
   SERIE_LEVELS.forEach(lvDef=>{
-    // Arbitri di questo livello esatto
-    const arbsInLv=allArbs.filter(p=>{const al=livelloArb(p);return al.lv===lvDef.lv;});
+    // Tutti gli arbitri di questo livello (per il rank totale)
+    const allInLv=allArbs.filter(p=>{const al=livelloArb(p);return al.lv===lvDef.lv;});
+    const arbsInLv=filteredArbs.filter(p=>{const al=livelloArb(p);return al.lv===lvDef.lv;});
     if(!arbsInLv.length)return;
     // Ordina per IQA desc
     arbsInLv.sort((a,b)=>(b.iqa||0)-(a.iqa||0));
     html+=`<div style="background:${lvDef.bg};border:1px solid ${lvDef.color}40;border-left:4px solid ${lvDef.color};border-radius:8px;overflow:hidden">
       <div style="background:${lvDef.color};color:#fff;padding:6px 12px;font-size:.78rem;font-weight:700;display:flex;justify-content:space-between;align-items:center">
         <span>${lvDef.label}</span>
-        <span style="opacity:.7;font-size:.65rem">${arbsInLv.length} arbitri</span>
+        <span style="opacity:.7;font-size:.65rem">${arbsInLv.length}${selPv?' (filtrati)':''} / ${allInLv.length} arbitri</span>
       </div>
-      <table style="width:100%;border-collapse:collapse;font-size:.72rem" id="sertbl-${lvDef.lv}">
+      <div style="overflow-x:auto">
+      <table style="width:100%;min-width:360px;border-collapse:collapse;font-size:.72rem" id="sertbl-${lvDef.lv}">
         <thead><tr style="border-bottom:1px solid ${lvDef.color}30;background:${lvDef.color}15">
-          <th style="padding:4px 8px;text-align:left;font-weight:600;cursor:pointer" onclick="_sortSerieCard('${lvDef.lv}','rank')"># ↕</th>
-          <th style="padding:4px 8px;text-align:left;font-weight:600;cursor:pointer" onclick="_sortSerieCard('${lvDef.lv}','nome')">Arbitro ↕</th>
-          <th style="padding:4px 8px;text-align:center;font-weight:600;cursor:pointer;color:${lvDef.color}" onclick="_sortSerieCard('${lvDef.lv}','iqa')">⭐ IQA ↕</th>
-          <th style="padding:4px 8px;text-align:center;font-weight:600;cursor:pointer" onclick="_sortSerieCard('${lvDef.lv}','gare')">Gare ↕</th>
-          <th style="padding:4px 8px;text-align:center;font-weight:600;cursor:pointer" onclick="_sortSerieCard('${lvDef.lv}','prov')">Prov. ↕</th>
+          <th style="padding:4px 8px;text-align:left;font-weight:600;cursor:pointer;white-space:nowrap" onclick="_sortSerieCard('${lvDef.lv}','rank')"># ↕</th>
+          <th style="padding:4px 8px;text-align:left;font-weight:600;cursor:pointer;white-space:nowrap" onclick="_sortSerieCard('${lvDef.lv}','nome')">Arbitro ↕</th>
+          <th style="padding:4px 8px;text-align:center;font-weight:600;cursor:pointer;color:${lvDef.color};white-space:nowrap" onclick="_sortSerieCard('${lvDef.lv}','iqa')">⭐ IQA ↕</th>
+          <th style="padding:4px 8px;text-align:center;font-weight:600;cursor:pointer;white-space:nowrap" onclick="_sortSerieCard('${lvDef.lv}','gare')">Gare tot ↕</th>
+          <th style="padding:4px 8px;text-align:center;font-weight:600;cursor:pointer;white-space:nowrap;color:${lvDef.color}" onclick="_sortSerieCard('${lvDef.lv}','garecat')" title="Gare arbitrate in questa specifica categoria">Gare cat. ↕</th>
+          <th style="padding:4px 8px;text-align:center;font-weight:600;cursor:pointer;white-space:nowrap" onclick="_sortSerieCard('${lvDef.lv}','prov')">Prov. ↕</th>
         </tr></thead>
         <tbody id="serbody-${lvDef.lv}">${arbsInLv.map((p,i)=>{
-          const medal=i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':(i+1)+'. ';
+          const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'.';
           const pvClr=PC[p.provincia]||'#888';
+          const gc=gareInCat(p,lvDef.lv);
           const _ov='this.style.background="'+lvDef.color+'18"';
           const _ou='this.style.background=""';
           const _cl='openPersona("'+esc(p.nome)+'")';
-          return '<tr data-iqa="'+(p.iqa||0)+'" data-gare="'+(p.n_gare_arbitro||0)+'" data-nome="'+escH(p.nome)+'" data-prov="'+(p.provincia||'')+'" style="border-bottom:0.5px solid '+lvDef.color+'33;cursor:pointer;transition:background .1s" onmouseover="'+_ov+'" onmouseout="'+_ou+'" onclick="'+_cl+'">'+
+          return '<tr data-iqa="'+(p.iqa||0)+'" data-gare="'+(p.n_gare_arbitro||0)+'" data-garecat="'+gc+'" data-nome="'+escH(p.nome)+'" data-prov="'+(p.provincia||'')+'" style="border-bottom:0.5px solid '+lvDef.color+'33;cursor:pointer;transition:background .1s" onmouseover="'+_ov+'" onmouseout="'+_ou+'" onclick="'+_cl+'" title="Apri scheda di '+escH(p.nome)+'">'+
             '<td style="padding:4px 8px;font-weight:700;color:'+lvDef.color+'">'+medal+'</td>'+
             '<td style="padding:4px 8px;font-weight:600;color:var(--bl);white-space:nowrap">'+escH(p.nome)+'</td>'+
             '<td style="padding:4px 8px;text-align:center;font-weight:800;font-size:.85rem;color:'+lvDef.color+'">'+((p.iqa||0).toFixed(1))+'</td>'+
             '<td style="padding:4px 8px;text-align:center;color:var(--mu)">'+(p.n_gare_arbitro||0)+'</td>'+
+            '<td style="padding:4px 8px;text-align:center;font-weight:700;color:'+lvDef.color+'">'+gc+'</td>'+
             '<td style="padding:4px 8px;text-align:center"><span style="background:'+pvClr+';color:#fff;border-radius:3px;padding:1px 6px;font-size:.6rem;font-weight:700">'+(p.provincia||'?')+'</span></td>'+
             '</tr>';
         }).join('')}
         </tbody>
       </table>
+      </div>
     </div>`;
   });
   html+='</div>';
@@ -2905,12 +3024,13 @@ function _sortSerieCard(lv,col){
   rows.sort((a,b)=>{
     if(col==='iqa'){const av=parseFloat(a.dataset.iqa||0),bv=parseFloat(b.dataset.iqa||0);return asc?av-bv:bv-av;}
     if(col==='gare'){const av=parseInt(a.dataset.gare||0),bv=parseInt(b.dataset.gare||0);return asc?av-bv:bv-av;}
+    if(col==='garecat'){const av=parseInt(a.dataset.garecat||0),bv=parseInt(b.dataset.garecat||0);return asc?av-bv:bv-av;}
     if(col==='nome'){const av=a.dataset.nome||'',bv=b.dataset.nome||'';return asc?bv.localeCompare(av):av.localeCompare(bv);}
     if(col==='prov'){const av=a.dataset.prov||'',bv=b.dataset.prov||'';return asc?bv.localeCompare(av):av.localeCompare(bv);}
     return 0;
   });
   rows.forEach(r=>tbody.appendChild(r));
-  rows.forEach((r,i)=>{const td=r.querySelector('td:first-child');if(td)td.textContent=(i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':(i+1)+'. ');});
+  rows.forEach((r,i)=>{const td=r.querySelector('td:first-child');if(td)td.textContent=(i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'. ');});
 }
 function toggleSection(wrId,togId){
   const wr=document.getElementById(wrId),tog=document.getElementById(togId);
@@ -7161,7 +7281,14 @@ function openPersona(nome,campFilter){
         <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[3]?.click()"><div class="sv">${colleghi.length}</div>${rankBadge(colleghi.length,'n_colleghi'||0)}<div class="sl">Colleghi ↗</div></div>
         <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[4]?.click()"><div class="sv">${campi.length}</div>${rankBadge(campi.length,'n_campi'||0)}<div class="sl">Campi ↗</div></div>
         ${(p.n_provv||0)>0?`<div class="sc" style="background:#fff3e0;border-color:#ffe082"><div class="sv" style="color:#e67e22">${p.n_provv}</div><div class="sl">⚠️ Provv.</div></div>`:''}
-        <div class="sc" style="background:${_lvMe.color}22;border-color:${_lvMe.color}"><div class="sv" style="color:${_lvMe.color};font-size:.75rem;font-weight:900">${_lvMe.label}</div><div class="sl">Livello</div></div>
+        <div class="sc" style="background:${_lvMe.color}22;border-color:${_lvMe.color}">${(()=>{
+          // Arbitri allo stesso livello, ordinati per IQA
+          const _lvPeers=allArbs.filter(x=>livelloArb(x).lv===_lvMe.lv).sort((a,b)=>(b.iqa||0)-(a.iqa||0));
+          const _lvPos=_lvPeers.findIndex(x=>x.nome===p.nome)+1;
+          const _lvTot=_lvPeers.length;
+          const _lvMed=_lvPos===1?'🥇':_lvPos===2?'🥈':_lvPos===3?'🥉':'';
+          return `<div class="sv" style="color:${_lvMe.color};font-size:.8rem;font-weight:900">${_lvMe.label}</div>${_lvPos>0?`<div class="sv" style="font-size:.6rem;color:${_lvMe.color};font-weight:700">${_lvMed}${_lvPos}°/${_lvTot}</div>`:''}`;
+        })()}<div class="sl">Livello</div></div>
         <div class="sc" style="background:#2c0066;border-color:#9c27b0"><div class="sv" style="color:#ce93d8">${_qMedal}${_qRankMe}°</div><div class="sv" style="font-size:.58rem;color:#9c27b0">${_qTotMe} arb.</div><div class="sl" style="color:#b39ddb">🏅 Q</div></div>
         <div class="sc" style="background:#1a0040;border-color:#6a1b9a"><div class="sv" style="color:#e040fb">${_lvqMedal}${_lvqRankMe}°</div><div class="sv" style="font-size:.58rem;color:#6a1b9a">${_lvqTotMe} arb.</div><div class="sl" style="color:#ce93d8">🎖 Lv-Q</div></div>
       </div>
@@ -7169,9 +7296,9 @@ function openPersona(nome,campFilter){
       <div class="scs" style="margin-bottom:14px">
         ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div>${rankBadge(km,'km_stimati'||0)}<div class="sl">Km stimati</div></div>`:''}
         ${kmGara>0?`<div class="sc"><div class="sv">${kmGara}</div><div class="sl">Km/gara</div></div>`:''}
-        <div class="sc" style="background:#1565c0;border-color:#90caf9"><div class="sv" style="color:#bbdefb">${_trsP.inSede||0}</div><div class="sl" style="color:#90caf9">In sede</div></div>
-        <div class="sc" style="background:#1b5e20;border-color:#81c784"><div class="sv" style="color:#a5d6a7">${_trsP.corta||0}</div>${rankBadgeDyn(_trsP.corta||0,_trsArr)}<div class="sl" style="color:#81c784">≤100km</div></div>
-        <div class="sc" style="background:#b71c1c;border-color:#ef9a9a"><div class="sv" style="color:#ffcdd2">${_trsP.lunga||0}</div><div class="sl" style="color:#ef9a9a">&gt;100km</div></div>
+        <div class="sc" style="background:#1565c0;border-color:#90caf9;cursor:pointer" onclick="openTrsGareModal(${JSON.stringify(esc(p.nome))},'sede')" title="Clicca per vedere le gare in sede"><div class="sv" style="color:#bbdefb">${_trsP.inSede||0}</div><div class="sl" style="color:#90caf9">In sede ↗</div></div>
+        <div class="sc" style="background:#1b5e20;border-color:#81c784;cursor:pointer" onclick="openTrsGareModal(${JSON.stringify(esc(p.nome))},'corta')" title="Clicca per vedere le gare ≤100km"><div class="sv" style="color:#a5d6a7">${_trsP.corta||0}</div>${rankBadgeDyn(_trsP.corta||0,_trsArr)}<div class="sl" style="color:#81c784">≤100km ↗</div></div>
+        <div class="sc" style="background:#b71c1c;border-color:#ef9a9a;cursor:pointer" onclick="openTrsGareModal(${JSON.stringify(esc(p.nome))},'lunga')" title="Clicca per vedere le gare >100km"><div class="sv" style="color:#ffcdd2">${_trsP.lunga||0}</div><div class="sl" style="color:#ef9a9a">&gt;100km ↗</div></div>
       </div>
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">💶 Rimborsi stimati</div>
       <div class="scs" style="margin-bottom:14px">
