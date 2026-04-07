@@ -2071,14 +2071,6 @@ function openTrsGareModal(nomePers,tipo){
     const k3=Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===base);if(k3)return[CAMPO_GPS[k3].lat,CAMPO_GPS[k3].lng];
     return null;
   };
-  // Ricava città e provincia da SQ (squadra casa)
-  const _getCittaPv=(g)=>{
-    const sqk=g['Squadra Casa']||g['Squadra 1']||g['squadra1']||'';
-    const sqObj=SQ[sqk]||Object.values(SQ||{}).find(x=>x.nome===sqk)||null;
-    const citta=sqObj?.citta||sqObj?.città||'';
-    const prov=sqObj?.prov||sqObj?.provincia||'';
-    return{citta,prov};
-  };
   const titoli={sede:'🏠 Gare in sede',corta:'🟢 Gare ≤100km',lunga:'🔴 Gare >100km'};
   const colori={sede:'#1565c0',corta:'#1b5e20',lunga:'#b71c1c'};
   const matched=[];
@@ -2087,95 +2079,95 @@ function openTrsGareModal(nomePers,tipo){
     const gps=CAMPO_GPS[campo]||CAMPO_GPS[Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===(campo||'').split(',')[0].trim().toUpperCase())||'']||null;
     const inCitta=gps&&Math.abs(gps.lat-home[0])<0.05&&Math.abs(gps.lng-home[1])<0.05;
     let kmG=0;
-    if(!inCitta){const gC=_cgf(campo);if(gC)kmG=haversineKm(home[0],home[1],gC[0],gC[1])*2;}
-    const cat=inCitta?'sede':kmG>=50?'lunga':'corta';
-    if(cat===tipo){
-      const{citta,prov}=_getCittaPv(g);
-      matched.push({g,kmG:inCitta?0:Math.round(kmG),citta,prov});
+    if(!inCitta){
+      const gC=_cgf(campo);
+      if(gC)kmG=haversineKm(home[0],home[1],gC[0],gC[1])*2;
     }
+    const cat=inCitta?'sede':kmG>=50?'lunga':'corta';
+    if(cat===tipo)matched.push({g,kmG:inCitta?0:Math.round(kmG)});
   });
   matched.sort((a,b)=>(a.g['Data']||'').localeCompare(b.g['Data']||''));
   const col=colori[tipo]||'#333';
-  // ── Tabella con sort ─────────────────────────────────────────────────────
-  const TRS_TBL_ID='tbl-trs-modal';
-  let _trsSort={col:-1,asc:true};
-  const _trsData=matched.slice();
-  function _trsRows(data){
-    return data.map(({g,kmG,citta,prov})=>{
-      const data2=g['Data']||'—';
-      const ora=g['Ora']||'';
-      const campo=escH(g['Campo']||'—');
-      const camp=(g['Campionato']||'').replace('COMITATO REGIONALE SARDEGNA ','').replace('Divisione regionale','DR').replace('Under ','U');
-      const sq1=escH(g['Squadra Casa']||g['Squadra 1']||g['squadra1']||'');
-      const sq2=escH(g['Squadra Ospite']||g['Squadra 2']||g['squadra2']||'');
-      const ris=g['Risultato']||'';
-      const pvDot=prov?`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${PC[prov]||'#aaa'};margin-right:3px;flex-shrink:0"></span>`:'';
-      return `<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer" onclick="openGara('${esc(g['Numero Gara']||'')}')">
-        <td style="padding:4px 8px;white-space:nowrap;font-size:.72rem">${data2}${ora?` <span style="color:#999">${ora}</span>`:''}</td>
-        <td style="padding:4px 8px;font-size:.68rem"><span style="background:${campColor(g['Campionato']||'')}22;color:${campColor(g['Campionato']||'')};border-radius:3px;padding:1px 5px;font-weight:600;font-size:.62rem">${camp}</span></td>
-        <td style="padding:4px 8px;font-size:.72rem;font-weight:600">${sq1} <span style="color:#aaa;font-weight:400">-</span> ${sq2}${ris?` <span style="font-size:.68rem;color:var(--mu);font-weight:400">(${ris})</span>`:''}</td>
-        <td style="padding:4px 8px;font-size:.68rem;color:#555;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${campo}">${campo}</td>
-        <td style="padding:4px 8px;font-size:.7rem;display:flex;align-items:center;gap:2px">${pvDot}<span style="font-weight:600;color:${PC[prov]||'var(--mu)'}">${prov||'—'}</span>${citta?` <span style="color:#888;font-size:.65rem">${escH(citta)}</span>`:''}</td>
-        <td style="padding:4px 8px;text-align:right;font-weight:700;color:${col};font-size:.78rem">${kmG>0?kmG+' km':'—'}</td>
-      </tr>`;
-    }).join('');
-  }
-  function _trsSortBy(colIdx){
-    if(_trsSort.col===colIdx)_trsSort.asc=!_trsSort.asc;
-    else{_trsSort.col=colIdx;_trsSort.asc=colIdx!==5;}
-    const keys=[['g','Data'],['g','Campionato'],['g','Squadra Casa'],['g','Campo'],'prov','kmG'];
-    _trsData.sort((a,b)=>{
-      let va,vb;
-      if(colIdx===5){va=a.kmG;vb=b.kmG;}
-      else if(colIdx===4){va=a.prov||'';vb=b.prov||'';}
-      else{const k=keys[colIdx];va=(a.g[k[1]]||'');vb=(b.g[k[1]]||'');}
-      const r=typeof va==='number'?va-vb:String(va).localeCompare(String(vb));
-      return _trsSort.asc?r:-r;
-    });
-    const tbody=document.getElementById(TRS_TBL_ID+'-body');
-    if(tbody)tbody.innerHTML=_trsRows(_trsData)||'<tr><td colspan="6" style="padding:20px;text-align:center;color:#999">Nessuna gara trovata</td></tr>';
-    // aggiorna freccette
-    document.querySelectorAll('#'+TRS_TBL_ID+' th').forEach((th,i)=>{
-      th.querySelector('.sort-arr')&&(th.querySelector('.sort-arr').textContent=i===_trsSort.col?(_trsSort.asc?'▲':'▼'):'⇅');
-    });
-  }
-  const thStyle='padding:6px 8px;text-align:left;font-size:.7rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none;white-space:nowrap;background:#f5f7ff';
-  const thR='padding:6px 8px;text-align:right;font-size:.7rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none;white-space:nowrap;background:#f5f7ff';
-  const arr='<span class="sort-arr" style="font-size:.6rem;color:#aaa;margin-left:3px">⇅</span>';
+  const rows=matched.map(({g,kmG},ri)=>{
+    const data=g['Data']||'—';
+    const ora=g['Ora']||'';
+    const campo=g['Campo']||'—';
+    const camp=(g['Campionato']||'').replace('COMITATO REGIONALE SARDEGNA ','');
+    const sq1=g['Squadra Casa']||g['Squadra 1']||g['squadra1']||'';
+    const sq2=g['Squadra Ospite']||g['Squadra 2']||g['squadra2']||'';
+    // Città e provincia dal campo
+    const campoBase=campo.split(',')[0].trim();
+    const pvCampoKey=Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===campoBase.toUpperCase());
+    const pvCampo=pvCampoKey?cpv(pvCampoKey):'';
+    const cittaCampo=pvCampoKey?(pvCampoKey.split(',')[1]||pvCampoKey.split(',')[0]||'').trim():campoBase;
+    const pvClr=pvCampo&&PC[pvCampo]?PC[pvCampo]:'#888';
+    const rowBg=ri%2===0?'#fff':'#f9f9fb';
+    return `<tr data-sort-data="${data}${ora}" style="border-bottom:1px solid #eee;background:${rowBg};cursor:pointer" onclick="openGara('${g['Numero Gara']||''}')">
+      <td style="padding:5px 8px;white-space:nowrap;font-size:.72rem;border-left:3px solid ${pvClr}">${data}${ora?' <span style=\"color:#888;font-size:.65rem\">'+(ora)+'</span>':''}</td>
+      <td style="padding:5px 8px;font-size:.68rem"><span style="background:${campColor(g['Campionato']||'')};color:#fff;border-radius:3px;padding:1px 5px">${escH(camp)}</span></td>
+      <td style="padding:5px 8px;font-size:.72rem;font-weight:600">${escH(sq1)} – ${escH(sq2)}</td>
+      <td style="padding:5px 8px;font-size:.68rem;color:#444">${escH(campoBase)}</td>
+      <td style="padding:5px 8px;font-size:.7rem;text-align:center"><span style="background:${pvClr}22;color:${pvClr};border:1px solid ${pvClr}44;border-radius:3px;padding:1px 5px;font-weight:700">${pvCampo||'—'}</span></td>
+      <td style="padding:5px 8px;text-align:right;font-weight:700;color:${col};white-space:nowrap">${kmG>0?kmG+' km':'—'}</td>
+    </tr>`;
+  }).join('');
   const mo=document.createElement('div');
-  mo.className='mo';
-  mo.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999999;display:flex;align-items:center;justify-content:center;padding:20px';
-  mo.innerHTML=`<div class="mbox" style="background:#fff;border-radius:10px;width:min(98vw,1100px);height:min(92vh,800px);min-width:480px;min-height:280px;resize:both;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.4)">
-    <div style="background:${col};color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-      <b style="font-size:.88rem">${titoli[tipo]} — ${escH(p.nome)} <span style="font-weight:400;opacity:.8">(${matched.length} gare)</span></b>
+  mo.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999999;display:flex;align-items:stretch;justify-content:stretch;padding:20px';
+  const moId='trs-mo-'+tipo;
+  mo.id=moId;
+  mo.innerHTML=`<div id="${moId}-box" style="background:#fff;border-radius:10px;width:92vw;max-height:92vh;min-width:400px;min-height:200px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.5);resize:both;position:relative">
+    <div id="${moId}-hd" style="background:${col};color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:move;user-select:none;flex-shrink:0">
+      <b style="font-size:.88rem">${titoli[tipo]} — ${escH(p.nome)} (${matched.length} gare)</b>
       <div style="display:flex;gap:6px">
-        <button id="trs-fs-btn" onclick="(function(){const box=this.closest('.mbox');const mo=box.parentElement;if(box.dataset.fs==='1'){box.style.cssText='background:#fff;border-radius:10px;width:min(98vw,1100px);height:min(92vh,800px);min-width:480px;min-height:280px;resize:both;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.4)';mo.style.padding='20px';box.dataset.fs='0';this.textContent='⛶';}else{box.style.cssText='background:#fff;border-radius:0;width:100vw;height:100vh;min-width:0;min-height:0;resize:none;overflow:hidden;display:flex;flex-direction:column';mo.style.padding='0';box.dataset.fs='1';this.textContent='⊡';}}).call(this)" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 9px;cursor:pointer;font-size:.85rem" title="Fullscreen">⛶</button>
-        <button onclick="this.closest('.mo').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:1rem">✕</button>
+        <button onclick="(()=>{const b=document.getElementById('${moId}-box');const isFs=b._fs;if(isFs){b.style.cssText=b._fsPrev;b._fs=false;}else{b._fsPrev=b.style.cssText;b.style.cssText='width:98vw;height:96vh;min-width:unset;min-height:unset;border-radius:0;resize:none;position:fixed;top:2vh;left:1vw';b._fs=true;}})()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:.85rem" title="Espandi / riduci">⛶</button>
+        <button onclick="document.getElementById('${moId}')?.remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:1rem">✕</button>
       </div>
     </div>
-    <div style="overflow-y:auto;flex:1">
-      <table id="${TRS_TBL_ID}" style="width:100%;border-collapse:collapse">
-        <thead style="position:sticky;top:0;z-index:2">
+    <div style="overflow:auto;flex:1">
+      <table id="${moId}-tbl" style="width:100%;border-collapse:collapse">
+        <thead style="position:sticky;top:0;background:#f0f2f7;z-index:2">
           <tr>
-            <th style="${thStyle}" onclick="_trsSortBy(0)">Data${arr}</th>
-            <th style="${thStyle}" onclick="_trsSortBy(1)">Campionato${arr}</th>
-            <th style="${thStyle}" onclick="_trsSortBy(2)">Partita${arr}</th>
-            <th style="${thStyle}" onclick="_trsSortBy(3)">Campo${arr}</th>
-            <th style="${thStyle}" onclick="_trsSortBy(4)">Città / Prov.${arr}</th>
-            <th style="${thR}" onclick="_trsSortBy(5)">Km (A/R)${arr}</th>
+            <th onclick="_trsTblSort('${moId}-tbl',0,this)" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Data ▾</th>
+            <th onclick="_trsTblSort('${moId}-tbl',1,this)" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Campionato</th>
+            <th onclick="_trsTblSort('${moId}-tbl',2,this)" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Partita</th>
+            <th onclick="_trsTblSort('${moId}-tbl',3,this)" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Città</th>
+            <th onclick="_trsTblSort('${moId}-tbl',4,this)" style="padding:6px 8px;text-align:center;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Prov.</th>
+            <th onclick="_trsTblSort('${moId}-tbl',5,this)" style="padding:6px 8px;text-align:right;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Km A/R</th>
           </tr>
         </thead>
-        <tbody id="${TRS_TBL_ID}-body">${_trsRows(_trsData)||'<tr><td colspan="6" style="padding:20px;text-align:center;color:#999">Nessuna gara trovata</td></tr>'}</tbody>
+        <tbody>${rows||'<tr><td colspan="6" style="padding:20px;text-align:center;color:#999">Nessuna gara trovata</td></tr>'}</tbody>
       </table>
     </div>
-    <div style="padding:6px 12px;font-size:.68rem;color:var(--mu);background:#f8f9fc;border-top:1px solid #eee;flex-shrink:0">
-      Totale km: <b style="color:${col}">${matched.reduce((s,x)=>s+x.kmG,0).toLocaleString('it')}</b> &nbsp;·&nbsp; media: <b>${matched.length?Math.round(matched.reduce((s,x)=>s+x.kmG,0)/matched.length):0} km/gara</b> &nbsp;·&nbsp; <span style="color:#aaa">Clicca colonna per ordinare · trascina angolo per ridimensionare</span>
-    </div>
   </div>`;
+  // Drag
+  const _moBox=mo.querySelector('#'+moId+'-box'),_moHd=mo.querySelector('#'+moId+'-hd');
+  let _drag=false,_ox=0,_oy=0;
+  _moHd.addEventListener('mousedown',e=>{if(e.target.tagName==='BUTTON')return;_drag=true;const r=_moBox.getBoundingClientRect();_moBox.style.position='fixed';_moBox.style.left=r.left+'px';_moBox.style.top=r.top+'px';_ox=e.clientX-r.left;_oy=e.clientY-r.top;e.preventDefault();});
+  document.addEventListener('mousemove',e=>{if(!_drag)return;_moBox.style.left=(e.clientX-_ox)+'px';_moBox.style.top=(e.clientY-_oy)+'px';});
+  document.addEventListener('mouseup',()=>_drag=false);
   mo.addEventListener('click',e=>{if(e.target===mo)mo.remove();});
   document.body.appendChild(mo);
 }
 
+function _trsTblSort(tblId,colIdx,th){
+  const tbl=document.getElementById(tblId);if(!tbl)return;
+  const tbody=tbl.querySelector('tbody');
+  const rows=[...tbody.querySelectorAll('tr')];
+  const asc=th.dataset.asc!=='1';th.dataset.asc=asc?'1':'0';
+  // Reset all th arrows
+  tbl.querySelectorAll('th').forEach(h=>h.textContent=h.textContent.replace(/ [▲▼]$/,''));
+  th.textContent=th.textContent+' '+(asc?'▲':'▼');
+  rows.sort((a,b)=>{
+    const ca=a.cells[colIdx]?.textContent.trim()||'';
+    const cb=b.cells[colIdx]?.textContent.trim()||'';
+    const na=parseFloat(ca);const nb=parseFloat(cb);
+    if(!isNaN(na)&&!isNaN(nb))return asc?na-nb:nb-na;
+    return asc?ca.localeCompare(cb,'it'):cb.localeCompare(ca,'it');
+  });
+  rows.forEach(r=>tbody.appendChild(r));
+  // Re-stripe rows
+  rows.forEach((r,i)=>{r.style.background=i%2===0?'#fff':'#f9f9fb';});
+}
 function campColor(cn){const cm=CAMP_META[cn]||{};return _CCLR[cm.gruppo]||'#636e72';}
 const CAMP_DATA=D.camp_data||{};
 const PC={CA:'#d63031',SS:'#0984e3',SU:'#6c5ce7',OR:'#00b894',NU:'#e17055'};
@@ -5019,10 +5011,10 @@ let _calCurrentArb=''; // nome arbitro corrente per filtro calendario
 document.addEventListener('click',function(ev){
   if(_calRangeStart&&!ev.target.closest('[data-cal-ds]')&&!ev.target.closest('#cal-range-hint')){
     _calRangeStart=null;
-    document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';});
+    document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';el.style.outlineOffset='';});
     const h=document.getElementById('cal-range-hint');if(h)h.remove();
   }
-},{capture:true});
+});
 function _calHighlightRange(start,hover){
   // Evidenzia le celle nel range start→hover durante la selezione
   const d1=start<hover?start:hover;
@@ -7032,15 +7024,26 @@ function mkCamminoArbitro(p){
         lastMonth=m;
       }
 
-      // Bars for this date
+      // Bars for this date - with day tick markers
+      var _dow=new Date(d+'T12:00').getDay();
+      var _isWEd=(_dow===0||_dow===6);
+      var _dLbl=d.slice(8)+'/'+d.slice(5,7);
+      var _tickClr=_isWEd?'#e67e22':'#8899bb';
+      html+='<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0" title="'+d+'">';
+      html+='<div style="display:flex;align-items:flex-end;gap:1px">';
       byDateOrd[d].forEach(function(g){
         var cn=g['Campionato']||'';
         var col=campColorCache[cn]||'#888';
         var imp=getImportance(cn);
         var barH=8+Math.round(imp/10*44);
         var title=cn+' — '+d+(g['Ora']?' '+g['Ora']:'')+'\n'+(g['Squadra Casa']||'')+' vs '+(g['Squadra Ospite']||'')+(g['Risultato']?' ('+g['Risultato']+')':'');
-        html+='<div title="'+title+'" style="width:9px;min-width:9px;height:'+barH+'px;background:'+col+';border-radius:3px 3px 0 0;cursor:pointer;flex-shrink:0;box-shadow:0 1px 3px '+col+'55" onmouseover="this.style.filter=\'brightness(1.2)\'" onmouseout="this.style.filter=\'\'"></div>';
+        html+='<div title="'+title+'" style="width:8px;min-width:8px;max-width:8px;height:'+barH+'px;background:'+col+';border-radius:3px 3px 0 0;cursor:pointer;flex-shrink:0;box-shadow:0 1px 2px '+col+'55;transition:filter .1s" onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'" onclick="tlDayClick(\''+d+'\')"></div>';
       });
+      html+='</div>';
+      html+='<div style="width:100%;height:3px;background:'+_tickClr+';border-radius:0 0 2px 2px;margin-top:1px"></div>';
+      html+='<div style="font-size:.4rem;color:'+_tickClr+';font-weight:'+(_isWEd?700:400)+';white-space:nowrap;margin-top:1px;line-height:1">'+_dLbl+'</div>';
+      html+='</div>';
+
     });
 
     html+='</div>';
@@ -7833,7 +7836,7 @@ function openPersona(nome,campFilter){
         const BG=['#e8f4ff','var(--bl3)','var(--bl2)','var(--bl)','#c0392b'];
         const uid='cal_'+Math.random().toString(36).slice(2,7);
 
-        const todayDs=new Date().toISOString().split('T')[0];
+        const todayDs=new Date().toISOString().split('T')[0]; // sempre data di sistema reale
         // ── VERSIONE A: Heatmap a blocchi — celle quadrate che riempiono la larghezza ──
         const FESTIVI_CAL=['2025-11-01','2025-12-08','2025-12-25','2025-12-26',
           '2026-01-01','2026-01-06','2026-04-05','2026-04-06','2026-04-25','2026-05-01','2026-06-02'];
@@ -7907,26 +7910,26 @@ function openPersona(nome,campFilter){
             const isToday=ds===todayDs;
             const isMStart=ds.slice(8)==='01';
             const isNewMWeek=isMStart; // la prima settimana del mese ha bordo sinistro blu
-            const streak=_streakMap[ds]||0;
             // Sfondo streak (overlay leggero sopra il colore normale)
-            // Streak: evidenziata come SPESSORE BORDO crescente
-            // 5gg = bordo giallo 3px, 7gg = bordo arancio 5px, 10gg = bordo rosso 7px
+            // Streak: TUTTI i giorni della serie >=5 evidenziati con sfondo colorato
             const _streakColor=streak>=10?'#e74c3c':streak>=7?'#e67e22':streak>=5?'#f39c12':'';
-            const _streakW=streak>=10?7:streak>=7?5:streak>=5?3:0;
-            const _streakBgAdd=streak>=5?`;border:${_streakW}px solid ${_streakColor};box-shadow:0 0 ${_streakW*2}px ${_streakColor}88`:'';
-            const streakGlow='';
+            const _streakW=streak>=10?4:streak>=7?3:streak>=5?2:0;
+            const _inSerie5=streak>=5;
+            const _serieBg5=streak>=10?'rgba(231,76,60,0.45)':streak>=7?'rgba(230,126,34,0.45)':streak>=5?'rgba(243,156,18,0.40)':'';
+            const _streakBgAdd=streak>=5?`;border:${_streakW}px solid ${_streakColor};box-shadow:0 0 ${_streakW*3}px ${_streakColor};outline:none`:'';
             const bg=isToday?'var(--gold)':cnt===0?(isWE?'#ddd8f0':isFest?'#fce4ec':'#e8f4ff'):cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt>=3?'var(--bl)':'#c0392b';
-            const clr=(cnt>1||isToday)?'#fff':(isWE?'#5d4037':'var(--mu)');
+            const _bgFinal=(!isToday&&_inSerie5)?_serieBg5:bg;
+            const clr=(cnt>1||isToday||_inSerie5)?'#fff':(isWE?'#5d4037':'var(--mu)');
             const border=isFest?'2px solid #e91e63':isToday?'2.5px solid #e0a800':isDom?'1.5px solid var(--gold)':isSab?'1px solid #ffcc80':isMStart?'2px solid #90caf9':'1px solid transparent';
             const festIcon=isFest&&cnt===0?'🎉':'';
             return _spacer+`<div data-cal-ds="${ds}" onclick="calDayClick('${ds}',${cnt})"
               onmouseover="calDayHover('${ds}');this.style.transform='scale(1.15)'"
               onmouseout="this.style.transform=''"
-              title="${ds}${isToday?' — OGGI':''}${isFest?' 🎉 Festivo':''}${streak>=5?' 🔥 Streak '+streak+'gg':''}: ${cnt} gar${cnt===1?'a':'e'}"
-              style="flex:1;min-width:10px;aspect-ratio:1;background:${bg};border-radius:3px;border:${border};
+              title="${ds}${isToday?' — OGGI':''}${isFest?' 🎉 Festivo':''}${streak>=5?' 🔥 Serie '+streak+'gg':''}: ${cnt} gar${cnt===1?'a':'e'}"
+              style="flex:1;min-width:10px;aspect-ratio:1;background:${_bgFinal};border-radius:3px;border:${border};
                 display:flex;align-items:center;justify-content:center;font-size:.55rem;
                 font-weight:800;color:${clr};cursor:${cnt>0||isToday?'pointer':'default'};
-                transition:transform .1s;margin:1px;${streakGlow}${_streakBgAdd}"
+                transition:transform .1s;margin:1px;${_streakBgAdd}"
             >${festIcon||(cnt>0?cnt:(isToday?'●':''))}</div>`;
           }).join('');
           return`<div style="display:flex;align-items:stretch;width:100%;margin-bottom:2px">
@@ -7999,10 +8002,15 @@ function openPersona(nome,campFilter){
                 ${isToday?'<div style="font-size:.42rem;line-height:1;opacity:.8">OGG</div>':''}
               </div>`;
             }).join('');
-            return`<div style="display:flex;align-items:center;gap:1px;padding:2px 0;border-bottom:1px solid var(--br)">
-              <div style="width:52px;font-size:.72rem;font-weight:700;color:var(--bl);flex-shrink:0;padding-right:4px;text-align:right;line-height:1.3">${label}</div>
-              <div style="display:flex;gap:2px;flex:1;min-width:0">${cells}</div>
-              <div style="font-size:.68rem;font-weight:700;color:var(--mu);margin-left:6px;flex-shrink:0;width:38px;text-align:right" title="Totale gare del mese">${tot?tot+'g':''}</div>
+            const labelBg=tot>0?'linear-gradient(135deg,#1e3a6e,#2456a4)':'linear-gradient(135deg,#6b7a99,#aab2c8)';
+            return`<div style="display:flex;align-items:center;gap:3px;padding:4px 0 4px 0;border-top:3px solid #1e3a6e;margin-top:2px">
+              <div style="width:56px;flex-shrink:0;padding:2px 4px 2px 0;text-align:right">
+                <div style="background:${labelBg};color:#fff;border-radius:4px;padding:2px 5px;display:inline-block;line-height:1.2">
+                  <div style="font-size:.7rem;font-weight:700">${label}</div>
+                  <div style="font-size:.58rem;opacity:.85">${tot?tot+'g':''}</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:1px;flex:1;min-width:0">${cells}</div>
             </div>`;
           }).join('');
           return`<div style="overflow:hidden;width:100%;box-sizing:border-box">${hdr}${rows}</div>`;
