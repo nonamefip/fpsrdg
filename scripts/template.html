@@ -2071,6 +2071,14 @@ function openTrsGareModal(nomePers,tipo){
     const k3=Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===base);if(k3)return[CAMPO_GPS[k3].lat,CAMPO_GPS[k3].lng];
     return null;
   };
+  // Ricava città e provincia da SQ (squadra casa)
+  const _getCittaPv=(g)=>{
+    const sqk=g['Squadra Casa']||g['Squadra 1']||g['squadra1']||'';
+    const sqObj=SQ[sqk]||Object.values(SQ||{}).find(x=>x.nome===sqk)||null;
+    const citta=sqObj?.citta||sqObj?.città||'';
+    const prov=sqObj?.prov||sqObj?.provincia||'';
+    return{citta,prov};
+  };
   const titoli={sede:'🏠 Gare in sede',corta:'🟢 Gare ≤100km',lunga:'🔴 Gare >100km'};
   const colori={sede:'#1565c0',corta:'#1b5e20',lunga:'#b71c1c'};
   const matched=[];
@@ -2079,50 +2087,89 @@ function openTrsGareModal(nomePers,tipo){
     const gps=CAMPO_GPS[campo]||CAMPO_GPS[Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===(campo||'').split(',')[0].trim().toUpperCase())||'']||null;
     const inCitta=gps&&Math.abs(gps.lat-home[0])<0.05&&Math.abs(gps.lng-home[1])<0.05;
     let kmG=0;
-    if(!inCitta){
-      const gC=_cgf(campo);
-      if(gC)kmG=haversineKm(home[0],home[1],gC[0],gC[1])*2;
-    }
+    if(!inCitta){const gC=_cgf(campo);if(gC)kmG=haversineKm(home[0],home[1],gC[0],gC[1])*2;}
     const cat=inCitta?'sede':kmG>=50?'lunga':'corta';
-    if(cat===tipo)matched.push({g,kmG:inCitta?0:Math.round(kmG)});
+    if(cat===tipo){
+      const{citta,prov}=_getCittaPv(g);
+      matched.push({g,kmG:inCitta?0:Math.round(kmG),citta,prov});
+    }
   });
   matched.sort((a,b)=>(a.g['Data']||'').localeCompare(b.g['Data']||''));
   const col=colori[tipo]||'#333';
-  const rows=matched.map(({g,kmG})=>{
-    const data=g['Data']||'—';
-    const ora=g['Ora']||'';
-    const campo=g['Campo']||'—';
-    const camp=(g['Campionato']||'').replace('COMITATO REGIONALE SARDEGNA ','');
-    const sq1=g['Squadra 1']||g['squadra1']||'';
-    const sq2=g['Squadra 2']||g['squadra2']||'';
-    return `<tr style="border-bottom:1px solid #eee">
-      <td style="padding:5px 8px;white-space:nowrap;font-size:.72rem">${data}${ora?' '+ora:''}</td>
-      <td style="padding:5px 8px;font-size:.7rem;color:#555">${camp}</td>
-      <td style="padding:5px 8px;font-size:.72rem;font-weight:600">${escH(sq1)} - ${escH(sq2)}</td>
-      <td style="padding:5px 8px;font-size:.7rem;color:#555">${campo}</td>
-      <td style="padding:5px 8px;text-align:right;font-weight:700;color:${col}">${kmG>0?kmG+' km':'—'}</td>
-    </tr>`;
-  }).join('');
+  // ── Tabella con sort ─────────────────────────────────────────────────────
+  const TRS_TBL_ID='tbl-trs-modal';
+  let _trsSort={col:-1,asc:true};
+  const _trsData=matched.slice();
+  function _trsRows(data){
+    return data.map(({g,kmG,citta,prov})=>{
+      const data2=g['Data']||'—';
+      const ora=g['Ora']||'';
+      const campo=escH(g['Campo']||'—');
+      const camp=(g['Campionato']||'').replace('COMITATO REGIONALE SARDEGNA ','').replace('Divisione regionale','DR').replace('Under ','U');
+      const sq1=escH(g['Squadra Casa']||g['Squadra 1']||g['squadra1']||'');
+      const sq2=escH(g['Squadra Ospite']||g['Squadra 2']||g['squadra2']||'');
+      const ris=g['Risultato']||'';
+      const pvDot=prov?`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${PC[prov]||'#aaa'};margin-right:3px;flex-shrink:0"></span>`:'';
+      return `<tr style="border-bottom:1px solid #f0f0f0;cursor:pointer" onclick="openGara('${esc(g['Numero Gara']||'')}')">
+        <td style="padding:4px 8px;white-space:nowrap;font-size:.72rem">${data2}${ora?` <span style="color:#999">${ora}</span>`:''}</td>
+        <td style="padding:4px 8px;font-size:.68rem"><span style="background:${campColor(g['Campionato']||'')}22;color:${campColor(g['Campionato']||'')};border-radius:3px;padding:1px 5px;font-weight:600;font-size:.62rem">${camp}</span></td>
+        <td style="padding:4px 8px;font-size:.72rem;font-weight:600">${sq1} <span style="color:#aaa;font-weight:400">-</span> ${sq2}${ris?` <span style="font-size:.68rem;color:var(--mu);font-weight:400">(${ris})</span>`:''}</td>
+        <td style="padding:4px 8px;font-size:.68rem;color:#555;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${campo}">${campo}</td>
+        <td style="padding:4px 8px;font-size:.7rem;display:flex;align-items:center;gap:2px">${pvDot}<span style="font-weight:600;color:${PC[prov]||'var(--mu)'}">${prov||'—'}</span>${citta?` <span style="color:#888;font-size:.65rem">${escH(citta)}</span>`:''}</td>
+        <td style="padding:4px 8px;text-align:right;font-weight:700;color:${col};font-size:.78rem">${kmG>0?kmG+' km':'—'}</td>
+      </tr>`;
+    }).join('');
+  }
+  function _trsSortBy(colIdx){
+    if(_trsSort.col===colIdx)_trsSort.asc=!_trsSort.asc;
+    else{_trsSort.col=colIdx;_trsSort.asc=colIdx!==5;}
+    const keys=[['g','Data'],['g','Campionato'],['g','Squadra Casa'],['g','Campo'],'prov','kmG'];
+    _trsData.sort((a,b)=>{
+      let va,vb;
+      if(colIdx===5){va=a.kmG;vb=b.kmG;}
+      else if(colIdx===4){va=a.prov||'';vb=b.prov||'';}
+      else{const k=keys[colIdx];va=(a.g[k[1]]||'');vb=(b.g[k[1]]||'');}
+      const r=typeof va==='number'?va-vb:String(va).localeCompare(String(vb));
+      return _trsSort.asc?r:-r;
+    });
+    const tbody=document.getElementById(TRS_TBL_ID+'-body');
+    if(tbody)tbody.innerHTML=_trsRows(_trsData)||'<tr><td colspan="6" style="padding:20px;text-align:center;color:#999">Nessuna gara trovata</td></tr>';
+    // aggiorna freccette
+    document.querySelectorAll('#'+TRS_TBL_ID+' th').forEach((th,i)=>{
+      th.querySelector('.sort-arr')&&(th.querySelector('.sort-arr').textContent=i===_trsSort.col?(_trsSort.asc?'▲':'▼'):'⇅');
+    });
+  }
+  const thStyle='padding:6px 8px;text-align:left;font-size:.7rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none;white-space:nowrap;background:#f5f7ff';
+  const thR='padding:6px 8px;text-align:right;font-size:.7rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none;white-space:nowrap;background:#f5f7ff';
+  const arr='<span class="sort-arr" style="font-size:.6rem;color:#aaa;margin-left:3px">⇅</span>';
   const mo=document.createElement('div');
-  mo.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999999;display:flex;align-items:stretch;justify-content:stretch;padding:20px';
-  mo.innerHTML=`<div style="background:#fff;border-radius:8px;width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.4)">
-    <div style="background:${col};color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
-      <b style="font-size:.9rem">${titoli[tipo]} — ${escH(p.nome)} (${matched.length} gare)</b>
-      <button onclick="this.closest('div[style*=fixed]').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:1rem">✕</button>
+  mo.className='mo';
+  mo.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999999;display:flex;align-items:center;justify-content:center;padding:20px';
+  mo.innerHTML=`<div class="mbox" style="background:#fff;border-radius:10px;width:min(98vw,1100px);height:min(92vh,800px);min-width:480px;min-height:280px;resize:both;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.4)">
+    <div style="background:${col};color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <b style="font-size:.88rem">${titoli[tipo]} — ${escH(p.nome)} <span style="font-weight:400;opacity:.8">(${matched.length} gare)</span></b>
+      <div style="display:flex;gap:6px">
+        <button id="trs-fs-btn" onclick="(function(){const box=this.closest('.mbox');const mo=box.parentElement;if(box.dataset.fs==='1'){box.style.cssText='background:#fff;border-radius:10px;width:min(98vw,1100px);height:min(92vh,800px);min-width:480px;min-height:280px;resize:both;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.4)';mo.style.padding='20px';box.dataset.fs='0';this.textContent='⛶';}else{box.style.cssText='background:#fff;border-radius:0;width:100vw;height:100vh;min-width:0;min-height:0;resize:none;overflow:hidden;display:flex;flex-direction:column';mo.style.padding='0';box.dataset.fs='1';this.textContent='⊡';}}).call(this)" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 9px;cursor:pointer;font-size:.85rem" title="Fullscreen">⛶</button>
+        <button onclick="this.closest('.mo').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:1rem">✕</button>
+      </div>
     </div>
     <div style="overflow-y:auto;flex:1">
-      <table style="width:100%;border-collapse:collapse">
-        <thead style="position:sticky;top:0;background:#f5f5f5">
+      <table id="${TRS_TBL_ID}" style="width:100%;border-collapse:collapse">
+        <thead style="position:sticky;top:0;z-index:2">
           <tr>
-            <th style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd">Data</th>
-            <th style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd">Campionato</th>
-            <th style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd">Partita</th>
-            <th style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd">Campo</th>
-            <th style="padding:6px 8px;text-align:right;font-size:.72rem;border-bottom:2px solid #ddd">Km (A/R)</th>
+            <th style="${thStyle}" onclick="_trsSortBy(0)">Data${arr}</th>
+            <th style="${thStyle}" onclick="_trsSortBy(1)">Campionato${arr}</th>
+            <th style="${thStyle}" onclick="_trsSortBy(2)">Partita${arr}</th>
+            <th style="${thStyle}" onclick="_trsSortBy(3)">Campo${arr}</th>
+            <th style="${thStyle}" onclick="_trsSortBy(4)">Città / Prov.${arr}</th>
+            <th style="${thR}" onclick="_trsSortBy(5)">Km (A/R)${arr}</th>
           </tr>
         </thead>
-        <tbody>${rows||'<tr><td colspan="5" style="padding:20px;text-align:center;color:#999">Nessuna gara trovata</td></tr>'}</tbody>
+        <tbody id="${TRS_TBL_ID}-body">${_trsRows(_trsData)||'<tr><td colspan="6" style="padding:20px;text-align:center;color:#999">Nessuna gara trovata</td></tr>'}</tbody>
       </table>
+    </div>
+    <div style="padding:6px 12px;font-size:.68rem;color:var(--mu);background:#f8f9fc;border-top:1px solid #eee;flex-shrink:0">
+      Totale km: <b style="color:${col}">${matched.reduce((s,x)=>s+x.kmG,0).toLocaleString('it')}</b> &nbsp;·&nbsp; media: <b>${matched.length?Math.round(matched.reduce((s,x)=>s+x.kmG,0)/matched.length):0} km/gara</b> &nbsp;·&nbsp; <span style="color:#aaa">Clicca colonna per ordinare · trascina angolo per ridimensionare</span>
     </div>
   </div>`;
   mo.addEventListener('click',e=>{if(e.target===mo)mo.remove();});
@@ -4972,10 +5019,10 @@ let _calCurrentArb=''; // nome arbitro corrente per filtro calendario
 document.addEventListener('click',function(ev){
   if(_calRangeStart&&!ev.target.closest('[data-cal-ds]')&&!ev.target.closest('#cal-range-hint')){
     _calRangeStart=null;
-    document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';});
+    document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';});
     const h=document.getElementById('cal-range-hint');if(h)h.remove();
   }
-},{capture:true,passive:true});
+},{capture:true});
 function _calHighlightRange(start,hover){
   // Evidenzia le celle nel range start→hover durante la selezione
   const d1=start<hover?start:hover;
@@ -7786,7 +7833,7 @@ function openPersona(nome,campFilter){
         const BG=['#e8f4ff','var(--bl3)','var(--bl2)','var(--bl)','#c0392b'];
         const uid='cal_'+Math.random().toString(36).slice(2,7);
 
-        const todayDs=(typeof D!=='undefined'&&D.generated)?D.generated.slice(0,10):new Date().toISOString().split('T')[0];
+        const todayDs=new Date().toISOString().split('T')[0];
         // ── VERSIONE A: Heatmap a blocchi — celle quadrate che riempiono la larghezza ──
         const FESTIVI_CAL=['2025-11-01','2025-12-08','2025-12-25','2025-12-26',
           '2026-01-01','2026-01-06','2026-04-05','2026-04-06','2026-04-25','2026-05-01','2026-06-02'];
