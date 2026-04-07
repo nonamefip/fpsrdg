@@ -2071,7 +2071,9 @@ function openTrsGareModal(nomePers,tipo){
     const k3=Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===base);if(k3)return[CAMPO_GPS[k3].lat,CAMPO_GPS[k3].lng];
     return null;
   };
-  const titoli={sede:'🏠 Gare in sede',corta:'🟢 Gare ≤100km',lunga:'🔴 Gare >100km'};
+  const titoli={sede:'🏠 Gare in sede',corta:'🟢 Gare &lt;50km',lunga:'🔴 Gare &gt;50km'};
+  const _parseCitta=c=>{const m=(c||'').match(/\d{5}\s+([A-Z\s'ÀÁÈÉÌÍÒÓÙÚ]+)\s*\(/);return m?m[1].trim():'';}
+  const _parseProv=c=>{const m=(c||'').match(/\(\s*([A-Z]{2})\s*\)/);return m?m[1]:'';}
   const colori={sede:'#1565c0',corta:'#1b5e20',lunga:'#b71c1c'};
   const matched=[];
   (p.gare_arbitro||p.gare||[]).forEach(g=>{
@@ -2088,86 +2090,69 @@ function openTrsGareModal(nomePers,tipo){
   });
   matched.sort((a,b)=>(a.g['Data']||'').localeCompare(b.g['Data']||''));
   const col=colori[tipo]||'#333';
-  const rows=matched.map(({g,kmG},ri)=>{
+  const rows=matched.map(({g,kmG})=>{
     const data=g['Data']||'—';
     const ora=g['Ora']||'';
     const campo=g['Campo']||'—';
     const camp=(g['Campionato']||'').replace('COMITATO REGIONALE SARDEGNA ','');
-    const sq1=g['Squadra Casa']||g['Squadra 1']||g['squadra1']||'';
-    const sq2=g['Squadra Ospite']||g['Squadra 2']||g['squadra2']||'';
-    // Città e provincia dal campo
-    const campoBase=campo.split(',')[0].trim();
-    const pvCampoKey=Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===campoBase.toUpperCase());
-    const pvCampo=pvCampoKey?cpv(pvCampoKey):'';
-    const cittaCampo=pvCampoKey?(pvCampoKey.split(',')[1]||pvCampoKey.split(',')[0]||'').trim():campoBase;
-    const pvClr=pvCampo&&PC[pvCampo]?PC[pvCampo]:'#888';
-    const rowBg=ri%2===0?'#fff':'#f9f9fb';
-    return `<tr data-sort-data="${data}${ora}" style="border-bottom:1px solid #eee;background:${rowBg};cursor:pointer" onclick="openGara('${g['Numero Gara']||''}')">
-      <td style="padding:5px 8px;white-space:nowrap;font-size:.72rem;border-left:3px solid ${pvClr}">${data}${ora?' <span style=\"color:#888;font-size:.65rem\">'+(ora)+'</span>':''}</td>
-      <td style="padding:5px 8px;font-size:.68rem"><span style="background:${campColor(g['Campionato']||'')};color:#fff;border-radius:3px;padding:1px 5px">${escH(camp)}</span></td>
-      <td style="padding:5px 8px;font-size:.72rem;font-weight:600">${escH(sq1)} – ${escH(sq2)}</td>
-      <td style="padding:5px 8px;font-size:.68rem;color:#444">${escH(campoBase)}</td>
-      <td style="padding:5px 8px;font-size:.7rem;text-align:center"><span style="background:${pvClr}22;color:${pvClr};border:1px solid ${pvClr}44;border-radius:3px;padding:1px 5px;font-weight:700">${pvCampo||'—'}</span></td>
+    const sq1=g['Squadra 1']||g['Squadra Casa']||g['squadra1']||'';
+    const sq2=g['Squadra 2']||g['Squadra Ospite']||g['squadra2']||'';
+    const citta=_parseCitta(campo);
+    const prov=_parseProv(campo);
+    const pvClr=prov&&PC[prov]?PC[prov]:'#888';
+    return `<tr style="border-bottom:1px solid #eee" data-data="${data}" data-camp="${escH(camp)}" data-sq="${escH(sq1+sq2)}" data-campo="${escH(campo)}" data-citta="${escH(citta)}" data-prov="${prov}" data-km="${kmG}">
+      <td style="padding:5px 8px;white-space:nowrap;font-size:.72rem">${data}${ora?' '+ora:''}</td>
+      <td style="padding:5px 8px;font-size:.7rem;color:#555">${escH(camp)}</td>
+      <td style="padding:5px 8px;font-size:.72rem;font-weight:600">${escH(sq1)} — ${escH(sq2)}</td>
+      <td style="padding:5px 8px;font-size:.7rem;color:#555;max-width:220px;word-break:break-word">${escH(campo)}</td>
+      <td style="padding:5px 8px;font-size:.72rem;font-weight:600">${escH(citta)}</td>
+      <td style="padding:5px 8px;text-align:center"><span style="background:${pvClr};color:#fff;border-radius:3px;padding:1px 6px;font-size:.6rem;font-weight:700">${prov||'?'}</span></td>
       <td style="padding:5px 8px;text-align:right;font-weight:700;color:${col};white-space:nowrap">${kmG>0?kmG+' km':'—'}</td>
     </tr>`;
   }).join('');
+  const _trsId='trs-'+Math.random().toString(36).slice(2,6);
   const mo=document.createElement('div');
-  mo.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999999;display:flex;align-items:stretch;justify-content:stretch;padding:20px';
-  const moId='trs-mo-'+tipo;
-  mo.id=moId;
-  mo.innerHTML=`<div id="${moId}-box" style="background:#fff;border-radius:10px;width:92vw;max-height:92vh;min-width:400px;min-height:200px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.5);resize:both;position:relative">
-    <div id="${moId}-hd" style="background:${col};color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:move;user-select:none;flex-shrink:0">
-      <b style="font-size:.88rem">${titoli[tipo]} — ${escH(p.nome)} (${matched.length} gare)</b>
-      <div style="display:flex;gap:6px">
-        <button onclick="(()=>{const b=document.getElementById('${moId}-box');const isFs=b._fs;if(isFs){b.style.cssText=b._fsPrev;b._fs=false;}else{b._fsPrev=b.style.cssText;b.style.cssText='width:98vw;height:96vh;min-width:unset;min-height:unset;border-radius:0;resize:none;position:fixed;top:2vh;left:1vw';b._fs=true;}})()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:.85rem" title="Espandi / riduci">⛶</button>
-        <button onclick="document.getElementById('${moId}')?.remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:1rem">✕</button>
+  mo.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999999;display:flex;align-items:stretch;justify-content:stretch;padding:12px';
+  mo.innerHTML=`<div id="${_trsId}_w" style="background:#fff;border-radius:6px;width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column;resize:both;box-shadow:0 8px 40px rgba(0,0,0,.4)">
+    <div style="background:${col};color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <b style="font-size:.9rem">${titoli[tipo]} — ${escH(p.nome)} (${matched.length} gare)</b>
+      <div style="display:flex;gap:5px">
+        <button onclick="(function(b){const w=document.getElementById('${_trsId}_w');const fs=w.dataset.fs==='1';w.dataset.fs=fs?'0':'1';w.parentElement.style.padding=fs?'12px':'0';w.style.borderRadius=fs?'6px':'0';b.textContent=fs?'⛶':'⊡';})(this)" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:.9rem" title="Fullscreen">⛶</button>
+        <button onclick="this.closest('div[style*=fixed]').remove();if(typeof _calResetAll==='function')_calResetAll();" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:1rem">✕</button>
       </div>
     </div>
-    <div style="overflow:auto;flex:1">
-      <table id="${moId}-tbl" style="width:100%;border-collapse:collapse">
-        <thead style="position:sticky;top:0;background:#f0f2f7;z-index:2">
+    <div style="overflow-y:auto;flex:1">
+      <table id="${_trsId}" style="width:100%;border-collapse:collapse">
+        <thead style="position:sticky;top:0;background:#f0f2f7;z-index:1">
           <tr>
-            <th onclick="_trsTblSort('${moId}-tbl',0,this)" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Data ▾</th>
-            <th onclick="_trsTblSort('${moId}-tbl',1,this)" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Campionato</th>
-            <th onclick="_trsTblSort('${moId}-tbl',2,this)" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Partita</th>
-            <th onclick="_trsTblSort('${moId}-tbl',3,this)" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Città</th>
-            <th onclick="_trsTblSort('${moId}-tbl',4,this)" style="padding:6px 8px;text-align:center;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Prov.</th>
-            <th onclick="_trsTblSort('${moId}-tbl',5,this)" style="padding:6px 8px;text-align:right;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Km A/R</th>
+            <th onclick="if(window._sTrs)_sTrs('${_trsId}',0,'s')" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;white-space:nowrap;user-select:none">Data ↕</th>
+            <th onclick="if(window._sTrs)_sTrs('${_trsId}',1,'s')" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Campionato ↕</th>
+            <th onclick="if(window._sTrs)_sTrs('${_trsId}',2,'s')" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Partita ↕</th>
+            <th onclick="if(window._sTrs)_sTrs('${_trsId}',3,'s')" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Campo ↕</th>
+            <th onclick="if(window._sTrs)_sTrs('${_trsId}',4,'s')" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Città ↕</th>
+            <th onclick="if(window._sTrs)_sTrs('${_trsId}',5,'s')" style="padding:6px 8px;text-align:center;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Prov. ↕</th>
+            <th onclick="if(window._sTrs)_sTrs('${_trsId}',6,'n')" style="padding:6px 8px;text-align:right;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;white-space:nowrap;user-select:none">Km (A/R) ↕</th>
           </tr>
         </thead>
-        <tbody>${rows||'<tr><td colspan="6" style="padding:20px;text-align:center;color:#999">Nessuna gara trovata</td></tr>'}</tbody>
+        <tbody>${rows||'<tr><td colspan="7" style="padding:20px;text-align:center;color:#999">Nessuna gara trovata</td></tr>'}</tbody>
       </table>
     </div>
   </div>`;
-  // Drag
-  const _moBox=mo.querySelector('#'+moId+'-box'),_moHd=mo.querySelector('#'+moId+'-hd');
-  let _drag=false,_ox=0,_oy=0;
-  _moHd.addEventListener('mousedown',e=>{if(e.target.tagName==='BUTTON')return;_drag=true;const r=_moBox.getBoundingClientRect();_moBox.style.position='fixed';_moBox.style.left=r.left+'px';_moBox.style.top=r.top+'px';_ox=e.clientX-r.left;_oy=e.clientY-r.top;e.preventDefault();});
-  document.addEventListener('mousemove',e=>{if(!_drag)return;_moBox.style.left=(e.clientX-_ox)+'px';_moBox.style.top=(e.clientY-_oy)+'px';});
-  document.addEventListener('mouseup',()=>_drag=false);
-  mo.addEventListener('click',e=>{if(e.target===mo)mo.remove();});
+  mo.addEventListener('click',e=>{if(e.target===mo){mo.remove();if(typeof _calResetAll==='function')_calResetAll();}});
   document.body.appendChild(mo);
+  if(!window._sTrs){window._sTrs=function(tid,col,type){
+    const tbl=document.getElementById(tid);if(!tbl)return;
+    const tbody=tbl.querySelector('tbody');
+    const rs=[...tbody.querySelectorAll('tr')];
+    const keys=['data-data','data-camp','data-sq','data-campo','data-citta','data-prov','data-km'];
+    const asc=tbl.dataset.sc===String(col)&&tbl.dataset.sd==='a';
+    tbl.dataset.sc=String(col);tbl.dataset.sd=asc?'d':'a';
+    rs.sort((a,b)=>{const av=a.getAttribute(keys[col])||'',bv=b.getAttribute(keys[col])||'';
+      return type==='n'?(asc?(+av)-(+bv):(+bv)-(+av)):(asc?bv.localeCompare(av):av.localeCompare(bv));});
+    rs.forEach(r=>tbody.appendChild(r));
+  };}
 }
 
-function _trsTblSort(tblId,colIdx,th){
-  const tbl=document.getElementById(tblId);if(!tbl)return;
-  const tbody=tbl.querySelector('tbody');
-  const rows=[...tbody.querySelectorAll('tr')];
-  const asc=th.dataset.asc!=='1';th.dataset.asc=asc?'1':'0';
-  // Reset all th arrows
-  tbl.querySelectorAll('th').forEach(h=>h.textContent=h.textContent.replace(/ [▲▼]$/,''));
-  th.textContent=th.textContent+' '+(asc?'▲':'▼');
-  rows.sort((a,b)=>{
-    const ca=a.cells[colIdx]?.textContent.trim()||'';
-    const cb=b.cells[colIdx]?.textContent.trim()||'';
-    const na=parseFloat(ca);const nb=parseFloat(cb);
-    if(!isNaN(na)&&!isNaN(nb))return asc?na-nb:nb-na;
-    return asc?ca.localeCompare(cb,'it'):cb.localeCompare(ca,'it');
-  });
-  rows.forEach(r=>tbody.appendChild(r));
-  // Re-stripe rows
-  rows.forEach((r,i)=>{r.style.background=i%2===0?'#fff':'#f9f9fb';});
-}
 function campColor(cn){const cm=CAMP_META[cn]||{};return _CCLR[cm.gruppo]||'#636e72';}
 const CAMP_DATA=D.camp_data||{};
 const PC={CA:'#d63031',SS:'#0984e3',SU:'#6c5ce7',OR:'#00b894',NU:'#e17055'};
@@ -4954,7 +4939,7 @@ function openGiornoModal(ds){
       </div>`;
     document.querySelectorAll('#dyn-mo-giorno,#dyn-mo-range').forEach(m=>m.remove());
     modal.style.zIndex='99999999';
-    modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}); _calRangeStart=null;}});
+    modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();_calResetAll();}});
     document.body.appendChild(modal);
 
     // Drag
@@ -5007,14 +4992,22 @@ function openGiornoModal(ds){
 // ── Selezione range calendario ──────────────────────────────────────────────
 let _calRangeStart=null;
 let _calCurrentArb=''; // nome arbitro corrente per filtro calendario
+function _calResetAll(){
+  document.querySelectorAll('[data-cal-ds]').forEach(el=>{
+    el.style.outline='';
+    el.style.outlineOffset='';
+    if(el.dataset.calBg)el.style.background=el.dataset.calBg;
+    else el.style.removeProperty('background');
+  });
+  _calRangeStart=null;
+  const h=document.getElementById('cal-range-hint');if(h)h.remove();
+}
 // Click fuori dal calendario cancella la selezione
 document.addEventListener('click',function(ev){
   if(_calRangeStart&&!ev.target.closest('[data-cal-ds]')&&!ev.target.closest('#cal-range-hint')){
-    _calRangeStart=null;
-    document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';el.style.outlineOffset='';});
-    const h=document.getElementById('cal-range-hint');if(h)h.remove();
+    _calResetAll();
   }
-});
+},{capture:true,passive:false});
 function _calHighlightRange(start,hover){
   // Evidenzia le celle nel range start→hover durante la selezione
   const d1=start<hover?start:hover;
@@ -5023,7 +5016,7 @@ function _calHighlightRange(start,hover){
     const d=el.dataset.calDs;
     if(d===start){el.style.outline='2.5px solid #e74c3c';el.style.outlineOffset='-1px';el.style.background='';}
     else if(d>=d1&&d<=d2){el.style.background='rgba(231,76,60,0.25)';el.style.outline='';}
-    else{el.style.outline='';el.style.background='';}
+    else{el.style.outline='';if(el.dataset.calBg)el.style.background=el.dataset.calBg;else el.style.removeProperty('background');}
   });
 }
 function calDayHover(ds){
@@ -5038,10 +5031,10 @@ function calDayHover(ds){
 function calDayClick(ds, cnt){
   if(!_calRangeStart){
     // Primo click: seleziona giorno di inizio
+    _calResetAll();
     _calRangeStart=ds;
     document.querySelectorAll('[data-cal-ds]').forEach(el=>{
-      el.style.outline=el.dataset.calDs===ds?'2.5px solid #e74c3c':'';
-      el.style.outlineOffset='-1px';
+      if(el.dataset.calDs===ds){el.style.outline='2.5px solid #e74c3c';el.style.outlineOffset='-1px';}
     });
     let hint=document.getElementById('cal-range-hint');
     if(!hint){hint=document.createElement('div');hint.id='cal-range-hint';hint.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#2c3e6b;color:#fff;border-radius:8px;padding:8px 16px;font-size:.75rem;z-index:9999;pointer-events:none';document.body.appendChild(hint);}
@@ -5049,21 +5042,18 @@ function calDayClick(ds, cnt){
   } else {
     const d1=_calRangeStart<ds?_calRangeStart:ds;
     const d2=_calRangeStart<ds?ds:_calRangeStart;
-    _calRangeStart=null;
-    document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';});
-    const hint=document.getElementById('cal-range-hint');if(hint)hint.remove();
+    _calResetAll();
     if(d1===d2){
-      // Singolo giorno: apri modal filtrato per arbitro
+      // Singolo giorno
       if(_calCurrentArb){
-        // Filtra gare del giorno per questo arbitro
         const allGD=[...(D.gare||[]),...(D.gare_future||[])].filter(g=>g['Data']===d1&&['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].some(f=>pns(g[f]||'')===_calCurrentArb));
-        if(allGD.length>0){openGiornoModal(d1);setTimeout(()=>document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}),100);}
-        else if(cnt>0){openGiornoModal(d1);setTimeout(()=>document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}),100);}
+        if(allGD.length>0)openGiornoModal(d1);
+        else if(cnt>0)openGiornoModal(d1);
       } else if(cnt>0){
         openGiornoModal(d1);
       }
     } else {
-      openGiornoRange(d1,d2,_calCurrentArb);setTimeout(()=>document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}),100);
+      openGiornoRange(d1,d2,_calCurrentArb);
     }
   }
 }
@@ -5146,10 +5136,10 @@ function openGiornoRange(d1,d2,arbFilter){
       <div class="mbox" style="width:100vw;height:100vh;margin:0;border-radius:0;resize:none;overflow:hidden;display:flex;flex-direction:column">
         <div class="mhd" style="cursor:move"><span>📅</span><h3>${escH(titleStr)}</h3>
         <button class="mbtn" onclick="toggleMoFullscreen('dyn-mo-range')" title="Espandi">⛶</button>
-        <button class="mbtn" onclick="document.getElementById('dyn-mo-range')?.remove();document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';});_calRangeStart=null;">✕</button></div>
+        <button class="mbtn" onclick="document.getElementById('dyn-mo-range')?.remove();_calResetAll();">✕</button></div>
         <div class="mbody">${bodyHtml}</div>
       </div>`;
-    modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}); _calRangeStart=null;}});
+    modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();_calResetAll();}});
     document.body.appendChild(modal);
     const box=modal.querySelector('.mbox'),head=modal.querySelector('.mhd');
     let drag=false,ox=0,oy=0;
@@ -7024,26 +7014,23 @@ function mkCamminoArbitro(p){
         lastMonth=m;
       }
 
-      // Bars for this date - with day tick markers
-      var _dow=new Date(d+'T12:00').getDay();
-      var _isWEd=(_dow===0||_dow===6);
-      var _dLbl=d.slice(8)+'/'+d.slice(5,7);
-      var _tickClr=_isWEd?'#e67e22':'#8899bb';
-      html+='<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0" title="'+d+'">';
-      html+='<div style="display:flex;align-items:flex-end;gap:1px">';
+      // Day group wrapper: bars with uniform width + bottom day-marker line
+      var _dayBarsHtml='';
       byDateOrd[d].forEach(function(g){
         var cn=g['Campionato']||'';
         var col=campColorCache[cn]||'#888';
         var imp=getImportance(cn);
         var barH=8+Math.round(imp/10*44);
         var title=cn+' — '+d+(g['Ora']?' '+g['Ora']:'')+'\n'+(g['Squadra Casa']||'')+' vs '+(g['Squadra Ospite']||'')+(g['Risultato']?' ('+g['Risultato']+')':'');
-        html+='<div title="'+title+'" style="width:8px;min-width:8px;max-width:8px;height:'+barH+'px;background:'+col+';border-radius:3px 3px 0 0;cursor:pointer;flex-shrink:0;box-shadow:0 1px 2px '+col+'55;transition:filter .1s" onmouseover="this.style.filter=\'brightness(1.3)\'" onmouseout="this.style.filter=\'\'" onclick="tlDayClick(\''+d+'\')"></div>';
+        _dayBarsHtml+='<div title="'+title+'" style="width:8px;min-width:8px;height:'+barH+'px;background:'+col+';border-radius:3px 3px 0 0;cursor:pointer;flex-shrink:0" onmouseover="this.style.filter=\'brightness(1.25)\'" onmouseout="this.style.filter=\'\'"></div>';
       });
-      html+='</div>';
-      html+='<div style="width:100%;height:3px;background:'+_tickClr+';border-radius:0 0 2px 2px;margin-top:1px"></div>';
-      html+='<div style="font-size:.4rem;color:'+_tickClr+';font-weight:'+(_isWEd?700:400)+';white-space:nowrap;margin-top:1px;line-height:1">'+_dLbl+'</div>';
-      html+='</div>';
-
+      var _dow2=new Date(d+'T12:00').getDay();
+      var _markerCol=_dow2===0?'#e67e22':_dow2===6?'#f39c12':'#b0c4ee';
+      var _nG2=byDateOrd[d].length;
+      html+='<div style="display:inline-flex;flex-direction:column;align-items:flex-end;flex-shrink:0" title="'+d+': '+_nG2+' gar'+(_nG2===1?'a':'e')+'">'
+        +'<div style="display:flex;align-items:flex-end;gap:1px">'+_dayBarsHtml+'</div>'
+        +'<div style="width:100%;height:3px;background:'+_markerCol+';border-radius:0 0 2px 2px"></div>'
+        +'</div>';
     });
 
     html+='</div>';
@@ -7836,7 +7823,7 @@ function openPersona(nome,campFilter){
         const BG=['#e8f4ff','var(--bl3)','var(--bl2)','var(--bl)','#c0392b'];
         const uid='cal_'+Math.random().toString(36).slice(2,7);
 
-        const todayDs=new Date().toISOString().split('T')[0]; // sempre data di sistema reale
+        const todayDs=new Date().toISOString().split('T')[0]; // always real today
         // ── VERSIONE A: Heatmap a blocchi — celle quadrate che riempiono la larghezza ──
         const FESTIVI_CAL=['2025-11-01','2025-12-08','2025-12-25','2025-12-26',
           '2026-01-01','2026-01-06','2026-04-05','2026-04-06','2026-04-25','2026-05-01','2026-06-02'];
@@ -7872,14 +7859,32 @@ function openPersona(nome,campFilter){
           if(isFirst) monthStartCols[col]=mesiL[parseInt(ds.slice(5,7))-1]+' '+ds.slice(2,4);
         });
         // Celle flex responsive che riempiono tutta la larghezza
-        // Header mesi allineato con flex:1 per ogni colonna-settimana
+        // Per-week and per-month counts
+        const _wkCnt={};
+        allDaysFlat.forEach(ds2=>{
+          const pos2=_padStart+allDaysFlat.indexOf(ds2);
+          const wk2=Math.floor(pos2/7);
+          const cnt2=(mesiGiorniMap[ds2.slice(0,7)]||{})[ds2]||0;
+          if(cnt2>0)_wkCnt[wk2]=(_wkCnt[wk2]||0)+cnt2;
+        });
+        const _mthCntMap={};
+        mesi.forEach(m=>{_mthCntMap[m]=Object.values(mesiGiorniMap[m]||{}).reduce((a,b)=>a+b,0);});
+        const _colToMonth={};
+        allDaysFlat.forEach((ds2,idx)=>{const col2=Math.floor((_padStart+idx)/7);if(!_colToMonth[col2])_colToMonth[col2]=ds2.slice(0,7);});
         const monthHdrAligned=(()=>{
           let h='';
           for(let c=0;c<numWeeks;c++){
             const lbl=monthStartCols[c]||'';
             const isMStart=!!monthStartCols[c]&&c>0;
-            if(isMStart) h+='<div style="flex:0;width:4px;min-width:4px;background:linear-gradient(to bottom,#1a6bb5,#90caf9);border-radius:2px;margin:1px 3px;align-self:stretch"></div>';
-            h+=`<div style="flex:1;min-width:10px;font-size:.65rem;font-weight:${lbl?800:400};color:${lbl?'var(--bl)':'transparent'};white-space:nowrap;overflow:visible;text-align:left;${isMStart?'border-left:3px solid #1a6bb5;padding-left:5px;':'padding-left:2px;'}line-height:1.2">${lbl||''}</div>`;
+            const mKey=_colToMonth[c]||'';
+            const wkCnt=_wkCnt[c]||0;
+            if(isMStart) h+='<div style="flex:0;width:5px;min-width:5px;background:linear-gradient(to bottom,#1565c0,#90caf9);border-radius:3px;margin:0 2px;align-self:stretch"></div>';
+            const mCnt=lbl?(_mthCntMap[mKey]||0):0;
+            h+=`<div style="flex:1;min-width:10px;display:flex;flex-direction:column;padding-left:${isMStart?'4':'1'}px;${isMStart?'border-left:2px solid #90caf9;':''}">
+              <span style="font-size:.65rem;font-weight:${lbl?800:300};color:${lbl?'var(--bl)':'transparent'};white-space:nowrap;line-height:1.3">${lbl||'.'}</span>
+              <span style="font-size:.58rem;font-weight:700;color:${mCnt>0?'#27ae60':'transparent'};white-space:nowrap;line-height:1">${mCnt>0?mCnt+'g':'0'}</span>
+              <span style="font-size:.52rem;color:${wkCnt>0?'var(--mu)':'transparent'};white-space:nowrap;line-height:1">${wkCnt>0?wkCnt:'0'}</span>
+            </div>`;
           }
           return h;
         })();
@@ -7910,27 +7915,27 @@ function openPersona(nome,campFilter){
             const isToday=ds===todayDs;
             const isMStart=ds.slice(8)==='01';
             const isNewMWeek=isMStart; // la prima settimana del mese ha bordo sinistro blu
-            // Sfondo streak (overlay leggero sopra il colore normale)
-            // Streak: TUTTI i giorni della serie >=5 evidenziati con sfondo colorato
             const streak=_streakMap[ds]||0;
-            const _streakColor=streak>=10?'#e74c3c':streak>=7?'#e67e22':streak>=5?'#f39c12':'';
-            const _streakW=streak>=10?4:streak>=7?3:streak>=5?2:0;
-            const _inSerie5=streak>=5;
-            const _serieBg5=streak>=10?'rgba(231,76,60,0.45)':streak>=7?'rgba(230,126,34,0.45)':streak>=5?'rgba(243,156,18,0.40)':'';
-            const _streakBgAdd=streak>=5?`;border:${_streakW}px solid ${_streakColor};box-shadow:0 0 ${_streakW*3}px ${_streakColor};outline:none`:'';
+            // Sfondo streak (overlay leggero sopra il colore normale)
+            // Streak: evidenziata come SPESSORE BORDO crescente
+            // 5gg = bordo giallo 3px, 7gg = bordo arancio 5px, 10gg = bordo rosso 7px
+            // Streak coloring: ALL days in any active streak series get highlighted
+            const _streakColor=streak>=10?'#e74c3c':streak>=7?'#e67e22':streak>=5?'#f39c12':streak>=2?'#3498db':'';
+            const _streakW=streak>=10?5:streak>=7?4:streak>=5?3:streak>=2?2:0;
+            const _streakBgAdd=streak>=2?`;border:${_streakW}px solid ${_streakColor};box-shadow:0 0 ${_streakW*2}px ${_streakColor}66`:'';
+            const streakGlow='';
             const bg=isToday?'var(--gold)':cnt===0?(isWE?'#ddd8f0':isFest?'#fce4ec':'#e8f4ff'):cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt>=3?'var(--bl)':'#c0392b';
-            const _bgFinal=(!isToday&&_inSerie5)?_serieBg5:bg;
-            const clr=(cnt>1||isToday||_inSerie5)?'#fff':(isWE?'#5d4037':'var(--mu)');
+            const clr=(cnt>1||isToday)?'#fff':(isWE?'#5d4037':'var(--mu)');
             const border=isFest?'2px solid #e91e63':isToday?'2.5px solid #e0a800':isDom?'1.5px solid var(--gold)':isSab?'1px solid #ffcc80':isMStart?'2px solid #90caf9':'1px solid transparent';
             const festIcon=isFest&&cnt===0?'🎉':'';
-            return _spacer+`<div data-cal-ds="${ds}" onclick="calDayClick('${ds}',${cnt})"
+            return _spacer+`<div data-cal-ds="${ds}" data-cal-bg="${bg}" onclick="calDayClick('${ds}',${cnt})"
               onmouseover="calDayHover('${ds}');this.style.transform='scale(1.15)'"
               onmouseout="this.style.transform=''"
-              title="${ds}${isToday?' — OGGI':''}${isFest?' 🎉 Festivo':''}${streak>=5?' 🔥 Serie '+streak+'gg':''}: ${cnt} gar${cnt===1?'a':'e'}"
-              style="flex:1;min-width:10px;aspect-ratio:1;background:${_bgFinal};border-radius:3px;border:${border};
+              title="${ds}${isToday?' — OGGI':''}${isFest?' 🎉 Festivo':''}${streak>=5?' 🔥 Streak '+streak+'gg':''}: ${cnt} gar${cnt===1?'a':'e'}"
+              style="flex:1;min-width:10px;aspect-ratio:1;background:${bg};border-radius:3px;border:${border};
                 display:flex;align-items:center;justify-content:center;font-size:.55rem;
                 font-weight:800;color:${clr};cursor:${cnt>0||isToday?'pointer':'default'};
-                transition:transform .1s;margin:1px;${_streakBgAdd}"
+                transition:transform .1s;margin:1px;${streakGlow}${_streakBgAdd}"
             >${festIcon||(cnt>0?cnt:(isToday?'●':''))}</div>`;
           }).join('');
           return`<div style="display:flex;align-items:stretch;width:100%;margin-bottom:2px">
@@ -8003,15 +8008,10 @@ function openPersona(nome,campFilter){
                 ${isToday?'<div style="font-size:.42rem;line-height:1;opacity:.8">OGG</div>':''}
               </div>`;
             }).join('');
-            const labelBg=tot>0?'linear-gradient(135deg,#1e3a6e,#2456a4)':'linear-gradient(135deg,#6b7a99,#aab2c8)';
-            return`<div style="display:flex;align-items:center;gap:3px;padding:4px 0 4px 0;border-top:3px solid #1e3a6e;margin-top:2px">
-              <div style="width:56px;flex-shrink:0;padding:2px 4px 2px 0;text-align:right">
-                <div style="background:${labelBg};color:#fff;border-radius:4px;padding:2px 5px;display:inline-block;line-height:1.2">
-                  <div style="font-size:.7rem;font-weight:700">${label}</div>
-                  <div style="font-size:.58rem;opacity:.85">${tot?tot+'g':''}</div>
-                </div>
-              </div>
-              <div style="display:flex;gap:1px;flex:1;min-width:0">${cells}</div>
+            return`<div style="display:flex;align-items:center;gap:1px;padding:2px 0;border-bottom:1px solid var(--br)">
+              <div style="width:52px;font-size:.72rem;font-weight:700;color:var(--bl);flex-shrink:0;padding-right:4px;text-align:right;line-height:1.3">${label}</div>
+              <div style="display:flex;gap:2px;flex:1;min-width:0">${cells}</div>
+              <div style="font-size:.68rem;font-weight:700;color:var(--mu);margin-left:6px;flex-shrink:0;width:38px;text-align:right" title="Totale gare del mese">${tot?tot+'g':''}</div>
             </div>`;
           }).join('');
           return`<div style="overflow:hidden;width:100%;box-sizing:border-box">${hdr}${rows}</div>`;
@@ -9480,7 +9480,7 @@ function openSharedArbSqGames(arb,sq,camp,tipo){
   </div>`;
   document.body.appendChild(modal);
   setTimeout(()=>makeTableSortable(modal),50);
-  modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}); _calRangeStart=null;}});
+  modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();_calResetAll();}});
 }
 
 function openArbVsSq(nomeSq,nomeArb){
@@ -9532,7 +9532,7 @@ function openArbVsSq(nomeSq,nomeArb){
   </div>`;
   document.body.appendChild(modal);
   setTimeout(()=>makeTableSortable(modal),50);
-  modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}); _calRangeStart=null;}});
+  modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();_calResetAll();}});
 }
 
 // ── FILTRO RAPIDO GARE SQUADRA DAI CONTATORI (P3) ─────────────────
