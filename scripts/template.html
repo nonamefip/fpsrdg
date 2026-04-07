@@ -2049,7 +2049,7 @@ function calcTrasferte(p){
       let kmGara=0;
       if(gareG.length===1){kmGara=kmG;}
       else{const pC=idx===0?home:(coordC[idx-1]||home),tC=coordC[idx],nC=idx===gareG.length-1?home:(coordC[idx+1]||home);if(tC&&pC)kmGara+=haversineKm(pC[0],pC[1],tC[0],tC[1]);if(tC&&nC)kmGara+=haversineKm(tC[0],tC[1],nC[0],nC[1]);}
-      if(kmGara>100)lunga++;else corta++;
+      if(kmGara>=50)lunga++;else corta++;
     });
   });
   return{inSede,corta,lunga,tot:inSede+corta+lunga};
@@ -2083,7 +2083,7 @@ function openTrsGareModal(nomePers,tipo){
       const gC=_cgf(campo);
       if(gC)kmG=haversineKm(home[0],home[1],gC[0],gC[1])*2;
     }
-    const cat=inCitta?'sede':kmG>100?'lunga':'corta';
+    const cat=inCitta?'sede':kmG>=50?'lunga':'corta';
     if(cat===tipo)matched.push({g,kmG:inCitta?0:Math.round(kmG)});
   });
   matched.sort((a,b)=>(a.g['Data']||'').localeCompare(b.g['Data']||''));
@@ -2104,8 +2104,8 @@ function openTrsGareModal(nomePers,tipo){
     </tr>`;
   }).join('');
   const mo=document.createElement('div');
-  mo.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999999;display:flex;align-items:center;justify-content:center;padding:16px';
-  mo.innerHTML=`<div style="background:#fff;border-radius:10px;max-width:760px;width:100%;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3)">
+  mo.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999999;display:flex;align-items:stretch;justify-content:stretch;padding:20px';
+  mo.innerHTML=`<div style="background:#fff;border-radius:8px;width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.4)">
     <div style="background:${col};color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
       <b style="font-size:.9rem">${titoli[tipo]} — ${escH(p.nome)} (${matched.length} gare)</b>
       <button onclick="this.closest('div[style*=fixed]').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:1rem">✕</button>
@@ -2549,7 +2549,7 @@ function renderPersonsTable(cid,persons,opts={}){
   // Intestazioni gruppo: usa colspan esatti basati sulle colonne reali
   // Colonne reali per isArb=true, showCat=false:
   // 2(vuoto) + 3(ana) + 10(att: Tot,Arb,UDC,Oss,Gg,4g,3g,2g,1g,Med/g) + 2(fare) + 3(camp) + 3(sq) + 2(km) + 1(top)
-  const _attCols=isArb?9:5;
+  const _attCols=isArb?11:5;
   const _sqCols=3;
   const _campCols=3;
   const _kmCols=isArb?2:1;
@@ -2557,7 +2557,7 @@ function renderPersonsTable(cid,persons,opts={}){
   const _topCols=isArb?1:0;
   const _GH_ST='text-align:center;font-size:.62rem;font-weight:700;padding:5px 6px;letter-spacing:.4px;border-bottom:2px solid rgba(255,255,255,.2)';
   const _trsGH=isArb?(('<th colspan="'+_trsCols+'" style="'+_GH_ST+';background:#0d47a1;color:#fff">TRASFERTE</th>')):'';
-  const _rimbGH=isArb?('<th style="'+_GH_ST+';background:#0a5c36;color:#7effc0">COV.</th><th colspan="4" style="'+_GH_ST+';background:#2e7d32;color:#fff">RIMBORSI STIMATI €</th>'):'';
+  const _rimbGH=isArb?('<th colspan="2" style="'+_GH_ST+';background:#0a5c36;color:#7effc0">COV.</th><th colspan="4" style="'+_GH_ST+';background:#2e7d32;color:#fff">RIMBORSI STIMATI €</th>'):'';
   const groupHeaderHtml=isArb?`<tr style="pointer-events:none;border-bottom:2px solid rgba(255,255,255,.15)">
     <th colspan="2" style="background:var(--tbl-hdr);border:none;padding:0"></th>
     <th colspan="${isArb?6:3}" class="th-ana" style="${_GH_ST}">ANAGRAFICA</th>
@@ -2567,7 +2567,6 @@ function renderPersonsTable(cid,persons,opts={}){
     <th colspan="${_sqCols}" class="th-sq" style="${_GH_ST}">SQUADRE</th>
     <th colspan="${isArb?2:1}" class="th-km" style="${_GH_ST}">PERCORRENZA</th>
     ${_trsGH}
-    <th style="background:var(--tbl-hdr);border:none;padding:0"></th>
     ${_rimbGH}
   </tr>`:'';
 
@@ -2903,8 +2902,10 @@ function renderPersonsTable(cid,persons,opts={}){
     <th class="th-sq" onclick="sT('${tableId}',${15+co+ae},event)" title="Gare in coppia · Shift+click per multiplo" style="cursor:pointer">Dopp.</th>
     <th class="th-sq" onclick="sT('${tableId}',${16+co+ae},event)" title="Squadre diverse · Shift+click per multiplo" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.2)">Sqd.</th>
     <th class="th-km" onclick="sT('${tableId}',${17+co+ae},true,event)" title="Km stimati · Shift+click per multiplo" style="cursor:pointer">&#128664; Km</th>
-    ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true,event)" title="Km medi/gara · Shift+click per multiplo" style="cursor:pointer">Km/g</th>`:''}
-    ${isArb?(()=>{const _ti=28+co+ae;return '<th onclick="sT(\''+tableId+'\',' +_ti+',true,event)" title="Gare nella stessa città" class="th-trs-s" style="cursor:pointer;border-left:2px solid rgba(255,255,255,.3);white-space:nowrap">In sede</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+1)+',true,event)" title="% in sede" class="th-trs-sp" style="cursor:pointer">%</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+2)+',true,event)" title="Gare entro 100km" class="th-trs-c" style="cursor:pointer;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap">≤100km</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+3)+',true,event)" title="% entro 100km" class="th-trs-cp" style="cursor:pointer">%</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+4)+',true,event)" title="Gare oltre 100km" class="th-trs-l" style="cursor:pointer;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap">&gt;100km</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+5)+',true,event)" title="% oltre 100km" class="th-trs-lp" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.3)">%</th>';})():''}
+    ${isArb?`<th class="th-km" onclick="sT('${tableId}',${18+co+ae},true,event)" title="Km medi/gara · Shift+click per multiplo" style="cursor:pointer">Km/g</th>
+    <th onclick="sT('${tableId}',${19+co+ae},event)" title="Mese con più gare · Shift+click per multiplo" style="cursor:pointer">Top mese</th>
+    <th onclick="sT('${tableId}',${20+co+ae},event)" title="Gare con provvedimenti · Shift+click per multiplo" style="cursor:pointer;background:#fff3e0;color:#e67e22">⚠️ Provv.</th>`:''}
+    ${isArb?(()=>{const _ti=28+co+ae;return '<th onclick="sT(\''+tableId+'\',' +_ti+',true,event)" title="Gare nella stessa città" class="th-trs-s" style="cursor:pointer;border-left:2px solid rgba(255,255,255,.3);white-space:nowrap">In sede</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+1)+',true,event)" title="% in sede" class="th-trs-sp" style="cursor:pointer">%</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+2)+',true,event)" title="Gare entro 50km (A/R)" class="th-trs-c" style="cursor:pointer;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap">&lt;50km</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+3)+',true,event)" title="% entro 50km" class="th-trs-cp" style="cursor:pointer">%</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+4)+',true,event)" title="Gare oltre 50km (A/R)" class="th-trs-l" style="cursor:pointer;border-left:1px solid rgba(255,255,255,.2);white-space:nowrap">&gt;100km</th>'+'<th onclick="sT(\''+tableId+'\','+(_ti+5)+',true,event)" title="% oltre 50km" class="th-trs-lp" style="cursor:pointer;border-right:2px solid rgba(255,255,255,.3)">%</th>';})():''}
     ${isArb?`<th onclick="sT('${tableId}',${21+co+ae},true,event)" title="Indice Qualità Arbitrale: somma pesi gare (campionato × fase). Più alto = gare più importanti arbitrate." style="cursor:pointer;background:#1a3a6b;color:#ffd54f;font-weight:700;white-space:nowrap;border-left:2px solid rgba(255,255,255,.2)">⭐ IQA</th>`:''}
     ${isArb?`<th onclick="sT('${tableId}',${22+co+ae},true,event)" title="% copertura gare comitato: singolo conta 1, in coppia conta 0.5" style="cursor:pointer;background:#0a5c36;color:#7effc0;font-weight:700;white-space:nowrap;border-left:2px solid rgba(255,255,255,.2)">% Cop.</th>`:''}
     ${isArb?`<th onclick="sT('${tableId}',${23+co+ae},event)" title="Gettone stimato (base + bonus singolo)" style="cursor:pointer;background:#e8f5e9;color:#2e7d32;font-weight:700;border-left:2px solid #a5d6a7">Gettone</th><th onclick="sT('${tableId}',${24+co+ae},event)" title="Rimborso benzina 0,25€/km (solo 1° arbitro)" style="cursor:pointer;background:#e8f5e9;color:#2e7d32">Benzina</th><th onclick="sT('${tableId}',${25+co+ae},event)" title="Extra km + traghetto + buono spesa" style="cursor:pointer;background:#e8f5e9;color:#2e7d32">Accessorie</th><th onclick="sT('${tableId}',${26+co+ae},event)" title="Totale rimborso stimato" style="cursor:pointer;background:#2e7d32;color:#fff;font-weight:700;border-left:2px solid #1b5e20">Totale €</th>`:''}  </tr></thead><tbody>${rows}${avgRow}</tbody></table></div>
@@ -4914,7 +4915,7 @@ function openGiornoModal(ds){
       </div>`;
     document.querySelectorAll('#dyn-mo-giorno,#dyn-mo-range').forEach(m=>m.remove());
     modal.style.zIndex='99999999';
-    modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+    modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}); _calRangeStart=null;}});
     document.body.appendChild(modal);
 
     // Drag
@@ -5017,13 +5018,13 @@ function calDayClick(ds, cnt){
       if(_calCurrentArb){
         // Filtra gare del giorno per questo arbitro
         const allGD=[...(D.gare||[]),...(D.gare_future||[])].filter(g=>g['Data']===d1&&['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].some(f=>pns(g[f]||'')===_calCurrentArb));
-        if(allGD.length>0) openGiornoModal(d1);
-        else if(cnt>0) openGiornoModal(d1);
+        if(allGD.length>0){openGiornoModal(d1);setTimeout(()=>document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}),100);}
+        else if(cnt>0){openGiornoModal(d1);setTimeout(()=>document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}),100);}
       } else if(cnt>0){
         openGiornoModal(d1);
       }
     } else {
-      openGiornoRange(d1,d2,_calCurrentArb);
+      openGiornoRange(d1,d2,_calCurrentArb);setTimeout(()=>document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}),100);
     }
   }
 }
@@ -5103,13 +5104,13 @@ function openGiornoRange(d1,d2,arbFilter){
     modal.id='dyn-mo-range';modal.className='mo open';
     modal.style.zIndex='99999999';
     modal.innerHTML=`
-      <div class="mbox" style="width:min(98vw,1400px);height:min(92vh,900px);resize:both;overflow:hidden;min-width:600px;display:flex;flex-direction:column">
+      <div class="mbox" style="width:100vw;height:100vh;margin:0;border-radius:0;resize:none;overflow:hidden;display:flex;flex-direction:column">
         <div class="mhd" style="cursor:move"><span>📅</span><h3>${escH(titleStr)}</h3>
         <button class="mbtn" onclick="toggleMoFullscreen('dyn-mo-range')" title="Espandi">⛶</button>
-        <button class="mbtn" onclick="document.getElementById('dyn-mo-range')?.remove()">✕</button></div>
+        <button class="mbtn" onclick="document.getElementById('dyn-mo-range')?.remove();document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';});_calRangeStart=null;">✕</button></div>
         <div class="mbody">${bodyHtml}</div>
       </div>`;
-    modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+    modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}); _calRangeStart=null;}});
     document.body.appendChild(modal);
     const box=modal.querySelector('.mbox'),head=modal.querySelector('.mhd');
     let drag=false,ox=0,oy=0;
@@ -7296,7 +7297,7 @@ function openPersona(nome,campFilter){
         ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div>${rankBadge(km,'km_stimati'||0)}<div class="sl">Km stimati</div></div>`:''}
         ${kmGara>0?`<div class="sc"><div class="sv">${kmGara}</div><div class="sl">Km/gara</div></div>`:''}
         <div class="sc" style="background:#1565c0;border-color:#90caf9;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'sede')" title="Clicca per vedere le gare in sede"><div class="sv" style="color:#bbdefb">${_trsP.inSede||0}</div><div class="sl" style="color:#90caf9">In sede ↗</div></div>
-        <div class="sc" style="background:#1b5e20;border-color:#81c784;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'corta')" title="Clicca per vedere le gare ≤100km"><div class="sv" style="color:#a5d6a7">${_trsP.corta||0}</div>${rankBadgeDyn(_trsP.corta||0,_trsArr)}<div class="sl" style="color:#81c784">≤100km ↗</div></div>
+        <div class="sc" style="background:#1b5e20;border-color:#81c784;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'corta')" title="Clicca per vedere le gare ≤100km"><div class="sv" style="color:#a5d6a7">${_trsP.corta||0}</div>${rankBadgeDyn(_trsP.corta||0,_trsArr)}<div class="sl" style="color:#81c784">&lt;50km ↗</div></div>
         <div class="sc" style="background:#b71c1c;border-color:#ef9a9a;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'lunga')" title="Clicca per vedere le gare >100km"><div class="sv" style="color:#ffcdd2">${_trsP.lunga||0}</div><div class="sl" style="color:#ef9a9a">&gt;100km ↗</div></div>
       </div>
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">💶 Rimborsi stimati</div>
@@ -7827,7 +7828,7 @@ function openPersona(nome,campFilter){
           for(let c=0;c<numWeeks;c++){
             const lbl=monthStartCols[c]||'';
             const isMStart=!!monthStartCols[c]&&c>0;
-            if(isMStart) h+='<div style="flex:0;width:12px;min-width:12px"></div>';
+            if(isMStart) h+='<div style="flex:0;width:4px;min-width:4px;background:linear-gradient(to bottom,#1a6bb5,#90caf9);border-radius:2px;margin:1px 3px;align-self:stretch"></div>';
             h+=`<div style="flex:1;min-width:10px;font-size:.65rem;font-weight:${lbl?800:400};color:${lbl?'var(--bl)':'transparent'};white-space:nowrap;overflow:visible;text-align:left;${isMStart?'border-left:3px solid #1a6bb5;padding-left:5px;':'padding-left:2px;'}line-height:1.2">${lbl||''}</div>`;
           }
           return h;
@@ -7849,7 +7850,7 @@ function openPersona(nome,campFilter){
           const showLbl=(ri%2===0);
           const cells=row.map((cell,ci)=>{
             const _isMStartCol=!!monthStartCols[ci]&&ci>0;
-            const _spacer=_isMStartCol?'<div style="flex:0;width:12px;min-width:12px"></div>':'';
+            const _spacer=_isMStartCol?'<div style="flex:0;width:4px;min-width:4px;background:linear-gradient(to bottom,#1a6bb5,#90caf9);border-radius:2px;margin:1px 3px;align-self:stretch"></div>':'';
             if(!cell) return _spacer+`<div style="flex:1;min-width:10px;aspect-ratio:1;background:#f0f2f7;border-radius:3px;opacity:.3;margin:1px"></div>`;
             const{ds}=cell;
             const cnt=(mesiGiorniMap[ds.slice(0,7)]||{})[ds]||0;
@@ -9423,7 +9424,7 @@ function openSharedArbSqGames(arb,sq,camp,tipo){
   </div>`;
   document.body.appendChild(modal);
   setTimeout(()=>makeTableSortable(modal),50);
-  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}); _calRangeStart=null;}});
 }
 
 function openArbVsSq(nomeSq,nomeArb){
@@ -9475,7 +9476,7 @@ function openArbVsSq(nomeSq,nomeArb){
   </div>`;
   document.body.appendChild(modal);
   setTimeout(()=>makeTableSortable(modal),50);
-  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();document.querySelectorAll('[data-cal-ds]').forEach(el=>{el.style.outline='';el.style.background='';}); _calRangeStart=null;}});
 }
 
 // ── FILTRO RAPIDO GARE SQUADRA DAI CONTATORI (P3) ─────────────────
