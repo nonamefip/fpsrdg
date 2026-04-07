@@ -7912,6 +7912,7 @@ function openPersona(nome,campFilter){
             const isNewMWeek=isMStart; // la prima settimana del mese ha bordo sinistro blu
             // Sfondo streak (overlay leggero sopra il colore normale)
             // Streak: TUTTI i giorni della serie >=5 evidenziati con sfondo colorato
+            const streak=_streakMap[ds]||0;
             const _streakColor=streak>=10?'#e74c3c':streak>=7?'#e67e22':streak>=5?'#f39c12':'';
             const _streakW=streak>=10?4:streak>=7?3:streak>=5?2:0;
             const _inSerie5=streak>=5;
