@@ -1874,131 +1874,231 @@ function haversineKm(a,b,c,d){
 
 // ── CALCOLO RIMBORSI PER ARBITRO ──────────────────────────────────────────
 // Restituisce { km, gettone, benzina, accessorie, totale }
+// ── ROAD KM TABLE ─────────────────────────────────────────────────────────
+// Distanze stradali reali tra città sarde (km andata, verificate su Google Maps)
+// Fallback: haversine × 1.4 per tratte non in tabella
+const ROAD_KM={"ALGHERO": {"SASSARI": 37, "CAGLIARI": 268, "ORISTANO": 168, "NUORO": 197, "OLBIA": 164, "PORTO TORRES": 48, "TEMPIO PAUSANIA": 130, "ARZACHENA": 157, "MACOMER": 102, "OZIERI": 98}, "SASSARI": {"ALGHERO": 37, "CAGLIARI": 210, "NUORO": 136, "ORISTANO": 147, "OLBIA": 105, "PORTO TORRES": 20, "TEMPIO PAUSANIA": 75, "ARZACHENA": 100, "MACOMER": 79, "OZIERI": 52, "SORSO": 15, "SENNORI": 13, "URI": 22, "ITTIRI": 25, "PLOAGHE": 33, "NULVI": 38, "OLMEDO": 28, "TISSI": 16, "VALLEDORIA": 57, "LA MADDALENA": 135}, "CAGLIARI": {"ALGHERO": 268, "SASSARI": 210, "NUORO": 185, "ORISTANO": 95, "OLBIA": 270, "IGLESIAS": 58, "CARBONIA": 72, "QUARTU SANT'ELENA": 12, "SELARGIUS": 9, "MONSERRATO": 8, "ASSEMINI": 15, "ELMAS": 8, "CAPOTERRA": 18, "DECIMOMANNU": 20, "SESTU": 13, "SINNAI": 18, "SETTIMO SAN PIETRO": 16, "MARACALAGONIS": 22, "DOLIANOVA": 24, "SARROCH": 25, "SAN SPERATE": 26, "SERRAMANNA": 38, "SANLURI": 48, "SAN GAVINO MONREALE": 58, "GUSPINI": 72, "SANT'ANTIOCO": 85, "CALASETTA": 93, "PORTOSCUSO": 82, "ARBUS": 80, "GONNOSFANADIGA": 66, "TERRALBA": 74, "MARRUBIU": 82, "GHILARZA": 120, "MACOMER": 150, "DORGALI": 215, "OROSEI": 220, "LANUSEI": 160, "JERZU": 170, "MOGORO": 68, "CABRAS": 100}, "ORISTANO": {"ALGHERO": 168, "SASSARI": 147, "CAGLIARI": 95, "NUORO": 130, "OLBIA": 245, "GHILARZA": 40, "MACOMER": 75, "CABRAS": 10, "MARRUBIU": 18, "TERRALBA": 22, "GUSPINI": 45, "MOGORO": 28}, "NUORO": {"ALGHERO": 197, "SASSARI": 136, "CAGLIARI": 185, "ORISTANO": 130, "OLBIA": 150, "MACOMER": 64, "DORGALI": 32, "OROSEI": 40, "OLIENA": 12, "LANUSEI": 90, "JERZU": 100, "GHILARZA": 70, "OZIERI": 90, "TEMPIO PAUSANIA": 145}, "OLBIA": {"ALGHERO": 164, "SASSARI": 105, "CAGLIARI": 270, "NUORO": 150, "ORISTANO": 245, "ARZACHENA": 27, "TEMPIO PAUSANIA": 55, "LA MADDALENA": 42, "OZIERI": 95, "MACOMER": 160, "PORTO TORRES": 110}, "PORTO TORRES": {"ALGHERO": 48, "SASSARI": 20, "OLBIA": 110, "TEMPIO PAUSANIA": 80, "OZIERI": 55, "SORSO": 8}, "TEMPIO PAUSANIA": {"ALGHERO": 130, "SASSARI": 75, "NUORO": 145, "OLBIA": 55, "PORTO TORRES": 80, "OZIERI": 58, "ARZACHENA": 38}, "ARZACHENA": {"ALGHERO": 157, "SASSARI": 100, "OLBIA": 27, "TEMPIO PAUSANIA": 38, "LA MADDALENA": 22}, "MACOMER": {"ALGHERO": 102, "SASSARI": 79, "CAGLIARI": 150, "NUORO": 64, "ORISTANO": 75, "OLBIA": 160, "GHILARZA": 35}, "OZIERI": {"ALGHERO": 98, "SASSARI": 52, "NUORO": 90, "OLBIA": 95, "PORTO TORRES": 55, "TEMPIO PAUSANIA": 58}, "SORSO": {"SASSARI": 15, "PORTO TORRES": 8}, "SENNORI": {"SASSARI": 13}, "URI": {"SASSARI": 22}, "ITTIRI": {"SASSARI": 25}, "PLOAGHE": {"SASSARI": 33}, "NULVI": {"SASSARI": 38}, "OLMEDO": {"SASSARI": 28}, "TISSI": {"SASSARI": 16}, "VALLEDORIA": {"SASSARI": 57}, "LA MADDALENA": {"SASSARI": 135, "OLBIA": 42, "ARZACHENA": 22}, "IGLESIAS": {"CAGLIARI": 58, "CARBONIA": 18, "PORTOSCUSO": 24, "SANT'ANTIOCO": 36, "CALASETTA": 44, "GONNOSFANADIGA": 28, "GUSPINI": 36}, "CARBONIA": {"CAGLIARI": 72, "IGLESIAS": 18, "SANT'ANTIOCO": 18, "CALASETTA": 26, "PORTOSCUSO": 10, "GUSPINI": 47}, "QUARTU SANT'ELENA": {"CAGLIARI": 12, "SELARGIUS": 6, "SINNAI": 10, "SETTIMO SAN PIETRO": 8, "MARACALAGONIS": 14, "DOLIANOVA": 18}, "SELARGIUS": {"CAGLIARI": 9, "QUARTU SANT'ELENA": 6, "MONSERRATO": 4}, "MONSERRATO": {"CAGLIARI": 8, "SELARGIUS": 4}, "ASSEMINI": {"CAGLIARI": 15}, "ELMAS": {"CAGLIARI": 8}, "CAPOTERRA": {"CAGLIARI": 18}, "DECIMOMANNU": {"CAGLIARI": 20}, "SESTU": {"CAGLIARI": 13}, "SINNAI": {"CAGLIARI": 18, "QUARTU SANT'ELENA": 10}, "SETTIMO SAN PIETRO": {"CAGLIARI": 16, "QUARTU SANT'ELENA": 8}, "MARACALAGONIS": {"CAGLIARI": 22, "QUARTU SANT'ELENA": 14}, "DOLIANOVA": {"CAGLIARI": 24, "QUARTU SANT'ELENA": 18}, "SARROCH": {"CAGLIARI": 25}, "SAN SPERATE": {"CAGLIARI": 26}, "SERRAMANNA": {"CAGLIARI": 38}, "SANLURI": {"CAGLIARI": 48, "SAN GAVINO MONREALE": 12}, "SAN GAVINO MONREALE": {"CAGLIARI": 58, "GONNOSFANADIGA": 8, "SANLURI": 12}, "GUSPINI": {"CAGLIARI": 72, "ORISTANO": 45, "IGLESIAS": 36, "CARBONIA": 47, "GONNOSFANADIGA": 12, "ARBUS": 20}, "SANT'ANTIOCO": {"CAGLIARI": 85, "IGLESIAS": 36, "CARBONIA": 18}, "CALASETTA": {"CAGLIARI": 93, "IGLESIAS": 44, "CARBONIA": 26}, "PORTOSCUSO": {"CAGLIARI": 82, "IGLESIAS": 24, "CARBONIA": 10}, "ARBUS": {"CAGLIARI": 80, "GUSPINI": 20}, "GONNOSFANADIGA": {"CAGLIARI": 66, "IGLESIAS": 28, "GUSPINI": 12, "SAN GAVINO MONREALE": 8}, "TERRALBA": {"CAGLIARI": 74, "ORISTANO": 22, "MARRUBIU": 8}, "MARRUBIU": {"CAGLIARI": 82, "ORISTANO": 18, "TERRALBA": 8}, "GHILARZA": {"CAGLIARI": 120, "NUORO": 70, "ORISTANO": 40, "MACOMER": 35}, "DORGALI": {"CAGLIARI": 215, "NUORO": 32}, "OROSEI": {"CAGLIARI": 220, "NUORO": 40}, "LANUSEI": {"CAGLIARI": 160, "NUORO": 90, "JERZU": 22}, "JERZU": {"CAGLIARI": 170, "NUORO": 100, "LANUSEI": 22}, "MOGORO": {"CAGLIARI": 68, "ORISTANO": 28}, "CABRAS": {"CAGLIARI": 100, "ORISTANO": 10}, "OLIENA": {"NUORO": 12}};
+
+// ── HELPER: km stradali tra due città ─────────────────────────────────────
+function roadKmBetweenCities(cityA, cityB){
+  if(!cityA||!cityB) return null;
+  const a=cityA.toUpperCase().trim(), b=cityB.toUpperCase().trim();
+  if(a===b) return 0;
+  const t=ROAD_KM[a];
+  if(t&&t[b]!=null) return t[b];
+  // Fallback simmetrico
+  const t2=ROAD_KM[b];
+  if(t2&&t2[a]!=null) return t2[a];
+  return null; // non trovato → uso haversine
+}
+
+// ── HELPER: ottieni coordinate GPS di un campo ────────────────────────────
+function _campoGps(nome){
+  if(!nome) return null;
+  let g=CAMPO_GPS[nome]; if(g) return [g.lat,g.lng,g.city||''];
+  const nu=nome.toUpperCase();
+  const k2=Object.keys(CAMPO_GPS).find(k=>k.toUpperCase()===nu);
+  if(k2){g=CAMPO_GPS[k2];return[g.lat,g.lng,g.city||''];}
+  const base=nome.split(',')[0].trim().toUpperCase();
+  const k3=Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===base);
+  if(k3){g=CAMPO_GPS[k3];return[g.lat,g.lng,g.city||''];}
+  return null;
+}
+
+// ── HELPER: coordinate capoluogo da città arbitro ─────────────────────────
+// p.citta contiene il nome del comune; cerca nelle chiavi CAMPO_GPS o usa pvCoord come fallback
+function _homeCoordsCity(p){
+  const PV_COORD={CA:[39.22,9.12,'CAGLIARI'],SS:[40.73,8.56,'SASSARI'],NU:[40.32,9.33,'NUORO'],OR:[39.90,8.59,'ORISTANO'],SU:[39.37,8.78,'IGLESIAS']};
+  // Prima prova con p.citta
+  const citta=(p.citta||'').toUpperCase().trim();
+  if(citta){
+    // Cerca in CAMPO_GPS una entry con quella city
+    const entry=Object.values(CAMPO_GPS).find(v=>(v.city||'').toUpperCase().trim()===citta);
+    if(entry) return [entry.lat,entry.lng,citta];
+  }
+  // Fallback provincia
+  const pv=PV_COORD[p.provincia];
+  return pv||null;
+}
+
+// ── KM STRADALI TRA DUE PUNTI (con fallback haversine) ────────────────────
+function kmStrada(latA,lngA,cityA,latB,lngB,cityB){
+  // Prova lookup tabella (più accurato)
+  const road=roadKmBetweenCities(cityA,cityB);
+  if(road!=null) return road;
+  // Fallback: haversine × 1.40 (coefficiente medio Sardegna)
+  return Math.round(haversineKm(latA,lngA,latB,lngB)*1.40);
+}
+
+// ── CALCOLO KM GARA per un arbitro (con logica Arb1/Arb2) ─────────────────
+// Restituisce { kmPropri, kmCondivisi, indennita }
+// kmPropri = km che contano per la retribuzione benzina dell'arbitro
+// kmCondivisi = km extra da sommare SOLO per verifica soglia indennità
+// indennita = true/false (se supera 100km considerando anche km condivisi)
+function calcKmGaraArb(g, p, allPersons){
+  const PV_COORD={CA:[39.22,9.12,'CAGLIARI'],SS:[40.73,8.56,'SASSARI'],NU:[40.32,9.33,'NUORO'],OR:[39.90,8.59,'ORISTANO'],SU:[39.37,8.78,'IGLESIAS']};
+  
+  const campo=g['Campo']||g.campo||'';
+  const campoGps=_campoGps(campo);
+  const homeCoords=_homeCoordsCity(p);
+  if(!homeCoords||!campoGps) return {kmPropri:0,kmCondivisi:0,indennita:false};
+  
+  const [hLat,hLng,hCity]=homeCoords;
+  const [cLat,cLng,cCity]=campoGps;
+  const hCityN=(hCity||'').toUpperCase().trim();
+  const cCityN=(cCity||'').toUpperCase().trim();
+  
+  const pNome=(p.nome||'').trim().toUpperCase();
+  const a1Nome=((g['Arbitro 1']||'')).trim().toUpperCase();
+  const a2Nome=((g['Arbitro 2']||'')).trim().toUpperCase();
+  const isArb1=pNome===a1Nome;
+  const isArb2=pNome===a2Nome;
+  
+  const hasArb2=a2Nome.length>2&&!/designazione in attesa/i.test(g['Arbitro 2']||'');
+  
+  // Gara in casa propria: 0 km, 0 indennità
+  if(hCityN&&cCityN&&hCityN===cCityN){
+    return {kmPropri:0,kmCondivisi:0,indennita:false,inCasa:true};
+  }
+  
+  // Calcola km andata (one-way) per questo arbitro
+  const kmAR=kmStrada(hLat,hLng,hCityN,cLat,cLng,cCityN);
+  
+  // Se gara singola senza collega, o non si applica logica passaggio
+  if(!hasArb2){
+    // Solo Arb1, nessun collega
+    const ar=kmAR*2;
+    return {kmPropri:ar,kmCondivisi:0,indennita:ar>100};
+  }
+  
+  // Logica con due arbitri
+  // Trova coordinate Arb1 e Arb2
+  let arb1p=null, arb2p=null;
+  if(allPersons){
+    arb1p=allPersons[g['Arbitro 1']]||Object.values(allPersons).find(x=>x.nome===g['Arbitro 1'])||null;
+    arb2p=allPersons[g['Arbitro 2']]||Object.values(allPersons).find(x=>x.nome===g['Arbitro 2'])||null;
+  }
+  
+  // Se siamo l'arb1
+  if(isArb1){
+    // Caso: gara nella città dell'Arb2 → Arb1 prende tutti i km A/R al campo
+    if(arb2p){
+      const arb2Home=_homeCoordsCity(arb2p);
+      if(arb2Home){
+        const arb2City=(arb2Home[2]||'').toUpperCase().trim();
+        if(arb2City&&arb2City===cCityN){
+          // Gara in casa dell'Arb2: solo Arb1 conta km
+          const ar=kmAR*2;
+          return {kmPropri:ar,kmCondivisi:0,indennita:ar>100};
+        }
+      }
+    }
+    // Caso normale: Arb1 prende km A/R al campo
+    const ar=kmAR*2;
+    return {kmPropri:ar,kmCondivisi:0,indennita:ar>100};
+  }
+  
+  // Se siamo l'arb2
+  if(isArb2){
+    // Caso: gara nella città dell'Arb1 → Arb2 prende km A/R, Arb1 = 0
+    if(arb1p){
+      const arb1Home=_homeCoordsCity(arb1p);
+      if(arb1Home){
+        const arb1City=(arb1Home[2]||'').toUpperCase().trim();
+        
+        // Gara in casa dell'Arb1: Arb2 conta km, indennità solo sua
+        if(arb1City&&arb1City===cCityN){
+          const ar=kmAR*2;
+          return {kmPropri:ar,kmCondivisi:0,indennita:ar>100};
+        }
+        
+        // Verifica passaggio: Arb1 è di passaggio per Arb2?
+        // = il percorso Arb2→Arb1→Campo è ≤15% più lungo di Arb2→Campo diretto
+        const [a1Lat,a1Lng,a1City]=arb1Home;
+        const a1CityN=(a1City||'').toUpperCase().trim();
+        const kmArb2ToArb1=kmStrada(hLat,hLng,hCityN,a1Lat,a1Lng,a1CityN);
+        const kmArb1ToCampo=kmStrada(a1Lat,a1Lng,a1CityN,cLat,cLng,cCityN);
+        const kmDiretto=kmAR; // Arb2 → Campo diretto
+        const kmPassaggio=kmArb2ToArb1+kmArb1ToCampo;
+        
+        // Se passare dall'Arb1 non è una deviazione eccessiva (≤20% in più)
+        if(kmArb2ToArb1<kmDiretto && kmPassaggio<=kmDiretto*1.20){
+          // Arb1 è di passaggio: Arb2 conta solo km fino ad Arb1
+          // Indennità Arb2: somma km propri (fino ad Arb1) + km Arb1 (fino al campo)
+          const kmPropri=kmArb2ToArb1*2; // A/R fino all'Arb1
+          const kmTotalePerIndennita=kmArb2ToArb1+kmArb1ToCampo; // percorso totale one-way
+          return {kmPropri,kmCondivisi:kmArb1ToCampo,indennita:kmTotalePerIndennita>100};
+        }
+        
+        // Nessun passaggio: Arb2 conta km propri A/R al campo
+        const ar=kmAR*2;
+        return {kmPropri:ar,kmCondivisi:0,indennita:ar>100};
+      }
+    }
+    // Fallback: km propri A/R
+    const ar=kmAR*2;
+    return {kmPropri:ar,kmCondivisi:0,indennita:ar>100};
+  }
+  
+  // Non è né Arb1 né Arb2 di questa gara (non dovrebbe succedere)
+  return {kmPropri:0,kmCondivisi:0,indennita:false};
+}
+
+// ── CALCOLO RIMBORSI PER ARBITRO (riscritta con logica A1/A2 corretta) ────
 function calcRimborsiArb(p){
   const zero={km:0,gettone:0,benzina:0,accessorie:0,totale:0};
   if(!p) return zero;
-  const pvCoord={CA:[39.22,9.12],SS:[40.73,8.56],NU:[40.32,9.33],OR:[39.90,8.59],SU:[39.37,8.78]};
-  const home=pvCoord[p.provincia];
-  if(!home) return zero;
+  const homeCoords=_homeCoordsCity(p);
+  if(!homeCoords) return zero;
 
   const TRAGHETTO_CITTA=['LA MADDALENA','CARLOFORTE'];
-  const TRAGHETTO_MEDIO=7.90; // €, costo medio stimato stagione 2025-26
-  const BUONO_SPESA=15.00;    // € fisso per Maddalena/Carloforte
-  const BENZINA_KM=0.25;      // €/km
+  const TRAGHETTO_MEDIO=7.90;
+  const BUONO_SPESA=15.00;
+  const BENZINA_KM=0.25;
 
-  // Raggruppa gare per giorno, in ordine di ora
   const byDay={};
-  const gareArb=(p.gare_arbitro||p.gare||[]).filter(g=>g['Risultato']||true);
+  const gareArb=(p.gare_arbitro||p.gare||[]);
   gareArb.forEach(g=>{
     const dt=g['Data']||g.d||'';
     if(!byDay[dt]) byDay[dt]=[];
     byDay[dt].push(g);
   });
-  // Ordina per ora dentro ogni giorno
   Object.values(byDay).forEach(gs=>gs.sort((a,b)=>(a['Ora']||a.o||'').localeCompare(b['Ora']||b.o||'')));
 
-  let totKm=0, totGettone=0, totBenzina=0, totAccessorie=0;
+  let totKm=0,totGettone=0,totBenzina=0,totAccessorie=0;
 
   Object.values(byDay).forEach(gareGiorno=>{
-    // Costruisci percorso: home → campo1 → campo2 → ... → home
-    // ma deduplica campi consecutivi identici
-    const campiOrdinati=[];
     gareGiorno.forEach(g=>{
-      const campo=g['Campo']||g.campo||'';
-      if(campo && (campiOrdinati.length===0 || campiOrdinati[campiOrdinati.length-1]!==campo))
-        campiOrdinati.push(campo);
-    });
-
-    // Calcola km per ogni tratta del percorso giornaliero
-    // e attribuiscili alle gare
-    const coords=[home];
-    // GPS lookup: exact match first, then case-insensitive fallback
-    const _campoGpsFallback=(nome)=>{
-      if(!nome)return null;
-      let g=CAMPO_GPS[nome];
-      if(g)return[g.lat,g.lng];
-      // Try uppercase key match
-      const nomu=nome.toUpperCase();
-      const k2=Object.keys(CAMPO_GPS).find(k=>k.toUpperCase()===nomu);
-      if(k2)return[CAMPO_GPS[k2].lat,CAMPO_GPS[k2].lng];
-      // Try partial: first token (name before first comma)
-      const base=nome.split(',')[0].trim().toUpperCase();
-      const k3=Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===base);
-      if(k3)return[CAMPO_GPS[k3].lat,CAMPO_GPS[k3].lng];
-      return null;
-    };
-    const coordCampi=campiOrdinati.map(c=>_campoGpsFallback(c));
-    coordCampi.forEach(c=>{if(c)coords.push(c);});
-    coords.push(home);
-
-    // Km totali giorno (A/R completo) — usa campo_km OSRM se disponibile, fallback Haversine
-    const _campKm=D.campo_km||{};
-    const _pvHome=p.provincia||'SS';
-    let kmGiorno=0;
-    if(campiOrdinati.length===1){
-      // Gara singola: usa lookup diretto se disponibile
-      const _ck=_campKm[campiOrdinati[0]];
-      if(_ck&&_ck[_pvHome]) kmGiorno=_ck[_pvHome]*2;
-      else for(let i=0;i<coords.length-1;i++){
-        if(coords[i]&&coords[i+1]) kmGiorno+=haversineKm(coords[i][0],coords[i][1],coords[i+1][0],coords[i+1][1]);
-      }
-    } else {
-      for(let i=0;i<coords.length-1;i++){
-        if(coords[i]&&coords[i+1]) kmGiorno+=haversineKm(coords[i][0],coords[i][1],coords[i+1][0],coords[i+1][1]);
-      }
-    }
-
-    // Attribuisci km e rimborsi a ciascuna gara del giorno
-    // Caso gara singola nel giorno: km A/R completi
-    // Caso più gare città diverse: km per tratta proporzionale
-    gareGiorno.forEach((g,idx)=>{
-      const campo=g['Campo']||g.campo||'';
-      const gps=CAMPO_GPS[campo]||CAMPO_GPS[Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===(campo||'').split(',')[0].trim().toUpperCase())||'']||null;
-      const city=(gps?.city||'').toUpperCase();
-      const homeCity=Object.values(CAMPO_GPS).find(c=>
-        Math.abs(c.lat-home[0])<0.05&&Math.abs(c.lng-home[1])<0.05)?.city?.toUpperCase()||'';
+      const {kmPropri,kmCondivisi,indennita,inCasa}=calcKmGaraArb(g,p,P);
       
-      // Gara in casa: 0 km, 0 benzina, solo gettone
-      const inCitta=gps&&Math.abs(gps.lat-home[0])<0.05&&Math.abs(gps.lng-home[1])<0.05;
-      
-      // Calcola km per questa specifica tratta
-      let kmGara=0;
-      if(!inCitta){
-        if(gareGiorno.length===1){
-          kmGara=kmGiorno; // unica gara: A/R completo
-        } else {
-          // Più gare: tratta da/a questo campo
-          const prevCoord=idx===0?home:(coordCampi[idx-1]||home);
-          const thisCoord=coordCampi[idx];
-          const nextCoord=idx===gareGiorno.length-1?home:(coordCampi[idx+1]||home);
-          if(thisCoord&&prevCoord) kmGara+=haversineKm(prevCoord[0],prevCoord[1],thisCoord[0],thisCoord[1]);
-          if(thisCoord&&nextCoord) kmGara+=haversineKm(thisCoord[0],thisCoord[1],nextCoord[0],nextCoord[1]);
-        }
-      }
+      totKm+=kmPropri;
 
-      totKm+=kmGara;
-
-      // Gettone: determina se singolo (Arbitro 1 presente, Arbitro 2 assente o non designato)
-      const isArb1=(pns(g['Arbitro 1']||'')||'').trim().toUpperCase()===(p.nome||'').trim().toUpperCase();
+      const a1Nome=((g['Arbitro 1']||'')).trim().toUpperCase();
+      const pNome=(p.nome||'').trim().toUpperCase();
+      const isArb1=pNome===a1Nome;
       const hasArb2=(g['Arbitro 2']||'').trim().length>2&&
                     !/designazione in attesa/i.test(g['Arbitro 2']||'');
       const isSingolo=isArb1&&!hasArb2;
-      const gettoneGara=gettonePerCamp(g['Campionato']||g.c||'', isSingolo);
-      totGettone+=gettoneGara;
+      totGettone+=gettonePerCamp(g['Campionato']||g.c||'',isSingolo);
 
-      // Benzina: solo 1° arbitro, solo se fuori città
-      if(isArb1&&!inCitta&&kmGara>0){
-        totBenzina+=Math.round(kmGara*BENZINA_KM*100)/100;
+      // Benzina: solo se ha km propri (e non è gara in casa)
+      if(kmPropri>0&&isArb1){
+        totBenzina+=Math.round(kmPropri*BENZINA_KM*100)/100;
       }
 
-      // Accessorie: extra km se fuori sede (DR2=12€, altri=10€), traghetto+buono (solo 1° arb)
+      // Accessorie: extra km gara se ha indennità (fuori sede)
       const EXTRA_KM_GARA=/divisione regionale 2|div.*reg.*2/i.test(g['Campionato']||g.c||'')?12:10;
       let acc=0;
-      if(!inCitta&&kmGara>0) acc+=EXTRA_KM_GARA;
-      if(isArb1&&TRAGHETTO_CITTA.includes(city)){
+      if(indennita) acc+=EXTRA_KM_GARA;
+      
+      // Traghetto/buono spesa
+      const campo=g['Campo']||g.campo||'';
+      const campoGps=_campoGps(campo);
+      const campoCityU=(campoGps?campoGps[2]:'').toUpperCase().trim();
+      if(isArb1&&TRAGHETTO_CITTA.includes(campoCityU)){
         acc+=TRAGHETTO_MEDIO+BUONO_SPESA;
-      } else if(!isArb1&&TRAGHETTO_CITTA.includes(city)){
-        acc+=BUONO_SPESA; // 2° arbitro: solo buono spesa
+      } else if(!isArb1&&TRAGHETTO_CITTA.includes(campoCityU)){
+        acc+=BUONO_SPESA;
       }
       totAccessorie+=acc;
     });
@@ -2010,106 +2110,78 @@ function calcRimborsiArb(p){
   return{km:totKm,gettone:totGettone,benzina:totBenzina,accessorie:totAccessorie,totale};
 }
 
-// Retrocompatibilità: calcKmArb resta usabile
+// Retrocompatibilità
 function calcKmArb(p){ return calcRimborsiArb(p).km; }
 
-// Distribuzione trasferte: in sede (stessa città), corta (1-100km), lunga (>100km)
+// ── CALCOLO TRASFERTE (riscritta) ─────────────────────────────────────────
 function calcTrasferte(p){
   const zero={inSede:0,corta:0,lunga:0,tot:0};
   if(!p) return zero;
-  const pvCoord={CA:[39.22,9.12],SS:[40.73,8.56],NU:[40.32,9.33],OR:[39.90,8.59],SU:[39.37,8.78]};
-  const home=pvCoord[p.provincia];
-  if(!home) return zero;
-  const _cgf=(nome)=>{
-    if(!nome)return null;
-    let g=CAMPO_GPS[nome];if(g)return[g.lat,g.lng];
-    const k2=Object.keys(CAMPO_GPS).find(k=>k.toUpperCase()===nome.toUpperCase());if(k2)return[CAMPO_GPS[k2].lat,CAMPO_GPS[k2].lng];
-    const base=nome.split(',')[0].trim().toUpperCase();
-    const k3=Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===base);if(k3)return[CAMPO_GPS[k3].lat,CAMPO_GPS[k3].lng];
-    return null;
-  };
-  const byDay={};
-  (p.gare_arbitro||p.gare||[]).forEach(g=>{const dt=g['Data']||g.d||'';if(!byDay[dt])byDay[dt]=[];byDay[dt].push(g);});
-  Object.values(byDay).forEach(gs=>gs.sort((a,b)=>(a['Ora']||a.o||'').localeCompare(b['Ora']||b.o||'')));
+  const homeCoords=_homeCoordsCity(p);
+  if(!homeCoords) return zero;
   let inSede=0,corta=0,lunga=0;
-  Object.values(byDay).forEach(gareG=>{
-    const campiOrd=[];
-    gareG.forEach(g=>{const campo=g['Campo']||g.campo||'';if(campo&&(campiOrd.length===0||campiOrd[campiOrd.length-1]!==campo))campiOrd.push(campo);});
-    const coordC=campiOrd.map(c=>_cgf(c));
-    const coords=[home,...coordC.filter(Boolean),home];
-    const _ck=D.campo_km||{},_pvH=p.provincia||'SS';
-    let kmG=0;
-    if(campiOrd.length===1){const _k=_ck[campiOrd[0]];if(_k&&_k[_pvH])kmG=_k[_pvH]*2;else for(let i=0;i<coords.length-1;i++){if(coords[i]&&coords[i+1])kmG+=haversineKm(coords[i][0],coords[i][1],coords[i+1][0],coords[i+1][1]);}}
-    else{for(let i=0;i<coords.length-1;i++){if(coords[i]&&coords[i+1])kmG+=haversineKm(coords[i][0],coords[i][1],coords[i+1][0],coords[i+1][1]);}}
-    gareG.forEach((g,idx)=>{
-      const campo=g['Campo']||g.campo||'';
-      const gps=CAMPO_GPS[campo]||CAMPO_GPS[Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===(campo||'').split(',')[0].trim().toUpperCase())||'']||null;
-      const inCitta=gps&&Math.abs(gps.lat-home[0])<0.05&&Math.abs(gps.lng-home[1])<0.05;
-      if(inCitta){inSede++;return;}
-      let kmGara=0;
-      if(gareG.length===1){kmGara=kmG;}
-      else{const pC=idx===0?home:(coordC[idx-1]||home),tC=coordC[idx],nC=idx===gareG.length-1?home:(coordC[idx+1]||home);if(tC&&pC)kmGara+=haversineKm(pC[0],pC[1],tC[0],tC[1]);if(tC&&nC)kmGara+=haversineKm(tC[0],tC[1],nC[0],nC[1]);}
-      if(kmGara>=50)lunga++;else corta++;
-    });
+  (p.gare_arbitro||p.gare||[]).forEach(g=>{
+    const {kmPropri,indennita,inCasa}=calcKmGaraArb(g,p,P);
+    if(inCasa||kmPropri===0){inSede++;return;}
+    if(indennita||kmPropri>100)lunga++;
+    else corta++;
   });
   return{inSede,corta,lunga,tot:inSede+corta+lunga};
 }
 
+
 function openTrsGareModal(nomePers,tipo){
-  // nomePers viene da dataset.pnome (escH = HTML entities), decode prima di cercare
   const decoded=nomePers.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
   const p=P[decoded]||Object.values(P).find(x=>x.nome===decoded)||Object.values(P).find(x=>x.nome.toUpperCase()===decoded.toUpperCase());
   if(!p)return;
-  const pvCoord={CA:[39.22,9.12],SS:[40.73,8.56],NU:[40.32,9.33],OR:[39.90,8.59],SU:[39.37,8.78]};
-  const home=pvCoord[p.provincia];
-  if(!home){alert('Coordinate provincia non disponibili');return;}
-  const _cgf=(nome)=>{
-    if(!nome)return null;
-    let g=CAMPO_GPS[nome];if(g)return[g.lat,g.lng];
-    const k2=Object.keys(CAMPO_GPS).find(k=>k.toUpperCase()===nome.toUpperCase());if(k2)return[CAMPO_GPS[k2].lat,CAMPO_GPS[k2].lng];
-    const base=nome.split(',')[0].trim().toUpperCase();
-    const k3=Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===base);if(k3)return[CAMPO_GPS[k3].lat,CAMPO_GPS[k3].lng];
-    return null;
-  };
-  const titoli={sede:'🏠 Gare in sede',corta:'🟢 Gare &lt;50km',lunga:'🔴 Gare &gt;50km'};
-  const _parseCitta=c=>{const m=(c||'').match(/\d{5}\s+([A-Z\s'ÀÁÈÉÌÍÒÓÙÚ]+)\s*\(/);return m?m[1].trim():'';}
+  const homeCoords=_homeCoordsCity(p);
+  if(!homeCoords){alert('Coordinate città non disponibili');return;}
+
+  const titoli={sede:'🏠 Gare in sede',corta:'🟢 Gare &lt;100km',lunga:'🔴 Gare &gt;100km'};
   const _parseProv=c=>{const m=(c||'').match(/\(\s*([A-Z]{2})\s*\)/);return m?m[1]:'';}
   const colori={sede:'#1565c0',corta:'#1b5e20',lunga:'#b71c1c'};
+
   const matched=[];
   (p.gare_arbitro||p.gare||[]).forEach(g=>{
-    const campo=g['Campo']||g.campo||'';
-    const gps=CAMPO_GPS[campo]||CAMPO_GPS[Object.keys(CAMPO_GPS).find(k=>k.split(',')[0].trim().toUpperCase()===(campo||'').split(',')[0].trim().toUpperCase())||'']||null;
-    const inCitta=gps&&Math.abs(gps.lat-home[0])<0.05&&Math.abs(gps.lng-home[1])<0.05;
-    let kmG=0;
-    if(!inCitta){
-      const gC=_cgf(campo);
-      if(gC)kmG=haversineKm(home[0],home[1],gC[0],gC[1])*2;
-    }
-    const cat=inCitta?'sede':kmG>=50?'lunga':'corta';
-    if(cat===tipo)matched.push({g,kmG:inCitta?0:Math.round(kmG)});
+    const {kmPropri,indennita,inCasa}=calcKmGaraArb(g,p,P);
+    let cat;
+    if(inCasa||kmPropri===0) cat='sede';
+    else if(indennita||kmPropri>100) cat='lunga';
+    else cat='corta';
+    if(cat===tipo) matched.push({g,kmG:kmPropri,indennita,inCasa:!!inCasa});
   });
   matched.sort((a,b)=>(a.g['Data']||'').localeCompare(b.g['Data']||''));
+
   const col=colori[tipo]||'#333';
-  const rows=matched.map(({g,kmG})=>{
+  const totKm=matched.reduce((s,{kmG})=>s+kmG,0);
+
+  const rows=matched.map(({g,kmG,indennita})=>{
     const data=g['Data']||'—';
     const ora=g['Ora']||'';
     const campo=g['Campo']||'—';
     const camp=(g['Campionato']||'').replace('COMITATO REGIONALE SARDEGNA ','');
     const sq1=g['Squadra 1']||g['Squadra Casa']||g['squadra1']||'';
     const sq2=g['Squadra 2']||g['Squadra Ospite']||g['squadra2']||'';
-    const citta=_parseCitta(campo);
+    const campoGps=_campoGps(campo);
+    const citta=campoGps?campoGps[2]:'';
     const prov=_parseProv(campo);
     const pvClr=prov&&PC[prov]?PC[prov]:'#888';
-    return `<tr style="border-bottom:1px solid #eee" data-data="${data}" data-camp="${escH(camp)}" data-sq="${escH(sq1+sq2)}" data-campo="${escH(campo)}" data-citta="${escH(citta)}" data-prov="${prov}" data-km="${kmG}">
+    const a1=(g['Arbitro 1']||'').trim();
+    const a2=(g['Arbitro 2']||'').trim();
+    const isArb1=(p.nome||'').trim().toUpperCase()===a1.toUpperCase();
+    const collega=isArb1?(a2||'—'):(a1||'—');
+    const indenBadge=indennita?`<span style="background:#b71c1c;color:#fff;border-radius:3px;padding:0 4px;font-size:.58rem;font-weight:700;margin-left:3px">IND</span>`:'';
+    return `<tr style="border-bottom:1px solid #eee" data-data="${data}" data-camp="${escH(camp)}" data-sq="${escH(sq1+sq2)}" data-campo="${escH(campo)}" data-citta="${escH(citta)}" data-prov="${prov}" data-km="${kmG}" data-collega="${escH(collega)}">
       <td style="padding:5px 8px;white-space:nowrap;font-size:.72rem">${data}${ora?' '+ora:''}</td>
       <td style="padding:5px 8px;font-size:.7rem;color:#555">${escH(camp)}</td>
       <td style="padding:5px 8px;font-size:.72rem;font-weight:600">${escH(sq1)} — ${escH(sq2)}</td>
-      <td style="padding:5px 8px;font-size:.7rem;color:#555;max-width:220px;word-break:break-word">${escH(campo)}</td>
-      <td style="padding:5px 8px;font-size:.72rem;font-weight:600">${escH(citta)}</td>
+      <td style="padding:5px 8px;font-size:.68rem;color:#555;max-width:180px;word-break:break-word">${escH(campo)}</td>
+      <td style="padding:5px 8px;font-size:.72rem;font-weight:600">${escH(citta||'—')}<br><span style="font-size:.62rem;color:#888;font-weight:400">${escH(collega)}</span></td>
       <td style="padding:5px 8px;text-align:center"><span style="background:${pvClr};color:#fff;border-radius:3px;padding:1px 6px;font-size:.6rem;font-weight:700">${prov||'?'}</span></td>
-      <td style="padding:5px 8px;text-align:right;font-weight:700;color:${col};white-space:nowrap">${kmG>0?kmG+' km':'—'}</td>
+      <td style="padding:5px 8px;text-align:right;font-weight:700;color:${col};white-space:nowrap">${kmG>0?kmG+' km':'—'}${indenBadge}</td>
     </tr>`;
   }).join('');
+
   const _trsId='trs-'+Math.random().toString(36).slice(2,6);
   const mo=document.createElement('div');
   mo.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999999;display:flex;align-items:stretch;justify-content:stretch;padding:12px';
@@ -2129,13 +2201,17 @@ function openTrsGareModal(nomePers,tipo){
             <th onclick="if(window._sTrs)_sTrs('${_trsId}',1,'s')" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Campionato ↕</th>
             <th onclick="if(window._sTrs)_sTrs('${_trsId}',2,'s')" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Partita ↕</th>
             <th onclick="if(window._sTrs)_sTrs('${_trsId}',3,'s')" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Campo ↕</th>
-            <th onclick="if(window._sTrs)_sTrs('${_trsId}',4,'s')" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Città ↕</th>
+            <th onclick="if(window._sTrs)_sTrs('${_trsId}',4,'s')" style="padding:6px 8px;text-align:left;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Città / Collega ↕</th>
             <th onclick="if(window._sTrs)_sTrs('${_trsId}',5,'s')" style="padding:6px 8px;text-align:center;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;user-select:none">Prov. ↕</th>
             <th onclick="if(window._sTrs)_sTrs('${_trsId}',6,'n')" style="padding:6px 8px;text-align:right;font-size:.72rem;border-bottom:2px solid #ddd;cursor:pointer;white-space:nowrap;user-select:none">Km (A/R) ↕</th>
           </tr>
         </thead>
         <tbody>${rows||'<tr><td colspan="7" style="padding:20px;text-align:center;color:#999">Nessuna gara trovata</td></tr>'}</tbody>
       </table>
+    </div>
+    <div style="padding:8px 14px;background:#f8f9fa;border-top:1px solid #ddd;font-size:.75rem;color:#555;flex-shrink:0;display:flex;justify-content:space-between;align-items:center">
+      <span>${matched.length} gare · <b style="color:${col}">${totKm} km totali</b>${totKm>0?' · media '+Math.round(totKm/matched.length)+' km/gara':''}</span>
+      <span style="font-size:.65rem;color:#aaa">IND = indennità &gt;100km</span>
     </div>
   </div>`;
   mo.addEventListener('click',e=>{if(e.target===mo){mo.remove();if(typeof _calResetAll==='function')_calResetAll();}});
