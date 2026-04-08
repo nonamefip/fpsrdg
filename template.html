@@ -1974,7 +1974,7 @@ function calcRimborsiArb(p){
   if(!p) return zero;
 
   const TRAGHETTO_CITTA=['LA MADDALENA','CARLOFORTE'];
-  const TRAGHETTO_MEDIO=7.90,BUONO_SPESA=15.00,BENZINA_KM=0.25;
+  const TRAGHETTO_FISSO=15.00,BENZINA_KM=0.25;
   const myName=(p.nome||'').trim().toUpperCase();
   const gareArb=(p.gare_arbitro||p.gare||[]);
   const byDay={};
@@ -2015,12 +2015,11 @@ function calcRimborsiArb(p){
       const extraKm=haIndennita?EXTRA:0;
       let traghetto=0,buonoPasto=0;
       if(TRAGHETTO_CITTA.includes(campoCitta)){
-        if(isArb1){traghetto=TRAGHETTO_MEDIO;buonoPasto=BUONO_SPESA;}
-        else{buonoPasto=BUONO_SPESA;}
+        traghetto=TRAGHETTO_FISSO;
       }
       const acc=extraKm+traghetto+buonoPasto;
       totAccessorie+=acc;
-      gareDetail.push({g,kmAR,gettoneBase,bonusSingolo,gettoneGara,benzina,extraKm,traghetto,buonoPasto,acc,totaleGara:Math.round((gettoneGara+benzina+acc)*100)/100,isArb1,isSingolo,campoCitta,caso:kgara.caso});
+      gareDetail.push({g,kmAR,gettoneBase,bonusSingolo,gettoneGara,benzina,extraKm,traghetto,buonoPasto:0,acc,totaleGara:Math.round((gettoneGara+benzina+acc)*100)/100,isArb1,isSingolo,campoCitta,caso:kgara.caso});
     });
   });
   totBenzina=Math.round(totBenzina*100)/100;
@@ -7178,7 +7177,7 @@ function openPersona(nome,campFilter){
   const icon=p.categoria==='Arbitro'?'👨‍⚖️':p.categoria==='UDC'?'📋':'🔭';
   document.getElementById('mp-icon').textContent=icon;
   const nFut=(D.gare_future||[]).filter(g=>['Arbitro 1','Arbitro 2','Segnapunti','Cronometrista','24 Secondi','Addetto Referto','Osservatore'].some(f=>pns(g[f]||'')===nome)).length;
-  document.getElementById('mp-title').innerHTML=`${escH(nome)} &nbsp;${pvB(p.provincia)} ${catB(p.categoria)}${isDual?`<span class="badge" style="background:#ff6b6b;color:#fff;margin-left:6px">⚡ doppio ruolo</span>`:''}${(typeof CODICI_FIP!=='undefined'&&CODICI_FIP[nome])?`<span style='background:#34495e;color:#fff;border-radius:4px;padding:1px 7px;font-size:.68rem;margin-left:6px;font-family:monospace' title='Codice FIP'>🪪 ${CODICI_FIP[nome]}</span>`:''}${nFut>0?`<span style="background:#e17055;color:#fff;border-radius:10px;padding:1px 8px;font-size:.7rem;margin-left:8px">📅 ${nFut} in programma</span>`:''}`;  const allG=p.gare||[];
+  document.getElementById('mp-title').innerHTML=`${escH(nome)} &nbsp;${pvB(p.provincia)} ${catB(p.categoria)}${p.citta?`<span style='background:#e8f5e9;color:#2e7d32;border-radius:4px;padding:1px 7px;font-size:.68rem;margin-left:4px;font-weight:600'>📍 ${escH(p.citta)}</span>`:''}${isDual?`<span class="badge" style="background:#ff6b6b;color:#fff;margin-left:6px">⚡ doppio ruolo</span>`:''}${(typeof CODICI_FIP!=='undefined'&&CODICI_FIP[nome])?`<span style='background:#34495e;color:#fff;border-radius:4px;padding:1px 7px;font-size:.68rem;margin-left:6px;font-family:monospace' title='Codice FIP'>🪪 ${CODICI_FIP[nome]}</span>`:''}${nFut>0?`<span style="background:#e17055;color:#fff;border-radius:10px;padding:1px 8px;font-size:.7rem;margin-left:8px">📅 ${nFut} in programma</span>`:''}`;  const allG=p.gare||[];
   const nGiorni=Object.keys(p.giorni||{}).length;
   const maxGday=Math.max(...Object.values(p.giorni||{1:1}));
   const topCamp=Object.entries(p.campionati||{}).sort((a,b)=>campFipRank(a[0])-campFipRank(b[0]));
@@ -7381,6 +7380,13 @@ function openPersona(nome,campFilter){
     const _lvqMedal=_lvqRankMe===1?"🥇":_lvqRankMe===2?"🥈":_lvqRankMe===3?"🥉":"";
     const _kmArr=allArbs.map(x=>calcKmArb(x));
     const _trsArr=allArbs.map(x=>calcTrasferte(x).corta||0);
+    const _rLungArr=allArbs.map(x=>calcTrasferte(x).lunga||0);
+    // Calcola rimborsi una volta per tutti per ranking (cached per performance)
+    const _allRimbCache=allArbs.map(x=>calcRimborsiArb(x));
+    const _kmArr=_allRimbCache.map(r=>r.km||0);
+    const _rGettArr=_allRimbCache.map(r=>r.gettone||0);
+    const _rBenzArr=_allRimbCache.map(r=>r.benzina||0);
+    const _rTotArr=_allRimbCache.map(r=>r.totale||0);
     document.getElementById('mpt-0').innerHTML=`
       ${isDual?`<div class="dual-role-notice">⚡ Ruolo doppio: ${(p.categorie||[]).join(' + ')}. Usa le tab dedicate.</div>`:''}
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">📊 Attività</div>
@@ -7418,18 +7424,18 @@ function openPersona(nome,campFilter){
       </div>
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">🚗 Km & Trasferte</div>
       <div class="scs" style="margin-bottom:14px" data-pnome="${escH(p.nome)}">
-        ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div>${rankBadge(km,'km_stimati'||0)}<div class="sl">Km stimati</div></div>`:''}
+        ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div>${rankBadgeDyn(km,_kmArr)}<div class="sl">Km stimati</div></div>`:''}
         ${kmGara>0?`<div class="sc"><div class="sv">${kmGara}</div><div class="sl">Km/gara</div></div>`:''}
         <div class="sc" style="background:#1565c0;border-color:#90caf9;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'sede')" title="Clicca per vedere le gare in sede"><div class="sv" style="color:#bbdefb">${_trsP.inSede||0}</div><div class="sl" style="color:#90caf9">In sede ↗</div></div>
         <div class="sc" style="background:#1b5e20;border-color:#81c784;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'corta')" title="Clicca per vedere le gare ≤100km"><div class="sv" style="color:#a5d6a7">${_trsP.corta||0}</div>${rankBadgeDyn(_trsP.corta||0,_trsArr)}<div class="sl" style="color:#81c784">&lt;50km ↗</div></div>
-        <div class="sc" style="background:#b71c1c;border-color:#ef9a9a;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'lunga')" title="Clicca per vedere le gare >100km"><div class="sv" style="color:#ffcdd2">${_trsP.lunga||0}</div><div class="sl" style="color:#ef9a9a">&gt;100km ↗</div></div>
+        <div class="sc" style="background:#b71c1c;border-color:#ef9a9a;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'lunga')" title="Clicca per vedere le gare >100km"><div class="sv" style="color:#ffcdd2">${_trsP.lunga||0}</div>${rankBadgeDyn(_trsP.lunga||0,_rLungArr)}<div class="sl" style="color:#ef9a9a">&gt;100km ↗</div></div>
       </div>
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">💶 Rimborsi stimati</div>
       <div class="scs" style="margin-bottom:14px">
-        <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#2e7d32">€ ${rGettoneP}</div><div class="sl">Gettone</div></div>
-        <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#1b5e20">€ ${rBenzinaP.toFixed(0)}</div><div class="sl">Benzina</div></div>
+        <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#2e7d32">€ ${rGettoneP}</div>${rankBadgeDyn(rGettoneP,_rGettArr)}<div class="sl">Gettone</div></div>
+        <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#1b5e20">€ ${rBenzinaP.toFixed(0)}</div>${rankBadgeDyn(rBenzinaP,_rBenzArr)}<div class="sl">Benzina</div></div>
         <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#33691e">€ ${rAccessorieP.toFixed(0)}</div><div class="sl">Accessorie</div></div>
-        <div class="sc" style="background:#2e7d32;border-color:#1b5e20"><div class="sv" style="color:#fff;font-size:1.2rem">€ ${rTotaleP.toFixed(0)}</div><div class="sl" style="color:#a5d6a7">Totale €</div></div>
+        <div class="sc" style="background:#2e7d32;border-color:#1b5e20"><div class="sv" style="color:#fff;font-size:1.2rem">€ ${rTotaleP.toFixed(0)}</div>${rankBadgeDyn(rTotaleP,_rTotArr)}<div class="sl" style="color:#a5d6a7">Totale €</div></div>
       </div>
       <!-- Rimborsi già mostrati nei quadratini sopra -->
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
@@ -7965,7 +7971,7 @@ function openPersona(nome,campFilter){
             const isMStart=!!monthStartCols[c]&&c>0;
             const mKey=_colToMonth[c]||'';
             const wkCnt=_wkCnt[c]||0;
-            if(isMStart) h+='<div style="flex:0;width:5px;min-width:5px;background:linear-gradient(to bottom,#1565c0,#90caf9);border-radius:3px;margin:0 2px;align-self:stretch"></div>';
+            if(isMStart) h+='<div style="flex:0;width:18px;min-width:18px;background:linear-gradient(to bottom,#0d47a1,#42a5f5,#0d47a1);border-radius:4px;margin:0 6px;align-self:stretch;box-shadow:0 0 4px rgba(13,71,161,.4)"></div>';
             const mCnt=lbl?(_mthCntMap[mKey]||0):0;
             h+=`<div style="flex:1;min-width:10px;display:flex;flex-direction:column;padding-left:${isMStart?'4':'1'}px;${isMStart?'border-left:2px solid #90caf9;':''}">
               <span style="font-size:.65rem;font-weight:${lbl?800:300};color:${lbl?'var(--bl)':'transparent'};white-space:nowrap;line-height:1.3">${lbl||'.'}</span>
@@ -7992,7 +7998,7 @@ function openPersona(nome,campFilter){
           const showLbl=(ri%2===0);
           const cells=row.map((cell,ci)=>{
             const _isMStartCol=!!monthStartCols[ci]&&ci>0;
-            const _spacer=_isMStartCol?'<div style="flex:0;width:4px;min-width:4px;background:linear-gradient(to bottom,#1a6bb5,#90caf9);border-radius:2px;margin:1px 3px;align-self:stretch"></div>':'';
+            const _spacer=_isMStartCol?'<div style="flex:0;width:18px;min-width:18px;background:linear-gradient(to bottom,#0d47a1,#42a5f5,#0d47a1);border-radius:4px;margin:1px 6px;align-self:stretch;box-shadow:0 0 4px rgba(13,71,161,.4)"></div>':'';
             if(!cell) return _spacer+`<div style="flex:1;min-width:10px;aspect-ratio:1;background:#f0f2f7;border-radius:3px;opacity:.3;margin:1px"></div>`;
             const{ds}=cell;
             const cnt=(mesiGiorniMap[ds.slice(0,7)]||{})[ds]||0;
