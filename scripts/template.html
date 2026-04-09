@@ -1876,7 +1876,7 @@ function haversineKm(a,b,c,d){
 const ROAD_KM=(function(){
   const T={
     'ALGHERO':{'ALGHERO':0,'SASSARI':34,'PORTO TORRES':47,'OLMEDO':13,'ITTIRI':25,'URI':22,'TISSI':38,'SORSO':42,'SENNORI':40,'NULVI':68,'PLOAGHE':55,'OZIERI':105,'CAGLIARI':228,'ORISTANO':134,'NUORO':160,'OLBIA':175,'ARZACHENA':192,'LA MADDALENA':208,'TEMPIO PAUSANIA':158,'MACOMER':109,'GHILARZA':120,'MARRUBIU':162,'SANLURI':192,'CARBONIA':227,'IGLESIAS':218,'DORGALI':199,'OROSEI':205,'LANUSEI':255,'JERZU':262,'VALLEDORIA':75},
-    'SASSARI':{'SASSARI':0,'ALGHERO':34,'PORTO TORRES':20,'OLMEDO':26,'ITTIRI':20,'URI':22,'TISSI':25,'SORSO':15,'SENNORI':12,'NULVI':50,'PLOAGHE':38,'OZIERI':73,'VALLEDORIA':55,'CAGLIARI':212,'ORISTANO':115,'NUORO':123,'OLBIA':105,'ARZACHENA':118,'LA MADDALENA':135,'TEMPIO PAUSANIA':91,'MACOMER':96,'GHILARZA':107,'MARRUBIU':144,'SANLURI':176,'CARBONIA':213,'IGLESIAS':204,'DORGALI':162,'OROSEI':168,'LANUSEI':219,'JERZU':225},
+    'SASSARI':{'SASSARI':0,'ALGHERO':34,'PORTO TORRES':20,'OLMEDO':26,'ITTIRI':20,'URI':22,'TISSI':25,'SORSO':15,'SENNORI':12,'NULVI':42,'PLOAGHE':38,'OZIERI':73,'VALLEDORIA':55,'CAGLIARI':212,'ORISTANO':115,'NUORO':123,'OLBIA':105,'ARZACHENA':118,'LA MADDALENA':135,'TEMPIO PAUSANIA':91,'MACOMER':96,'GHILARZA':107,'MARRUBIU':144,'SANLURI':176,'CARBONIA':213,'IGLESIAS':204,'DORGALI':162,'OROSEI':168,'LANUSEI':219,'JERZU':225},
     'CAGLIARI':{'CAGLIARI':0,'SASSARI':212,'ALGHERO':228,'PORTO TORRES':228,'OLMEDO':218,'ITTIRI':220,'URI':222,'TISSI':216,'SORSO':222,'SENNORI':221,'NULVI':248,'PLOAGHE':200,'OZIERI':211,'VALLEDORIA':263,'ORISTANO':95,'NUORO':182,'OLBIA':265,'ARZACHENA':293,'LA MADDALENA':313,'TEMPIO PAUSANIA':259,'MACOMER':145,'GHILARZA':115,'MARRUBIU':55,'SANLURI':45,'CARBONIA':75,'IGLESIAS':65,'ELMAS':7,'ASSEMINI':12,'SESTU':12,'SELARGIUS':9,"QUARTU SANT'ELENA":13,'MONSERRATO':7,'CAPOTERRA':20,'DECIMOMANNU':22,'SAN SPERATE':22,'SERRAMANNA':42,'SAN GAVINO MONREALE':58,'GUSPINI':72,'GONNOSFANADIGA':64,'ARBUS':88,'DOLIANOVA':28,'MARACALAGONIS':27,'SINNAI':24,'SETTIMO SAN PIETRO':20,'SARROCH':26,'DORGALI':215,'OROSEI':218,'LANUSEI':175,'JERZU':185,"SANT'ANTIOCO":80,'CALASETTA':85,'PORTOSCUSO':85,'TERRALBA':75,'CABRAS':100,'MOGORO':65,'OLIENA':188},
     'ORISTANO':{'ORISTANO':0,'SASSARI':115,'ALGHERO':134,'CAGLIARI':95,'NUORO':123,'OLBIA':230,'ARZACHENA':250,'LA MADDALENA':268,'MACOMER':55,'GHILARZA':25,'MARRUBIU':30,'SANLURI':60,'CARBONIA':140,'IGLESIAS':130,'TERRALBA':20,'CABRAS':15,'MOGORO':25,'DORGALI':155,'LANUSEI':145,'PORTO TORRES':130,'TEMPIO PAUSANIA':195,'SERRAMANNA':65,'SAN GAVINO MONREALE':55,'GUSPINI':60,'ARBUS':68,'VALLEDORIA':168},
     'NUORO':{'NUORO':0,'SASSARI':123,'ALGHERO':160,'CAGLIARI':182,'ORISTANO':123,'OLBIA':155,'ARZACHENA':175,'LA MADDALENA':192,'TEMPIO PAUSANIA':140,'OZIERI':85,'MACOMER':55,'GHILARZA':70,'DORGALI':35,'OROSEI':38,'LANUSEI':90,'JERZU':100,'OLIENA':8,'MARRUBIU':148,'SANLURI':156,'CARBONIA':215,'IGLESIAS':205,'PORTO TORRES':138,'VALLEDORIA':160,"QUARTU SANT'ELENA":190,'SELARGIUS':188,'SESTU':187},
@@ -1892,7 +1892,7 @@ const ROAD_KM=(function(){
     'LANUSEI':{'LANUSEI':0,'SASSARI':219,'CAGLIARI':175,'NUORO':90,'OLBIA':230,'ORISTANO':145,'JERZU':20,'DORGALI':75,'OROSEI':78},
     'JERZU':{'JERZU':0,'SASSARI':225,'CAGLIARI':185,'NUORO':100,'LANUSEI':20,'DORGALI':85,'OROSEI':88},
     'VALLEDORIA':{'VALLEDORIA':0,'SASSARI':55,'PORTO TORRES':35,'OLBIA':72,'ARZACHENA':85,'TEMPIO PAUSANIA':60,'OZIERI':55,'NULVI':40,'ALGHERO':75},
-    'NULVI':{'NULVI':0,'SASSARI':50,'ALGHERO':68,'PORTO TORRES':55,'OZIERI':30,'TEMPIO PAUSANIA':65,'OLBIA':95,'VALLEDORIA':40},
+    'NULVI':{'NULVI':0,'SASSARI':42,'ALGHERO':68,'PORTO TORRES':55,'OZIERI':30,'TEMPIO PAUSANIA':65,'OLBIA':95,'VALLEDORIA':40},
     'SORSO':{'SORSO':0,'SASSARI':15,'PORTO TORRES':23,'SENNORI':8,'ALGHERO':42,'OLBIA':112},
     'SENNORI':{'SENNORI':0,'SASSARI':12,'PORTO TORRES':25,'SORSO':8,'ALGHERO':40,'OLBIA':110},
     'PLOAGHE':{'PLOAGHE':0,'SASSARI':38,'PORTO TORRES':50,'OZIERI':35,'ALGHERO':55,'OLBIA':90},
@@ -1976,7 +1976,12 @@ function calcRimborsiArb(p){
   const TRAGHETTO_CITTA=['LA MADDALENA','CARLOFORTE'];
   const TRAGHETTO_FISSO=15.00,BENZINA_KM=0.25;
   const myName=(p.nome||'').trim().toUpperCase();
-  const gareArb=(p.gare_arbitro||p.gare||[]);
+  // Fallback: se gare_arbitro e gare sono vuoti, cerca nelle gare globali
+  let gareArb=(p.gare_arbitro||p.gare||[]);
+  if(!gareArb.length&&typeof GARE!=='undefined'&&GARE.length){
+    const _myN=(p.nome||'').trim().toUpperCase();
+    gareArb=GARE.filter(g=>['Arbitro 1','Arbitro 2'].some(f=>((pns&&pns(g[f]||'')||g[f]||'')).trim().toUpperCase()===_myN));
+  }
   const byDay={};
   gareArb.forEach(g=>{const dt=g['Data']||g.d||'';if(!byDay[dt])byDay[dt]=[];byDay[dt].push(g);});
   Object.values(byDay).forEach(gs=>gs.sort((a,b)=>(a['Ora']||a.o||'').localeCompare(b['Ora']||b.o||'')));
@@ -7380,12 +7385,20 @@ function openPersona(nome,campFilter){
     const _lvqMedal=_lvqRankMe===1?"🥇":_lvqRankMe===2?"🥈":_lvqRankMe===3?"🥉":"";
     const _trsArr=allArbs.map(x=>calcTrasferte(x).corta||0);
     const _rLungArr=allArbs.map(x=>calcTrasferte(x).lunga||0);
+    const _inSedeArr=allArbs.map(x=>calcTrasferte(x).inSede||0);
     // Calcola rimborsi una volta per tutti per ranking (cached per performance)
     const _allRimbCache=allArbs.map(x=>calcRimborsiArb(x));
     const _kmArr=_allRimbCache.map(r=>r.km||0);
     const _rGettArr=_allRimbCache.map(r=>r.gettone||0);
     const _rBenzArr=_allRimbCache.map(r=>r.benzina||0);
     const _rTotArr=_allRimbCache.map(r=>r.totale||0);
+    const _rAccArr=_allRimbCache.map(r=>r.accessorie||0);
+    const _nDoppArr=allArbs.map(x=>(x.n_gare_arbitro||0)-(x.n_singolo||0));
+    const _mediaGArr=allArbs.map(x=>{const ng=x.n_gare_arbitro||0;const kg=calcRimborsiArb(x).km||0;const _allGx=Object.values(P).flatMap(pp=>pp===x?(pp.gare_arbitro||pp.gare||[]):[]);const nGx=x.n_gare_arbitro||(_allRimbCache[allArbs.indexOf(x)]?.gare?.length)||1;return ng>0?Math.round(nGx>0?(x.n_gare_arbitro||0)/Math.max(1,new Set((x.gare_arbitro||x.gare||[]).map(g=>(g['Data']||'').slice(0,10))).size*1):0):0;});
+    const _maxGdayArr=allArbs.map(x=>{const dc={};(x.gare_arbitro||x.gare||[]).forEach(g=>{const d=g['Data']||'';if(d)dc[d]=(dc[d]||0)+1;});return Math.max(0,...Object.values(dc));});
+    const _copPctArr=allArbs.map(x=>{const tot=x.n_gare_arbitro||0;if(!tot)return 0;const nS=x.n_singolo||0;const nD=tot-nS;return Math.round((nS+nD*0.5)/_totComP*100*10)/10;});
+    const _kmGaraArr=allArbs.map(x=>{const km2=calcRimborsiArb(x).km||0;const ng2=x.n_gare_arbitro||1;return ng2>0?Math.round(km2/ng2):0;});
+    const _nFutArr=allArbs.map(x=>{const _now2=new Date().toISOString().split('T')[0];return(D.gare_future||[]).filter(g=>['Arbitro 1','Arbitro 2'].some(f=>pns(g[f]||'')===x.nome)&&(g['Data']||'')>=_now2).length;});
     document.getElementById('mpt-0').innerHTML=`
       ${isDual?`<div class="dual-role-notice">⚡ Ruolo doppio: ${(p.categorie||[]).join(' + ')}. Usa le tab dedicate.</div>`:''}
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">📊 Attività</div>
@@ -7393,19 +7406,19 @@ function openPersona(nome,campFilter){
         <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()" title="Vedi tutte le gare"><div class="sv">${allG.length}</div>${rankBadge(allG.length,'n_gare')}<div class="sl">Gare totali ↗</div></div>
         ${p.n_gare_arbitro?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()"><div class="sv">${p.n_gare_arbitro}</div>${rankBadge(p.n_gare_arbitro,'n_gare_arbitro')}<div class="sl">Come Arbitro ↗</div></div>`:''}
         ${p.n_gare_arbitro?`<div class="sc"><div class="sv" style="color:#e17055">${_nSingP}</div>${rankBadge(_nSingP,'n_singolo')}<div class="sl">In singolo</div></div>`:''}
-        ${p.n_gare_arbitro?`<div class="sc"><div class="sv">${_nDoppP}</div><div class="sl">In coppia</div></div>`:''}
+        ${p.n_gare_arbitro?`<div class="sc"><div class="sv">${_nDoppP}</div>${rankBadgeDyn(_nDoppP,_nDoppArr)}<div class="sl">In coppia</div></div>`:''}
         ${p.n_gare_udc?`<div class="sc"><div class="sv">${p.n_gare_udc}</div><div class="sl">Come UDC</div></div>`:''}
         ${p.n_gare_osservatore?`<div class="sc"><div class="sv">${p.n_gare_osservatore}</div><div class="sl">Come Oss.</div></div>`:''}
         <div class="sc"><div class="sv">${nGiorni}</div>${rankBadge(nGiorni,'n_giorni'||0)}<div class="sl">Giorni</div></div>
-        <div class="sc gold"><div class="sv">${(allG.length/Math.max(nGiorni,1)).toFixed(1)}</div><div class="sl">Media/g</div></div>
-        <div class="sc"><div class="sv">${maxGday}</div><div class="sl">Max/g</div></div>
-        ${_nFutP>0?`<div class="sc" style="background:#fff3e0;border-color:#ffe082"><div class="sv" style="color:#e67e22">${_nFutP}</div><div class="sl">Da fare</div></div>`:''}
+        <div class="sc gold"><div class="sv">${(allG.length/Math.max(nGiorni,1)).toFixed(1)}</div>${rankBadgeDyn(parseFloat((allG.length/Math.max(nGiorni,1)).toFixed(1)),allArbs.map(x=>{const _nGx=(x.gare_arbitro||x.gare||[]).length||x.n_gare_arbitro||0;const _nGxD=new Set((x.gare_arbitro||x.gare||[]).map(g=>(g['Data']||'').slice(0,10)).filter(Boolean)).size||1;return parseFloat((_nGx/Math.max(_nGxD,1)).toFixed(1));}))}<div class="sl">Media/g</div></div>
+        <div class="sc"><div class="sv">${maxGday}</div>${rankBadgeDyn(maxGday,_maxGdayArr)}<div class="sl">Max/g</div></div>
+        ${_nFutP>0?`<div class="sc" style="background:#fff3e0;border-color:#ffe082"><div class="sv" style="color:#e67e22">${_nFutP}</div>${rankBadgeDyn(_nFutP,_nFutArr)}<div class="sl">Da fare</div></div>`:''}
         ${_nFutP>0?`<div class="sc"><div class="sv">${_totPrevP}</div><div class="sl">Tot.prev.</div></div>`:''}
       </div>
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">🏅 Qualità & Copertura</div>
       <div class="scs" style="margin-bottom:14px">
         <div class="sc" style="background:#1a3a6b;border-color:#ffd54f"><div class="sv" style="color:#ffd54f">${_iqaP.toFixed(1)}</div>${rankBadgeDyn(_iqaP,_iqaArr)}<div class="sl" style="color:#b0bec5">⭐ IQA</div></div>
-        <div class="sc" style="background:#0a5c36;border-color:#69f0ae"><div class="sv" style="color:#69f0ae">${_copPct}%</div><div class="sl" style="color:#a5d6a7">% Cop.</div></div>
+        <div class="sc" style="background:#0a5c36;border-color:#69f0ae"><div class="sv" style="color:#69f0ae">${_copPct}%</div>${rankBadgeDyn(_copPct,_copPctArr)}<div class="sl" style="color:#a5d6a7">% Cop.</div></div>
         <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[2]?.click()"><div class="sv">${topCamp.length}</div>${rankBadge(topCamp.length,'n_campionati'||0)}<div class="sl">Campionati ↗</div></div>
         <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[3]?.click()"><div class="sv">${colleghi.length}</div>${rankBadge(colleghi.length,'n_colleghi'||0)}<div class="sl">Colleghi ↗</div></div>
         <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[4]?.click()"><div class="sv">${campi.length}</div>${rankBadge(campi.length,'n_campi'||0)}<div class="sl">Campi ↗</div></div>
@@ -7424,8 +7437,8 @@ function openPersona(nome,campFilter){
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">🚗 Km & Trasferte</div>
       <div class="scs" style="margin-bottom:14px" data-pnome="${escH(p.nome)}">
         ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div>${rankBadgeDyn(km,_kmArr)}<div class="sl">Km stimati</div></div>`:''}
-        ${kmGara>0?`<div class="sc"><div class="sv">${kmGara}</div><div class="sl">Km/gara</div></div>`:''}
-        <div class="sc" style="background:#1565c0;border-color:#90caf9;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'sede')" title="Clicca per vedere le gare in sede"><div class="sv" style="color:#bbdefb">${_trsP.inSede||0}</div><div class="sl" style="color:#90caf9">In sede ↗</div></div>
+        ${kmGara>0?`<div class="sc"><div class="sv">${kmGara}</div>${rankBadgeDyn(kmGara,_kmGaraArr)}<div class="sl">Km/gara</div></div>`:''}
+        <div class="sc" style="background:#1565c0;border-color:#90caf9;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'sede')" title="Clicca per vedere le gare in sede"><div class="sv" style="color:#bbdefb">${_trsP.inSede||0}</div>${rankBadgeDyn(_trsP.inSede||0,_inSedeArr)}<div class="sl" style="color:#90caf9">In sede ↗</div></div>
         <div class="sc" style="background:#1b5e20;border-color:#81c784;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'corta')" title="Clicca per vedere le gare ≤100km"><div class="sv" style="color:#a5d6a7">${_trsP.corta||0}</div>${rankBadgeDyn(_trsP.corta||0,_trsArr)}<div class="sl" style="color:#81c784">&lt;50km ↗</div></div>
         <div class="sc" style="background:#b71c1c;border-color:#ef9a9a;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'lunga')" title="Clicca per vedere le gare >100km"><div class="sv" style="color:#ffcdd2">${_trsP.lunga||0}</div>${rankBadgeDyn(_trsP.lunga||0,_rLungArr)}<div class="sl" style="color:#ef9a9a">&gt;100km ↗</div></div>
       </div>
@@ -7433,7 +7446,7 @@ function openPersona(nome,campFilter){
       <div class="scs" style="margin-bottom:14px">
         <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#2e7d32">€ ${rGettoneP}</div>${rankBadgeDyn(rGettoneP,_rGettArr)}<div class="sl">Gettone</div></div>
         <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#1b5e20">€ ${rBenzinaP.toFixed(0)}</div>${rankBadgeDyn(rBenzinaP,_rBenzArr)}<div class="sl">Benzina</div></div>
-        <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#33691e">€ ${rAccessorieP.toFixed(0)}</div><div class="sl">Accessorie</div></div>
+        <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#33691e">€ ${rAccessorieP.toFixed(0)}</div>${rankBadgeDyn(rAccessorieP,_rAccArr)}<div class="sl">Accessorie</div></div>
         <div class="sc" style="background:#2e7d32;border-color:#1b5e20"><div class="sv" style="color:#fff;font-size:1.2rem">€ ${rTotaleP.toFixed(0)}</div>${rankBadgeDyn(rTotaleP,_rTotArr)}<div class="sl" style="color:#a5d6a7">Totale €</div></div>
       </div>
       <!-- Rimborsi già mostrati nei quadratini sopra -->
@@ -7916,71 +7929,17 @@ function openPersona(nome,campFilter){
         const uid='cal_'+Math.random().toString(36).slice(2,7);
 
         const todayDs=new Date().toISOString().split('T')[0]; // always real today
-        // ── VERSIONE A: Heatmap a blocchi — celle quadrate che riempiono la larghezza ──
+        // ── VERSIONE A: Heatmap per mese — ogni mese è una griglia indipendente ──
         const FESTIVI_CAL=['2025-11-01','2025-12-08','2025-12-25','2025-12-26',
           '2026-01-01','2026-01-06','2026-04-05','2026-04-06','2026-04-25','2026-05-01','2026-06-02'];
         const _DAYS_LBL=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
-        // Costruiamo una griglia continua: 7 righe (Lun→Dom), colonne=settimane di tutta la stagione
-        // Raccogliamo tutti i giorni della stagione in ordine
+        // Streak globale su tutti i giorni della stagione
         const allDaysFlat=[];
         mesi.forEach(m=>{
           const[y,mo]=m.split('-');
           const dInM=new Date(parseInt(y),parseInt(mo),0).getDate();
           for(let d=1;d<=dInM;d++) allDaysFlat.push(`${m}-${d<10?'0':''}${d}`);
         });
-        // Prima data e padding iniziale
-        const _firstDs=allDaysFlat[0];
-        const _firstDow=new Date(_firstDs+'T12:00').getDay(); // 0=dom
-        const _padStart=_firstDow===0?6:_firstDow-1; // giorni da skippare (Lun=0)
-        const totalCells=_padStart+allDaysFlat.length;
-        const numWeeks=Math.ceil(totalCells/7);
-        // Costruiamo matrice 7×numWeeks
-        const matrix=Array.from({length:7},()=>Array(numWeeks).fill(null));
-        allDaysFlat.forEach((ds,idx)=>{
-          const pos=_padStart+idx;
-          const row=pos%7; // 0=Lun, 6=Dom
-          const col=Math.floor(pos/7);
-          matrix[row][col]={ds};
-        });
-        // Colonne con intestazione mese
-        const monthStartCols={};
-        allDaysFlat.forEach((ds,idx)=>{
-          const pos=_padStart+idx;
-          const col=Math.floor(pos/7);
-          const isFirst=idx===0||(idx>0&&allDaysFlat[idx].slice(0,7)!==allDaysFlat[idx-1].slice(0,7));
-          if(isFirst) monthStartCols[col]=mesiL[parseInt(ds.slice(5,7))-1]+' '+ds.slice(2,4);
-        });
-        // Celle flex responsive che riempiono tutta la larghezza
-        // Per-week and per-month counts
-        const _wkCnt={};
-        allDaysFlat.forEach(ds2=>{
-          const pos2=_padStart+allDaysFlat.indexOf(ds2);
-          const wk2=Math.floor(pos2/7);
-          const cnt2=(mesiGiorniMap[ds2.slice(0,7)]||{})[ds2]||0;
-          if(cnt2>0)_wkCnt[wk2]=(_wkCnt[wk2]||0)+cnt2;
-        });
-        const _mthCntMap={};
-        mesi.forEach(m=>{_mthCntMap[m]=Object.values(mesiGiorniMap[m]||{}).reduce((a,b)=>a+b,0);});
-        const _colToMonth={};
-        allDaysFlat.forEach((ds2,idx)=>{const col2=Math.floor((_padStart+idx)/7);if(!_colToMonth[col2])_colToMonth[col2]=ds2.slice(0,7);});
-        const monthHdrAligned=(()=>{
-          let h='';
-          for(let c=0;c<numWeeks;c++){
-            const lbl=monthStartCols[c]||'';
-            const isMStart=!!monthStartCols[c]&&c>0;
-            const mKey=_colToMonth[c]||'';
-            const wkCnt=_wkCnt[c]||0;
-            if(isMStart) h+='<div style="flex:0;width:18px;min-width:18px;background:linear-gradient(to bottom,#0d47a1,#42a5f5,#0d47a1);border-radius:4px;margin:0 6px;align-self:stretch;box-shadow:0 0 4px rgba(13,71,161,.4)"></div>';
-            const mCnt=lbl?(_mthCntMap[mKey]||0):0;
-            h+=`<div style="flex:1;min-width:10px;display:flex;flex-direction:column;padding-left:${isMStart?'4':'1'}px;${isMStart?'border-left:2px solid #90caf9;':''}">
-              <span style="font-size:.65rem;font-weight:${lbl?800:300};color:${lbl?'var(--bl)':'transparent'};white-space:nowrap;line-height:1.3">${lbl||'.'}</span>
-              <span style="font-size:.58rem;font-weight:700;color:${mCnt>0?'#27ae60':'transparent'};white-space:nowrap;line-height:1">${mCnt>0?mCnt+'g':'0'}</span>
-              <span style="font-size:.52rem;color:${wkCnt>0?'var(--mu)':'transparent'};white-space:nowrap;line-height:1">${wkCnt>0?wkCnt:'0'}</span>
-            </div>`;
-          }
-          return h;
-        })();
-        // Calcola streak per ogni giorno (cella calA)
         const _streakMap={};
         (()=>{
           const dset=new Set(allDaysFlat.filter(d=>{const m2=d.slice(0,7);return((mesiGiorniMap[m2]||{})[d]||0)>0;}));
@@ -7991,56 +7950,79 @@ function openPersona(nome,campFilter){
             _streakMap[d2]=run;
           });
         })();
-        // Righe con celle flex:1 (riempiono tutta la larghezza come calB)
-        const rowsHtmlFlex=matrix.map((row,ri)=>{
-          const dlbl=_DAYS_LBL[ri];
-          const showLbl=(ri%2===0);
-          const cells=row.map((cell,ci)=>{
-            const _isMStartCol=!!monthStartCols[ci]&&ci>0;
-            const _spacer=_isMStartCol?'<div style="flex:0;width:18px;min-width:18px;background:linear-gradient(to bottom,#0d47a1,#42a5f5,#0d47a1);border-radius:4px;margin:1px 6px;align-self:stretch;box-shadow:0 0 4px rgba(13,71,161,.4)"></div>':'';
-            if(!cell) return _spacer+`<div style="flex:1;min-width:10px;aspect-ratio:1;background:#f0f2f7;border-radius:3px;opacity:.3;margin:1px"></div>`;
-            const{ds}=cell;
-            const cnt=(mesiGiorniMap[ds.slice(0,7)]||{})[ds]||0;
-            const dow=new Date(ds+'T12:00').getDay();
-            const isDom=dow===0;const isSab=dow===6;const isWE=isDom||isSab;
-            const isFest=FESTIVI_CAL.includes(ds);
-            const isToday=ds===todayDs;
-            const isMStart=ds.slice(8)==='01';
-            const isNewMWeek=isMStart; // la prima settimana del mese ha bordo sinistro blu
-            const streak=_streakMap[ds]||0;
-            // Sfondo streak (overlay leggero sopra il colore normale)
-            // Streak: evidenziata come SPESSORE BORDO crescente
-            // 5gg = bordo giallo 3px, 7gg = bordo arancio 5px, 10gg = bordo rosso 7px
-            // Streak coloring: ALL days in any active streak series get highlighted
-            const _streakColor=streak>=10?'#e74c3c':streak>=7?'#e67e22':streak>=5?'#f39c12':streak>=2?'#3498db':'';
-            const _streakW=streak>=10?5:streak>=7?4:streak>=5?3:streak>=2?2:0;
-            const _streakBgAdd=streak>=2?`;border:${_streakW}px solid ${_streakColor};box-shadow:0 0 ${_streakW*2}px ${_streakColor}66`:'';
-            const streakGlow='';
-            const bg=isToday?'var(--gold)':cnt===0?(isWE?'#ddd8f0':isFest?'#fce4ec':'#e8f4ff'):cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt>=3?'var(--bl)':'#c0392b';
-            const clr=(cnt>1||isToday)?'#fff':(isWE?'#5d4037':'var(--mu)');
-            const border=isFest?'2px solid #e91e63':isToday?'2.5px solid #e0a800':isDom?'1.5px solid var(--gold)':isSab?'1px solid #ffcc80':isMStart?'2px solid #90caf9':'1px solid transparent';
-            const festIcon=isFest&&cnt===0?'🎉':'';
-            return _spacer+`<div data-cal-ds="${ds}" data-cal-bg="${bg}" onclick="calDayClick('${ds}',${cnt})"
-              onmouseover="calDayHover('${ds}');this.style.transform='scale(1.15)'"
-              onmouseout="this.style.transform=''"
-              title="${ds}${isToday?' — OGGI':''}${isFest?' 🎉 Festivo':''}${streak>=5?' 🔥 Streak '+streak+'gg':''}: ${cnt} gar${cnt===1?'a':'e'}"
-              style="flex:1;min-width:10px;aspect-ratio:1;background:${bg};border-radius:3px;border:${border};
-                display:flex;align-items:center;justify-content:center;font-size:.55rem;
-                font-weight:800;color:${clr};cursor:${cnt>0||isToday?'pointer':'default'};
-                transition:transform .1s;margin:1px;${streakGlow}${_streakBgAdd}"
-            >${festIcon||(cnt>0?cnt:(isToday?'●':''))}</div>`;
+        // Genera una griglia per ogni mese separatamente
+        const monthGrids=mesi.map(m=>{
+          const[y,mo]=m.split('-');
+          const dInM=new Date(parseInt(y),parseInt(mo),0).getDate();
+          const label=mesiL[parseInt(mo)-1]+' '+y;
+          const giorni=mesiGiorniMap[m]||{};
+          const totMonth=Object.values(giorni).reduce((s,v)=>s+v,0);
+          // Padding: giorno della settimana del 1° del mese (Lun=0, Dom=6)
+          const firstDow=new Date(`${m}-01T12:00`).getDay();
+          const padStart=firstDow===0?6:firstDow-1;
+          const totalCells=padStart+dInM;
+          const numWeeks=Math.ceil(totalCells/7);
+          // Matrice 7 righe × numWeeks col — solo per questo mese
+          const mat=Array.from({length:7},()=>Array(numWeeks).fill(null));
+          for(let d=1;d<=dInM;d++){
+            const ds=`${m}-${d<10?'0':''}${d}`;
+            const pos=padStart+(d-1);
+            const row=pos%7;
+            const col=Math.floor(pos/7);
+            mat[row][col]={ds};
+          }
+          // Header settimane
+          const wkHeaders=Array.from({length:numWeeks},(_,wi)=>`<div style="flex:1;min-width:10px;text-align:center;font-size:.48rem;color:var(--mu);opacity:.6">S${wi+1}</div>`).join('');
+          // Righe
+          const rowsHtml=mat.map((row,ri)=>{
+            const showLbl=(ri%2===0);
+            const dlbl=_DAYS_LBL[ri];
+            const cells=row.map(cell=>{
+              if(!cell)return`<div style="flex:1;min-width:10px;aspect-ratio:1;background:#f0f2f7;border-radius:3px;opacity:.2;margin:1px"></div>`;
+              const{ds}=cell;
+              const cnt=(mesiGiorniMap[ds.slice(0,7)]||{})[ds]||0;
+              const dow=new Date(ds+'T12:00').getDay();
+              const isDom=dow===0;const isSab=dow===6;const isWE=isDom||isSab;
+              const isFest=FESTIVI_CAL.includes(ds);
+              const isToday=ds===todayDs;
+              const isMStart=ds.slice(8)==='01';
+              const streak=_streakMap[ds]||0;
+              const _streakColor=streak>=10?'#e74c3c':streak>=7?'#e67e22':streak>=5?'#f39c12':streak>=2?'#3498db':'';
+              const _streakW=streak>=10?5:streak>=7?4:streak>=5?3:streak>=2?2:0;
+              const _streakBgAdd=streak>=2?`;border:${_streakW}px solid ${_streakColor};box-shadow:0 0 ${_streakW*2}px ${_streakColor}66`:'';
+              const bg=isToday?'var(--gold)':cnt===0?(isWE?'#ddd8f0':isFest?'#fce4ec':'#e8f4ff'):cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt>=3?'var(--bl)':'#c0392b';
+              const clr=(cnt>1||isToday)?'#fff':(isWE?'#5d4037':'var(--mu)');
+              const border=isFest?'2px solid #e91e63':isToday?'2.5px solid #e0a800':isDom?'1.5px solid var(--gold)':isSab?'1px solid #ffcc80':'1px solid transparent';
+              const festIcon=isFest&&cnt===0?'🎉':'';
+              return `<div data-cal-ds="${ds}" data-cal-bg="${bg}" onclick="calDayClick('${ds}',${cnt})"
+                onmouseover="calDayHover('${ds}');this.style.transform='scale(1.15)'"
+                onmouseout="this.style.transform=''"
+                title="${ds}${isToday?' — OGGI':''}${isFest?' 🎉 Festivo':''}${streak>=5?' 🔥 Streak '+streak+'gg':''}: ${cnt} gar${cnt===1?'a':'e'}"
+                style="flex:1;min-width:10px;aspect-ratio:1;background:${bg};border-radius:3px;border:${border};
+                  display:flex;align-items:center;justify-content:center;font-size:.55rem;
+                  font-weight:800;color:${clr};cursor:${cnt>0||isToday?'pointer':'default'};
+                  transition:transform .1s;margin:1px${_streakBgAdd}"
+              >${festIcon||(cnt>0?cnt:(isToday?'●':''))}</div>`;
+            }).join('');
+            return`<div style="display:flex;align-items:stretch;width:100%;margin-bottom:2px">
+              <div style="width:28px;font-size:.58rem;color:var(--mu);font-weight:${showLbl?600:400};opacity:${showLbl?1:.4};text-align:right;padding-right:4px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end">${showLbl?dlbl:''}</div>
+              <div style="display:flex;flex:1;align-items:stretch">${cells}</div>
+            </div>`;
           }).join('');
-          return`<div style="display:flex;align-items:stretch;width:100%;margin-bottom:2px">
-            <div style="width:28px;font-size:.58rem;color:var(--mu);font-weight:${showLbl?600:400};opacity:${showLbl?1:.4};text-align:right;padding-right:4px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end">${showLbl?dlbl:''}</div>
-            <div style="display:flex;flex:1;align-items:stretch">${cells}</div>
+          return`<div style="margin-bottom:16px;border:1.5px solid #d0d8f0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(13,71,161,.08)">
+            <div style="background:linear-gradient(90deg,#1e3a6e,#2962cc);color:#fff;padding:5px 10px;display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:.78rem;font-weight:800;letter-spacing:.5px">${label}</span>
+              <span style="font-size:.65rem;opacity:.8">${totMonth} gar${totMonth===1?'a':'e'}</span>
+            </div>
+            <div style="padding:6px 6px 4px 0">
+              <div style="display:flex;margin-bottom:2px;padding-left:32px">${wkHeaders}</div>
+              ${rowsHtml}
+            </div>
           </div>`;
         }).join('');
         const calA=`<div style="width:100%;box-sizing:border-box">
-          <div style="display:flex;margin-bottom:3px;padding-left:32px">
-            ${monthHdrAligned}
-          </div>
-          ${rowsHtmlFlex}
-          <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:.6rem;color:var(--mu);flex-wrap:wrap;padding-left:32px">
+          ${monthGrids}
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:.6rem;color:var(--mu);flex-wrap:wrap">
             <span><span style="display:inline-block;width:10px;height:10px;background:#e8f4ff;border:1px solid #ccc;margin-right:3px"></span>0</span>
             <span><span style="display:inline-block;width:10px;height:10px;background:var(--bl3);margin-right:3px"></span>1</span>
             <span><span style="display:inline-block;width:10px;height:10px;background:var(--bl2);margin-right:3px"></span>2</span>
