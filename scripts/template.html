@@ -766,6 +766,7 @@ tr.loss-row td{background:#fdecea!important;}
     </div>
   </div>
 
+  <button class="nav-btn" onclick="showPage('fiplive')" title="Classifiche e risultati live da fip.it">🌐 FIP Live</button>
   <button class="nav-btn" onclick="showPage('aggiornamento')" title="Impostazioni">⚙️</button>
 </div>
 <div class="kpi-strip">
@@ -1708,6 +1709,48 @@ tr.loss-row td{background:#fdecea!important;}
   <div id="naz-panel-arbext" style="display:none"></div>
 </div>
 
+<!-- ═══════════════════════════════════════════════════════════════
+     PAGE: FIP LIVE — Campionati e Classifiche Sardegna (da fip.it)
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="ps" id="page-fiplive">
+  <div class="st">🌐 Campionati Sardi — Classifiche & Risultati FIP</div>
+
+  <!-- Sub-tab bar -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center" id="fiplive-tabs">
+    <button class="naz-tab active" id="flt-m" onclick="setFipLiveTab('M',this)">🏀 Maschili</button>
+    <button class="naz-tab" id="flt-f" onclick="setFipLiveTab('F',this)">🏀 Femminili</button>
+    <span style="flex:1"></span>
+    <span id="fiplive-aggiornato" style="font-size:.68rem;color:var(--mu);align-self:center"></span>
+  </div>
+
+  <!-- Filtro campionato -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px" id="fiplive-filters">
+    <div class="fg">
+      <label>Campionato</label>
+      <select id="fiplive-sel-camp" onchange="renderFipLive()" style="min-width:240px">
+        <option value="">Tutti</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>Girone</label>
+      <select id="fiplive-sel-girone" onchange="renderFipLive()" style="min-width:160px">
+        <option value="">Tutti</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>Vista</label>
+      <select id="fiplive-sel-vista" onchange="renderFipLive()">
+        <option value="classifica">📊 Classifica</option>
+        <option value="risultati">📅 Risultati</option>
+        <option value="prossime">📆 Prossime</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Contenuto principale -->
+  <div id="fiplive-body"></div>
+</div>
+
 <div class="ps" id="page-aggiornamento">
   <div class="st">⚙️ Come Aggiornare</div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -1776,6 +1819,12 @@ Argomenti: /c "cd C:\percorso\cartella && python fip_scraper_v5.py && python gen
 
 
 const D=__DATA__;
+
+// ═══ FIP SARDA — dati classifiche/risultati campionati regionali ═══
+// Blocco generato da fip_scraper_sarda.py ad ogni deploy.
+// Struttura: { aggiornato: "YYYY-MM-DD HH:MM", campionati: [ { nome, sesso, gironi: [ { nome, classifica:[], risultati:[], prossime:[] } ] } ] }
+const FIP_SARDA = __FIP_SARDA__;
+
 const CAMPO_GPS={"Palestra Coni, Via Lazio 08100 NUORO ( NU)": {"lat": 40.321, "lng": 9.329, "city": "NUORO"}, "Palestra Luca Simula, Via Poligono 2 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALAZZETTO DELLO SPORT, VIA ENRICO TOTI 09016 IGLESIAS ( SU)": {"lat": 39.309, "lng": 8.538, "city": "IGLESIAS"}, "Pala Antonianum, Via Mons. Angioni 46 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "PALASERRADIMIGNI, Piazza Segni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra S. Elena, Via Pessina 29 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "PalaManchia, Via Mauro Manca 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "Palestra Comunale, Via Garau, Sn 09026 SAN SPERATE ( SU)": {"lat": 39.354, "lng": 8.981, "city": "SAN SPERATE"}, "PALAZZETTO COMUNALE, Via Giliacquas 09030 ELMAS ( CA)": {"lat": 39.27, "lng": 9.05, "city": "ELMAS"}, "PALESTRA C.E.P., Via Talete 2 09131 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra Esperia, Via Pessagno snc 09126 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALACUS, Via Is Mirrionis 3 - 9 09123 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra ї Cus Sassari ї, Reg. San Giovanni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Hangar Sport Center, Via Gioscari 9 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALAZZETTO COMUNALE, VIA KENNEDY 08020 DORGALI ( NU)": {"lat": 40.292, "lng": 9.587, "city": "DORGALI"}, "Palestra Scolastica, Localitа Sertinu 08015 MACOMER ( NU)": {"lat": 40.265, "lng": 8.779, "city": "MACOMER"}, "Palestra, Via Alessandro Volta 09074 GHILARZA ( OR)": {"lat": 40.121, "lng": 8.841, "city": "GHILARZA"}, "Palestra Scuola Media, Via Nanni 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "Palestra Virtus, Via Pessagno (loc. Montemixi) 09126 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PalAversano, Loc. Sciamain 09011 CALASETTA ( SU)": {"lat": 39.107, "lng": 8.37, "city": "CALASETTA"}, "Pal. Genneruxi, Via Zagabria 09129 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALAZZETTO COMUNALE, Via Lamarmora 07024 LA MADDALENA ( SS)": {"lat": 41.216, "lng": 9.407, "city": "LA MADDALENA"}, "PALAZZETTO DELLO SPORT , VIA MOROSINI 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "Palestra Comunale, Viale Paolo Dettori 92 07021 ARZACHENA ( SS)": {"lat": 41.085, "lng": 9.435, "city": "ARZACHENA"}, "STRUTTURA GEODETICA, Viale Vienna 1 09047 SELARGIUS ( CA)": {"lat": 39.252, "lng": 9.165, "city": "SELARGIUS"}, "Pala Bsk90 - GLM, Via Luna e Sole 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "PALESTRA SCOLASTICA, Via Ariosto 09047 SELARGIUS ( CA)": {"lat": 39.252, "lng": 9.165, "city": "SELARGIUS"}, "PALASPORT 'R.DA TOME', Via Frosinone 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "CAPANNONE POLIVALENTE, VIA MARIA CARTA 09037 SAN GAVINO MONREALE ( SU)": {"lat": 39.552, "lng": 8.793, "city": "SAN GAVINO MONREALE"}, "Tensostruttura, Via Baronie - Flumini 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "CUPOLA GEODETICA, Via Capo Comino 09042 MONSERRATO ( CA)": {"lat": 39.259, "lng": 9.145, "city": "MONSERRATO"}, "Palestra Comunale, S. S. 126 MARRUBIU 09170 MARRUBIU ( OR)": {"lat": 39.77, "lng": 8.644, "city": "MARRUBIU"}, "Palazzetto dello Sport, Via Sardegna 2 07017 PLOAGHE ( SS)": {"lat": 40.657, "lng": 8.745, "city": "PLOAGHE"}, "Palestra scuole medie , Salita S. Cristina 09014 CARLOFORTE ( SU)": {"lat": 39.143, "lng": 8.314, "city": "CARLOFORTE"}, "PALESTRA, Via EMILIO LUSSU 18 07040 OLMEDO ( SS)": {"lat": 40.649, "lng": 8.378, "city": "OLMEDO"}, "PALESTRA, LOC. LIXIUS 08045 LANUSEI ( NU)": {"lat": 39.876, "lng": 9.543, "city": "LANUSEI"}, "Palestra Vittorio Corbia, Via Pacinotti Snc 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "Palestra Comunale, Via Cagliari, 239 09032 ASSEMINI ( CA)": {"lat": 39.295, "lng": 9.001, "city": "ASSEMINI"}, "Palestra C.G. Salesiano, Loc. Fontana Buddia 08100 NUORO ( NU)": {"lat": 40.321, "lng": 9.329, "city": "NUORO"}, "PALESTRA SCUOLA EL. A.FRANK, Ottaviano Augusto 09028 SESTU ( CA)": {"lat": 39.303, "lng": 9.094, "city": "SESTU"}, "Cupola Geodetica, Via Deffenu 09013 CARBONIA ( SU)": {"lat": 39.168, "lng": 8.521, "city": "CARBONIA"}, "Istituto Tecnico Lorenzo Mossa, Via Enrico Carboni 10 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "Palestra Ist.Industriale, Via Degli Orti 07041 ALGHERO ( SS)": {"lat": 40.558, "lng": 8.319, "city": "ALGHERO"}, "PALESTRA COMPARTO 8, VIA RIU MORTU SN 09042 MONSERRATO ( CA)": {"lat": 39.259, "lng": 9.145, "city": "MONSERRATO"}, "Palestra Oratorio Salesiano, Piazza Giovanni X X I I I 09131 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra I.T.I.S. Othoca, Via Zara snc - Z.I. 09170 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "PALESTRA COMUNALE, CORTE PISCEDDA 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "Palestra I.T.I.S. ї Giua ї, Via Montecassino 09134 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALESTRA SCOLASTICA, P.zza Don Milani 07046 PORTO TORRES ( SS)": {"lat": 40.838, "lng": 8.401, "city": "PORTO TORRES"}, "PAL. COMUNALE, Via E. D' Arborea 09033 DECIMOMANNU ( CA)": {"lat": 39.303, "lng": 8.975, "city": "DECIMOMANNU"}, "Palazzetto dello Sport їG. Co, Via Pani 82 09031 ARBUS ( SU)": {"lat": 39.527, "lng": 8.589, "city": "ARBUS"}, "Palestra Comunale G.P.Murratzu, Via San Leonardo 07014 OZIERI ( SS)": {"lat": 40.586, "lng": 9.001, "city": "OZIERI"}, "Palasport, Via Siena 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "Palestra scolastica G. Cima, Piazza Giovanni XXIII 09100 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "PALESTRA COMUNALE, via Verdi 08028 OROSEI ( NU)": {"lat": 40.378, "lng": 9.699, "city": "OROSEI"}, "PALASPORT, Lungomare C. Colombo 09017 SANT'ANTIOCO ( SU)": {"lat": 39.065, "lng": 8.458, "city": "SANT'ANTIOCO"}, "Palazzetto dello Sport, Asse Mediano 09036 GUSPINI ( SU)": {"lat": 39.542, "lng": 8.634, "city": "GUSPINI"}, "CUPOLA GEODETICA COMUNALE, S.P. LUNAMATRONA 09025 SANLURI ( SU)": {"lat": 39.568, "lng": 8.9, "city": "SANLURI"}, "Casa Dinamo, Via Caniga 1 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palazzetto dello Sport, Loc. Sertinu 08015 MACOMER ( NU)": {"lat": 40.265, "lng": 8.779, "city": "MACOMER"}, "PALESTRA SCOLASTICA, Via Matteotti 09041 DOLIANOVA ( SU)": {"lat": 39.374, "lng": 9.178, "city": "DOLIANOVA"}, "PALAZZETTO 'CITTA' UNITE', Via Palladio 07046 PORTO TORRES ( SS)": {"lat": 40.838, "lng": 8.401, "city": "PORTO TORRES"}, "PAL.IMP. SP. UNIVERS., Reg. San Giovanni 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra C.O.N.I., Via Coradduzza 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "ORATORIO CHIESA MADRE, VIA AL MARE - FRUTTI D'ORO 09012 CAPOTERRA ( CA)": {"lat": 39.176, "lng": 9.055, "city": "CAPOTERRA"}, "PALESTRA ISTITUTO GLOBALE JERZ, VIA BUSINCO 31 08044 JERZU ( NU)": {"lat": 39.793, "lng": 9.521, "city": "JERZU"}, "PALAZZETTO BEETHOVEN, Via Beethoven 09045 QUARTU SANT'ELENA ( CA)": {"lat": 39.302, "lng": 9.19, "city": "QUARTU SANT'ELENA"}, "Cupola Geodetica, Via Verdi 09018 SARROCH ( CA)": {"lat": 39.063, "lng": 9.017, "city": "SARROCH"}, "Palazzetto, Via Tharros 09072 CABRAS ( OR)": {"lat": 39.929, "lng": 8.535, "city": "CABRAS"}, "Palestra, Via Nuoro 08100 OLIENA ( NU)": {"lat": 40.268, "lng": 9.396, "city": "OLIENA"}, "- Geopalace c/o Geovi, Circonvallazione Nord direzion 07026 OLBIA ( SS)": {"lat": 40.924, "lng": 9.501, "city": "OLBIA"}, "Palazzetto Marika Pes, Via Kennedy 09035 GONNOSFANADIGA ( SU)": {"lat": 39.499, "lng": 8.656, "city": "GONNOSFANADIGA"}, "Palestra I.T.I. їG. Asproniї, Via delle Regioni 09010 PORTOSCUSO ( SU)": {"lat": 39.205, "lng": 8.388, "city": "PORTOSCUSO"}, "Palestra 'MOSSA', Viale Diaz 07046 ORISTANO ( OR)": {"lat": 39.906, "lng": 8.59, "city": "ORISTANO"}, "PALESTRA, Via Degli Stendardi 09134 CAGLIARI ( CA)": {"lat": 39.223, "lng": 9.125, "city": "CAGLIARI"}, "Palestra Sc. Ist. Tecn. A. S., Via Solari 07100 SASSARI ( SS)": {"lat": 40.727, "lng": 8.556, "city": "SASSARI"}, "Palestra, Via Garibaldi 09040 MARACALAGONIS ( CA)": {"lat": 39.328, "lng": 9.206, "city": "MARACALAGONIS"}, "PALAZZETTO DELLO SPORT COVRE, PIAZZALE DELLO SPORT SNC 07029 TEMPIO PAUSANIA ( SS)": {"lat": 40.9006, "lng": 9.1364, "city": "TEMPIO PAUSANIA"}, "PALAZZETTO COMUNALE, Via Dante Alighieri 07100 TISSI ( SS)": {"lat": 40.7046, "lng": 8.5776, "city": "TISSI"}, "PALAZZETTO DELLO SPORT , VIA NURAMINIS 09038 SERRAMANNA ( SU)": {"lat": 39.4248, "lng": 8.9161, "city": "Serramanna"}, "PALAZZETTO DELLO SPORT, VIA ASPRONI 21 07039 VALLEDORIA ( SS)": {"lat": 40.9301, "lng": 8.829, "city": "Valledoria"}, "PALAZZETTO DELLO SPORT, Via Delle Cernitrici 09013 CARBONIA ( SU)": {"lat": 39.1657, "lng": 8.5223, "city": "Carbonia"}, "PALAZZETTO DELLO SPORT, Via Verga 09037 SAN GAVINO MONREALE ( SU)": {"lat": 39.5547, "lng": 8.7971, "city": "San Gavino Monreale"}, "PALAZZETTO, ZONA MARTINEDDU ITTIRI ( SS)": {"lat": 40.5993, "lng": 8.5617, "city": "Ittiri"}, "PALESTRA COPERTA, Via Addis 07037 SORSO ( SS)": {"lat": 40.8088, "lng": 8.5768, "city": "Sorso"}, "Palazzetto dello Sport, Via Palladio 07046 PORTO TORRES ( SS)": {"lat": 40.8378, "lng": 8.4015, "city": "Porto Torres"}, "Palazzetto dello Sport, Zona Sportiva 07032 NULVI ( SS)": {"lat": 40.79, "lng": 8.7367, "city": "Nulvi"}, "Palestra Comunale, Via De Amicis - Loc. Sa Gora 09098 TERRALBA ( OR)": {"lat": 39.7215, "lng": 8.6417, "city": "Terralba"}, "Palestra Comunale, Zona Sportiva 07040 URI ( SS)": {"lat": 40.6501, "lng": 8.4836, "city": "Uri"}, "Palestra Montigeddu, Via Massarenti 07036 SENNORI ( SS)": {"lat": 40.8024, "lng": 8.5841, "city": "Sennori"}, "Palestra Scuola Elementare, Via Lussu 09040 SETTIMO SAN PIETRO ( CA)": {"lat": 39.2879, "lng": 9.1899, "city": "Settimo San Pietro"}, "Palestra Scuole Elementari, Via Perra 09048 SINNAI ( CA)": {"lat": 39.3021, "lng": 9.2083, "city": "Sinnai"}, "Palestra, Via Dess\\u043c 09170 MOGORO ( OR)": {"lat": 39.6876, "lng": 8.7723, "city": "Mogoro"}};
 
 const GARE=D.gare||[],P=D.persons,SQ=D.squads,PV=D.province||{},CS=D.camp_stats||{},H2H=D.h2h||{};
@@ -2275,7 +2324,8 @@ function showPage(id){
     'gare':'gare','prossime':'gare','classifica':'gare','campionati':'gare',
     'h2h':'h2h','h2h-arb':'h2h',
     'province':'territorio',
-    'resoconto':'analisi','copertura':'analisi','provvedimenti':'analisi','campi':'analisi','mappa':'analisi','nazionale':'analisi'
+    'resoconto':'analisi','copertura':'analisi','provvedimenti':'analisi','campi':'analisi','mappa':'analisi','nazionale':'analisi',
+    'fiplive':'fiplive'
   };
   const grp=_grpMap[id];
   if(grp){const gb=document.getElementById('navgrp-'+grp);if(gb)gb.classList.add('active');}
@@ -2291,6 +2341,7 @@ function showPage(id){
   if(id==='province'){renderProvCards();}
   if(id==='campi'){renderCampi();}
   if(id==='nazionale'){initNazionale();}
+  if(id==='fiplive'){initFipLive();}
 }
 
 // HELPERS
@@ -16113,6 +16164,233 @@ function renderNazArbExt(){
     doSort(tbl.id,ci,!!e.shiftKey);
   },true);
 })();
-</script>
+
+// ═══════════════════════════════════════════════════════════════
+//  FIP LIVE — Classifiche e Risultati Campionati Sardi
+// ═══════════════════════════════════════════════════════════════
+var _fipSesso='M';
+var _fipCampSel='';
+var _fipGironeSel='';
+var _fipInited=false;
+
+function initFipLive(){
+  if(!_fipInited){
+    _fipInited=true;
+    setFipLiveTab('M',document.getElementById('flt-m'));
+  }
+}
+
+function setFipLiveTab(sesso,btn){
+  _fipSesso=sesso;
+  _fipCampSel='';
+  _fipGironeSel='';
+  document.querySelectorAll('#fiplive-tabs .naz-tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  _buildFipLiveCampSelect();
+  renderFipLive();
+}
+
+function _getFipCamps(){
+  if(!FIP_SARDA||!FIP_SARDA.campionati)return[];
+  return FIP_SARDA.campionati.filter(c=>c.sesso===_fipSesso);
+}
+
+function _buildFipLiveCampSelect(){
+  var sel=document.getElementById('fiplive-sel-camp');
+  if(!sel)return;
+  var camps=_getFipCamps();
+  sel.innerHTML='<option value="">Tutti</option>'+camps.map(c=>`<option value="${escH(c.nome)}">${escH(c.nome)}</option>`).join('');
+  sel.value=_fipCampSel||'';
+  _buildFipLiveGironeSelect();
+}
+
+function _buildFipLiveGironeSelect(){
+  var campSel=document.getElementById('fiplive-sel-camp');
+  var sel=document.getElementById('fiplive-sel-girone');
+  if(!sel||!campSel)return;
+  var campNome=campSel.value;
+  var camp=_getFipCamps().find(c=>c.nome===campNome);
+  var gironi=camp?camp.gironi:[];
+  if(!gironi||gironi.length<=1){
+    sel.innerHTML='<option value="">—</option>';
+    sel.disabled=true;
+  } else {
+    sel.disabled=false;
+    sel.innerHTML='<option value="">Tutti</option>'+gironi.map(g=>`<option value="${escH(g.nome)}">${escH(g.nome)}</option>`).join('');
+  }
+  sel.value=_fipGironeSel||'';
+}
+
+function renderFipLive(){
+  // Aggiorna select girone quando cambia campionato
+  var campSel=document.getElementById('fiplive-sel-camp');
+  var gironeSel=document.getElementById('fiplive-sel-girone');
+  var vistaSel=document.getElementById('fiplive-sel-vista');
+  _fipCampSel=campSel?campSel.value:'';
+  _buildFipLiveGironeSelect();
+  _fipGironeSel=gironeSel?gironeSel.value:'';
+  var vista=vistaSel?vistaSel.value:'classifica';
+
+  var body=document.getElementById('fiplive-body');
+  if(!body)return;
+
+  // Aggiornamento timestamp
+  var aggEl=document.getElementById('fiplive-aggiornato');
+  if(aggEl&&FIP_SARDA&&FIP_SARDA.aggiornato)
+    aggEl.textContent='Aggiornato: '+FIP_SARDA.aggiornato;
+
+  if(!FIP_SARDA||!FIP_SARDA.campionati||FIP_SARDA.campionati.length===0){
+    body.innerHTML='<div class="card" style="text-align:center;padding:30px;color:var(--mu)">'
+      +'<div style="font-size:2rem;margin-bottom:10px">📥</div>'
+      +'<div style="font-weight:700;margin-bottom:6px">Nessun dato FIP disponibile</div>'
+      +'<div style="font-size:.8rem">Esegui <code>fip_scraper_sarda.py</code> e poi <code>deploy.bat</code> per caricare classifiche e risultati.</div>'
+      +'</div>';
+    return;
+  }
+
+  var camps=_getFipCamps();
+  if(_fipCampSel) camps=camps.filter(c=>c.nome===_fipCampSel);
+
+  var html='';
+  camps.forEach(camp=>{
+    var gironi=camp.gironi||[];
+    if(_fipGironeSel) gironi=gironi.filter(g=>g.nome===_fipGironeSel);
+
+    // Header campionato
+    var clr=_fipCampColor(camp.nome);
+    html+=`<div style="margin-bottom:20px">`;
+    html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">`;
+    html+=`<span style="display:inline-block;width:5px;height:28px;border-radius:3px;background:${clr};flex-shrink:0"></span>`;
+    html+=`<span style="font-size:.95rem;font-weight:800;color:var(--bl)">${escH(camp.nome)}</span>`;
+    html+=`<span style="font-size:.7rem;color:var(--mu);margin-left:4px">${camp.sesso==='F'?'♀ Femminile':'♂ Maschile'}</span>`;
+    html+=`</div>`;
+
+    gironi.forEach(girone=>{
+      if(gironi.length>1){
+        html+=`<div style="font-size:.78rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 6px 13px">Girone ${escH(girone.nome)}</div>`;
+      }
+      if(vista==='classifica') html+=_renderFipClassifica(girone,clr);
+      else if(vista==='risultati') html+=_renderFipRisultati(girone,clr);
+      else html+=_renderFipProssime(girone,clr);
+    });
+
+    html+=`</div>`;
+  });
+
+  if(!html) html='<div style="color:var(--mu);padding:20px">Nessun dato per i filtri selezionati.</div>';
+  body.innerHTML=html;
+}
+
+function _fipCampColor(nome){
+  var n=(nome||'').toLowerCase();
+  if(n.includes('serie c')||n.includes('serie b')) return '#1a4db3';
+  if(n.includes('divisione regionale 1')||n.includes('dr1')) return '#0984e3';
+  if(n.includes('divisione regionale 2')||n.includes('dr2')) return '#5aacf5';
+  if(n.includes('under 19')||n.includes('u19')) return '#6c3dc8';
+  if(n.includes('under 17')||n.includes('u17')) return '#c0392b';
+  if(n.includes('under 15')||n.includes('u15')) return '#27ae60';
+  if(n.includes('under 14')||n.includes('u14')) return '#00838f';
+  if(n.includes('under 13')||n.includes('u13')) return '#b8860b';
+  return '#636e72';
+}
+
+function _posIcon(pos){
+  if(pos===1)return'🥇';if(pos===2)return'🥈';if(pos===3)return'🥉';
+  return`<span style="color:var(--mu);font-weight:600">${pos}</span>`;
+}
+
+function _renderFipClassifica(girone,clr){
+  var rows=girone.classifica||[];
+  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Classifica non disponibile.</div>';
+  var h=`<div style="overflow-x:auto;margin-bottom:14px"><table class="tbl" id="fiplive-cl-${Math.random().toString(36).slice(2,7)}" style="border-top:3px solid ${clr}">`;
+  h+=`<thead><tr>
+    <th style="width:28px;text-align:center">#</th>
+    <th style="text-align:left">Squadra</th>
+    <th title="Partite giocate">PG</th>
+    <th title="Partite vinte">V</th>
+    <th title="Partite perse">P</th>
+    <th title="Punti classifica">Pt</th>
+    <th title="Punti fatti">PF</th>
+    <th title="Punti subiti">PS</th>
+    <th title="Differenza punti">+/-</th>
+    <th title="Win%">Win%</th>
+  </tr></thead><tbody>`;
+  rows.forEach((r,i)=>{
+    var pos=r.pos||(i+1);
+    var odd=i%2===0?'':'background:var(--tbl-even)';
+    var isBold=pos<=3?'font-weight:700':'';
+    var pt=r.punti!==undefined?r.punti:'–';
+    var pf=r.pf!==undefined?r.pf:'–';
+    var ps=r.ps!==undefined?r.ps:'–';
+    var diff=(r.pf!==undefined&&r.ps!==undefined)?(r.pf-r.ps):'–';
+    var diffStr=typeof diff==='number'?(diff>0?'+'+diff:diff):'–';
+    var diffClr=typeof diff==='number'?(diff>0?'var(--green)':diff<0?'var(--red)':'var(--mu)'):'var(--mu)';
+    var win=r.pg?(((r.vinte||0)/r.pg)*100).toFixed(0)+'%':'–';
+    var sqNome=r.squadra||r.nome||'–';
+    // Evidenzia se squadra presente nel dataset locale
+    var sqLink=SQ&&SQ[sqNome]?`<span style="cursor:pointer;color:var(--bl2);text-decoration:underline dotted" onclick="openSquadra('${esc(sqNome)}')">${escH(sqNome)}</span>`:escH(sqNome);
+    h+=`<tr style="${odd}">
+      <td style="text-align:center;padding:4px 6px">${_posIcon(pos)}</td>
+      <td style="padding:4px 8px;${isBold}">${sqLink}</td>
+      <td style="text-align:center">${r.pg||'–'}</td>
+      <td style="text-align:center;color:var(--green)">${r.vinte||0}</td>
+      <td style="text-align:center;color:var(--red)">${r.perse||0}</td>
+      <td style="text-align:center;font-weight:700;color:var(--bl)">${pt}</td>
+      <td style="text-align:center">${pf}</td>
+      <td style="text-align:center">${ps}</td>
+      <td style="text-align:center;color:${diffClr};font-weight:600">${diffStr}</td>
+      <td style="text-align:center;color:var(--mu)">${win}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  return h;
+}
+
+function _renderFipRisultati(girone,clr){
+  var rows=girone.risultati||[];
+  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessun risultato disponibile.</div>';
+  // Raggruppa per giornata
+  var byGiornata={};
+  rows.forEach(r=>{var g=r.giornata||'—';if(!byGiornata[g])byGiornata[g]=[];byGiornata[g].push(r);});
+  var h='<div style="margin-bottom:14px">';
+  Object.entries(byGiornata).reverse().forEach(([g,gare])=>{
+    h+=`<div style="font-size:.75rem;font-weight:700;color:${clr};text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px 4px">Giornata ${g}</div>`;
+    gare.forEach(r=>{
+      var data=r.data||'';
+      var casa=r.casa||'–';var osp=r.ospite||'–';
+      var sc=r.punteggio||'';var pf=sc.split('-')[0]||'';var ps=sc.split('-')[1]||'';
+      var casaW=pf&&ps&&parseInt(pf)>parseInt(ps);var ospW=pf&&ps&&parseInt(ps)>parseInt(pf);
+      h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
+      h+=`<span style="color:var(--mu);width:70px;flex-shrink:0;font-size:.7rem">${escH(data)}</span>`;
+      h+=`<span style="flex:1;text-align:right;font-weight:${casaW?'700':'400'}">${escH(casa)}</span>`;
+      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;text-align:center">${sc?escH(sc):'–'}</span>`;
+      h+=`<span style="flex:1;font-weight:${ospW?'700':'400'}">${escH(osp)}</span>`;
+      h+=`</div>`;
+    });
+  });
+  h+='</div>';
+  return h;
+}
+
+function _renderFipProssime(girone,clr){
+  var rows=girone.prossime||[];
+  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessuna prossima gara disponibile.</div>';
+  var h='<div style="margin-bottom:14px">';
+  rows.forEach(r=>{
+    var data=r.data||'';var ora=r.ora||'';var casa=r.casa||'–';var osp=r.ospite||'–';
+    var campo=r.campo||'';var giornata=r.giornata?`G${r.giornata}`:'';
+    h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
+    h+=`<span style="color:var(--mu);width:90px;flex-shrink:0;font-size:.7rem">${escH(data)} ${escH(ora)}</span>`;
+    h+=`<span style="flex:1;text-align:right">${escH(casa)}</span>`;
+    h+=`<span style="margin:0 8px;font-weight:700;font-size:.8rem;color:var(--bl);min-width:54px;text-align:center">VS</span>`;
+    h+=`<span style="flex:1">${escH(osp)}</span>`;
+    if(campo)h+=`<span style="font-size:.67rem;color:var(--mu);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(campo)}">📍 ${escH(campo)}</span>`;
+    if(giornata)h+=`<span style="font-size:.67rem;color:${clr};font-weight:600;margin-left:4px">${giornata}</span>`;
+    h+=`</div>`;
+  });
+  h+='</div>';
+  return h;
+}
+
 </body></html>
 <!-- deploy:2026-04-06 16:57:10.159625 -->
