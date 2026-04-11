@@ -16211,7 +16211,7 @@ function _buildFipLiveGironeSelect(){
   if(!sel||!campSel)return;
   var campNome=campSel.value;
   var camp=_getFipCamps().find(c=>c.nome===campNome);
-  var gironi=camp?camp.gironi:[];
+  var gironi=(camp&&camp.gironi&&camp.gironi.length>0)?camp.gironi:[];
   if(!gironi||gironi.length<=1){
     sel.innerHTML='<option value="">—</option>';
     sel.disabled=true;
@@ -16254,7 +16254,15 @@ function renderFipLive(){
 
   var html='';
   camps.forEach(camp=>{
-    var gironi=camp.gironi||[];
+    // Supporta sia struttura piatta (classifica/risultati/prossime diretti)
+    // che struttura a gironi (camp.gironi = array di oggetti con nome+dati)
+    var gironi;
+    if(camp.gironi&&camp.gironi.length>0){
+      gironi=camp.gironi;
+    } else {
+      // Struttura piatta: crea un girone virtuale unico
+      gironi=[{nome:'', classifica:camp.classifica||[], risultati:camp.risultati||[], prossime:camp.prossime||[]}];
+    }
     if(_fipGironeSel) gironi=gironi.filter(g=>g.nome===_fipGironeSel);
 
     // Header campionato
@@ -16267,7 +16275,7 @@ function renderFipLive(){
     html+=`</div>`;
 
     gironi.forEach(girone=>{
-      if(gironi.length>1){
+      if(gironi.length>1&&girone.nome){
         html+=`<div style="font-size:.78rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 6px 13px">Girone ${escH(girone.nome)}</div>`;
       }
       if(vista==='classifica') html+=_renderFipClassifica(girone,clr);
