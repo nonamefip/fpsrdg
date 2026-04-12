@@ -6,6 +6,8 @@ on:
     paths:
       - 'scripts/template.html'
       - 'cache/data_v5_new.json'
+      - 'fip_sarda_data.json'
+      - 'scripts/build.py'
   workflow_dispatch:
     inputs:
       mode:
@@ -133,5 +135,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
-          publish_branch: gh-pages
+        
