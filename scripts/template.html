@@ -16243,8 +16243,8 @@ function renderFipLive(){
   var gironeSel=document.getElementById('fiplive-sel-girone');
   var vistaSel=document.getElementById('fiplive-sel-vista');
   _fipCampSel=campSel?campSel.value:'';
+  _fipGironeSel=gironeSel?gironeSel.value:''; // leggi PRIMA di ricostruire il select
   _buildFipLiveGironeSelect();
-  _fipGironeSel=gironeSel?gironeSel.value:'';
   var vista=vistaSel?vistaSel.value:'classifica';
 
   var body=document.getElementById('fiplive-body');
@@ -16283,7 +16283,7 @@ function renderFipLive(){
 
     gironi.forEach(girone=>{
       if(gironi.length>1){
-        html+=`<div style="font-size:.78rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 6px 13px">Girone ${escH(girone.nome)}</div>`;
+        html+=`<div style="font-size:.78rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 6px 13px">${escH(girone.nome)}</div>`;
       }
       if(vista==='classifica') html+=_renderFipClassifica(girone,clr);
       else if(vista==='risultati') html+=_renderFipRisultati(girone,clr);
@@ -16369,11 +16369,11 @@ function _renderFipRisultati(girone,clr){
   var byGiornata={};
   rows.forEach(r=>{var g=r.giornata||'—';if(!byGiornata[g])byGiornata[g]=[];byGiornata[g].push(r);});
   var h='<div style="margin-bottom:14px">';
-  // Ordina giornate numericamente (desc: più recenti prima)
+  // Ordina giornate numericamente (asc: dalla prima)
   var giornateKeys=Object.keys(byGiornata).sort((a,b)=>{
     var na=parseInt(a,10),nb=parseInt(b,10);
-    if(!isNaN(na)&&!isNaN(nb))return nb-na;
-    return b>a?1:-1;
+    if(!isNaN(na)&&!isNaN(nb))return na-nb;
+    return a>b?1:-1;
   });
   giornateKeys.forEach(g=>{
     var gare=byGiornata[g];
