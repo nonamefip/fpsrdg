@@ -16191,9 +16191,24 @@ function setFipLiveTab(sesso,btn){
   renderFipLive();
 }
 
+function _fipNormalizza(camp){
+  // Se il campionato ha classifica/risultati/prossime diretti (senza gironi),
+  // li racchiude in un girone unico così tutta la logica funziona
+  if(!camp.gironi&&(camp.classifica||camp.risultati||camp.prossime)){
+    camp.gironi=[{
+      nome:'Girone Unico',
+      classifica:camp.classifica||[],
+      risultati:camp.risultati||[],
+      prossime:camp.prossime||[]
+    }];
+  }
+  if(!camp.gironi) camp.gironi=[];
+  return camp;
+}
+
 function _getFipCamps(){
   if(!FIP_SARDA||!FIP_SARDA.campionati)return[];
-  return FIP_SARDA.campionati.filter(c=>c.sesso===_fipSesso);
+  return FIP_SARDA.campionati.filter(c=>c.sesso===_fipSesso).map(_fipNormalizza);
 }
 
 function _buildFipLiveCampSelect(){
@@ -16354,7 +16369,14 @@ function _renderFipRisultati(girone,clr){
   var byGiornata={};
   rows.forEach(r=>{var g=r.giornata||'—';if(!byGiornata[g])byGiornata[g]=[];byGiornata[g].push(r);});
   var h='<div style="margin-bottom:14px">';
-  Object.entries(byGiornata).reverse().forEach(([g,gare])=>{
+  // Ordina giornate numericamente (desc: più recenti prima)
+  var giornateKeys=Object.keys(byGiornata).sort((a,b)=>{
+    var na=parseInt(a,10),nb=parseInt(b,10);
+    if(!isNaN(na)&&!isNaN(nb))return nb-na;
+    return b>a?1:-1;
+  });
+  giornateKeys.forEach(g=>{
+    var gare=byGiornata[g];
     h+=`<div style="font-size:.75rem;font-weight:700;color:${clr};text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px 4px">Giornata ${g}</div>`;
     gare.forEach(r=>{
       var data=r.data||'';
