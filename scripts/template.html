@@ -1741,8 +1741,7 @@ tr.loss-row td{background:#fdecea!important;}
       <label>Vista</label>
       <select id="fiplive-sel-vista" onchange="renderFipLive()">
         <option value="classifica">📊 Classifica</option>
-        <option value="risultati">📅 Risultati</option>
-        <option value="prossime">📆 Prossime</option>
+        <option value="risultati">📅 Calendario</option>
       </select>
     </div>
   </div>
@@ -16283,11 +16282,16 @@ function renderFipLive(){
 
     gironi.forEach(girone=>{
       if(gironi.length>1){
-        html+=`<div style="font-size:.78rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 6px 13px">Girone ${escH(girone.nome)}</div>`;
+        var gLabel=girone.nome||'';
+        // Per gironi playoff, mostra il nome come titolo di sezione
+        var isPlay=_isPlayoffGirone(girone);
+        var sectionStyle=isPlay
+          ?`font-size:.76rem;font-weight:700;color:var(--bl2);background:var(--bl4);padding:4px 10px;border-left:3px solid ${clr};border-radius:0 4px 4px 0;margin:10px 0 5px 0`
+          :`font-size:.72rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 5px 13px`;
+        html+=`<div style="${sectionStyle}">${isPlay?'':'Girone '}${escH(gLabel)}</div>`;
       }
       if(vista==='classifica') html+=_renderFipClassifica(girone,clr);
-      else if(vista==='risultati') html+=_renderFipRisultati(girone,clr);
-      else html+=_renderFipProssime(girone,clr);
+      else html+=_renderFipRisultati(girone,clr);
     });
 
     html+=`</div>`;
@@ -16362,32 +16366,131 @@ function _renderFipClassifica(girone,clr){
   return h;
 }
 
+/* ── helpers playoff ── */
+function _isPlayoffGirone(girone){
+  var n=(girone.nome||'').toLowerCase();
+  return n.includes('playoff')||n.includes('finale')||n.includes('classificaz')||
+         n.includes('semifinal')||n.includes('quarti')||n.includes('ottavi');
+}
+
 function _renderFipRisultati(girone,clr){
   var rows=girone.risultati||[];
-  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessun risultato disponibile.</div>';
-  // Raggruppa per giornata
-  var byGiornata={};
-  rows.forEach(r=>{var g=r.giornata||'—';if(!byGiornata[g])byGiornata[g]=[];byGiornata[g].push(r);});
-  var h='<div style="margin-bottom:14px">';
-  // Ordina giornate numericamente (desc: più recenti prima)
-  var giornateKeys=Object.keys(byGiornata).sort((a,b)=>{
-    var na=parseInt(a,10),nb=parseInt(b,10);
-    if(!isNaN(na)&&!isNaN(nb))return nb-na;
-    return b>a?1:-1;
+  var future=(girone.prossime||[]).map(r=>Object.assign({},r,{futuro:true}));
+  var all=rows.concat(future);
+  if(!all.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessun dato calendario disponibile.</div>';
+  if(_isPlayoffGirone(girone)) return _renderFipPlayoff(girone,clr,all);
+  return _renderFipCalendario(girone,clr,all);
+}
+
+/* Calendario regolare: Andata ◀ | Ritorno ▶ */
+function _renderFipCalendario(girone,clr,all){
+  var byG={};
+  all.forEach(r=>{var g=parseInt(r.giornata)||0;if(!byG[g])byG[g]=[];byG[g].push(r);});
+  var nTeams=(girone.classifica||[]).length;
+  var legLen=nTeams>1?nTeams-1:0;
+  var allKeys=Object.keys(byG).map(k=>parseInt(k)).filter(n=>!isNaN(n)&&n>0).sort((a,b)=>a-b);
+  if(!legLen&&allKeys.length) legLen=Math.ceil(allKeys[allKeys.length-1]/2);
+  var andataKeys=allKeys.filter(g=>g<=legLen);
+  var ritornoKeys=allKeys.filter(g=>g>legLen);
+
+  function _gameRow(r){
+    var sc=r.punteggio||'';var pf=sc.split('-')[0]||'';var ps=sc.split('-')[1]||'';
+    var cW=pf&&ps&&parseInt(pf)>parseInt(ps);var oW=pf&&ps&&parseInt(ps)>parseInt(pf);
+    var op=r.futuro?'opacity:.55;':'';
+    var score=r.futuro
+      ?`<span style="margin:0 4px;font-size:.68rem;color:var(--mu);min-width:42px;text-align:center;white-space:nowrap">${escH(r.data||'?')}</span>`
+      :`<span style="margin:0 4px;font-weight:800;font-size:.82rem;color:var(--bl);min-width:42px;text-align:center">${sc?escH(sc):'–'}</span>`;
+    return`<div style="display:flex;align-items:center;gap:3px;padding:4px 4px;border-bottom:1px solid var(--tbl-bd);font-size:.77rem;${op}">
+      <span style="flex:1;text-align:right;font-weight:${cW?'700':'400'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(r.casa||'')}">${escH(r.casa||'–')}</span>
+      ${score}
+      <span style="flex:1;font-weight:${oW?'700':'400'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(r.ospite||'')}">${escH(r.ospite||'–')}</span>
+    </div>`;
+  }
+
+  function _col(keys,label){
+    var h=`<div style="flex:1;min-width:0">`;
+    h+=`<div style="font-size:.68rem;font-weight:800;color:${clr};text-transform:uppercase;letter-spacing:.6px;padding:3px 6px;background:${clr}18;border-radius:4px;margin-bottom:6px;text-align:center">${label}</div>`;
+    if(!keys.length){
+      h+=`<div style="color:var(--mu2);font-size:.75rem;padding:10px 6px;text-align:center">—</div>`;
+    } else {
+      keys.forEach(g=>{
+        h+=`<div style="font-size:.65rem;font-weight:700;color:${clr};opacity:.7;padding:5px 4px 2px;text-transform:uppercase;letter-spacing:.4px">G${g}</div>`;
+        (byG[g]||[]).forEach(r=>{ h+=_gameRow(r); });
+      });
+    }
+    h+=`</div>`;
+    return h;
+  }
+
+  return`<div style="display:flex;gap:10px;margin-bottom:14px">
+    ${_col(andataKeys,'◀ Andata')}
+    <div style="width:1px;background:var(--br);flex-shrink:0;margin:22px 0"></div>
+    ${_col(ritornoKeys,'Ritorno ▶')}
+  </div>`;
+}
+
+/* Playoff: serie Gara1/Gara2/Bella oppure sequenziale */
+function _renderFipPlayoff(girone,clr,all){
+  // Raggruppa per coppia di squadre
+  var matchups={};var order=[];
+  all.forEach(r=>{
+    var key=[r.casa||'',r.ospite||''].sort().join('|||');
+    if(!matchups[key]){matchups[key]={gare:[]};order.push(key);}
+    matchups[key].gare.push(r);
   });
-  giornateKeys.forEach(g=>{
-    var gare=byGiornata[g];
-    h+=`<div style="font-size:.75rem;font-weight:700;color:${clr};text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px 4px">Giornata ${g}</div>`;
-    gare.forEach(r=>{
-      var data=r.data||'';
-      var casa=r.casa||'–';var osp=r.ospite||'–';
+  var hasSeries=Object.values(matchups).some(m=>m.gare.length>1);
+  if(!hasSeries) return _renderFipSequenziale(all,clr);
+
+  var h='<div style="margin-bottom:14px">';
+  order.forEach(key=>{
+    var m=matchups[key];
+    var gare=m.gare.slice().sort((a,b)=>(parseInt(a.giornata)||0)-(parseInt(b.giornata)||0));
+    var t1=gare[0].casa||'';var t2=gare[0].ospite||'';
+    h+=`<div style="margin-bottom:10px;border:1px solid var(--tbl-bd);border-radius:6px;overflow:hidden">`;
+    h+=`<div style="background:${clr}14;padding:5px 10px;font-size:.78rem;font-weight:700;color:${clr};border-bottom:1px solid ${clr}22">${escH(t1)} <span style="opacity:.5">vs</span> ${escH(t2)}</div>`;
+    gare.forEach((r,i)=>{
+      var label=i===0?'Gara 1':i===1?'Gara 2':'Bella';
       var sc=r.punteggio||'';var pf=sc.split('-')[0]||'';var ps=sc.split('-')[1]||'';
-      var casaW=pf&&ps&&parseInt(pf)>parseInt(ps);var ospW=pf&&ps&&parseInt(ps)>parseInt(pf);
-      h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
-      h+=`<span style="color:var(--mu);width:70px;flex-shrink:0;font-size:.7rem">${escH(data)}</span>`;
-      h+=`<span style="flex:1;text-align:right;font-weight:${casaW?'700':'400'}">${escH(casa)}</span>`;
-      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;text-align:center">${sc?escH(sc):'–'}</span>`;
-      h+=`<span style="flex:1;font-weight:${ospW?'700':'400'}">${escH(osp)}</span>`;
+      var cW=pf&&ps&&parseInt(pf)>parseInt(ps);var oW=pf&&ps&&parseInt(ps)>parseInt(pf);
+      var op=r.futuro?'opacity:.5;':'';
+      h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid var(--tbl-bd);font-size:.78rem;${op}">`;
+      h+=`<span style="font-size:.64rem;font-weight:800;color:${clr};min-width:44px;text-transform:uppercase;letter-spacing:.3px">${label}</span>`;
+      h+=`<span style="flex:1;text-align:right;font-weight:${cW?'700':'400'}">${escH(r.casa||'–')}</span>`;
+      if(r.futuro){
+        h+=`<span style="margin:0 6px;font-size:.7rem;color:var(--mu);min-width:50px;text-align:center">${escH(r.data||'?')}</span>`;
+      } else {
+        h+=`<span style="margin:0 6px;font-weight:800;font-size:.88rem;color:var(--bl);min-width:50px;text-align:center">${sc?escH(sc):'–'}</span>`;
+      }
+      h+=`<span style="flex:1;font-weight:${oW?'700':'400'}">${escH(r.ospite||'–')}</span>`;
+      h+=`</div>`;
+    });
+    h+=`</div>`;
+  });
+  h+='</div>';
+  return h;
+}
+
+/* Sequenziale (playoff grandi gironi o round-robin) */
+function _renderFipSequenziale(all,clr){
+  var byG={};
+  all.forEach(r=>{var g=r.giornata||'—';if(!byG[g])byG[g]=[];byG[g].push(r);});
+  var keys=Object.keys(byG).sort((a,b)=>{var na=parseInt(a),nb=parseInt(b);return(isNaN(na)||isNaN(nb))?(a>b?1:-1):na-nb;});
+  var h='<div style="margin-bottom:14px">';
+  keys.forEach(g=>{
+    h+=`<div style="font-size:.72rem;font-weight:700;color:${clr};text-transform:uppercase;letter-spacing:.5px;margin:10px 0 3px 4px">Giornata ${g}</div>`;
+    (byG[g]||[]).forEach(r=>{
+      var sc=r.punteggio||'';var pf=sc.split('-')[0]||'';var ps=sc.split('-')[1]||'';
+      var cW=pf&&ps&&parseInt(pf)>parseInt(ps);var oW=pf&&ps&&parseInt(ps)>parseInt(pf);
+      var op=r.futuro?'opacity:.55;':'';
+      h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.79rem;${op}">`;
+      h+=`<span style="color:var(--mu);width:68px;flex-shrink:0;font-size:.68rem">${escH(r.data||'')}</span>`;
+      h+=`<span style="flex:1;text-align:right;font-weight:${cW?'700':'400'}">${escH(r.casa||'–')}</span>`;
+      if(r.futuro){
+        h+=`<span style="margin:0 8px;font-size:.72rem;color:var(--mu);min-width:54px;text-align:center">${escH(r.ora||'?')}</span>`;
+      } else {
+        h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;text-align:center">${sc?escH(sc):'–'}</span>`;
+      }
+      h+=`<span style="flex:1;font-weight:${oW?'700':'400'}">${escH(r.ospite||'–')}</span>`;
       h+=`</div>`;
     });
   });
@@ -16396,23 +16499,7 @@ function _renderFipRisultati(girone,clr){
 }
 
 function _renderFipProssime(girone,clr){
-  var rows=girone.prossime||[];
-  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessuna prossima gara disponibile.</div>';
-  var h='<div style="margin-bottom:14px">';
-  rows.forEach(r=>{
-    var data=r.data||'';var ora=r.ora||'';var casa=r.casa||'–';var osp=r.ospite||'–';
-    var campo=r.campo||'';var giornata=r.giornata?`G${r.giornata}`:'';
-    h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
-    h+=`<span style="color:var(--mu);width:90px;flex-shrink:0;font-size:.7rem">${escH(data)} ${escH(ora)}</span>`;
-    h+=`<span style="flex:1;text-align:right">${escH(casa)}</span>`;
-    h+=`<span style="margin:0 8px;font-weight:700;font-size:.8rem;color:var(--bl);min-width:54px;text-align:center">VS</span>`;
-    h+=`<span style="flex:1">${escH(osp)}</span>`;
-    if(campo)h+=`<span style="font-size:.67rem;color:var(--mu);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(campo)}">📍 ${escH(campo)}</span>`;
-    if(giornata)h+=`<span style="font-size:.67rem;color:${clr};font-weight:600;margin-left:4px">${giornata}</span>`;
-    h+=`</div>`;
-  });
-  h+='</div>';
-  return h;
+  return _renderFipRisultati(girone,clr);
 }
 </script>
 </body></html>
