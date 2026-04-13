@@ -16242,8 +16242,8 @@ function renderFipLive(){
   var gironeSel=document.getElementById('fiplive-sel-girone');
   var vistaSel=document.getElementById('fiplive-sel-vista');
   _fipCampSel=campSel?campSel.value:'';
-  _buildFipLiveGironeSelect();
-  _fipGironeSel=gironeSel?gironeSel.value:'';
+  _fipGironeSel=gironeSel?gironeSel.value:''; // salva PRIMA di ricostruire
+  _buildFipLiveGironeSelect(); // ripristina sel.value=_fipGironeSel internamente
   var vista=vistaSel?vistaSel.value:'classifica';
 
   var body=document.getElementById('fiplive-body');
@@ -16499,8 +16499,4 @@ function _renderFipSequenziale(all,clr){
 }
 
 function _renderFipProssime(girone,clr){
-  return _renderFipRisultati(girone,clr);
-}
-</script>
-</body></html>
-<\!-- deploy:2026-04-13 17:31:12.515872 -->
+  return _renderFipRisultati(girone,
