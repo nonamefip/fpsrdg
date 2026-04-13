@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redattore Documenti Ufficiali v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- PDF.js per leggere PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- Mammoth.js per leggere .docx -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --surface3: #252525;
+    --border: #2a2a2a;
+    --accent: #c8a96e;
+    --accent2: #8fb8a8;
+    --danger: #c96e6e;
+    --warn: #c8a96e;
+    --text: #e8e4dc;
+    --text-dim: #7a7570;
+    --text-mid: #b0aa9f;
+    --radius: 4px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .logo { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--accent); }
+  .logo span { color: var(--text-dim); font-size: 0.7rem; font-family: 'IBM Plex Mono', monospace; display: block; margin-top: 2px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .status-bar { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: var(--text-dim); }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--danger); transition: background 0.3s; }
+  .status-dot.ok { background: var(--accent2); }
+
+  /* LAYOUT */
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    overflow: hidden;
+    height: calc(100vh - 62px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    padding: 20px 18px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .doc-types { display: flex; flex-direction: column; gap: 5px; }
+  .doc-type-btn {
+    background: none; border: 1px solid var(--border); color: var(--text-mid);
+    padding: 8px 12px; border-radius: var(--radius); cursor: pointer;
+    text-align: left; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.8rem;
+    transition: all 0.15s; display: flex; align-items: center; gap: 8px;
+  }
+  .doc-type-btn:hover { border-color: var(--accent); color: var(--text); }
+  .doc-type-btn.active { border-color: var(--accent); background: rgba(200,169,110,0.08); color: var(--accent); }
+  .doc-type-btn.suggested { border-color: var(--accent2); background: rgba(143,184,168,0.1); color: var(--accent2); }
+  .doc-type-btn.suggested::after { content: '← suggerito'; font-size: 0.65rem; margin-left: auto; opacity: 0.8; }
+
+  label { font-size: 0.72rem; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.04em; }
+  input, select, textarea {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 10px; border-radius: var(--radius); font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.8rem; outline: none; transition: border-color 0.15s; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  select option { background: var(--surface2); }
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .generate-btn {
+    background: var(--accent); color: #0e0e0e; border: none;
+    padding: 12px 16px; border-radius: var(--radius);
+    font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; font-size: 0.88rem;
+    cursor: pointer; width: 100%; transition: all 0.2s; letter-spacing: 0.02em;
+  }
+  .generate-btn:hover { background: #d9bb82; }
+  .generate-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; }
+
+  .divider { border: none; border-top: 1px solid var(--border); }
+
+  /* CONTENT */
+  .content-area {
+    display: grid;
+    grid-template-rows: auto 1fr 1fr;
+    overflow: hidden;
+  }
+
+  /* DROP ZONE */
+  .drop-zone {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    background: var(--surface);
+  }
+  .drop-box {
+    border: 2px dashed var(--border);
+    border-radius: 6px;
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .drop-box:hover, .drop-box.dragover {
+    border-color: var(--accent);
+    background: rgba(200,169,110,0.04);
+  }
+  .drop-box input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .drop-icon { font-size: 1.6rem; margin-bottom: 6px; }
+  .drop-text { font-size: 0.8rem; color: var(--text-mid); }
+  .drop-text strong { color: var(--accent); }
+  .drop-formats { font-size: 0.68rem; color: var(--text-dim); margin-top: 4px; font-family: 'IBM Plex Mono', monospace; }
+
+  /* File loaded state */
+  .file-loaded {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--accent2);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-top: 10px;
+  }
+  .file-loaded.visible { display: flex; }
+  .file-icon { font-size: 1.4rem; }
+  .file-info { flex: 1; }
+  .file-name { font-size: 0.82rem; color: var(--text); font-weight: 500; }
+  .file-size { font-size: 0.68rem; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; }
+  .remove-file { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1rem; padding: 4px; transition: color 0.15s; }
+  .remove-file:hover { color: var(--danger); }
+
+  /* Analysis box */
+  .analysis-box {
+    display: none;
+    margin-top: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .analysis-box.visible { display: block; }
+  .analysis-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+  }
+  .analysis-title { font-size: 0.75rem; color: var(--accent2); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.05em; }
+  .analysis-content { font-size: 0.82rem; line-height: 1.7; color: var(--text-mid); }
+  .suggestion-row {
+    display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+  }
+  .suggestion-chip {
+    background: rgba(143,184,168,0.12); border: 1px solid var(--accent2);
+    color: var(--accent2); padding: 5px 12px; border-radius: 20px;
+    font-size: 0.72rem; font-family: 'IBM Plex Mono', monospace; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .suggestion-chip:hover { background: rgba(143,184,168,0.25); }
+  .confirm-btn {
+    background: var(--accent2); color: #0e0e0e; border: none;
+    padding: 8px 16px; border-radius: var(--radius);
+    font-family: 'IBM Plex Sans', sans-serif; font-weight: 500; font-size: 0.8rem;
+    cursor: pointer; transition: all 0.15s; margin-top: 10px;
+  }
+  .confirm-btn:hover { background: #a5ccbc; }
+
+  /* PANELS */
+  .panel {
+    padding: 18px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .panel:nth-child(2) { border-bottom: 1px solid var(--border); }
+  .panel-header { display: flex; align-items: center; justify-content: space-between; }
+  .panel-title { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--text); }
+  .char-count { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: var(--text-dim); }
+  textarea.input-text {
+    flex: 1; resize: none; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 14px; border-radius: var(--radius);
+    font-size: 0.82rem; line-height: 1.7;
+  }
+  .output-panel { background: var(--surface); }
+  .output-actions { display: flex; gap: 6px; }
+  .action-btn {
+    background: none; border: 1px solid var(--border); color: var(--text-mid);
+    padding: 5px 12px; border-radius: var(--radius); font-size: 0.72rem;
+    cursor: pointer; font-family: 'IBM Plex Mono', monospace; transition: all 0.15s;
+  }
+  .action-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .output-text {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px; overflow-y: auto;
+    font-size: 0.82rem; line-height: 1.8; white-space: pre-wrap;
+    font-family: 'IBM Plex Sans', sans-serif; color: var(--text);
+  }
+  .output-text.placeholder {
+    color: var(--text-dim); font-style: italic;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+  }
+
+  /* Loading */
+  .loading-indicator { display: none; align-items: center; gap: 8px; color: var(--accent); font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; }
+  .loading-indicator.visible { display: flex; }
+  .spinner { width: 12px; height: 12px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .model-row { display: flex; gap: 6px; }
+  .model-row input { flex: 1; }
+  .check-btn { background: none; border: 1px solid var(--border); color: var(--text-mid); padding: 8px 10px; border-radius: var(--radius); cursor: pointer; font-size: 0.7rem; font-family: 'IBM Plex Mono', monospace; white-space: nowrap; transition: all 0.15s; }
+  .check-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .toast { position: fixed; bottom: 20px; right: 20px; background: var(--surface2); border: 1px solid var(--accent2); color: var(--accent2); padding: 8px 16px; border-radius: var(--radius); font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; opacity: 0; transform: translateY(8px); transition: all 0.3s; pointer-events: none; z-index: 100; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .analyse-btn {
+    background: rgba(143,184,168,0.15); border: 1px solid var(--accent2); color: var(--accent2);
+    padding: 8px 16px; border-radius: var(--radius); font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 0.8rem; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+  }
+  .analyse-btn:hover { background: rgba(143,184,168,0.25); }
+  .analyse-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    Redattore Documenti
+    <span>Offline · Ollama · v2.0</span>
+  </div>
+  <div class="status-bar">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Verifica Ollama...</span>
+  </div>
+</header>
+
+<main>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div>
+      <div class="section-label">Tipo di Documento</div>
+      <div class="doc-types" id="docTypes">
+        <button class="doc-type-btn active" data-type="lettera_ente"><span>🏛️</span> Lettera a Ente Pubblico</button>
+        <button class="doc-type-btn" data-type="ricorso"><span>⚖️</span> Ricorso</button>
+        <button class="doc-type-btn" data-type="diffida"><span>📋</span> Diffida</button>
+        <button class="doc-type-btn" data-type="richiesta_privata"><span>🏢</span> Richiesta a Privato/Azienda</button>
+        <button class="doc-type-btn" data-type="accesso_atti"><span>📂</span> Accesso agli Atti (FOIA)</button>
+        <button class="doc-type-btn" data-type="esposto"><span>📣</span> Esposto / Segnalazione</button>
+        <button class="doc-type-btn" data-type="libero"><span>✍️</span> Testo Libero</button>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div>
+      <div class="section-label">Dati Mittente</div>
+      <div class="field-group">
+        <label>Nome e Cognome</label>
+        <input type="text" id="mittente" placeholder="Mario Rossi">
+        <label>Indirizzo</label>
+        <input type="text" id="indirizzo" placeholder="Via Roma 1, 20100 Milano">
+        <label>Contatti (email/tel)</label>
+        <input type="text" id="contatti" placeholder="mario@email.it">
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div>
+      <div class="section-label">Tono</div>
+      <select id="tono">
+        <option value="formale">Formale e professionale</option>
+        <option value="deciso">Deciso e fermo</option>
+        <option value="conciliante">Conciliante e collaborativo</option>
+        <option value="urgente">Urgente</option>
+      </select>
+    </div>
+
+    <hr class="divider">
+
+    <div>
+      <div class="section-label">Modello Ollama</div>
+      <div class="field-group">
+        <div class="model-row">
+          <input type="text" id="modelName" value="mistral" placeholder="mistral">
+          <button class="check-btn" onclick="checkOllama()">Test</button>
+        </div>
+        <div class="loading-indicator" id="loadingIndicator">
+          <div class="spinner"></div>
+          <span id="loadingText">Elaborazione...</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="generate-btn" id="generateBtn" onclick="generateDocument()">
+      ✦ Genera Documento
+    </button>
+
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content-area">
+
+    <!-- DROP ZONE -->
+    <div class="drop-zone">
+      <div class="section-label" style="margin-bottom:8px;">Carica un Documento (opzionale)</div>
+      <div class="drop-box" id="dropBox">
+        <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt" onchange="handleFile(this.files[0])">
+        <div class="drop-icon">📄</div>
+        <div class="drop-text">Trascina qui un file oppure <strong>clicca per scegliere</strong></div>
+        <div class="drop-formats">PDF · DOCX · TXT</div>
+      </div>
+
+      <div class="file-loaded" id="fileLoaded">
+        <div class="file-icon" id="fileLoadedIcon">📄</div>
+        <div class="file-info">
+          <div class="file-name" id="fileName">—</div>
+          <div class="file-size" id="fileSize">—</div>
+        </div>
+        <button class="analyse-btn" id="analyseBtn" onclick="analyseDocument()">
+          🔍 Analizza
+        </button>
+        <button class="remove-file" onclick="removeFile()" title="Rimuovi file">✕</button>
+      </div>
+
+      <!-- Box analisi -->
+      <div class="analysis-box" id="analysisBox">
+        <div class="analysis-header">
+          <div class="analysis-title">◆ ANALISI DOCUMENTO</div>
+        </div>
+        <div class="analysis-content" id="analysisContent">—</div>
+        <div class="suggestion-row" id="suggestionRow"></div>
+        <button class="confirm-btn" id="confirmBtn" onclick="confirmAnalysis()" style="display:none">
+          ✓ Confermo — Genera il documento
+        </button>
+      </div>
+    </div>
+
+    <!-- Input Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Situazione / Integrazioni</div>
+        <div class="char-count" id="charCount">0 caratteri</div>
+      </div>
+      <textarea class="input-text" id="inputText"
+        placeholder="Descrivi la situazione oppure aggiungi dettagli al documento caricato.
+
+Esempio: 'Ho ricevuto questa multa ma ero autorizzato dai lavori comunali. Voglio fare ricorso. Ho le foto come prova.'
+
+Se hai già caricato un file, puoi usare questo spazio per aggiungere informazioni extra."
+      ></textarea>
+    </div>
+
+    <!-- Output Panel -->
+    <div class="panel output-panel">
+      <div class="panel-header">
+        <div class="panel-title">Documento Generato</div>
+        <div class="output-actions">
+          <button class="action-btn" onclick="copyOutput()">📋 Copia</button>
+          <button class="action-btn" onclick="downloadOutput()">💾 Salva .txt</button>
+          <button class="action-btn" onclick="clearOutput()">✕ Pulisci</button>
+        </div>
+      </div>
+      <div class="output-text placeholder" id="outputText">
+        Il documento apparirà qui.<br><br>
+        Carica un file o descrivi la situazione,<br>poi premi <strong>Genera</strong>.
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // PDF.js worker
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  const OLLAMA_URL = 'http://localhost:11434';
+  let extractedFileText = '';
+  let analysisResult = null;
+  let selectedDocType = 'lettera_ente';
+
+  // ── Tipo documento ──────────────────────────────────
+  document.querySelectorAll('.doc-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.doc-type-btn').forEach(b => {
+        b.classList.remove('active', 'suggested');
+        b.style.removeProperty('border-color');
+      });
+      btn.classList.add('active');
+      selectedDocType = btn.dataset.type;
+    });
+  });
+
+  // ── Char count ──────────────────────────────────────
+  document.getElementById('inputText').addEventListener('input', function() {
+    document.getElementById('charCount').textContent = this.value.length + ' caratteri';
+  });
+
+  // ── Drag & Drop ─────────────────────────────────────
+  const dropBox = document.getElementById('dropBox');
+  dropBox.addEventListener('dragover', e => { e.preventDefault(); dropBox.classList.add('dragover'); });
+  dropBox.addEventListener('dragleave', () => dropBox.classList.remove('dragover'));
+  dropBox.addEventListener('drop', e => {
+    e.preventDefault();
+    dropBox.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+
+  // ── Handle file ─────────────────────────────────────
+  async function handleFile(file) {
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    const icons = { pdf: '📕', docx: '📘', doc: '📘', txt: '📄' };
+
+    document.getElementById('fileLoadedIcon').textContent = icons[ext] || '📄';
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+    document.getElementById('fileLoaded').classList.add('visible');
+    document.getElementById('analysisBox').classList.remove('visible');
+    document.getElementById('confirmBtn').style.display = 'none';
+    extractedFileText = '';
+    analysisResult = null;
+
+    try {
+      if (ext === 'pdf') {
+        extractedFileText = await extractPDF(file);
+      } else if (ext === 'docx' || ext === 'doc') {
+        extractedFileText = await extractDOCX(file);
+      } else if (ext === 'txt') {
+        extractedFileText = await file.text();
+      } else {
+        showToast('Formato non supportato');
+        return;
+      }
+      showToast(`✓ File caricato (${extractedFileText.length} caratteri estratti)`);
+    } catch (e) {
+      showToast('Errore lettura file: ' + e.message);
+    }
+  }
+
+  async function extractPDF(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let text = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(s => s.str).join(' ') + '\n';
+    }
+    return text.trim();
+  }
+
+  async function extractDOCX(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value.trim();
+  }
+
+  function removeFile() {
+    extractedFileText = '';
+    analysisResult = null;
+    document.getElementById('fileLoaded').classList.remove('visible');
+    document.getElementById('analysisBox').classList.remove('visible');
+    document.getElementById('fileInput').value = '';
+    document.getElementById('confirmBtn').style.display = 'none';
+    // Rimuovi suggerimenti
+    document.querySelectorAll('.doc-type-btn').forEach(b => {
+      b.classList.remove('suggested');
+    });
+  }
+
+  // ── Analisi documento ────────────────────────────────
+  async function analyseDocument() {
+    if (!extractedFileText) { showToast('Carica prima un file!'); return; }
+
+    const btn = document.getElementById('analyseBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Analisi...';
+
+    const model = document.getElementById('modelName').value.trim() || 'mistral';
+    const testo = extractedFileText.slice(0, 3000); // max 3000 char per l'analisi
+
+    const prompt = `Analizza il seguente documento italiano e rispondi SOLO in italiano con questo formato esatto:
+
+SITUAZIONE: [descrivi brevemente la situazione in 2-3 righe]
+ENTE_DESTINATARIO: [a chi bisogna rivolgersi: es. Comune di..., INPS, Agenzia delle Entrate, ecc.]
+TIPO_DOCUMENTO: [il tipo più adatto tra: lettera_ente, ricorso, diffida, richiesta_privata, accesso_atti, esposto, libero]
+COSA_CHIEDERE: [cosa dovrebbe chiedere il mittente in 1-2 righe]
+NOTE: [eventuali note importanti, normative da citare, scadenze]
+
+DOCUMENTO:
+${testo}`;
+
+    try {
+      const response = await fetch(`${OLLAMA_URL}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          prompt,
+          stream: false,
+          options: { temperature: 0.1, num_predict: 600 }
+        })
+      });
+      const data = await response.json();
+      const raw = data.response || '';
+      analysisResult = parseAnalysis(raw);
+      showAnalysis(analysisResult);
+    } catch(e) {
+      showToast('Errore analisi: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🔍 Analizza';
+    }
+  }
+
+  function parseAnalysis(raw) {
+    const get = (key) => {
+      const match = raw.match(new RegExp(key + ':\\s*(.+)'));
+      return match ? match[1].trim() : '';
+    };
+    return {
+      situazione: get('SITUAZIONE'),
+      ente: get('ENTE_DESTINATARIO'),
+      tipo: get('TIPO_DOCUMENTO'),
+      cosa: get('COSA_CHIEDERE'),
+      note: get('NOTE'),
+      raw
+    };
+  }
+
+  function showAnalysis(a) {
+    const box = document.getElementById('analysisBox');
+    const content = document.getElementById('analysisContent');
+    const row = document.getElementById('suggestionRow');
+
+    let html = '';
+    if (a.situazione) html += `<div style="margin-bottom:8px"><span style="color:var(--accent);font-size:0.7rem;font-family:'IBM Plex Mono',monospace;">SITUAZIONE</span><br>${a.situazione}</div>`;
+    if (a.ente) html += `<div style="margin-bottom:8px"><span style="color:var(--accent);font-size:0.7rem;font-family:'IBM Plex Mono',monospace;">A CHI RIVOLGERSI</span><br>${a.ente}</div>`;
+    if (a.cosa) html += `<div style="margin-bottom:8px"><span style="color:var(--accent);font-size:0.7rem;font-family:'IBM Plex Mono',monospace;">COSA CHIEDERE</span><br>${a.cosa}</div>`;
+    if (a.note) html += `<div><span style="color:var(--accent);font-size:0.7rem;font-family:'IBM Plex Mono',monospace;">NOTE</span><br>${a.note}</div>`;
+
+    content.innerHTML = html;
+
+    // Chips suggerimenti
+    row.innerHTML = '';
+    if (a.tipo) {
+      const typeMap = {
+        lettera_ente: 'Lettera Ente Pubblico',
+        ricorso: 'Ricorso',
+        diffida: 'Diffida',
+        richiesta_privata: 'Richiesta Privato',
+        accesso_atti: 'Accesso Atti',
+        esposto: 'Esposto',
+        libero: 'Testo Libero'
+      };
+      const label = typeMap[a.tipo] || a.tipo;
+      const chip = document.createElement('span');
+      chip.className = 'suggestion-chip';
+      chip.textContent = '📌 Tipo suggerito: ' + label;
+      chip.onclick = () => selectSuggestedType(a.tipo);
+      row.appendChild(chip);
+    }
+
+    // Evidenzia il tipo suggerito nella sidebar
+    if (a.tipo) selectSuggestedType(a.tipo);
+
+    document.getElementById('confirmBtn').style.display = 'block';
+    box.classList.add('visible');
+    showToast('✓ Analisi completata!');
+  }
+
+  function selectSuggestedType(tipo) {
+    document.querySelectorAll('.doc-type-btn').forEach(b => {
+      b.classList.remove('active', 'suggested');
+    });
+    const btn = document.querySelector(`[data-type="${tipo}"]`);
+    if (btn) {
+      btn.classList.add('suggested');
+      selectedDocType = tipo;
+    }
+  }
+
+  function confirmAnalysis() {
+    // Imposta il tipo suggerito come attivo
+    document.querySelectorAll('.doc-type-btn').forEach(b => b.classList.remove('active', 'suggested'));
+    const btn = document.querySelector(`[data-type="${selectedDocType}"]`);
+    if (btn) btn.classList.add('active');
+
+    // Pre-compila il campo di testo con le info estratte
+    const extra = document.getElementById('inputText').value.trim();
+    if (!extra && analysisResult) {
+      let prefill = '';
+      if (analysisResult.situazione) prefill += analysisResult.situazione + '\n';
+      if (analysisResult.cosa) prefill += '\nObiettivo: ' + analysisResult.cosa;
+      document.getElementById('inputText').value = prefill.trim();
+      document.getElementById('charCount').textContent = prefill.trim().length + ' caratteri';
+    }
+
+    generateDocument();
+  }
+
+  // ── Prompts per tipo ─────────────────────────────────
+  const docPrompts = {
+    lettera_ente: `Sei un esperto redattore di documenti formali italiani. Redigi una lettera formale e professionale indirizzata a un ente pubblico basandoti sulla situazione descritta. La lettera deve: avere intestazione con mittente, data e destinatario; usare linguaggio formale e corretto; esporre i fatti in modo chiaro e cronologico; indicare chiaramente cosa si richiede; citare normative di riferimento se pertinenti; chiudersi con formula di saluto formale e firma.`,
+    ricorso: `Sei un esperto redattore legale italiano. Redigi un ricorso formale. Deve avere: intestazione completa; oggetto del ricorso; fatti in ordine cronologico numerato; motivazioni con riferimenti normativi; richieste specifiche; elenco documenti allegati; formula legale di chiusura.`,
+    diffida: `Sei un esperto redattore legale italiano. Redigi una diffida formale. Deve avere: intestazione completa; esposizione dei fatti; violazioni commesse con riferimenti normativi; termine perentorio per l'adempimento; conseguenze legali in caso di inadempimento; tono fermo e formalmente corretto.`,
+    richiesta_privata: `Sei un esperto redattore di comunicazioni formali italiane. Redigi una lettera formale a un'azienda o soggetto privato. Deve avere: intestazione; esposizione chiara del problema; richieste precise; riferimenti contrattuali o normativi (es. Codice del Consumo); eventuali termini di risposta; formula di chiusura.`,
+    accesso_atti: `Sei un esperto redattore italiano. Redigi una richiesta di accesso agli atti ai sensi della L. 241/1990 e/o D.Lgs. 33/2013. Deve citare: la normativa (art. 22 L.241/1990 e/o art. 5 D.Lgs.33/2013); i documenti richiesti con precisione; l'interesse diretto e concreto; termini di legge per la risposta (30 giorni); modalità di risposta preferite.`,
+    esposto: `Sei un esperto redattore italiano. Redigi un esposto/segnalazione formale. Deve avere: intestazione; fatti in ordine cronologico; irregolarità o illeciti riscontrati; normative violate; prove o testimoni disponibili; richiesta di intervento dell'autorità.`,
+    libero: `Sei un esperto redattore di documenti formali italiani. Basandoti sulla situazione descritta, redigi il documento formale più appropriato adattando formato e contenuto. Usa linguaggio corretto, formale e professionale.`
+  };
+
+  // ── Genera documento ─────────────────────────────────
+  async function generateDocument() {
+    const inputText = document.getElementById('inputText').value.trim();
+    const hasFile = extractedFileText.length > 0;
+
+    if (!inputText && !hasFile) {
+      showToast('Descrivi la situazione o carica un file!');
+      return;
+    }
+
+    const mittente = document.getElementById('mittente').value.trim();
+    const indirizzo = document.getElementById('indirizzo').value.trim();
+    const contatti = document.getElementById('contatti').value.trim();
+    const tono = document.getElementById('tono').value;
+    const model = document.getElementById('modelName').value.trim() || 'mistral';
+
+    const tonoDesc = { formale: 'formale e professionale', deciso: 'deciso e fermo', conciliante: 'conciliante e collaborativo', urgente: 'urgente' }[tono];
+    const today = new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    let userPrompt = `Data odierna: ${today}\nTono richiesto: ${tonoDesc}\n`;
+    if (mittente) userPrompt += `Mittente: ${mittente}\n`;
+    if (indirizzo) userPrompt += `Indirizzo mittente: ${indirizzo}\n`;
+    if (contatti) userPrompt += `Contatti mittente: ${contatti}\n`;
+
+    if (hasFile) {
+      userPrompt += `\nCONTENUTO DEL DOCUMENTO ALLEGATO (usa queste informazioni come base):\n${extractedFileText.slice(0, 4000)}\n`;
+    }
+
+    if (inputText) {
+      userPrompt += `\nINFORMAZIONI AGGIUNTIVE / SITUAZIONE:\n${inputText}\n`;
+    }
+
+    if (analysisResult?.ente) {
+      userPrompt += `\nDestinatario suggerito: ${analysisResult.ente}\n`;
+    }
+    if (analysisResult?.cosa) {
+      userPrompt += `Obiettivo: ${analysisResult.cosa}\n`;
+    }
+
+    userPrompt += '\nRedigi il documento completo e formale:';
+
+    const btn = document.getElementById('generateBtn');
+    const loading = document.getElementById('loadingIndicator');
+    const output = document.getElementById('outputText');
+
+    btn.disabled = true;
+    loading.classList.add('visible');
+    document.getElementById('loadingText').textContent = 'Generazione documento...';
+    output.className = 'output-text';
+    output.textContent = '';
+
+    try {
+      const response = await fetch(`${OLLAMA_URL}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          system: docPrompts[selectedDocType],
+          prompt: userPrompt,
+          stream: true,
+          options: { temperature: 0.3, num_predict: 2048 }
+        })
+      });
+
+      if (!response.ok) throw new Error('Ollama non risponde');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const lines = decoder.decode(value).split('\n').filter(l => l.trim());
+        for (const line of lines) {
+          try {
+            const json = JSON.parse(line);
+            if (json.response) { fullText += json.response; output.textContent = fullText; output.scrollTop = output.scrollHeight; }
+          } catch {}
+        }
+      }
+      showToast('✓ Documento generato!');
+    } catch(err) {
+      output.className = 'output-text placeholder';
+      output.textContent = `Errore: ${err.message}\n\nOllama è in esecuzione?\nApri PowerShell e digita: ollama serve`;
+      showToast('✗ Errore. Ollama attivo?');
+    } finally {
+      btn.disabled = false;
+      loading.classList.remove('visible');
+    }
+  }
+
+  // ── Utilità output ───────────────────────────────────
+  function copyOutput() {
+    const el = document.getElementById('outputText');
+    if (el.classList.contains('placeholder')) { showToast('Nessun documento'); return; }
+    navigator.clipboard.writeText(el.textContent).then(() => showToast('✓ Copiato!'));
+  }
+
+  function downloadOutput() {
+    const el = document.getElementById('outputText');
+    if (el.classList.contains('placeholder')) { showToast('Nessun documento'); return; }
+    const blob = new Blob([el.textContent], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `documento_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    showToast('✓ Salvato!');
+  }
+
+  function clearOutput() {
+    const el = document.getElementById('outputText');
+    el.className = 'output-text placeholder';
+    el.innerHTML = 'Il documento apparirà qui.<br><br>Carica un file o descrivi la situazione,<br>poi premi <strong>Genera</strong>.';
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // ── Check Ollama ─────────────────────────────────────
+  async function checkOllama() {
+    const dot = document.getElementById('statusDot');
+    const txt = document.getElementById('statusText');
+    txt.textContent = 'Verifica...';
+    dot.className = 'status-dot';
+    try {
+      const r = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(3000) });
+      if (r.ok) {
+        const data = await r.json();
+        const models = data.models?.map(m => m.name).join(', ') || 'nessuno';
+        dot.className = 'status-dot ok';
+        txt.textContent = `Attivo · ${models}`;
+        showToast('✓ Ollama connesso!');
+      } else throw new Error();
+    } catch {
+      dot.className = 'status-dot';
+      txt.textContent = 'Ollama non raggiungibile';
+    }
+  }
+
+  window.addEventListener('load', () => setTimeout(checkOllama, 600));
+</script>
+</body>
+</html>

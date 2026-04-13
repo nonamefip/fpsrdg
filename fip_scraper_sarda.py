@@ -202,43 +202,69 @@ def scrape_campionato(sesso, camp_code, camp_nome):
     if not soup_base:
         return None
 
-    # Fase corrente
+    # Tutte le fasi disponibili
     fase_opts = select_opts(soup_base, 3)
-    fase_curr = fase_opts[0][0] if fase_opts else ''
+    if not fase_opts:
+        fase_opts = [('', '')]
 
-    # Classifica: prova pagina base, poi fase 1
-    cl_base = parse_classifica(soup_base)
-    soup_cl = soup_base
-    if not cl_base and fase_curr != '1':
-        s1 = fetch(build_url(sesso=sesso, codice_campionato=camp_code, codice_fase='1'))
-        time.sleep(SLEEP)
-        if s1:
-            cl_base = parse_classifica(s1)
-            soup_cl = s1
-
-    # Gironi
-    girone_opts = select_opts(soup_cl, 4)
-    if not girone_opts:
-        girone_opts = [('', 'Girone Unico')]
-
-    log(f"     fasi:{[f[0] for f in fase_opts]} gironi:{[g[0] for g in girone_opts]} sq:{len(cl_base)}")
+    log(f"     fasi: {[f[0] for f in fase_opts]}")
 
     gironi_out = []
-    for girone_code, girone_nome in girone_opts:
-        if girone_code and len(girone_opts) > 1:
-            sg = fetch(build_url(sesso=sesso, codice_campionato=camp_code,
-                                 codice_fase=fase_curr or None, codice_girone=girone_code))
+    cl_globale = []   # prima classifica valida trovata (fallback)
+    multi_fasi = len(fase_opts) > 1
+
+    # ── Itera TUTTE le fasi ────────────────────────────────────
+    for fase_code, fase_nome in fase_opts:
+        if fase_code:
+            soup_fase = fetch(build_url(sesso=sesso, codice_campionato=camp_code,
+                                        codice_fase=fase_code))
             time.sleep(SLEEP)
-            cl_g = parse_classifica(sg) if sg else cl_base
-            if not cl_g:
-                cl_g = cl_base
         else:
-            cl_g = cl_base
+            soup_fase = soup_base
 
-        g_data = scrape_girone(sesso, camp_code, fase_curr, girone_code, girone_nome, cl_g)
-        gironi_out.append(g_data)
+        if not soup_fase:
+            continue
 
-    if not any(g['classifica'] or g['risultati'] or g['prossime'] for g in gironi_out):
+        cl_fase = parse_classifica(soup_fase)
+        if not cl_globale and cl_fase:
+            cl_globale = cl_fase
+
+        # Gironi di questa fase
+        girone_opts = select_opts(soup_fase, 4)
+        if not girone_opts:
+            girone_opts = [('', 'Girone Unico')]
+
+        log(f"     fase={fase_code!r} '{fase_nome}' gironi:{[g[0] for g in girone_opts]} sq:{len(cl_fase)}")
+
+        for girone_code, girone_nome in girone_opts:
+            # Classifica specifica per questo girone
+            if girone_code and len(girone_opts) > 1:
+                sg = fetch(build_url(sesso=sesso, codice_campionato=camp_code,
+                                     codice_fase=fase_code or None,
+                                     codice_girone=girone_code))
+                time.sleep(SLEEP)
+                cl_g = parse_classifica(sg) if sg else cl_fase
+                if not cl_g:
+                    cl_g = cl_fase
+            else:
+                cl_g = cl_fase
+            if not cl_g:
+                cl_g = cl_globale
+
+            # Nome del girone: prefissa con fase se ci sono più fasi
+            if multi_fasi and fase_nome and fase_nome.strip():
+                fn = fase_nome.strip()
+                full_nome = f"{fn} – {girone_nome}" if girone_nome and girone_nome != 'Girone Unico' else fn
+            else:
+                full_nome = girone_nome
+
+            g_data = scrape_girone(sesso, camp_code, fase_code, girone_code, full_nome, cl_g)
+
+            # Includi il girone se ha dati (risultati, prossime o classifica)
+            if g_data['risultati'] or g_data['prossime'] or g_data['classifica']:
+                gironi_out.append(g_data)
+
+    if not gironi_out:
         log(f"     Nessun dato — saltato")
         return None
 
@@ -269,7 +295,7 @@ def scrape_sesso(sesso):
 
 def main():
     t0 = time.time()
-    log("=== FIP Scraper Sarda v3 ===")
+    log("=== FIP Scraper Sarda v4 (tutte le fasi) ===")
 
     data = {
         'aggiornato': datetime.now().strftime('%Y-%m-%d %H:%M'),
