@@ -16242,8 +16242,14 @@ function renderFipLive(){
   var campSel=document.getElementById('fiplive-sel-camp');
   var gironeSel=document.getElementById('fiplive-sel-girone');
   var vistaSel=document.getElementById('fiplive-sel-vista');
+  var prevCamp=_fipCampSel;
   _fipCampSel=campSel?campSel.value:'';
-  _buildFipLiveGironeSelect();
+  // Ricostruisci il girone select solo se è cambiato il campionato
+  // (non quando cambia solo la vista o il girone stesso, per non perdere la selezione)
+  if(_fipCampSel!==prevCamp){
+    _fipGironeSel=''; // reset girone quando cambia campionato
+    _buildFipLiveGironeSelect();
+  }
   _fipGironeSel=gironeSel?gironeSel.value:'';
   var vista=vistaSel?vistaSel.value:'classifica';
 
