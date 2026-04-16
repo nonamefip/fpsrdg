@@ -1860,9 +1860,9 @@ const _CCLR={
   'Serie B Femminile':'#003087','Serie B':'#003087','Serie C':'#1a4db3',
   'Div. Reg. 1':'#0984e3','Div. Reg. 2':'#5aacf5','Divisione regionale 1':'#0984e3','Divisione regionale 2':'#5aacf5',
   'Under 19 Maschile Gold':'#4a1580','Under 19 Femminile Regionale':'#9b59b6',
-  'Under 17 Maschile Eccellenza':'#c0392b','Under 17 Maschile Gold':'#e17055',
-  'Under 17 Maschile Regionale':'#fab1a0','Under 17 Femminile Regionale':'#fd79a8',
-  'Under 15 Maschile Eccellenza':'#006400','Under 15 Maschile Regionale':'#27ae60','Under 15 Femminile Regionale':'#55efc4',
+  'Under 17 Maschile Eccellenza':'#7b0000','Under 17 Maschile Gold':'#c0392b',
+  'Under 17 Maschile Regionale':'#e17055','Under 17 Femminile Regionale':'#fd79a8',
+  'Under 15 Maschile Eccellenza':'#004d1a','Under 15 Maschile Regionale':'#27ae60','Under 15 Femminile Regionale':'#55efc4',
   'Under 14 Maschile Regionale':'#00838f','Under 14 Femminile Regionale':'#4dd0e1',
   'Under 13 Maschile Regionale':'#b8860b','Under 13 Femminile Regionale':'#fdcb6e',
   'Esordienti Femminile':'#e84393','Trofeo Esordienti':'#fd79a8',
@@ -2292,6 +2292,11 @@ function _loadRimbTab(nomeEnc){
 }
 
 function campColor(cn){const cm=CAMP_META[cn]||{};return _CCLR[cm.gruppo]||'#636e72';}
+function isEccellenzaCamp(cn){return /eccellenza/i.test(cn||'');}
+function campBadgeExtra(cn){
+  if(isEccellenzaCamp(cn)) return 'border:2px solid var(--gold);box-shadow:0 0 4px rgba(201,138,0,.4);';
+  return '';
+}
 const CAMP_DATA=D.camp_data||{};
 const PC={CA:'#d63031',SS:'#0984e3',SU:'#6c5ce7',OR:'#00b894',NU:'#e17055'};
 const RBG={Arbitro:'#fff3cd',UDC:'#d1ecf1',Osservatore:'#d4edda'};
@@ -3866,8 +3871,33 @@ function renderHomePv(){
   });
 
   var maxG=pvList.length?pvList.reduce(function(m,p){return Math.max(m,p.v.n_gare||0);},0)||1:1;
+  var maxArb=pvList.reduce(function(m,p){return Math.max(m,(p.v.arbitri_residenti||[]).length);},0)||1;
+  var maxUdc=pvList.reduce(function(m,p){return Math.max(m,(p.v.udc_residenti||[]).length);},0)||1;
+  var maxOss=pvList.reduce(function(m,p){return Math.max(m,(p.v.oss_residenti||[]).length);},0)||1;
+  var maxSq=pvList.reduce(function(m,p){return Math.max(m,(p.v.sq_residenti||[]).length);},0)||1;
+  var maxDoppio=pvList.reduce(function(m,p){return Math.max(m,p.doppio||0);},0)||1;
+  var maxSingolo=pvList.reduce(function(m,p){return Math.max(m,p.singolo||0);},0)||1;
+  var maxConAss=pvList.reduce(function(m,p){return Math.max(m,p.conAss||0);},0)||1;
+  var maxConOss=pvList.reduce(function(m,p){return Math.max(m,p.conOss||0);},0)||1;
+  var maxDesArb=pvList.reduce(function(m,p){return Math.max(m,p.desArb||0);},0)||1;
+  var maxDesUdc=pvList.reduce(function(m,p){return Math.max(m,p.desUdc||0);},0)||1;
+  var maxDesOss=pvList.reduce(function(m,p){return Math.max(m,p.desOss||0);},0)||1;
   var totG=pvList.reduce(function(s,p){return s+(p.v.n_gare||0);},0);
   var totGare=allGare.length;
+
+  function _pctBar(val,max,clr){
+    var p=Math.round(val/max*100);
+    return '<div style="height:2px;background:#eee;border-radius:1px;margin-top:2px"><div style="height:2px;background:'+clr+';border-radius:1px;width:'+p+'%"></div></div>';
+  }
+  function _statCell(val,max,clr,label){
+    var p=Math.round(val/max*100);
+    return '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px">'+
+      '<div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+val+'</div>'+
+      '<div style="font-size:.5rem;color:var(--mu)">'+label+'</div>'+
+      _pctBar(val,max,clr)+
+      '<div style="font-size:.48rem;color:var(--mu2);text-align:center">'+p+'%</div>'+
+      '</div>';
+  }
 
   // Grid province
   var html='<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:14px">';
@@ -3884,29 +3914,29 @@ function renderHomePv(){
       '<div style="font-size:1.2rem;font-weight:900;color:'+clr+';line-height:1">'+(p.v.n_gare||0)+'</div>'+
       '<div style="font-size:.52rem;color:var(--mu);margin-bottom:4px">gare nel campo</div>'+
       '<div style="height:3px;background:#eef1fa;border-radius:2px;margin-bottom:6px;overflow:hidden"><div style="height:3px;background:'+clr+';border-radius:2px;width:'+barPct+'%"></div></div>'+
-      // Residenti
+      // Residenti con percentuali
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:2px;text-align:center;margin-bottom:5px">'+
-      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+nArb+'</div><div style="font-size:.5rem;color:var(--mu)">Arb.</div></div>'+
-      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+nUdc+'</div><div style="font-size:.5rem;color:var(--mu)">UDC</div></div>'+
-      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+nOss+'</div><div style="font-size:.5rem;color:var(--mu)">Oss.</div></div>'+
-      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+nSq+'</div><div style="font-size:.5rem;color:var(--mu)">Sq.</div></div>'+
+      _statCell(nArb,maxArb,clr,'Arb.')+
+      _statCell(nUdc,maxUdc,clr,'UDC')+
+      _statCell(nOss,maxOss,clr,'Oss.')+
+      _statCell(nSq,maxSq,clr,'Sq.')+
       '</div>'+
-      // Separatore
+      // Gare nel campo con percentuali
       '<div style="font-size:.5rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;border-top:1px solid var(--br);padding-top:4px;margin-bottom:3px">Gare nel campo</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;text-align:center;margin-bottom:2px">'+
-      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con 2 arbitri"><div style="font-size:.75rem;font-weight:800;color:var(--green)">'+p.doppio+'</div><div style="font-size:.5rem;color:var(--mu)">2 arb. ⚖️⚖️</div></div>'+
-      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con 1 arbitro"><div style="font-size:.75rem;font-weight:800;color:var(--gold)">'+p.singolo+'</div><div style="font-size:.5rem;color:var(--mu)">1 arb. ⚖️</div></div>'+
+      _statCell(p.doppio,maxDoppio,'var(--green)','2 arb. ⚖️⚖️')+
+      _statCell(p.singolo,maxSingolo,'var(--gold)','1 arb. ⚖️')+
       '</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;text-align:center;margin-bottom:5px">'+
-      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con assistenti (segnapunti/crono/24s)"><div style="font-size:.75rem;font-weight:800;color:var(--bl)">'+p.conAss+'</div><div style="font-size:.5rem;color:var(--mu)">Con ass.</div></div>'+
-      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con osservatore"><div style="font-size:.75rem;font-weight:800;color:#8e44ad">'+p.conOss+'</div><div style="font-size:.5rem;color:var(--mu)">Con oss.</div></div>'+
+      _statCell(p.conAss,maxConAss,'var(--bl)','Con ass.')+
+      _statCell(p.conOss,maxConOss,'#8e44ad','Con oss.')+
       '</div>'+
-      // Designazioni uscenti
+      // Designazioni uscenti con percentuali
       '<div style="font-size:.5rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;border-top:1px solid var(--br);padding-top:4px;margin-bottom:3px">Designazioni uscenti</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;text-align:center;margin-bottom:4px">'+
-      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare arbitrate da residenti di questa provincia"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+p.desArb+'</div><div style="font-size:.5rem;color:var(--mu)">Arb. ⚖️</div></div>'+
-      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare con UDC residenti di questa provincia"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+p.desUdc+'</div><div style="font-size:.5rem;color:var(--mu)">UDC 📋</div></div>'+
-      '<div style="background:var(--bg2);border-radius:4px;padding:3px 2px" title="Gare osservate da residenti di questa provincia"><div style="font-size:.75rem;font-weight:800;color:'+clr+'">'+p.desOss+'</div><div style="font-size:.5rem;color:var(--mu)">Oss. 👁</div></div>'+
+      _statCell(p.desArb,maxDesArb,clr,'Arb. ⚖️')+
+      _statCell(p.desUdc,maxDesUdc,clr,'UDC 📋')+
+      _statCell(p.desOss,maxDesOss,clr,'Oss. 👁')+
       '</div>'+
       '<div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--br);padding-top:4px">'+
       '<span style="font-size:.55rem;color:var(--mu)">Dop. arb.</span>'+
@@ -4368,8 +4398,18 @@ function renderArbiFermi(){
     if(fPv&&p.provincia!==fPv)return false;
     return true;
   });
-  // Ordina per gare crescenti (meno attivi prima)
-  arbList.sort((a,b)=>(arbGare[a.nome]||0)-(arbGare[b.nome]||0));
+  // Ordina per data ultima gara (più lontana prima), poi per gare crescenti
+  function _lastDate(p){
+    if(!p.gare||!p.gare.length)return'0000-00-00';
+    return p.gare.slice().sort((a,b)=>(b['Data']||'').localeCompare(a['Data']||''))[0]['Data']||'0000-00-00';
+  }
+  arbList.sort((a,b)=>{
+    const ga=arbGare[a.nome]||0,gb=arbGare[b.nome]||0;
+    if(ga===0&&gb===0)return _lastDate(a).localeCompare(_lastDate(b));
+    if(ga===0)return-1;if(gb===0)return 1;
+    const dc=_lastDate(a).localeCompare(_lastDate(b));
+    return dc!==0?dc:ga-gb;
+  });
   if(!arbList.length){body.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessun arbitro</span>';return;}
   const maxG=Math.max(...arbList.map(p=>arbGare[p.nome]||0),1);
   const periodoLabel=fD1||fD2?(fD1||'inizio')+' → '+(fD2||'oggi'):
@@ -5081,6 +5121,9 @@ function openGiornoModal(ds){
     modal.style.zIndex='99999999';
     modal.addEventListener('click',e=>{if(e.target===modal){modal.remove();_calResetAll();}});
     document.body.appendChild(modal);
+    // Apri sempre a tutto schermo
+    const _fsBox=modal.querySelector('.mbox');
+    if(_fsBox){_fsBox.style.width='100vw';_fsBox.style.height='100vh';_fsBox.style.maxWidth='100vw';_fsBox.style.maxHeight='100vh';_fsBox.style.borderRadius='0';_fsBox.style.margin='0';modal.style.padding='0';_fsBox.dataset.fs='1';}
 
     // Drag
     const box=modal.querySelector('.mbox');
@@ -8090,7 +8133,7 @@ function openPersona(nome,campFilter){
         </div>`;
         // ── VERSIONE B: Strip mensile migliorata — celle che riempiono tutta la larghezza ──
         const calB=(()=>{
-          const dayH=52; // celle grandi che riempiono tutta la pagina
+          const dayH=28; // celle compatte in riga mensile
           // Header numeri 1-31 — flex puro senza larghezza fissa
           const hdr='<div style="display:flex;gap:0;margin-bottom:3px;padding-left:52px;width:100%">'
             +Array.from({length:31},(_,i)=>`<div style="flex:1;font-size:.6rem;font-weight:600;color:var(--mu);text-align:center;min-width:0" title="Giorno ${i+1}">${i+1}</div>`).join('')
@@ -8775,7 +8818,7 @@ function mkGarePersonaTbl(gare,nome,tid,sqRef){
     const _ospClr=_haRis?(_ospWins?'color:#00704a;font-weight:700':'color:#c0392b'):'';
     // Campionato con colore
     const campClr=campColor(g['Campionato'])||'#555';
-    const campBadge=`<span style="background:${campClr};color:#fff;border-radius:3px;padding:1px 6px;font-size:.6rem;font-weight:600;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(g['Campionato']||'')}');event.stopPropagation()">${escH(g['Campionato']||'')}</span>`;
+    const campBadge=`<span style="background:${campClr};color:#fff;border-radius:3px;padding:1px 6px;font-size:.6rem;font-weight:600;cursor:pointer;white-space:nowrap;${campBadgeExtra(g['Campionato']||'')}" onclick="openCampionato('${esc(g['Campionato']||'')}');event.stopPropagation()">${escH(g['Campionato']||'')}</span>`;
     // Risultato colorato
     const _ris=_haRis
       ?`<span style="font-weight:700;font-family:monospace;font-size:.82rem">${g['Risultato']}</span>`
@@ -9146,7 +9189,7 @@ function fgpP(nome){
     const casaClr=haRis?(casaWins?'color:#00704a;font-weight:700':'color:#c0392b'):'';
     const ospClr=haRis?(ospWins?'color:#00704a;font-weight:700':'color:#c0392b'):'';
     const campClr=campColor(g['Campionato'])||'#555';
-    const campBadge=`<span style="background:${campClr};color:#fff;border-radius:3px;padding:1px 6px;font-size:.6rem;font-weight:600;white-space:nowrap;cursor:pointer" onclick="openCampionato('${esc(g['Campionato']||'')}');event.stopPropagation()">${escH(g['Campionato']||'')}</span>`;
+    const campBadge=`<span style="background:${campClr};color:#fff;border-radius:3px;padding:1px 6px;font-size:.6rem;font-weight:600;white-space:nowrap;cursor:pointer;${campBadgeExtra(g['Campionato']||'')}" onclick="openCampionato('${esc(g['Campionato']||'')}');event.stopPropagation()">${escH(g['Campionato']||'')}</span>`;
     const ris=haRis?`<span style="font-weight:700;font-family:monospace;font-size:.82rem">${g['Risultato']}</span>`:`<span style="color:var(--mu);font-size:.68rem">Prog.</span>`;
     const pvCampo=cpv(g['Campo']||'');
     const gps=typeof CAMPO_GPS!=='undefined'&&CAMPO_GPS&&CAMPO_GPS[g['Campo']||''];
