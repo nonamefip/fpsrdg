@@ -156,18 +156,20 @@ def parse_partite(soup, giornata=None):
 
 
 def scrape_girone(sesso, camp_code, fase_code, girone_code, girone_nome, classifica):
-    """Scarica TUTTE le partite di un girone iterando le giornate."""
+    """Scarica TUTTE le partite di un girone con numerazione sequenziale.
+    Su fip.it le giornate sono numerate 1..2*(N-1): le prime N-1 sono Andata,
+    le successive N-1 sono Ritorno. Non serve il parametro codice_ar.
+    """
     n_sq = len(classifica)
-    # Round robin: 2*(N-1) giornate; aggiunge un po' di margine
-    max_g = max((n_sq - 1) * 2 + 4, 34) if n_sq > 1 else 34
+    leg_len = max(n_sq - 1, 1) if n_sq > 1 else 18
+    max_g = leg_len * 2 + 4   # copre andata + ritorno + margine
 
     base_kw = dict(sesso=sesso, codice_campionato=camp_code,
                    codice_fase=fase_code or None,
                    codice_girone=girone_code or None)
 
-    tutti_ris, tutte_pro = [], []
+    ris, pro = [], []
     vuote = 0
-
     for g in range(1, max_g + 1):
         soup = fetch(build_url(**base_kw, giornata=g))
         time.sleep(SLEEP)
@@ -175,23 +177,21 @@ def scrape_girone(sesso, camp_code, fase_code, girone_code, girone_nome, classif
             vuote += 1
             if vuote >= 3: break
             continue
-
-        ris, pro = parse_partite(soup, giornata=g)
-        if not ris and not pro:
+        r, p = parse_partite(soup, giornata=g)
+        if not r and not p:
             vuote += 1
             if vuote >= 3: break
             continue
-
         vuote = 0
-        tutti_ris.extend(ris)
-        tutte_pro.extend(pro)
+        ris.extend(r)
+        pro.extend(p)
 
-    log(f"       '{girone_nome}': ris={len(tutti_ris)} pros={len(tutte_pro)}")
+    log(f"       '{girone_nome}': {len(ris)}r+{len(pro)}p  (legLen={leg_len}, maxG={max_g})")
     return {
         'nome':       girone_nome,
         'classifica': classifica,
-        'risultati':  tutti_ris,
-        'prossime':   tutte_pro,
+        'risultati':  ris,
+        'prossime':   pro,
     }
 
 
