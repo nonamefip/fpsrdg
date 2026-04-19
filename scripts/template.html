@@ -950,7 +950,7 @@ tr.loss-row td{background:#fdecea!important;}
   </div>
 
 
-  <\!-- ROW 4e-pre: Ultima partita tutti gli arbitri -->
+  <!-- ROW 4e-pre: Ultima partita tutti gli arbitri -->
   <div class="db-card" style="margin-bottom:12px">
     <div class="db-card-hd" style="cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap" onclick="_fToggle(event)">
       <span>📋 Ultima partita — tutti gli arbitri</span>
@@ -4132,11 +4132,11 @@ function _fToggle(e){
   const hd=e.currentTarget;const card=hd.closest('.db-card')||hd.parentElement;
   const wrap=card?card.querySelector('[id$="-wrap"]'):null;
   const tog=card?card.querySelector('[id$="-tog"]'):null;
-  if(\!wrap)return;
-  const open=wrap.style.display\!=='none';
+  if(!wrap)return;
+  const open=wrap.style.display!=='none';
   wrap.style.display=open?'none':'block';
   if(tog)tog.textContent=open?'▶':'▼';
-  if(\!open){const wid=wrap.id;
+  if(!open){const wid=wrap.id;
     if(wid==='fermi-wrap')renderArbiFermi();
     else if(wid==='ultime-wrap')renderUltimeGare();
   }
@@ -4400,11 +4400,11 @@ function renderUltimeGare(){
   // Init mesi selectors if needed
   ['ultime-m1','ultime-m2','fermi-m1','fermi-m2'].forEach(id=>{
     const sel=document.getElementById(id);
-    if(\!sel||sel.options.length>1)return;
+    if(!sel||sel.options.length>1)return;
     const ms=new Set();(D.gare||[]).forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)ms.add(m);});
     [...ms].sort().reverse().forEach(m=>{const[y,mo]=m.split('-');sel.innerHTML+=`<option value="${m}">${MESI_IT[parseInt(mo)-1]} ${y}</option>`;});
   });
-  const body=document.getElementById('ultime-body');if(\!body)return;
+  const body=document.getElementById('ultime-body');if(!body)return;
   const fPv=(document.getElementById('ultime-pv')||{}).value||'';
   const fM1=(document.getElementById('ultime-m1')||{}).value||'';
   const fM2=(document.getElementById('ultime-m2')||{}).value||'';
@@ -4420,21 +4420,21 @@ function renderUltimeGare(){
     if(dateFrom&&d<dateFrom)return;
     if(dateTo&&d>dateTo)return;
     ['Arbitro 1','Arbitro 2'].forEach(f=>{
-      const n=pns(g[f]||'');if(\!n)return;
+      const n=pns(g[f]||'');if(!n)return;
       arbGarePer[n]=(arbGarePer[n]||0)+1;
     });
   });
   // Tutti gli arbitri attivi
   const allArbs=Object.values(P).filter(p=>p.categoria==='Arbitro'||(p.categorie||[]).includes('Arbitro'));
-  let arbList=allArbs.filter(p=>\!fPv||p.provincia===fPv);
+  let arbList=allArbs.filter(p=>!fPv||p.provincia===fPv);
   // Calcola ultima gara (assoluta, non filtrata per periodo)
   function lastDate(p){
-    if(\!p.gare||\!p.gare.length)return'0000-00-00';
+    if(!p.gare||!p.gare.length)return'0000-00-00';
     return p.gare.slice().sort((a,b)=>(b['Data']||'').localeCompare(a['Data']||''))[0]['Data']||'0000-00-00';
   }
   // Ordina per data ultima gara (più vecchia prima)
   arbList.sort((a,b)=>lastDate(a).localeCompare(lastDate(b)));
-  if(\!arbList.length){body.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessun arbitro</span>';return;}
+  if(!arbList.length){body.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessun arbitro</span>';return;}
   const today=new Date().toISOString().split('T')[0];
   function daysDiff(d){if(d==='0000-00-00')return 9999;const ms=new Date(today)-new Date(d);return Math.round(ms/86400000);}
   const periodoLabel=fD1||fD2?(fD1||'inizio')+' → '+(fD2||'oggi'):
@@ -5548,9 +5548,9 @@ function gmApplyPillFilters(){
       (_gmS.prov.size>0&&!_gmS.prov.has(r.dataset.prov||''))||
       (_gmS.arb.size>0&&!_gmS.arb.has(r.dataset.arb1||''))||
       (_gmS.campo.size>0&&!_gmS.campo.has((r.dataset.campo||'').split(',')[0].trim()))||
-      (_gmS.citta&&_gmS.citta.size>0&&\!_gmS.citta.has(r.dataset.citta||''))||
-      (_gmS.ora&&_gmS.ora.size>0&&\!_gmS.ora.has(r.dataset.ora||''))||
-      (_gmS.prov_arb&&_gmS.prov_arb.size>0&&\!_gmS.prov_arb.has(r.dataset.provArb1||'')&&\!_gmS.prov_arb.has(r.dataset.provArb2||''));
+      (_gmS.citta&&_gmS.citta.size>0&&!_gmS.citta.has(r.dataset.citta||''))||
+      (_gmS.ora&&_gmS.ora.size>0&&!_gmS.ora.has(r.dataset.ora||''))||
+      (_gmS.prov_arb&&_gmS.prov_arb.size>0&&!_gmS.prov_arb.has(r.dataset.provArb1||'')&&!_gmS.prov_arb.has(r.dataset.provArb2||''));
     r.style.display=hide?'none':'';
   });
   gmRenumber();
@@ -6822,7 +6822,7 @@ function _gGetVis(){
     if(_gSEL.camp.size>0&&!_gSEL.camp.has(g['Campionato']||''))return false;
     if(_gSEL.prov.size>0){var pvC=SQ[g['Squadra Casa']]&&SQ[g['Squadra Casa']].prov||'';var pvO=SQ[g['Squadra Ospite']]&&SQ[g['Squadra Ospite']].prov||'';if(!_gSEL.prov.has(pvC)&&!_gSEL.prov.has(pvO))return false;}
     if(_gSEL.arb.size>0){var a1b=pns(g['Arbitro 1']||''),a2b=pns(g['Arbitro 2']||'');if(!_gSEL.arb.has(a1b)&&!_gSEL.arb.has(a2b))return false;}
-    if(_gSEL.campo.size>0&&\!_gSEL.campo.has(g['Campo']||''))return false;
+    if(_gSEL.campo.size>0&&!_gSEL.campo.has(g['Campo']||''))return false;
     if(_gSEL.sq.size>0&&!_gSEL.sq.has(g['Squadra Casa']||'')&&!_gSEL.sq.has(g['Squadra Ospite']||''))return false;
     if(_gSEL.citta.size>0){var _gpsC2=CAMPO_GPS&&CAMPO_GPS[g['Campo']||''];var _cit2=_gpsC2&&_gpsC2.city||'';if(!_gSEL.citta.has(_cit2))return false;}
     return true;
