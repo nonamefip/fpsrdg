@@ -1890,12 +1890,22 @@ const AG_EXT=(()=>{
 })();
 const CAMP_META=D.camp_meta||{};
 const _CCLR={
+  // Serie nazionali/regionali top
   'Serie B Femminile':'#003087','Serie B':'#003087','Serie C':'#1a4db3',
-  'Div. Reg. 1':'#0984e3','Div. Reg. 2':'#5aacf5','Divisione regionale 1':'#0984e3','Divisione regionale 2':'#5aacf5',
+  // DR1 > DR2: blu pieno vs grigio-azzurro
+  'Div. Reg. 1':'#0d6efd','Div. Reg. 2':'#6ea8d8','Divisione regionale 1':'#0d6efd','Divisione regionale 2':'#6ea8d8',
+  // Under 19
   'Under 19 Maschile Gold':'#4a1580','Under 19 Femminile Regionale':'#9b59b6',
-  'Under 17 Maschile Eccellenza':'#6a0dad','Under 17 Maschile Gold':'#c0392b',
-  'Under 17 Maschile Regionale':'#e17055','Under 17 Femminile Regionale':'#fd79a8',
-  'Under 15 Maschile Eccellenza':'#005f73','Under 15 Maschile Regionale':'#27ae60','Under 15 Femminile Regionale':'#55efc4',
+  // Under 17 — colori distinti per livello
+  'Under 17 Maschile Eccellenza':'#6a0dad',  // viola
+  'Under 17 Maschile Gold':'#b84300',        // marrone-arancio
+  'Under 17 Maschile Regionale':'#e65100',   // arancione scuro
+  'Under 17 Femminile Regionale':'#c2185b',  // rosa scuro
+  // Under 15 — verde/teal
+  'Under 15 Maschile Eccellenza':'#005f73',  // teal scuro
+  'Under 15 Maschile Regionale':'#2e7d32',   // verde
+  'Under 15 Femminile Regionale':'#00695c',  // verde-teal
+  // Under 14-13
   'Under 14 Maschile Regionale':'#00838f','Under 14 Femminile Regionale':'#4dd0e1',
   'Under 13 Maschile Regionale':'#b8860b','Under 13 Femminile Regionale':'#fdcb6e',
   'Esordienti Femminile':'#e84393','Trofeo Esordienti':'#fd79a8',
@@ -1903,9 +1913,10 @@ const _CCLR={
   'Scoiattoli Big':'#a29bfe','Scoiattoli Small':'#c0c0c0',
   'Gazzelle Big':'#f39c12','Gazzelle Small':'#f9ca24',
   'Libellule Big':'#8e44ad','Serie A':'#003087',
-  'Under 13':'#b8860b','Under 14':'#00838f','Under 15':'#27ae60',
-  'Under 17':'#e17055','Under 19':'#4a1580',
-  'Div. Reg.':'#5aacf5'};
+  // Fallback per gruppo generico
+  'Under 13':'#b8860b','Under 14':'#00838f','Under 15':'#2e7d32',
+  'Under 17':'#e65100','Under 19':'#4a1580',
+  'Div. Reg.':'#6ea8d8'};
 const _ordFIP=[
   'Serie B Femminile','Serie C','Divisione regionale 1','Divisione regionale 2',
   'Under 19 Maschile Gold','Under 19 Femminile Regionale',
@@ -2324,7 +2335,9 @@ function _loadRimbTab(nomeEnc){
   el.innerHTML=out;
 }
 
-function campColor(cn){const cm=CAMP_META[cn]||{};return _CCLR[cm.gruppo]||'#636e72';}
+function campColor(cn){if(_CCLR[cn])return _CCLR[cn];const cm=CAMP_META[cn]||{};return _CCLR[cm.gruppo]||'#636e72';}
+function campIsEcc(cn){return /eccellenza/i.test(cn||'');}
+function campBadgeStyle(cn){const bg=campColor(cn);return campIsEcc(cn)?`background:${bg};color:#fff;border:2px solid #ffd700;`:`background:${bg};color:#fff;`;}
 function isEccellenzaCamp(cn){return /eccellenza/i.test(cn||'');}
 function campBadgeExtra(cn){
   if(isEccellenzaCamp(cn)) return 'border:2px solid #f1c40f;box-shadow:0 0 6px rgba(241,196,15,.5);outline:1px solid rgba(255,255,255,.3);outline-offset:-3px;';
@@ -4397,6 +4410,7 @@ function _openArbCampD(nome,camp){
 }
 
 function renderUltimeGare(){
+  const MESI_IT=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
   // Init mesi selectors if needed
   ['ultime-m1','ultime-m2','fermi-m1','fermi-m2'].forEach(id=>{
     const sel=document.getElementById(id);
@@ -8260,7 +8274,7 @@ function openPersona(nome,campFilter){
               <div style="display:flex;flex:1;align-items:stretch">${cells}</div>
             </div>`;
           }).join('');
-          return`<div style="flex-shrink:0;min-width:142px;border:1.5px solid #d0d8f0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(13,71,161,.08)">
+          return`<div style="flex:1;min-width:145px;border:1.5px solid #d0d8f0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(13,71,161,.08)">
             <div style="background:linear-gradient(90deg,#1e3a6e,#2962cc);color:#fff;padding:5px 10px;display:flex;align-items:center;justify-content:space-between">
               <span style="font-size:.78rem;font-weight:800;letter-spacing:.5px">${label}</span>
               <span style="font-size:.65rem;opacity:.8">${totMonth} gar${totMonth===1?'a':'e'}</span>
