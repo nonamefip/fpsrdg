@@ -950,6 +950,40 @@ tr.loss-row td{background:#fdecea!important;}
   </div>
 
 
+  <\!-- ROW 4e-pre: Ultima partita tutti gli arbitri -->
+  <div class="db-card" style="margin-bottom:12px">
+    <div class="db-card-hd" style="cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap" onclick="_fToggle(event)">
+      <span>📋 Ultima partita — tutti gli arbitri</span>
+      <span id="ultime-tog" style="font-size:.8rem;color:var(--mu)">▶</span>
+      <span style="font-size:.65rem;font-weight:400;color:var(--mu)">clicca per espandere</span>
+      <select id="ultime-pv" onchange="renderUltimeGare()" onclick="event.stopPropagation()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
+        <option value="">Tutte le province</option>
+        <option value="CA">CA</option><option value="SS">SS</option><option value="SU">SU</option>
+        <option value="NU">NU</option><option value="OR">OR</option>
+      </select>
+      <select id="ultime-m1" onchange="renderUltimeGare()" onclick="event.stopPropagation()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
+        <option value="">Dal (mese)...</option>
+      </select>
+      <select id="ultime-m2" onchange="renderUltimeGare()" onclick="event.stopPropagation()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
+        <option value="">Al (mese)...</option>
+      </select>
+      <button onclick="event.stopPropagation();['ultime-pv','ultime-m1','ultime-m2','ultime-d1','ultime-d2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});renderUltimeGare()" style="font-size:.68rem;padding:2px 8px;border:1px solid var(--br);border-radius:6px;background:none;cursor:pointer;color:var(--mu)">↺</button>
+      <span style="font-size:.65rem;color:var(--mu);margin-left:auto">data ultima gara per ogni arbitro</span>
+    </div>
+    <div id="ultime-wrap" style="display:none;margin-top:8px">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding:6px 8px;background:#f8faff;border-radius:6px">
+        <span style="font-size:.7rem;font-weight:600;color:var(--mu)">Periodo preciso:</span>
+        <label style="font-size:.68rem;color:var(--mu)">Dal</label>
+        <input type="date" id="ultime-d1" onchange="renderUltimeGare()" style="font-size:.68rem;padding:2px 5px;border:1px solid var(--br);border-radius:4px">
+        <label style="font-size:.68rem;color:var(--mu)">Al</label>
+        <input type="date" id="ultime-d2" onchange="renderUltimeGare()" style="font-size:.68rem;padding:2px 5px;border:1px solid var(--br);border-radius:4px">
+        <button onclick="document.getElementById('ultime-d1').value='';document.getElementById('ultime-d2').value='';renderUltimeGare()" style="font-size:.65rem;padding:1px 6px;border:1px solid var(--br);border-radius:4px;background:none;cursor:pointer;color:var(--mu)">↺ date</button>
+        <span style="font-size:.65rem;color:var(--mu2)">oppure usa i selettori mese sopra</span>
+      </div>
+      <div id="ultime-body"></div>
+    </div>
+  </div>
+
   <!-- ROW 4e: Arbitri meno attivi -->
   <div class="db-card" style="margin-bottom:12px">
     <div class="db-card-hd" style="cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap" onclick="_fToggle(event)">
@@ -4095,13 +4129,17 @@ function renderTopMese(){renderTopMeseCol();}
 
 function _fToggle(e){
   if(e.target.tagName==='SELECT'||e.target.tagName==='BUTTON'||e.target.tagName==='INPUT')return;
-  const wrap=document.getElementById('fermi-wrap');
-  const tog=document.getElementById('fermi-tog');
-  if(!wrap)return;
-  const open=wrap.style.display!=='none';
+  const hd=e.currentTarget;const card=hd.closest('.db-card')||hd.parentElement;
+  const wrap=card?card.querySelector('[id$="-wrap"]'):null;
+  const tog=card?card.querySelector('[id$="-tog"]'):null;
+  if(\!wrap)return;
+  const open=wrap.style.display\!=='none';
   wrap.style.display=open?'none':'block';
   if(tog)tog.textContent=open?'▶':'▼';
-  if(!open)renderArbiFermi();
+  if(\!open){const wid=wrap.id;
+    if(wid==='fermi-wrap')renderArbiFermi();
+    else if(wid==='ultime-wrap')renderUltimeGare();
+  }
 }
 function _tmSortClick(th){
   const col=th.dataset.sc;
@@ -4358,6 +4396,69 @@ function _openArbCampD(nome,camp){
   wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
+function renderUltimeGare(){
+  // Init mesi selectors if needed
+  ['ultime-m1','ultime-m2','fermi-m1','fermi-m2'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(\!sel||sel.options.length>1)return;
+    const ms=new Set();(D.gare||[]).forEach(g=>{const m=(g['Data']||'').slice(0,7);if(m)ms.add(m);});
+    [...ms].sort().reverse().forEach(m=>{const[y,mo]=m.split('-');sel.innerHTML+=`<option value="${m}">${MESI_IT[parseInt(mo)-1]} ${y}</option>`;});
+  });
+  const body=document.getElementById('ultime-body');if(\!body)return;
+  const fPv=(document.getElementById('ultime-pv')||{}).value||'';
+  const fM1=(document.getElementById('ultime-m1')||{}).value||'';
+  const fM2=(document.getElementById('ultime-m2')||{}).value||'';
+  const fD1=(document.getElementById('ultime-d1')||{}).value||'';
+  const fD2=(document.getElementById('ultime-d2')||{}).value||'';
+  const dateFrom=fD1||fM1;
+  const dateTo=fD2||(fM2?fM2+'-31':'');
+  const PROV_COLORS={'CA':'#c0392b','SS':'#1a6bb5','NU':'#c05a20','OR':'#0a8c6a','SU':'#6c3dc8'};
+  // Conta gare per arbitro nel periodo
+  const arbGarePer={};
+  (D.gare||[]).forEach(g=>{
+    const d=g['Data']||'';
+    if(dateFrom&&d<dateFrom)return;
+    if(dateTo&&d>dateTo)return;
+    ['Arbitro 1','Arbitro 2'].forEach(f=>{
+      const n=pns(g[f]||'');if(\!n)return;
+      arbGarePer[n]=(arbGarePer[n]||0)+1;
+    });
+  });
+  // Tutti gli arbitri attivi
+  const allArbs=Object.values(P).filter(p=>p.categoria==='Arbitro'||(p.categorie||[]).includes('Arbitro'));
+  let arbList=allArbs.filter(p=>\!fPv||p.provincia===fPv);
+  // Calcola ultima gara (assoluta, non filtrata per periodo)
+  function lastDate(p){
+    if(\!p.gare||\!p.gare.length)return'0000-00-00';
+    return p.gare.slice().sort((a,b)=>(b['Data']||'').localeCompare(a['Data']||''))[0]['Data']||'0000-00-00';
+  }
+  // Ordina per data ultima gara (più vecchia prima)
+  arbList.sort((a,b)=>lastDate(a).localeCompare(lastDate(b)));
+  if(\!arbList.length){body.innerHTML='<span style="color:var(--mu);font-size:.75rem">Nessun arbitro</span>';return;}
+  const today=new Date().toISOString().split('T')[0];
+  function daysDiff(d){if(d==='0000-00-00')return 9999;const ms=new Date(today)-new Date(d);return Math.round(ms/86400000);}
+  const periodoLabel=fD1||fD2?(fD1||'inizio')+' → '+(fD2||'oggi'):
+    (fM1||fM2)?(fM1?(()=>{const[y,mo]=fM1.split('-');return MESI_IT[parseInt(mo)-1]+' '+y;})():'inizio')+' → '+(fM2?(()=>{const[y,mo]=fM2.split('-');return MESI_IT[parseInt(mo)-1]+' '+y;})():'oggi'):'Tutta la stagione';
+  const rows=arbList.map(p=>{
+    const clr=PROV_COLORS[p.provincia]||PC[p.provincia]||'var(--bl)';
+    const ld=lastDate(p);
+    const ldStr=ld==='0000-00-00'?'mai':ld.slice(5).split('-').reverse().join('/');
+    const days=daysDiff(ld);
+    const daysStr=ld==='0000-00-00'?'—':days===0?'oggi':days===1?'ieri':days+' gg fa';
+    const gPer=arbGarePer[p.nome]||0;
+    const dClr=days>90?'#c0392b':days>45?'#e67e22':days>14?'#f39c12':'var(--green)';
+    return`<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:5px;border:1px solid #f0f2f8;background:#fff;cursor:pointer;margin-bottom:3px" onclick="openPersona('${esc(p.nome)}')">
+      <span style="min-width:18px;font-size:.6rem;background:${clr};color:#fff;border-radius:3px;padding:0 4px;font-weight:700;text-align:center">${p.provincia||'?'}</span>
+      <span style="flex:1;font-size:.73rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(p.nome)}</span>
+      <span style="font-size:.68rem;color:var(--mu);white-space:nowrap">ultima: <b style="color:${dClr}">${ldStr}</b></span>
+      <span style="font-size:.63rem;color:${dClr};font-weight:700;min-width:60px;text-align:right">${daysStr}</span>
+      ${(dateFrom||dateTo)?`<span style="font-size:.63rem;color:var(--mu);min-width:20px;text-align:right" title="Gare nel periodo">${gPer||'–'}</span>`:''}
+    </div>`;
+  }).join('');
+  const periodoHint=(dateFrom||dateTo)?` · nel periodo: <b>${Object.keys(arbGarePer).length}</b> hanno arbitrato`:'';
+  body.innerHTML=`<div style="font-size:.68rem;color:var(--mu);margin-bottom:8px">Periodo: <b>${periodoLabel}</b>${fPv?' · Provincia: <b>'+fPv+'</b>':''} · <b>${arbList.length}</b> arbitri${periodoHint}</div>`+rows;
+}
+
 function renderArbiFermi(){
   const selPv=document.getElementById('fermi-pv');
   const selM1=document.getElementById('fermi-m1');
@@ -4425,6 +4526,7 @@ function renderArbiFermi(){
     {label:'🔴 1–3 gare',items:arbList.filter(p=>{const g=arbGare[p.nome]||0;return g>=1&&g<=3;}).sort((a,b)=>_lastDate(a).localeCompare(_lastDate(b))),clrBg:'#fff9f0',clrBdr:'#ffc580'},
     {label:'🟡 4–10 gare',items:arbList.filter(p=>{const g=arbGare[p.nome]||0;return g>=4&&g<=10;}).sort((a,b)=>_lastDate(a).localeCompare(_lastDate(b))),clrBg:'#fffdf0',clrBdr:'#f5e57a'},
     {label:'🟢 11–20 gare',items:arbList.filter(p=>{const g=arbGare[p.nome]||0;return g>=11&&g<=20;}).sort((a,b)=>_lastDate(a).localeCompare(_lastDate(b))),clrBg:'#f0fff4',clrBdr:'#86efac'},
+    {label:'🔵 21+ gare',items:arbList.filter(p=>(arbGare[p.nome]||0)>20).sort((a,b)=>_lastDate(a).localeCompare(_lastDate(b))),clrBg:'#f0f4ff',clrBdr:'#93c5fd'},
   ];
   function mkRow(p){
     const g=arbGare[p.nome]||0;
@@ -5008,6 +5110,8 @@ function openGiornoModal(ds){
           ${_gmFcatHtml('arb','Arbitri')}
           ${_gmFcatHtml('campo','Campi')}
           ${_gmFcatHtml('citta','Città')}
+          ${_gmFcatHtml('ora','Orario')}
+          ${_gmFcatHtml('prov_arb','Prov.Arb.')}
           <button id="gm-reset-all-btn" onclick="gmResetAll()" style="display:none;align-items:center;gap:4px;border:1.5px solid #c0392b;border-radius:7px;padding:5px 11px;font-size:.7rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">✕ Azzera tutto</button>
         </div>
         <div class="gm-pp" id="gm-pp-camp" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-camp">${campsSet.map(c=>`<span class="gm-pill" data-gm-pill="camp" data-gm-val="${escH(c)}" style="border:none;border-radius:5px;padding:3px 10px;font-size:.65rem;font-weight:600;cursor:pointer;color:#fff;background:${campColor(c)};transition:opacity .12s" onclick="gmTogglePill(this,'camp','${esc(c)}')">${escH(c)}</span>`).join('')}<button onclick="gmResetGrp('camp')" style="background:none;border:0.5px solid var(--tbl-bdr,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button></div></div>
@@ -5015,6 +5119,8 @@ function openGiornoModal(ds){
         <div class="gm-pp" id="gm-pp-arb" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-arb"></div></div>
         <div class="gm-pp" id="gm-pp-campo" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-campo"></div></div>
         <div class="gm-pp" id="gm-pp-citta" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-citta"></div></div>
+        <div class="gm-pp" id="gm-pp-ora" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-ora"></div></div>
+        <div class="gm-pp" id="gm-pp-prov_arb" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-prov_arb"></div></div>
         <div style="overflow-x:auto" id="gm-tbl-wrap">`;
 
       // Tabella con ORA e colonne ordinabili
@@ -5031,7 +5137,8 @@ function openGiornoModal(ds){
         const campName=g['Campionato']||'';
         const pvCampo=cpv(campo);
         const pvClr=pvCampo&&PC[pvCampo]?PC[pvCampo]:'transparent';
-        return`<tr data-camp="${escH(campName)}" data-risultato="${g['Risultato']?'1':''}" data-arb="${nArb>0?'1':''}" data-arb1="${escH(a1)}" data-prov="${pvCampo||''}" data-campo="${escH(campo)}" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()}" onclick="const _n=this.getAttribute('data-ng');if(_n)openGara(_n)" data-ng="${(g['Numero Gara']||'')}" style="cursor:pointer;border-left:3px solid ${pvClr}">
+        const _oraH=parseInt((ora||'').split(':')[0]||'0');const _oraSlot=_oraH<12?'mattina':_oraH<17?'pomeriggio':'sera';const _pvArb1=(P[a1]&&P[a1].provincia)||'';const _pvArb2=(P[a2]&&P[a2].provincia)||'';
+        return`<tr data-camp="${escH(campName)}" data-risultato="${g['Risultato']?'1':''}" data-arb="${nArb>0?'1':''}" data-arb1="${escH(a1)}" data-prov="${pvCampo||''}" data-campo="${escH(campo)}" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()}" data-ora="${_oraSlot}" data-prov-arb1="${_pvArb1}" data-prov-arb2="${_pvArb2}" onclick="const _n=this.getAttribute('data-ng');if(_n)openGara(_n)" data-ng="${(g['Numero Gara']||'')}" style="cursor:pointer;border-left:3px solid ${pvClr}">
           <td class="gm-rnum" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()}" style="text-align:center;font-size:.7rem;color:var(--mu2)"></td>
           <td style="font-size:.7rem;text-align:center;color:var(--mu);white-space:nowrap">${ora||'–'}</td>
           <td style="text-align:center" onclick="event.stopPropagation();openGara('${(g['Numero Gara']||'')}')"><span class="ng-pill" style="cursor:pointer">${escH(g['Numero Gara']||'')}</span></td>
@@ -5142,7 +5249,7 @@ function openGiornoModal(ds){
 
     // ── Sistema filtri pill multi-select ──────────────────────────────────────
     // Reset _gmS for this new modal instance
-    _gmS={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),citta:new Set()};
+    _gmS={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),citta:new Set(),ora:new Set(),prov_arb:new Set()};
     _gmDayGare=allDayG;
     const allProvs=[...new Set(allDayG.map(g=>cpv(g['Campo']||'')).filter(Boolean))].sort();
     const allArbs=[...new Set(allDayG.flatMap(g=>['Arbitro 1','Arbitro 2'].map(f=>pns(g[f]||'')).filter(Boolean)))].sort();
@@ -5168,6 +5275,13 @@ function openGiornoModal(ds){
       _mkP('gm-pills-arb','arb',allArbs,()=>'#2c3e6b');
       _mkP('gm-pills-campo','campo',allCampi,()=>'#3d4d6b');
       _mkP('gm-pills-citta','citta',allCitta,()=>'#6d5d9e');
+      // Orario pills
+      const _oraSlotsAvail=[...new Set(allDayG.map(g=>{const h=parseInt((g['Ora']||'').split(':')[0]||'0');return h<12?'mattina':h<17?'pomeriggio':'sera';}))].sort();
+      const _oraColors={mattina:'#f39c12',pomeriggio:'#e67e22',sera:'#8e44ad'};
+      _mkP('gm-pills-ora','ora',_oraSlotsAvail,v=>_oraColors[v]||'#555');
+      // Prov arbitri pills
+      const _pvArbAvail=[...new Set(allDayG.flatMap(g=>{const a1=pns(g['Arbitro 1']||''),a2=pns(g['Arbitro 2']||'');return[P[a1]&&P[a1].provincia||'',P[a2]&&P[a2].provincia||''].filter(Boolean);}))].sort();
+      _mkP('gm-pills-prov_arb','prov_arb',_pvArbAvail,p=>PC[p]||'#888');
     })();
 
     // Numera subito le righe al primo caricamento
@@ -5389,7 +5503,7 @@ function gmResetGrp(type){
   gmCascadePills();
   gmApplyPillFilters();
 }
-function gmResetAll(){['camp','prov','arb','campo','citta'].forEach(t=>{_gmS[t].clear();});const mo=document.getElementById('dyn-mo-giorno');if(mo){mo.querySelectorAll('[data-gm-pill]').forEach(p=>{p.style.opacity='1';p.style.boxShadow='';p.style.display='';});mo.querySelectorAll('[data-gm-fc]').forEach(fc=>{const ob=fc.querySelector('.gm-cnt');if(ob)ob.remove();fc.style.borderColor='';fc.style.color='';});const rab=mo.querySelector('#gm-reset-all-btn');if(rab)rab.style.display='none';}gmApplyPillFilters();}
+function gmResetAll(){['camp','prov','arb','campo','citta','ora','prov_arb'].forEach(t=>{_gmS[t].clear();});const mo=document.getElementById('dyn-mo-giorno');if(mo){mo.querySelectorAll('[data-gm-pill]').forEach(p=>{p.style.opacity='1';p.style.boxShadow='';p.style.display='';});mo.querySelectorAll('[data-gm-fc]').forEach(fc=>{const ob=fc.querySelector('.gm-cnt');if(ob)ob.remove();fc.style.borderColor='';fc.style.color='';});const rab=mo.querySelector('#gm-reset-all-btn');if(rab)rab.style.display='none';}gmApplyPillFilters();}
 function gmCascadePills(){
   const mo=document.getElementById('dyn-mo-giorno');if(!mo||!_gmDayGare.length)return;
   // Filtra gare con le selezioni attive (province e campionati)
@@ -5434,7 +5548,9 @@ function gmApplyPillFilters(){
       (_gmS.prov.size>0&&!_gmS.prov.has(r.dataset.prov||''))||
       (_gmS.arb.size>0&&!_gmS.arb.has(r.dataset.arb1||''))||
       (_gmS.campo.size>0&&!_gmS.campo.has((r.dataset.campo||'').split(',')[0].trim()))||
-      (_gmS.citta&&_gmS.citta.size>0&&!_gmS.citta.has(r.dataset.citta||''));
+      (_gmS.citta&&_gmS.citta.size>0&&\!_gmS.citta.has(r.dataset.citta||''))||
+      (_gmS.ora&&_gmS.ora.size>0&&\!_gmS.ora.has(r.dataset.ora||''))||
+      (_gmS.prov_arb&&_gmS.prov_arb.size>0&&\!_gmS.prov_arb.has(r.dataset.provArb1||'')&&\!_gmS.prov_arb.has(r.dataset.provArb2||''));
     r.style.display=hide?'none':'';
   });
   gmRenumber();
@@ -6631,7 +6747,7 @@ function renderCamp(){
 
 var _gKpiOn={camp:false,arb:false,campi:false};
 // Pill filter state for giorno modal (module-level for hoisted functions)
-var _gmS={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),citta:new Set()};
+var _gmS={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),citta:new Set(),ora:new Set(),prov_arb:new Set()};
 var _gFiltCamp=new Set(),_gFiltArb=new Set(),_gFiltCampo=new Set();
 var _gHidden=new Set(),_gFrozen=new Set();
 var _gSortCol=null,_gSortAsc=true;
@@ -6706,7 +6822,7 @@ function _gGetVis(){
     if(_gSEL.camp.size>0&&!_gSEL.camp.has(g['Campionato']||''))return false;
     if(_gSEL.prov.size>0){var pvC=SQ[g['Squadra Casa']]&&SQ[g['Squadra Casa']].prov||'';var pvO=SQ[g['Squadra Ospite']]&&SQ[g['Squadra Ospite']].prov||'';if(!_gSEL.prov.has(pvC)&&!_gSEL.prov.has(pvO))return false;}
     if(_gSEL.arb.size>0){var a1b=pns(g['Arbitro 1']||''),a2b=pns(g['Arbitro 2']||'');if(!_gSEL.arb.has(a1b)&&!_gSEL.arb.has(a2b))return false;}
-    if(_gSEL.campo.size>0&&!_gSEL.campo.has((g['Campo']||'').split(',')[0].trim()))return false;
+    if(_gSEL.campo.size>0&&\!_gSEL.campo.has(g['Campo']||''))return false;
     if(_gSEL.sq.size>0&&!_gSEL.sq.has(g['Squadra Casa']||'')&&!_gSEL.sq.has(g['Squadra Ospite']||''))return false;
     if(_gSEL.citta.size>0){var _gpsC2=CAMPO_GPS&&CAMPO_GPS[g['Campo']||''];var _cit2=_gpsC2&&_gpsC2.city||'';if(!_gSEL.citta.has(_cit2))return false;}
     return true;
@@ -6772,7 +6888,7 @@ function _gBuildPillBars(){
   var camps=[...new Set(allRows.map(function(g){return g['Campionato']||'';}))].filter(Boolean).sort(function(a,b){return(typeof livelloC==='function'?livelloC(b)-livelloC(a):0)||a.localeCompare(b,'it');});
   var provs=[...new Set(allRows.flatMap(function(g){var sqc=SQ[g['Squadra Casa']];var sqo=SQ[g['Squadra Ospite']];var pvC=(sqc&&(sqc.prov||sqc.provincia))||'';var pvO=(sqo&&(sqo.prov||sqo.provincia))||'';return[pvC,pvO];}))].filter(Boolean).sort();
   var arbs=[...new Set(allRows.flatMap(function(g){return[pns(g['Arbitro 1']||''),pns(g['Arbitro 2']||'')];}))].filter(Boolean).sort();
-  var campi=[...new Set(allRows.map(function(g){return(g['Campo']||'').split(',')[0].trim();}))].filter(Boolean).sort();
+  var campi=[...new Set(allRows.map(function(g){return g['Campo']||'';}))].filter(Boolean).sort();
   function mkPills(cid,type,items,colorFn){
     var w=document.getElementById(cid);if(!w)return;
     // Keep existing selection state
@@ -6782,6 +6898,8 @@ function _gBuildPillBars(){
       var s=document.createElement('span');s.className='g-pill';s.dataset.gp=type;s.dataset.gpv=v;
       s.style.background=colorFn(v);
       if(type==='camp'&&isEccellenzaCamp(v)){s.textContent='⭐ '+v;s.style.cssText+=';border:2px solid #f1c40f;box-shadow:0 0 5px rgba(241,196,15,.4);font-weight:800';}
+      else if(type==='campo'){s.textContent=v.split(',')[0].trim();s.title=v;}
+      else if(type==='citta'){s.textContent=v;}
       else{s.textContent=v;}
       if(selVals.has(v)){s.classList.add('sel');}
       else if(selVals.size>0){s.classList.add('dim');}
@@ -8142,7 +8260,7 @@ function openPersona(nome,campFilter){
               <div style="display:flex;flex:1;align-items:stretch">${cells}</div>
             </div>`;
           }).join('');
-          return`<div style="margin-bottom:16px;border:1.5px solid #d0d8f0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(13,71,161,.08)">
+          return`<div style="flex-shrink:0;min-width:142px;border:1.5px solid #d0d8f0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(13,71,161,.08)">
             <div style="background:linear-gradient(90deg,#1e3a6e,#2962cc);color:#fff;padding:5px 10px;display:flex;align-items:center;justify-content:space-between">
               <span style="font-size:.78rem;font-weight:800;letter-spacing:.5px">${label}</span>
               <span style="font-size:.65rem;opacity:.8">${totMonth} gar${totMonth===1?'a':'e'}</span>
@@ -8154,7 +8272,7 @@ function openPersona(nome,campFilter){
           </div>`;
         }).join('');
         const calA=`<div style="width:100%;box-sizing:border-box">
-          ${monthGrids}
+          <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;align-items:flex-start">${monthGrids}</div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:.6rem;color:var(--mu);flex-wrap:wrap">
             <span><span style="display:inline-block;width:10px;height:10px;background:#e8f4ff;border:1px solid #ccc;margin-right:3px"></span>0</span>
             <span><span style="display:inline-block;width:10px;height:10px;background:var(--bl3);margin-right:3px"></span>1</span>
