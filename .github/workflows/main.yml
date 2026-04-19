@@ -61,6 +61,18 @@ jobs:
           git add docs/index.html
           git diff --staged --quiet || git commit -m "Dashboard aggiornata $(date '+%Y-%m-%d %H:%M')"
           git push || true
+      - name: Sincronizza gh-pages
+        run: |
+          git fetch origin gh-pages || true
+          git worktree add _ghp gh-pages 2>/dev/null || git worktree add _ghp origin/gh-pages
+          cp docs/index.html _ghp/index.html
+          touch _ghp/.nojekyll
+          cd _ghp
+          git add index.html .nojekyll
+          git diff --staged --quiet || git commit -m "Deploy $(date '+%Y-%m-%d %H:%M')"
+          git push origin gh-pages || true
+          cd ..
+          git worktree remove _ghp --force || true
 
   build-full:
     name: Build completo (scraper + deploy)
@@ -145,3 +157,16 @@ jobs:
           git add docs/index.html cache/data_v5_new.json || true
           git diff --staged --quiet || git commit -m "Dashboard + dati aggiornati $(date '+%Y-%m-%d %H:%M')"
           git push || true
+      - name: Sincronizza gh-pages
+        if: ${{ inputs.mode != 'full' }}
+        run: |
+          git fetch origin gh-pages || true
+          git worktree add _ghp gh-pages 2>/dev/null || git worktree add _ghp origin/gh-pages
+          cp docs/index.html _ghp/index.html
+          touch _ghp/.nojekyll
+          cd _ghp
+          git add index.html .nojekyll
+          git diff --staged --quiet || git commit -m "Deploy $(date '+%Y-%m-%d %H:%M')"
+          git push origin gh-pages || true
+          cd ..
+          git worktree remove _ghp --force || true
