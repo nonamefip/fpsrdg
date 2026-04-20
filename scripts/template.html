@@ -950,6 +950,41 @@ tr.loss-row td{background:#fdecea!important;}
   </div>
 
 
+  <!-- ROW 4e-pre: Ultima partita arbitri -->
+  <div class="db-card" style="margin-bottom:12px">
+    <div class="db-card-hd" style="cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap" onclick="_fToggle(event)">
+      <span>📅 Ultima partita — tutti gli arbitri</span>
+      <span id="ultime-tog" style="font-size:.8rem;color:var(--mu)">▶</span>
+      <span style="font-size:.65rem;font-weight:400;color:var(--mu)">clicca per espandere</span>
+      <select id="ultime-pv" onchange="renderUltimeGare()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
+        <option value="">Tutte le province</option>
+        <option value="CA">CA</option><option value="SS">SS</option><option value="SU">SU</option>
+        <option value="NU">NU</option><option value="OR">OR</option>
+      </select>
+      <select id="ultime-m" onchange="renderUltimeGare()" style="font-size:.72rem;padding:2px 6px;border:1px solid var(--br);border-radius:6px">
+        <option value="">Tutti i mesi</option>
+      </select>
+      <button onclick="document.getElementById('ultime-pv').value='';document.getElementById('ultime-m').value='';document.getElementById('ultime-d1').value='';document.getElementById('ultime-d2').value='';renderUltimeGare()" style="font-size:.68rem;padding:2px 8px;border:1px solid var(--br);border-radius:6px;background:none;cursor:pointer;color:var(--mu)">↺</button>
+      <span style="font-size:.65rem;color:var(--mu);margin-left:auto">ordinati per data ultima partita</span>
+    </div>
+    <div id="ultime-wrap" style="display:none;margin-top:8px">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding:6px 8px;background:#f8faff;border-radius:6px">
+        <span style="font-size:.7rem;font-weight:600;color:var(--mu)">Periodo preciso:</span>
+        <div style="display:flex;align-items:center;gap:4px">
+          <label style="font-size:.68rem;color:var(--mu)">Dal</label>
+          <input type="date" id="ultime-d1" onchange="renderUltimeGare()" style="font-size:.68rem;padding:2px 5px;border:1px solid var(--br);border-radius:4px">
+        </div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <label style="font-size:.68rem;color:var(--mu)">Al</label>
+          <input type="date" id="ultime-d2" onchange="renderUltimeGare()" style="font-size:.68rem;padding:2px 5px;border:1px solid var(--br);border-radius:4px">
+        </div>
+        <button onclick="document.getElementById('ultime-d1').value='';document.getElementById('ultime-d2').value='';renderUltimeGare()" style="font-size:.65rem;padding:1px 6px;border:1px solid var(--br);border-radius:4px;background:none;cursor:pointer;color:var(--mu)">↺ date</button>
+        <span style="font-size:.65rem;color:var(--mu2)">oppure usa il selettore mese sopra</span>
+      </div>
+      <div id="ultime-body"></div>
+    </div>
+  </div>
+
   <!-- ROW 4e: Arbitri meno attivi -->
   <div class="db-card" style="margin-bottom:12px">
     <div class="db-card-hd" style="cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap" onclick="_fToggle(event)">
@@ -1858,11 +1893,16 @@ const AG_EXT=(()=>{
 const CAMP_META=D.camp_meta||{};
 const _CCLR={
   'Serie B Femminile':'#003087','Serie B':'#003087','Serie C':'#1a4db3',
-  'Div. Reg. 1':'#0984e3','Div. Reg. 2':'#5aacf5','Divisione regionale 1':'#0984e3','Divisione regionale 2':'#5aacf5',
+  'Div. Reg. 1':'#0d6efd','Div. Reg. 2':'#6ea8d8',
+  'Divisione regionale 1':'#0d6efd','Divisione regionale 2':'#6ea8d8',
   'Under 19 Maschile Gold':'#4a1580','Under 19 Femminile Regionale':'#9b59b6',
-  'Under 17 Maschile Eccellenza':'#7b0000','Under 17 Maschile Gold':'#c0392b',
-  'Under 17 Maschile Regionale':'#e17055','Under 17 Femminile Regionale':'#fd79a8',
-  'Under 15 Maschile Eccellenza':'#004d1a','Under 15 Maschile Regionale':'#27ae60','Under 15 Femminile Regionale':'#55efc4',
+  'Under 17 Maschile Eccellenza':'#6a0dad',
+  'Under 17 Maschile Gold':'#b84300',
+  'Under 17 Maschile Regionale':'#e65100',
+  'Under 17 Femminile Regionale':'#c2185b',
+  'Under 15 Maschile Eccellenza':'#005f73',
+  'Under 15 Maschile Regionale':'#2e7d32',
+  'Under 15 Femminile Regionale':'#00695c',
   'Under 14 Maschile Regionale':'#00838f','Under 14 Femminile Regionale':'#4dd0e1',
   'Under 13 Maschile Regionale':'#b8860b','Under 13 Femminile Regionale':'#fdcb6e',
   'Esordienti Femminile':'#e84393','Trofeo Esordienti':'#fd79a8',
@@ -1870,9 +1910,9 @@ const _CCLR={
   'Scoiattoli Big':'#a29bfe','Scoiattoli Small':'#c0c0c0',
   'Gazzelle Big':'#f39c12','Gazzelle Small':'#f9ca24',
   'Libellule Big':'#8e44ad','Serie A':'#003087',
-  'Under 13':'#b8860b','Under 14':'#00838f','Under 15':'#27ae60',
-  'Under 17':'#e17055','Under 19':'#4a1580',
-  'Div. Reg.':'#5aacf5'};
+  'Under 13':'#b8860b','Under 14':'#00838f','Under 15':'#2e7d32',
+  'Under 17':'#e65100','Under 19':'#4a1580',
+  'Div. Reg.':'#6ea8d8'};
 const _ordFIP=[
   'Serie B Femminile','Serie C','Divisione regionale 1','Divisione regionale 2',
   'Under 19 Maschile Gold','Under 19 Femminile Regionale',
@@ -2291,7 +2331,9 @@ function _loadRimbTab(nomeEnc){
   el.innerHTML=out;
 }
 
-function campColor(cn){const cm=CAMP_META[cn]||{};return _CCLR[cm.gruppo]||'#636e72';}
+function campColor(cn){if(_CCLR[cn])return _CCLR[cn];const cm=CAMP_META[cn]||{};return _CCLR[cm.gruppo]||'#636e72';}
+function campIsEcc(cn){return /eccellenza/i.test(cn||'');}
+function campBadgeStyle(cn){const bg=campColor(cn);return campIsEcc(cn)?`background:${bg};color:#fff;border:2px solid #ffd700;`:`background:${bg};color:#fff;`;}
 function isEccellenzaCamp(cn){return /eccellenza/i.test(cn||'');}
 function campBadgeExtra(cn){
   if(isEccellenzaCamp(cn)) return 'border:2px solid var(--gold);box-shadow:0 0 4px rgba(201,138,0,.4);';
@@ -4090,13 +4132,17 @@ function renderTopMese(){renderTopMeseCol();}
 
 function _fToggle(e){
   if(e.target.tagName==='SELECT'||e.target.tagName==='BUTTON'||e.target.tagName==='INPUT')return;
-  const wrap=document.getElementById('fermi-wrap');
-  const tog=document.getElementById('fermi-tog');
+  const hd=e.currentTarget;const card=hd.closest('.db-card')||hd.parentElement;
+  const wrap=card?card.querySelector('[id$="-wrap"]'):null;
+  const tog=card?card.querySelector('[id$="-tog"]'):null;
   if(!wrap)return;
   const open=wrap.style.display!=='none';
   wrap.style.display=open?'none':'block';
   if(tog)tog.textContent=open?'▶':'▼';
-  if(!open)renderArbiFermi();
+  if(!open){const wid=wrap.id;
+    if(wid==='fermi-wrap')renderArbiFermi();
+    else if(wid==='ultime-wrap')renderUltimeGare();
+  }
 }
 function _tmSortClick(th){
   const col=th.dataset.sc;
@@ -4351,6 +4397,95 @@ function _openArbCampD(nome,camp){
   }
   inner.innerHTML=html2;
   wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderUltimeGare(){
+  const selPv=document.getElementById('ultime-pv');
+  const selM=document.getElementById('ultime-m');
+  const body=document.getElementById('ultime-body');
+  if(!body)return;
+  const MESI_IT=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  if(selM&&selM.options.length<=1){
+    const ms=new Set();
+    (window.GARE||[]).forEach(g=>{if(g['Data'])ms.add(g['Data'].slice(0,7));});
+    [...ms].sort().reverse().forEach(m=>{
+      const[y,mo]=m.split('-');
+      selM.innerHTML+='<option value="'+m+'">'+MESI_IT[parseInt(mo)-1]+' '+y+'</option>';
+    });
+  }
+  const fPv=selPv?selPv.value:'';
+  const fM=selM?selM.value:'';
+  const fD1=(document.getElementById('ultime-d1')||{}).value||'';
+  const fD2=(document.getElementById('ultime-d2')||{}).value||'';
+  const ultimaMap={};
+  (window.GARE||[]).forEach(g=>{
+    const d=g['Data']||'';
+    if(!d)return;
+    if(fD1&&d<fD1)return;
+    if(fD2&&d>fD2)return;
+    if(fM&&!d.startsWith(fM))return;
+    const arbs=(g['Arbitri']||g['Arbitro']||'').split(',').map(s=>s.trim()).filter(Boolean);
+    arbs.forEach(a=>{
+      if(!ultimaMap[a]||d>ultimaMap[a].data){
+        ultimaMap[a]={data:d,camp:g['Campionato']||'',citta:g['CittaGara']||g['Città']||''};
+      }
+    });
+  });
+  const ARB=(window.ARBITRI||[]);
+  let rows=ARB.map(a=>{
+    const nome=(a['Nome Cognome']||a['Nome']||'').trim();
+    const pv=(a['Provincia']||'').toUpperCase();
+    const last=ultimaMap[nome]||null;
+    return {nome,pv,last};
+  }).filter(r=>r.nome);
+  if(fPv) rows=rows.filter(r=>r.pv===fPv);
+  rows.sort((a,b)=>{
+    if(!a.last&&!b.last)return a.nome.localeCompare(b.nome);
+    if(!a.last)return 1;
+    if(!b.last)return -1;
+    return a.last.data.localeCompare(b.last.data);
+  });
+  if(!rows.length){body.innerHTML='<p style="color:var(--mu);font-size:.8rem;padding:8px">Nessun arbitro trovato.</p>';return;}
+  const today=new Date().toISOString().slice(0,10);
+  const daysDiff=d=>{if(!d)return null;const ms2=new Date(today)-new Date(d);return Math.round(ms2/86400000);};
+  const rowColor=days=>{
+    if(days===null)return '#e9ecef';
+    if(days>90)return '#ffc9c9';
+    if(days>60)return '#ffe8b0';
+    if(days>30)return '#fff3cd';
+    return '#d4edda';
+  };
+  let html='<table style="width:100%;border-collapse:collapse;font-size:.75rem">';
+  html+='<thead><tr style="background:#f0f4ff">';
+  html+='<th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--br)">#</th>';
+  html+='<th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--br)">Arbitro</th>';
+  html+='<th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--br)">Prov.</th>';
+  html+='<th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--br)">Ultima partita</th>';
+  html+='<th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--br)">Campionato</th>';
+  html+='<th style="padding:4px 8px;text-align:left;border-bottom:1px solid var(--br)">Città</th>';
+  html+='<th style="padding:4px 8px;text-align:center;border-bottom:1px solid var(--br)">Giorni fa</th>';
+  html+='</tr></thead><tbody>';
+  rows.forEach(function(r,i){
+    const days=r.last?daysDiff(r.last.data):null;
+    const bg=rowColor(days);
+    const dataStr=r.last?r.last.data:'—';
+    const campStr=r.last?r.last.camp:'—';
+    const cittaStr=r.last?r.last.citta:'—';
+    const daysStr=days!==null?days+'gg':'n/d';
+    const nomeSafe=r.nome.replace(/'/g,"\x27");
+    html+='<tr style="background:'+bg+';border-bottom:1px solid #e8eaf0">';
+    html+='<td style="padding:3px 8px;color:var(--mu)">'+( i+1)+'</td>';
+    html+='<td style="padding:3px 8px;font-weight:600;cursor:pointer" onclick="openArbitro(\''+nomeSafe+'\')">'+r.nome+'</td>';
+    html+='<td style="padding:3px 8px">'+( r.pv||'—')+'</td>';
+    html+='<td style="padding:3px 8px">'+dataStr+'</td>';
+    html+='<td style="padding:3px 8px;font-size:.68rem">'+escH(campStr)+'</td>';
+    html+='<td style="padding:3px 8px">'+escH(cittaStr)+'</td>';
+    html+='<td style="padding:3px 8px;text-align:center;font-weight:600">'+daysStr+'</td>';
+    html+='</tr>';
+  });
+  html+='</tbody></table>';
+  const label=fM?(function(){const pt=fM.split('-');return MESI_IT[parseInt(pt[1])-1]+' '+pt[0];})():(fD1||fD2?(fD1||'inizio')+' → '+(fD2||'oggi'):'Tutta la stagione');
+  body.innerHTML='<p style="font-size:.7rem;color:var(--mu);margin-bottom:6px">Periodo: <b>'+label+'</b>'+(fPv?' · Prov. '+fPv:'')+' · '+rows.length+' arbitri</p>'+html;
 }
 
 function renderArbiFermi(){
@@ -8071,7 +8206,7 @@ function openPersona(nome,campFilter){
           const wkHeaders=Array.from({length:numWeeks},(_,wi)=>`<div style="flex:1;min-width:10px;text-align:center;font-size:.48rem;color:var(--mu);opacity:.6">S${wi+1}</div>`).join('');
           // Righe
           const rowsHtml=mat.map((row,ri)=>{
-            const showLbl=(ri%2===0);
+            const showLbl=true;
             const dlbl=_DAYS_LBL[ri];
             const cells=row.map(cell=>{
               if(!cell)return`<div style="flex:1;min-width:10px;aspect-ratio:1;background:#f0f2f7;border-radius:3px;opacity:.2;margin:1px"></div>`;
