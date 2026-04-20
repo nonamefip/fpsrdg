@@ -1820,7 +1820,7 @@ Argomenti: /c "cd C:\percorso\cartella && python fip_scraper_v5.py && python gen
 
 const D=__DATA__;
 
-// ═══ FIP SARDA — dati classifiche/risultati campionati regionali ═══
+// ═══ FIP SARDA — dati classifiche/risultati campionati regionali ═══ // BUILD:20260420-v2
 // Blocco generato da fip_scraper_sarda.py ad ogni deploy.
 // Struttura: { aggiornato: "YYYY-MM-DD HH:MM", campionati: [ { nome, sesso, gironi: [ { nome, classifica:[], risultati:[], prossime:[] } ] } ] }
 const FIP_SARDA = __FIP_SARDA_JSON__;
@@ -8105,7 +8105,7 @@ function openPersona(nome,campFilter){
               <div style="display:flex;flex:1;align-items:stretch">${cells}</div>
             </div>`;
           }).join('');
-          return`<div style="margin-bottom:16px;border:1.5px solid #d0d8f0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(13,71,161,.08)">
+          return`<div style="flex:1;min-width:140px;border:1.5px solid #d0d8f0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(13,71,161,.08)">
             <div style="background:linear-gradient(90deg,#1e3a6e,#2962cc);color:#fff;padding:5px 10px;display:flex;align-items:center;justify-content:space-between">
               <span style="font-size:.78rem;font-weight:800;letter-spacing:.5px">${label}</span>
               <span style="font-size:.65rem;opacity:.8">${totMonth} gar${totMonth===1?'a':'e'}</span>
@@ -8117,7 +8117,7 @@ function openPersona(nome,campFilter){
           </div>`;
         }).join('');
         const calA=`<div style="width:100%;box-sizing:border-box">
-          ${monthGrids}
+          <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;align-items:flex-start">${monthGrids}</div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:4px;font-size:.6rem;color:var(--mu);flex-wrap:wrap">
             <span><span style="display:inline-block;width:10px;height:10px;background:#e8f4ff;border:1px solid #ccc;margin-right:3px"></span>0</span>
             <span><span style="display:inline-block;width:10px;height:10px;background:var(--bl3);margin-right:3px"></span>1</span>
