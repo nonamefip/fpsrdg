@@ -8707,6 +8707,13 @@ function openPersona(nome,campFilter){
         const pvComp=new Set([arbPv]);
         if(arbPv==='SS')pvComp.add('NU');
         if(arbPv==='NU')pvComp.add('SS');
+        const cittaCompSS=(arbPv==='SS'||arbPv==='NU')?['ghilarza','palau']:[];
+        function isInTerritory(campo){
+          const pvC=cpv(campo||'');
+          if(pvC&&pvComp.has(pvC))return true;
+          const cl=(campo||'').toLowerCase();
+          return cittaCompSS.some(city=>cl.includes(city));
+        }
         // Gare arbitrate (usa gare_arbitro: .h=casa, .a=ospite, .campo, .d=data, .c=camp)
         const gaArb=p.gare_arbitro||[];
         const sqVisitate=new Set();
@@ -8717,12 +8724,12 @@ function openPersona(nome,campFilter){
         const gareFuoriPv=[];
         gaArb.forEach(g=>{
           const h=g.h||'',a=g.a||'',campo=(g.campo||g['Campo']||'').trim();
-          if(h){sqVisitate.add(h);const pvH=(SQ[h]||{}).prov||'';if(pvH&&!pvComp.has(pvH))sqFuoriArea.add(h);}
-          if(a){sqVisitate.add(a);const pvA=(SQ[a]||{}).prov||'';if(pvA&&!pvComp.has(pvA))sqFuoriArea.add(a);}
+          if(h){sqVisitate.add(h);const pvH=(SQ[h]||{}).prov||'';const cpH=(SQ[h]||{}).campo_principale||'';if(pvH&&\!pvComp.has(pvH)&&\!isInTerritory(cpH))sqFuoriArea.add(h);}
+          if(a){sqVisitate.add(a);const pvA=(SQ[a]||{}).prov||'';const cpA=(SQ[a]||{}).campo_principale||'';if(pvA&&\!pvComp.has(pvA)&&\!isInTerritory(cpA))sqFuoriArea.add(a);}
           if(campo){
             campiVisitati.add(campo.toLowerCase());
             const pvC=cpv(campo);
-            if(pvC&&!pvComp.has(pvC))gareFuoriPv.push(g);
+            if(\!isInTerritory(campo))gareFuoriPv.push(g);
           }
         });
         // Squadre nelle province di competenza
@@ -8747,14 +8754,16 @@ function openPersona(nome,campFilter){
         if(sqNonVisitate.length===0){
           html+='<div style="color:var(--green);font-size:.72rem;padding:6px 10px;background:#e6f8ee;border-radius:6px">✅ Tutte le squadre della provincia arbitrate almeno una volta!</div>';
         }else{
+          const campArbitrati=new Set(gaArb.map(g=>g.c||'').filter(Boolean));
           const byCamp={};
           sqNonVisitate.forEach(n=>{
             const s=SQ[n]||{};
-            const camps=Object.keys(s.campionati||{});
-            const camp=camps.length?camps.sort((a,b)=>(s.campionati[b]||0)-(s.campionati[a]||0))[0]:'Sconosciuto';
+            const camps=Object.keys(s.campionati||{}).filter(cp=>campArbitrati.has(cp));
+            if(\!camps.length)return;
+            const camp=camps.sort((a,b)=>(s.campionati[b]||0)-(s.campionati[a]||0))[0];
             const pv=s.prov||'?';
             const key=camp+'||'+pv;
-            if(!byCamp[key])byCamp[key]={camp,pv,sqs:[]};
+            if(\!byCamp[key])byCamp[key]={camp,pv,sqs:[]};
             byCamp[key].sqs.push(n);
           });
           // Riga per riga con campionato, provincia, città, squadra
