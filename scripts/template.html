@@ -5005,7 +5005,7 @@ function openGiornoModal(ds){
           ${_gmFcatHtml('citta','Città')}
           <button id="gm-reset-all-btn" onclick="gmResetAll()" style="display:none;align-items:center;gap:4px;border:1.5px solid #c0392b;border-radius:7px;padding:5px 11px;font-size:.7rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">✕ Azzera tutto</button>
         </div>
-        <div class="gm-pp" id="gm-pp-camp" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-camp">${campsSet.map(c=>`<span class="gm-pill" data-gm-pill="camp" data-gm-val="${escH(c)}" style="border:none;border-radius:5px;padding:3px 10px;font-size:.65rem;font-weight:600;cursor:pointer;color:#fff;background:${campColor(c)};transition:opacity .12s" onclick="gmTogglePill(this,'camp','${esc(c)}')">${escH(c)}</span>`).join('')}<button onclick="gmResetGrp('camp')" style="background:none;border:0.5px solid var(--tbl-bdr,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button></div></div>
+        <div class="gm-pp" id="gm-pp-camp" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-camp">${campsSet.map(c=>`<span class="gm-pill" data-gm-pill="camp" data-gm-val="${escH(c)}" style="${campBadgeStyle(c)}border-radius:5px;padding:3px 10px;font-size:.65rem;font-weight:600;cursor:pointer;transition:opacity .12s" onclick="gmTogglePill(this,'camp','${esc(c)}')">${campIsEcc(c)?'⭐ ':''}${escH(c)}</span>`).join('')}<button onclick="gmResetGrp('camp')" style="background:none;border:0.5px solid var(--tbl-bdr,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button></div></div>
         <div class="gm-pp" id="gm-pp-prov" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-prov"></div></div>
         <div class="gm-pp" id="gm-pp-arb" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-arb"></div></div>
         <div class="gm-pp" id="gm-pp-campo" style="max-height:0px;overflow:hidden;transition:max-height .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center" id="gm-pills-campo"></div></div>
@@ -5030,7 +5030,7 @@ function openGiornoModal(ds){
           <td class="gm-rnum" data-citta="${(()=>{const _gpsC=CAMPO_GPS[campo];return _gpsC&&_gpsC.city?_gpsC.city:'';})()}" style="text-align:center;font-size:.7rem;color:var(--mu2)"></td>
           <td style="font-size:.7rem;text-align:center;color:var(--mu);white-space:nowrap">${ora||'–'}</td>
           <td style="text-align:center" onclick="event.stopPropagation();openGara('${(g['Numero Gara']||'')}')"><span class="ng-pill" style="cursor:pointer">${escH(g['Numero Gara']||'')}</span></td>
-          <td style="font-size:.7rem"><span style="background:${campColor(campName)};color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(campName)}')">${escH(campName)}</span></td>
+          <td style="font-size:.7rem"><span style="${campBadgeStyle(campName)}border-radius:3px;padding:1px 5px;font-size:.6rem;cursor:pointer;white-space:nowrap" onclick="openCampionato('${esc(campName)}')">${campIsEcc(campName)?'⭐ ':''}${escH(campName)}</span></td>
           <td style="text-align:center">${pvCampo?`<span style="background:${pvClr};color:#fff;border-radius:3px;padding:0 5px;font-size:.65rem;font-weight:700">${pvCampo}</span>`:''}</td>
           <td style="font-size:.68rem;color:var(--mu2)">${escH(g['Girone']||'')}</td>
           <td style="text-align:center">${(()=>{const pv=SQ[g['Squadra Casa']]?.prov||'';return pv&&PC[pv]?`<span style="background:${PC[pv]};color:#fff;border-radius:3px;padding:0 5px;font-size:.65rem;font-weight:700">${pv}</span>`:''})()}</td>
@@ -5274,7 +5274,7 @@ function openGiornoRange(d1,d2,arbFilter){
         <td style="font-size:.68rem;color:var(--mu);white-space:nowrap">${g['Data']||''}</td>
         <td style="font-size:.7rem;text-align:center;color:var(--mu);white-space:nowrap">${g['Ora']||'–'}</td>
         <td style="text-align:center"><span class="ng-pill" style="cursor:pointer" onclick="event.stopPropagation();openGara('${g['Numero Gara']||''}')">${escH(g['Numero Gara']||'')}</span></td>
-        <td style="font-size:.7rem"><span style="background:${campColor(g['Campionato']||'')};color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem">${escH(g['Campionato']||'')}</span></td>
+        <td style="font-size:.7rem"><span style="${campBadgeStyle(g['Campionato']||'')}border-radius:3px;padding:1px 5px;font-size:.6rem">${campIsEcc(g['Campionato']||'')?'⭐ ':''}${escH(g['Campionato']||'')}</span></td>
         <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Casa']||'')}');event.stopPropagation()" style="${casaW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Casa']||'')}</span></td>
         <td style="text-align:center">${(()=>{const r=g['Risultato'];if(!r)return'<span style="color:var(--mu2);font-size:.7rem">—</span>';const[a,b]=r.split('-').map(Number);if(a>b)return`<span style="background:#eaf3de;color:#27500A;border-radius:4px;padding:1px 7px;font-weight:700">${r}</span>`;if(b>a)return`<span style="background:#fcebeb;color:#791F1F;border-radius:4px;padding:1px 7px;font-weight:700">${r}</span>`;return`<span style="font-weight:700">${r}</span>`;})()}</td>
         <td><span class="rn rn-sq" onclick="openSquadra('${esc(g['Squadra Ospite']||'')}');event.stopPropagation()" style="${ospW?'color:var(--green);font-weight:800':''}">${escH(g['Squadra Ospite']||'')}</span></td>
@@ -6767,7 +6767,7 @@ function _gRenderChips(){
   el.innerHTML='';
   if(_gKpiOn.camp){
     var camps=[...new Set(_gf.map(function(g){return g['Campionato'];}))];
-    camps.forEach(function(c){var clr=campColor(c)||'#555';var sel=_gFiltCamp.has(c);var ch=document.createElement('span');ch.className='gare-chip'+(sel?' sel':'');ch.style.cssText='background:'+clr+';color:#fff;--gc-col:'+clr;ch.textContent=c;ch.onclick=function(){if(_gFiltCamp.has(c))_gFiltCamp.delete(c);else _gFiltCamp.add(c);_gRenderChips();_gRenderTable();};el.appendChild(ch);});
+    camps.forEach(function(c){var clr=campColor(c)||'#555';var isEcc=campIsEcc(c);var sel=_gFiltCamp.has(c);var ch=document.createElement('span');ch.className='gare-chip'+(sel?' sel':'');ch.style.cssText='background:'+clr+';color:#fff;--gc-col:'+clr+(isEcc?';border:2px solid #ffd700':'');ch.textContent=(isEcc?'⭐ ':'')+c;ch.onclick=function(){if(_gFiltCamp.has(c))_gFiltCamp.delete(c);else _gFiltCamp.add(c);_gRenderChips();_gRenderTable();};el.appendChild(ch);});
   }
   if(_gKpiOn.arb){
     var arbs=[...new Set(_gf.flatMap(function(g){return[pns(g['Arbitro 1']||''),pns(g['Arbitro 2']||'')].filter(Boolean);}))].sort();
@@ -7363,6 +7363,7 @@ function openPersona(nome,campFilter){
       <button class="mt" onclick="swTabId(this,'mpt-2')">🤝 Colleghi (${colleghi.length})</button>
       <button class="mt" onclick="swTabId(this,'mpt-3')">🏟️ Campi (${campi.length})</button>
       <button class="mt" onclick="swTabId(this,'mpt-4')">🏆 Squadre (${squadre.length})</button>
+      ${p.categoria==='Arbitro'?`<button class="mt" onclick="swTabId(this,'mpt-terr')">🗺️ Territorio</button>`:''}
       ${provvTab}
       ${extraTabs}
     </div>
@@ -7394,6 +7395,7 @@ function openPersona(nome,campFilter){
     <div class="mtc hidden" id="mpt-2" id="mpt-2-inner"></div>
     <div class="mtc hidden" id="mpt-3" id="mpt-3-inner"></div>
     <div class="mtc hidden" id="mpt-4" id="mpt-4-inner"></div>
+    <div class="mtc hidden" id="mpt-terr"><div id="mpt-terr-inner" style="padding:10px 8px"></div></div>
     ${provvPanel}
     ${extraPanels}`;
 
@@ -8545,6 +8547,74 @@ function openPersona(nome,campFilter){
       </div>
       <div style="padding:4px">${sqBlocks}${nonIncBlocks}</div>`;
   } catch(e){ document.getElementById('mpt-4').innerHTML='<p style="color:red;padding:10px">Errore squadre: '+e.message+'</p>'; }
+
+  // Populate mpt-terr (Territorio — province analysis)
+  if(p.categoria==='Arbitro'){
+    try{
+      const terrEl=document.getElementById('mpt-terr-inner');
+      if(terrEl){
+        const arbPv=p.provincia||'';
+        // Province di competenza: SS e NU si coprono a vicenda
+        const pvComp=new Set([arbPv]);
+        if(arbPv==='SS')pvComp.add('NU');
+        if(arbPv==='NU')pvComp.add('SS');
+        // Squadre visitate (campo casa o trasferta in gare arbitrate)
+        const sqVisitate=new Set();
+        const sqFuoriPv=new Set();
+        (p.gare||[]).forEach(g=>{
+          ['Casa','Ospite'].forEach(f=>{
+            const sq=g[f]||'';if(\!sq)return;
+            const sqData=SQ[sq];const pvSq=sqData?sqData.prov:'';
+            if(pvSq&&\!pvComp.has(pvSq))sqFuoriPv.add(sq);
+            sqVisitate.add(sq);
+          });
+        });
+        // Tutte le squadre nelle province di competenza
+        const sqDiComp=Object.entries(SQ).filter(([n,s])=>pvComp.has(s.prov||'')).map(([n])=>n);
+        const sqNonVisitate=sqDiComp.filter(n=>\!sqVisitate.has(n));
+        // Render helper
+        function sqPill(nome,clr){
+          const s=SQ[nome]||{};const campo=s.campo_principale||'';
+          const city=campo?(campo.match(/([A-Z]{2,})\s*\(\s*\w+\s*\)/)||[])[1]||'':'';
+          return `<span style="display:inline-flex;align-items:center;gap:3px;background:${clr}18;border:1px solid ${clr}44;border-radius:5px;padding:2px 7px;font-size:.65rem;margin:2px;cursor:pointer" onclick="openSquadra('${nome.replace(/'/g,"\'")}')"><b style="color:${clr}">${escH(nome)}</b>${city?`<span style="color:var(--mu);font-size:.6rem">${city}</span>`:''}</span>`;
+        }
+        const pvLabel=[...pvComp].join(' + ');
+        let html=`<div style="font-size:.72rem;color:var(--mu);margin-bottom:12px">Province di competenza: <b>${pvLabel}</b>${arbPv==='SS'?' (include NU per accordo territoriale)':arbPv==='NU'?' (include SS per accordo territoriale)':''}</div>`;
+        // SEZIONE 1: mai stati nelle province di competenza
+        html+=`<div style="margin-bottom:16px"><div style="font-size:.75rem;font-weight:700;color:#c0392b;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          ❌ Squadre NON ancora arbitrate (${pvLabel}) <span style="font-size:.65rem;font-weight:400;color:var(--mu)">${sqNonVisitate.length} su ${sqDiComp.length}</span></div>`;
+        if(sqNonVisitate.length===0){
+          html+=`<div style="color:var(--green);font-size:.72rem;padding:6px 10px;background:#e6f8ee;border-radius:6px">✅ Hai arbitrato almeno una volta tutte le squadre della tua provincia\!</div>`;
+        }else{
+          // Group by prov
+          const byPv={};sqNonVisitate.forEach(n=>{const pv=(SQ[n]||{}).prov||'?';if(\!byPv[pv])byPv[pv]=[];byPv[pv].push(n);});
+          Object.entries(byPv).sort().forEach(([pv,sqs])=>{
+            const clr=PC[pv]||'#555';
+            html+=`<div style="margin-bottom:6px"><span style="font-size:.62rem;font-weight:700;color:${clr};background:${clr}18;border-radius:4px;padding:1px 7px;margin-right:4px">${pv}</span>`;
+            html+=sqs.sort().map(n=>sqPill(n,clr)).join('');
+            html+='</div>';
+          });
+        }
+        html+='</div>';
+        // SEZIONE 2: squadre arbitrate fuori provincia
+        html+=`<div><div style="font-size:.75rem;font-weight:700;color:#0d6efd;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          🌍 Squadre arbitrate FUORI provincia <span style="font-size:.65rem;font-weight:400;color:var(--mu)">${sqFuoriPv.size} squadre</span></div>`;
+        if(sqFuoriPv.size===0){
+          html+=`<div style="color:var(--mu);font-size:.72rem;padding:6px 10px;background:#f8faff;border-radius:6px">Nessuna gara arbitrata fuori dalle province di competenza.</div>`;
+        }else{
+          const byPv2={};[...sqFuoriPv].forEach(n=>{const pv=(SQ[n]||{}).prov||'?';if(\!byPv2[pv])byPv2[pv]=[];byPv2[pv].push(n);});
+          Object.entries(byPv2).sort().forEach(([pv,sqs])=>{
+            const clr=PC[pv]||'#555';
+            html+=`<div style="margin-bottom:6px"><span style="font-size:.62rem;font-weight:700;color:${clr};background:${clr}18;border-radius:4px;padding:1px 7px;margin-right:4px">${pv}</span>`;
+            html+=sqs.sort().map(n=>sqPill(n,clr)).join('');
+            html+='</div>';
+          });
+        }
+        html+='</div>';
+        terrEl.innerHTML=html;
+      }
+    }catch(e){const el=document.getElementById('mpt-terr-inner');if(el)el.innerHTML='<p style="color:red;padding:10px">Errore territorio: '+e.message+'</p>';}
+  }
 
   // Populate inline trend (4 finestre in riga)
   try{
