@@ -8844,7 +8844,7 @@ function openPersona(nome,campFilter){
             // Sub-row with games (hidden by default)
             const gs=sqFuoriGames[n]||[];
             const gsHtml=gs.sort((a,b)=>(a.d||'').localeCompare(b.d||'')).map(g=>{
-              return '<tr style="background:#f3eeff"><td style="padding:2px 8px;font-size:.67rem">'+( g.d||'')+'</td><td style="padding:2px 8px;font-size:.67rem;color:var(--mu)" colspan="3">'+escH(g.h||'')+' vs '+escH(g.a||'')+' &nbsp;<span style="'+campBadgeStyle(g.c||'')+';border-radius:3px;padding:0 5px;font-size:.6rem">'+escH(g.c||'')+'</span> &nbsp;<span style="color:var(--mu)">'+escH(g.campo||g[\'Campo\']||'')+'</span></td></tr>';
+              return '<tr style="background:#f3eeff"><td style="padding:2px 8px;font-size:.67rem">'+( g.d||'')+'</td><td style="padding:2px 8px;font-size:.67rem;color:var(--mu)" colspan="3">'+escH(g.h||'')+' vs '+escH(g.a||'')+' &nbsp;<span style="'+campBadgeStyle(g.c||'')+';border-radius:3px;padding:0 5px;font-size:.6rem">'+escH(g.c||'')+'</span> &nbsp;<span style="color:var(--mu)">'+escH(g.campo||g['Campo']||'')+'</span></td></tr>';
             }).join('');
             html+='<tr id="'+rowId+'" style="display:none;border-bottom:2px solid #d0b8f0"><td colspan="4" style="padding:0"><table style="width:100%;border-collapse:collapse;font-size:.68rem"><thead><tr style="background:#ede8ff"><th style="padding:2px 8px;text-align:left">Data</th><th style="padding:2px 8px;text-align:left" colspan="3">Gara</th></tr></thead><tbody>'+gsHtml+'</tbody></table></td></tr>';
           });
