@@ -7023,13 +7023,15 @@ function _gRenderTable(){
     var col=_gSortCol;var va='',vb='';
     if(col==='data')va=a['Data']||'',vb=b['Data']||'';
     else if(col==='ora')va=a['Ora']||'',vb=b['Ora']||'';
-    else if(col==='camp')va=a['Campionato']||'',vb=b['Campionato']||'';
-    else if(col==='narb')return _gSortAsc?((pns(a['Arbitro 1']||'')?1:0)+(pns(a['Arbitro 2']||'')?1:0))-((pns(b['Arbitro 1']||'')?1:0)+(pns(b['Arbitro 2']||'')?1:0)):((pns(b['Arbitro 1']||'')?1:0)+(pns(b['Arbitro 2']||'')?1:0))-((pns(a['Arbitro 1']||'')?1:0)+(pns(a['Arbitro 2']||'')?1:0));
+    else if(col==='camp'){var cs2=campSort(a['Campionato']||'')-campSort(b['Campionato']||'');return _gSortAsc?cs2:-cs2;}
+    else if(col==='narb'){var na=(pns(a['Arbitro 1']||'')?1:0)+(pns(a['Arbitro 2']||'')?1:0),nb=(pns(b['Arbitro 1']||'')?1:0)+(pns(b['Arbitro 2']||'')?1:0);return _gSortAsc?na-nb:nb-na;}
     else if(col==='pvcasa'){va=SQ[a['Squadra Casa']]&&SQ[a['Squadra Casa']].prov||'';vb=SQ[b['Squadra Casa']]&&SQ[b['Squadra Casa']].prov||'';}
     else if(col==='casa')va=a['Squadra Casa']||'',vb=b['Squadra Casa']||'';
     else if(col==='osp')va=a['Squadra Ospite']||'',vb=b['Squadra Ospite']||'';
     else if(col==='pvosp'){va=SQ[a['Squadra Ospite']]&&SQ[a['Squadra Ospite']].prov||'';vb=SQ[b['Squadra Ospite']]&&SQ[b['Squadra Ospite']].prov||'';}
-    return _gSortAsc?va.localeCompare(vb,'it'):vb.localeCompare(va,'it');
+    var primary=_gSortAsc?va.localeCompare(vb,'it'):vb.localeCompare(va,'it');
+    if(primary\!==0)return primary;
+    return campSort(a['Campionato']||'')-campSort(b['Campionato']||'');
   });}
   var html='';
   sorted.forEach(function(g,ri){
