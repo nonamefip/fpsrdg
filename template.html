@@ -7102,6 +7102,7 @@ function renderGare(){
     if(res==='no'&&g['Risultato'])return false;
     return true;
   });
+  _gf.sort(function(a,b){var cs=campSort(a['Campionato']||'')-campSort(b['Campionato']||'');if(cs!==0)return cs;var ds=(a['Data']||'').localeCompare(b['Data']||'');if(ds!==0)return ds;return(a['Ora']||'').localeCompare(b['Ora']||'');});
   _gFiltCamp.clear();_gFiltArb.clear();_gFiltCampo.clear();
   Object.keys(_gKpiOn).forEach(function(k){_gKpiOn[k]=false;});
   document.querySelectorAll('[id^=gkpi-]').forEach(function(el){el.classList.remove('on');});
@@ -16871,12 +16872,3 @@ function _renderFipProssime(girone,clr){
     h+=`<span style="margin:0 8px;font-weight:700;font-size:.8rem;color:var(--bl);min-width:54px;text-align:center">VS</span>`;
     h+=`<span style="flex:1">${escH(osp)}</span>`;
     if(campo)h+=`<span style="font-size:.67rem;color:var(--mu);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(campo)}">📍 ${escH(campo)}</span>`;
-    if(giornata)h+=`<span style="font-size:.67rem;color:${clr};font-weight:600;margin-left:4px">${giornata}</span>`;
-    h+=`</div>`;
-  });
-  h+='</div>';
-  return h;
-}
-</script>
-</body></html>
-<!-- deploy:2026-04-06 16:57:10.159625 -->
