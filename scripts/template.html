@@ -16879,4 +16879,53 @@ function _renderFipRisultati(girone,clr){
   if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessun risultato disponibile.</div>';
   // Raggruppa per giornata
   var byGiornata={};
-  rows.forEach(r=>{var g=r.giornata||'—';if(!
+  rows.forEach(r=>{var g=r.giornata||'—';if(!byGiornata[g])byGiornata[g]=[];byGiornata[g].push(r);});
+  var h='<div style="margin-bottom:14px">';
+  // Ordina giornate numericamente (desc: più recenti prima)
+  var giornateKeys=Object.keys(byGiornata).sort((a,b)=>{
+    var na=parseInt(a,10),nb=parseInt(b,10);
+    if(!isNaN(na)&&!isNaN(nb))return nb-na;
+    return b>a?1:-1;
+  });
+  giornateKeys.forEach(g=>{
+    var gare=byGiornata[g];
+    h+=`<div style="font-size:.75rem;font-weight:700;color:${clr};text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px 4px">Giornata ${g}</div>`;
+    gare.forEach(r=>{
+      var data=r.data||'';
+      var casa=r.casa||'–';var osp=r.ospite||'–';
+      var sc=r.punteggio||'';var pf=sc.split('-')[0]||'';var ps=sc.split('-')[1]||'';
+      var casaW=pf&&ps&&parseInt(pf)>parseInt(ps);var ospW=pf&&ps&&parseInt(ps)>parseInt(pf);
+      h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
+      h+=`<span style="color:var(--mu);width:70px;flex-shrink:0;font-size:.7rem">${escH(data)}</span>`;
+      h+=`<span style="flex:1;text-align:right;font-weight:${casaW?'700':'400'}">${escH(casa)}</span>`;
+      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;text-align:center">${sc?escH(sc):'–'}</span>`;
+      h+=`<span style="flex:1;font-weight:${ospW?'700':'400'}">${escH(osp)}</span>`;
+      h+=`</div>`;
+    });
+  });
+  h+='</div>';
+  return h;
+}
+
+function _renderFipProssime(girone,clr){
+  var rows=girone.prossime||[];
+  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessuna prossima gara disponibile.</div>';
+  var h='<div style="margin-bottom:14px">';
+  rows.forEach(r=>{
+    var data=r.data||'';var ora=r.ora||'';var casa=r.casa||'–';var osp=r.ospite||'–';
+    var campo=r.campo||'';var giornata=r.giornata?`G${r.giornata}`:'';
+    h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
+    h+=`<span style="color:var(--mu);width:90px;flex-shrink:0;font-size:.7rem">${escH(data)} ${escH(ora)}</span>`;
+    h+=`<span style="flex:1;text-align:right">${escH(casa)}</span>`;
+    h+=`<span style="margin:0 8px;font-weight:700;font-size:.8rem;color:var(--bl);min-width:54px;text-align:center">VS</span>`;
+    h+=`<span style="flex:1">${escH(osp)}</span>`;
+    if(campo)h+=`<span style="font-size:.67rem;color:var(--mu);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(campo)}">📍 ${escH(campo)}</span>`;
+    if(giornata)h+=`<span style="font-size:.67rem;color:${clr};font-weight:600;margin-left:4px">${giornata}</span>`;
+    h+=`</div>`;
+  });
+  h+='</div>';
+  return h;
+}
+</script>
+</body></html>
+<!-- deploy:2026-04-06 16:57:10.159625 -->
