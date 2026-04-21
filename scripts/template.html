@@ -1438,6 +1438,7 @@ tr.loss-row td{background:#fdecea!important;}
     <span class="g-fcat" id="gfc-campo" onclick="gFcatToggle('campo')">Campi <span class="g-fcat-arr">&#9660;</span></span>
     <span class="g-fcat" id="gfc-sq" onclick="gFcatToggle('sq')">Squadre <span class="g-fcat-arr">&#9660;</span></span>
     <span class="g-fcat" id="gfc-citta" onclick="gFcatToggle('citta')">Città <span class="g-fcat-arr">&#9660;</span></span>
+    <span class="g-fcat" id="gfc-ora" onclick="gFcatToggle('ora')">Orario <span class="g-fcat-arr">&#9660;</span></span>
     <button id="g-rst-all" onclick="gResetAll()" style="display:none;align-items:center;border:1.5px solid #c0392b;border-radius:7px;padding:4px 10px;font-size:.68rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">&#10005; Azzera tutto</button>
   </div>
   <div class="g-pp" id="g-pp-camp"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca campionato..." oninput="gPillSearch(this,'camp')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-camp"></div></div>
@@ -1446,6 +1447,7 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="g-pp" id="g-pp-campo"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca campo..." oninput="gPillSearch(this,'campo')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-campo"></div></div>
   <div class="g-pp" id="g-pp-sq"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca squadra..." oninput="gPillSearch(this,'sq')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-sq"></div></div>
   <div class="g-pp" id="g-pp-citta"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca città..." oninput="gPillSearch(this,'citta')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-citta"></div></div>
+  <div class="g-pp" id="g-pp-ora"><div style="padding:4px 2px 2px;font-size:.7rem;color:var(--mu);font-weight:600">Filtra per fascia oraria</div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-ora"></div></div>
   <div class="gare-chips" id="g-chips" style="display:none"></div>
   <div class="gare-restore" id="g-restore"></div>
   <div style="overflow-x:auto">
@@ -6909,6 +6911,7 @@ function _gGetVis(){
     if(_gSEL.campo.size>0&&!_gSEL.campo.has((g['Campo']||'').split(',')[0].trim()))return false;
     if(_gSEL.sq.size>0&&!_gSEL.sq.has(g['Squadra Casa']||'')&&!_gSEL.sq.has(g['Squadra Ospite']||''))return false;
     if(_gSEL.citta.size>0){var _gpsC2=CAMPO_GPS&&CAMPO_GPS[g['Campo']||''];var _cit2=_gpsC2&&_gpsC2.city||'';if(!_gSEL.citta.has(_cit2))return false;}
+    if(_gSEL.ora.size>0){var _oraH=(g['Ora']||'').substring(0,2);if(!_gSEL.ora.has(_oraH))return false;}
     return true;
   });
 }
@@ -6919,7 +6922,7 @@ function gKpiToggle(key){
   _gRenderChips();_gRenderTable();
 }
 // ── Nuovo sistema pill filter multi-select ──────────────────────────────
-var _gSEL={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),sq:new Set(),citta:new Set()};
+var _gSEL={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),sq:new Set(),citta:new Set(),ora:new Set()};
 function gFcatToggle(type){
   var pp=document.getElementById('g-pp-'+type);
   var fc=document.getElementById('gfc-'+type);
@@ -6955,6 +6958,7 @@ function gTogglePill(type,val){
     else{fc.style.borderColor='';fc.style.color='';}}
   var rab=document.getElementById('g-rst-all');
   if(rab)rab.style.display=Object.values(_gSEL).some(function(x){return x.size>0;})?'inline-flex':'none';
+  _gBuildPillBars(); // ricostruit le pill a cascata
   _gRenderTable();
 }
 function gResetGrp(type){
@@ -6964,42 +6968,87 @@ function gResetGrp(type){
   if(fc){var ob=fc.querySelector('.g-cnt');if(ob)ob.remove();fc.style.borderColor='';fc.style.color='';}
   var rab=document.getElementById('g-rst-all');
   if(rab)rab.style.display=Object.values(_gSEL).some(function(x){return x.size>0;})?'inline-flex':'none';
+  _gBuildPillBars();
   _gRenderTable();
 }
-function gResetAll(){['camp','prov','arb','campo','sq','citta'].forEach(function(t){gResetGrp(t);});}
+function gResetAll(){['camp','prov','arb','campo','sq','citta','ora'].forEach(function(t){gResetGrp(t);});}
 function _gBuildPillBars(){
-  var allRows=GARE||[];
-  var camps=[...new Set(allRows.map(function(g){return g['Campionato']||'';}))].filter(Boolean).sort(function(a,b){return(typeof livelloC==='function'?livelloC(b)-livelloC(a):0)||a.localeCompare(b,'it');});
-  var provs=[...new Set(allRows.flatMap(function(g){var sqc=SQ[g['Squadra Casa']];var sqo=SQ[g['Squadra Ospite']];var pvC=(sqc&&(sqc.prov||sqc.provincia))||'';var pvO=(sqo&&(sqo.prov||sqo.provincia))||'';return[pvC,pvO];}))].filter(Boolean).sort();
-  var arbs=[...new Set(allRows.flatMap(function(g){return[pns(g['Arbitro 1']||''),pns(g['Arbitro 2']||'')];}))].filter(Boolean).sort();
-  var campi=[...new Set(allRows.map(function(g){return(g['Campo']||'').split(',')[0].trim();}))].filter(Boolean).sort();
-  function mkPills(cid,type,items,colorFn){
-    var w=document.getElementById(cid);if(!w)return;
-    // Keep existing selection state
-    var selVals=new Set(_gSEL[type]||[]);
-    w.innerHTML='';
-    items.forEach(function(v){
-      var s=document.createElement('span');s.className='g-pill';s.dataset.gp=type;s.dataset.gpv=v;
-      s.style.background=colorFn(v);
-      if(type==='camp'&&campIsEcc&&campIsEcc(v)){s.style.border='2px solid #ffd700';s.textContent='⭐ '+v;}
-      else s.textContent=v;
-      if(selVals.has(v)){s.classList.add('sel');}
-      else if(selVals.size>0){s.classList.add('dim');}
-      s.onclick=function(){gTogglePill(type,v);};
+  // Filtro a cascata: ogni categoria mostra solo valori compatibili
+  // con i filtri gia' attivi nelle altre categorie.
+  var allRows = _gf || GARE || [];
+
+  function rowsExcluding(skipType) {
+    return allRows.filter(function(g) {
+      var pvC = (SQ[g['Squadra Casa']] && (SQ[g['Squadra Casa']].prov || SQ[g['Squadra Casa']].provincia)) || '';
+      var pvO = (SQ[g['Squadra Ospite']] && (SQ[g['Squadra Ospite']].prov || SQ[g['Squadra Ospite']].provincia)) || '';
+      var a1 = pns(g['Arbitro 1'] || ''), a2 = pns(g['Arbitro 2'] || '');
+      var gps = CAMPO_GPS && CAMPO_GPS[g['Campo'] || ''];
+      var cit = gps && gps.city || '';
+      var oraH = (g['Ora'] || '').substring(0, 2);
+      if (skipType !== 'camp'  && _gSEL.camp.size  > 0 && !_gSEL.camp.has(g['Campionato'] || '')) return false;
+      if (skipType !== 'prov'  && _gSEL.prov.size  > 0 && !_gSEL.prov.has(pvC) && !_gSEL.prov.has(pvO)) return false;
+      if (skipType !== 'arb'   && _gSEL.arb.size   > 0 && !_gSEL.arb.has(a1) && !_gSEL.arb.has(a2)) return false;
+      if (skipType !== 'campo' && _gSEL.campo.size > 0 && !_gSEL.campo.has((g['Campo'] || '').split(',')[0].trim())) return false;
+      if (skipType !== 'sq'    && _gSEL.sq.size    > 0 && !_gSEL.sq.has(g['Squadra Casa'] || '') && !_gSEL.sq.has(g['Squadra Ospite'] || '')) return false;
+      if (skipType !== 'citta' && _gSEL.citta.size > 0 && !_gSEL.citta.has(cit)) return false;
+      if (skipType !== 'ora'   && _gSEL.ora.size   > 0 && !_gSEL.ora.has(oraH)) return false;
+      return true;
+    });
+  }
+
+  function mkPills(cid, type, items, colorFn) {
+    var w = document.getElementById(cid); if (!w) return;
+    var selVals = new Set(_gSEL[type] || []);
+    var compatible = rowsExcluding(type);
+    var compatSet = new Set();
+    items.forEach(function(v) {
+      var found = compatible.some(function(g) {
+        if (type === 'camp')  return (g['Campionato'] || '') === v;
+        if (type === 'prov')  { var pvC2=(SQ[g['Squadra Casa']]&&(SQ[g['Squadra Casa']].prov||SQ[g['Squadra Casa']].provincia))||''; var pvO2=(SQ[g['Squadra Ospite']]&&(SQ[g['Squadra Ospite']].prov||SQ[g['Squadra Ospite']].provincia))||''; return pvC2===v||pvO2===v; }
+        if (type === 'arb')   { var a1c=pns(g['Arbitro 1']||''),a2c=pns(g['Arbitro 2']||''); return a1c===v||a2c===v; }
+        if (type === 'campo') return (g['Campo']||'').split(',')[0].trim()===v;
+        if (type === 'sq')    return (g['Squadra Casa']||'')===v||(g['Squadra Ospite']||'')===v;
+        if (type === 'citta') { var gps2=CAMPO_GPS&&CAMPO_GPS[g['Campo']||'']; return (gps2&&gps2.city||'')===v; }
+        if (type === 'ora')   return (g['Ora']||'').substring(0,2)===v;
+        return false;
+      });
+      if (found) compatSet.add(v);
+    });
+    w.innerHTML = '';
+    items.forEach(function(v) {
+      var isCompat = compatSet.has(v);
+      var isSel = selVals.has(v);
+      if (!isCompat && !isSel) return;
+      var s = document.createElement('span');
+      s.className = 'g-pill' + (isSel ? ' sel' : '') + (!isCompat ? ' dim' : '');
+      s.dataset.gp = type; s.dataset.gpv = v;
+      s.style.background = colorFn(v);
+      if (type === 'camp' && campIsEcc && campIsEcc(v)) { s.style.border = '2px solid #ffd700'; s.textContent = '⭐ ' + v; }
+      else if (type === 'ora') s.textContent = v + ':xx';
+      else s.textContent = v;
+      s.onclick = function() { gTogglePill(type, v); };
       w.appendChild(s);
     });
-    var rst=document.createElement('button');rst.textContent='✕ Tutti';
-    rst.style.cssText='background:none;border:0.5px solid var(--br,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 7px;font-size:.63rem;cursor:pointer;margin:1px';
-    rst.onclick=function(){gResetGrp(type);};w.appendChild(rst);
+    var rst = document.createElement('button'); rst.textContent = '× Tutti';
+    rst.style.cssText = 'background:none;border:0.5px solid var(--br,#dde3f0);color:var(--mu,#6b7a99);border-radius:5px;padding:2px 7px;font-size:.63rem;cursor:pointer;margin:1px';
+    rst.onclick = function() { gResetGrp(type); }; w.appendChild(rst);
   }
-  var squads=[...new Set(allRows.flatMap(function(g){return[g['Squadra Casa']||'',g['Squadra Ospite']||''];}))].filter(Boolean).sort();
-  mkPills('g-pills-camp','camp',camps,function(v){return campColor(v)||'#888';});
-  mkPills('g-pills-prov','prov',provs,function(p){return PC[p]||'#888';});
-  mkPills('g-pills-arb','arb',arbs,function(){return'#2c3e6b';});
-  mkPills('g-pills-campo','campo',campi,function(v){var pv=cpv(v)||'';return PC[pv]||'#3d4d6b';});
-  mkPills('g-pills-sq','sq',squads,function(v){var sq=SQ[v];var pv=sq&&(sq.prov||sq.provincia)||'';return PC[pv]||'#3d4d6b';});
-  var citta=[...new Set(allRows.map(function(g){var gps=CAMPO_GPS&&CAMPO_GPS[g['Campo']||''];return gps&&gps.city||'';}).filter(Boolean))].sort();
-  mkPills('g-pills-citta','citta',citta,function(v){return'#0f6e56';});
+
+  var camps = [...new Set(allRows.map(function(g){return g['Campionato']||'';}))].filter(Boolean).sort(function(a,b){return(typeof livelloC==='function'?livelloC(b)-livelloC(a):0)||a.localeCompare(b,'it');});
+  var provs  = [...new Set(allRows.flatMap(function(g){var sqc=SQ[g['Squadra Casa']];var sqo=SQ[g['Squadra Ospite']];var pvC=(sqc&&(sqc.prov||sqc.provincia))||'';var pvO=(sqo&&(sqo.prov||sqo.provincia))||'';return[pvC,pvO];}))].filter(Boolean).sort();
+  var arbs   = [...new Set(allRows.flatMap(function(g){return[pns(g['Arbitro 1']||''),pns(g['Arbitro 2']||'')];}))].filter(Boolean).sort();
+  var campi  = [...new Set(allRows.map(function(g){return(g['Campo']||'').split(',')[0].trim();}))].filter(Boolean).sort();
+  var squads = [...new Set(allRows.flatMap(function(g){return[g['Squadra Casa']||'',g['Squadra Ospite']||''];}))].filter(Boolean).sort();
+  var citta  = [...new Set(allRows.map(function(g){var gps=CAMPO_GPS&&CAMPO_GPS[g['Campo']||''];return gps&&gps.city||'';}))].filter(Boolean).sort();
+  var ore    = [...new Set(allRows.map(function(g){return(g['Ora']||'').substring(0,2);}))].filter(function(h){return/^\d{2}$/.test(h);}).sort();
+
+  mkPills('g-pills-camp',  'camp',  camps,  function(v){return campColor(v)||'#888';});
+  mkPills('g-pills-prov',  'prov',  provs,  function(p){return PC[p]||'#888';});
+  mkPills('g-pills-arb',   'arb',   arbs,   function(a){var pv=P[a]&&P[a].provincia||'';return PC[pv]?PC[pv]:'#2c3e6b';});
+  mkPills('g-pills-campo', 'campo', campi,  function(v){var pv=cpv(v)||'';return PC[pv]||'#3d4d6b';});
+  mkPills('g-pills-sq',    'sq',    squads, function(v){var sq=SQ[v];var pv=sq&&(sq.prov||sq.provincia)||'';return PC[pv]||'#3d4d6b';});
+  mkPills('g-pills-citta', 'citta', citta,  function(){return'#0f6e56';});
+  mkPills('g-pills-ora',   'ora',   ore,    function(){return'#6b2f8a';});
 }
 function _gRenderChips(){
   var el=document.getElementById('g-chips');if(!el)return;
@@ -8848,13 +8897,12 @@ function openPersona(nome,campFilter){
         if(sqNonVisitate.length===0){
           html+='<div style="color:var(--green);font-size:.72rem;padding:6px 10px;background:#e6f8ee;border-radius:6px">✅ Tutte le squadre della provincia arbitrate almeno una volta!</div>';
         }else{
-          const campArbitrati=new Set(gaArb.map(g=>g.c||'').filter(Boolean));
           const byCamp={};
           sqNonVisitate.forEach(n=>{
             const s=SQ[n]||{};
-            const camps=Object.keys(s.campionati||{}).filter(cp=>campArbitrati.has(cp));
-            if(!camps.length)return;
-            const camp=camps.sort((a,b)=>(s.campionati[b]||0)-(s.campionati[a]||0))[0];
+            const allCamps=Object.keys(s.campionati||{});
+            if(!allCamps.length)return;
+            const camp=allCamps.sort((a,b)=>(s.campionati[b]||0)-(s.campionati[a]||0))[0];
             const pv=s.prov||'?';
             const key=camp+'||'+pv;
             if(!byCamp[key])byCamp[key]={camp,pv,sqs:[]};
@@ -12038,7 +12086,19 @@ function openGara(numGara){
       ['Arbitro 1',pLink('Arbitro 1','rn-Arbitro')],['Arbitro 2',pLink('Arbitro 2','rn-Arbitro')],
       ['Segnapunti',pLink('Segnapunti','')],['Cronometrista',pLink('Cronometrista','')],
       ['Osservatore',pLink('Osservatore','rn-Osservatore')],
-      ['Provvedimenti',g['Provvedimenti']?'<span style="color:#c0392b">'+escH(g['Provvedimenti'])+'</span>':'\u2014']]
+      ['Provvedimenti',(()=>{
+        const rawPv=g['Provvedimenti']||'';
+        if(!rawPv.trim()) return '\u2014';
+        const TCLR={inibitoria:'#8e44ad',squalifica:'#c0392b',ammonizione:'#e67e22',diffida:'#f39c12',sospensione:'#2c3e50',deplorazione:'#16a085',ammenda:'#8e5ea2','squalifica campo':'#c0392b',forfait:'#c0392b',provvedimento:'#7f8c8d'};
+        const pp=parseProvv(rawPv, casa, osp);
+        const badges=(pp&&pp.length?pp:[]).map(p=>{
+          const clr=TCLR[p.tipo]||'#888';
+          const badge='<span style="background:'+clr+';color:#fff;border-radius:3px;padding:2px 6px;font-size:.62rem;font-weight:700;text-transform:uppercase;white-space:nowrap;margin-right:4px">'+escH(p.tipo)+'</span>';
+          const who=(p.persona?'<b style="font-size:.72rem">'+escH(p.persona)+'</b> ':'')+(p.societa?'<span style="color:var(--mu);font-size:.68rem">'+escH(p.societa)+'</span>':'');
+          return '<div style="margin-bottom:3px">'+badge+who+'</div>';
+        }).join('');
+        return badges+'<div style="font-size:.72rem;margin-top:5px;color:var(--tx);line-height:1.45;white-space:pre-wrap">'+escH(rawPv)+'</div>';
+      })()]]
       .map(([k,v],i)=>'<tr style="background:'+(i%2?'var(--bl5)':'#fff')+'"><td style="padding:4px 8px;color:var(--mu);width:35%">'+k+'</td><td style="padding:4px 8px">'+v+'</td></tr>').join('')
     +'</table></div></div>';
   // ── Extra data for new tabs ───────────────────────────────────────────────
@@ -15047,7 +15107,7 @@ showPage=function(id){
   if(id==='h2h-arb') initH2HArb();
   if(id==='campi') initCampiPage();
   if(id==='prossime') initProssimePage();
-  if(id==='fiplive'){_buildFipLiveCampSelect();renderFipLive();}
+  if(id==='fiplive'){setTimeout(function(){_buildFipLiveCampSelect();renderFipLive();},0);}
 };
 
 // ── PROSSIME GARE ──────────────────────────────────────────────────────
@@ -15387,7 +15447,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   // ── Version badge (v7)
   if(document.getElementById('ver-badge')){
-    document.getElementById('ver-badge').textContent='v7.0  ·  '+((D.meta&&D.meta.generated||D.generated||'').slice(0,10)||'2026');
+    document.getElementById('ver-badge').textContent='v7.0  ·  0000-00-00  ·  #0000';
   }
   ['ft-pv','fa-pv','fu-pv','fo-pv','fs-pv','fg2-pv'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
@@ -16706,13 +16766,9 @@ function renderNazArbExt(){
 var _fipSesso='M';
 var _fipCampSel='';
 var _fipGironeSel='';
-var _fipInited=false;
 
 function initFipLive(){
-  if(!_fipInited){
-    _fipInited=true;
-    setFipLiveTab('M',document.getElementById('flt-m'));
-  }
+  setFipLiveTab('M',document.getElementById('flt-m'));
 }
 
 function setFipLiveTab(sesso,btn){
@@ -16775,13 +16831,12 @@ function _buildFipLiveGironeSelect(keepVal){
 }
 
 function renderFipLive(){
-  // Aggiorna select girone quando cambia campionato
+  try{
+  // Ricostruisce sempre il select campionato
+  _buildFipLiveCampSelect();
   var campSel=document.getElementById('fiplive-sel-camp');
   var gironeSel=document.getElementById('fiplive-sel-girone');
   var vistaSel=document.getElementById('fiplive-sel-vista');
-  // Ricostruisce sempre il select campionato se ha solo "Tutti"
-  if(!campSel||campSel.options.length<=1) _buildFipLiveCampSelect();
-  campSel=document.getElementById('fiplive-sel-camp');
   var _prevGirone=gironeSel?gironeSel.value:'';
   _fipCampSel=campSel?campSel.value:'';
   _buildFipLiveGironeSelect(_prevGirone);
@@ -16836,6 +16891,11 @@ function renderFipLive(){
 
   if(!html) html='<div style="color:var(--mu);padding:20px">Nessun dato per i filtri selezionati.</div>';
   body.innerHTML=html;
+  }catch(e){
+    var b=document.getElementById('fiplive-body');
+    if(b) b.innerHTML='<div style="color:#c0392b;padding:20px;font-family:monospace;font-size:.78rem">Errore FIP Live: '+escH(String(e))+'</div>';
+    console.error('renderFipLive error:',e);
+  }
 }
 
 function _fipCampColor(nome){
@@ -16927,4 +16987,33 @@ function _renderFipRisultati(girone,clr){
       h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
       h+=`<span style="color:var(--mu);width:70px;flex-shrink:0;font-size:.7rem">${escH(data)}</span>`;
       h+=`<span style="flex:1;text-align:right;font-weight:${casaW?'700':'400'}">${escH(casa)}</span>`;
-      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;tex
+      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;text-align:center">${sc?escH(sc):'–'}</span>`;
+      h+=`<span style="flex:1;font-weight:${ospW?'700':'400'}">${escH(osp)}</span>`;
+      h+=`</div>`;
+    });
+  });
+  h+='</div>';
+  return h;
+}
+
+function _renderFipProssime(girone,clr){
+  var rows=girone.prossime||[];
+  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessuna prossima gara disponibile.</div>';
+  var h='<div style="margin-bottom:14px">';
+  rows.forEach(r=>{
+    var data=r.data||'';var ora=r.ora||'';var casa=r.casa||'–';var osp=r.ospite||'–';
+    var campo=r.campo||'';var giornata=r.giornata?`G${r.giornata}`:'';
+    h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
+    h+=`<span style="color:var(--mu);width:90px;flex-shrink:0;font-size:.7rem">${escH(data)} ${escH(ora)}</span>`;
+    h+=`<span style="flex:1;text-align:right">${escH(casa)}</span>`;
+    h+=`<span style="margin:0 8px;font-weight:700;font-size:.8rem;color:var(--bl);min-width:54px;text-align:center">VS</span>`;
+    h+=`<span style="flex:1">${escH(osp)}</span>`;
+    if(campo)h+=`<span style="font-size:.67rem;color:var(--mu);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(campo)}">📍 ${escH(campo)}</span>`;
+    if(giornata)h+=`<span style="font-size:.67rem;color:${clr};font-weight:600;margin-left:4px">${giornata}</span>`;
+    h+=`</div>`;
+  });
+  h+='</div>';
+  return h;
+}
+</script>
+</body></html>
