@@ -15047,6 +15047,7 @@ showPage=function(id){
   if(id==='h2h-arb') initH2HArb();
   if(id==='campi') initCampiPage();
   if(id==='prossime') initProssimePage();
+  if(id==='fiplive'){_buildFipLiveCampSelect();renderFipLive();}
 };
 
 // ── PROSSIME GARE ──────────────────────────────────────────────────────
@@ -15386,7 +15387,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   // ── Version badge (v7)
   if(document.getElementById('ver-badge')){
-    document.getElementById('ver-badge').textContent='v7.0  ·  '+((D.meta&&D.meta.generated||'').slice(0,10)||'2026')+((D.generated||'').slice(0,10)||'2026');
+    document.getElementById('ver-badge').textContent='v7.0  ·  '+((D.meta&&D.meta.generated||D.generated||'').slice(0,10)||'2026');
   }
   ['ft-pv','fa-pv','fu-pv','fo-pv','fs-pv','fg2-pv'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
@@ -16778,8 +16779,9 @@ function renderFipLive(){
   var campSel=document.getElementById('fiplive-sel-camp');
   var gironeSel=document.getElementById('fiplive-sel-girone');
   var vistaSel=document.getElementById('fiplive-sel-vista');
-  // Salva selezione corrente prima di eventuali rebuild
-  if(campSel&&campSel.options.length<=1) _buildFipLiveCampSelect();
+  // Ricostruisce sempre il select campionato se ha solo "Tutti"
+  if(!campSel||campSel.options.length<=1) _buildFipLiveCampSelect();
+  campSel=document.getElementById('fiplive-sel-camp');
   var _prevGirone=gironeSel?gironeSel.value:'';
   _fipCampSel=campSel?campSel.value:'';
   _buildFipLiveGironeSelect(_prevGirone);
@@ -16925,5 +16927,4 @@ function _renderFipRisultati(girone,clr){
       h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
       h+=`<span style="color:var(--mu);width:70px;flex-shrink:0;font-size:.7rem">${escH(data)}</span>`;
       h+=`<span style="flex:1;text-align:right;font-weight:${casaW?'700':'400'}">${escH(casa)}</span>`;
-      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;text-align:center">${sc?escH(sc):'–'}</span>`;
-      h+=`<span style="flex:1;font-weight:${ospW?'700':'
+      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;tex
