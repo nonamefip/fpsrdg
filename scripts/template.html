@@ -7030,7 +7030,7 @@ function _gRenderTable(){
     else if(col==='osp')va=a['Squadra Ospite']||'',vb=b['Squadra Ospite']||'';
     else if(col==='pvosp'){va=SQ[a['Squadra Ospite']]&&SQ[a['Squadra Ospite']].prov||'';vb=SQ[b['Squadra Ospite']]&&SQ[b['Squadra Ospite']].prov||'';}
     var primary=_gSortAsc?va.localeCompare(vb,'it'):vb.localeCompare(va,'it');
-    if(primary\!==0)return primary;
+    if(primary!==0)return primary;
     return campSort(a['Campionato']||'')-campSort(b['Campionato']||'');
   });}
   var html='';
