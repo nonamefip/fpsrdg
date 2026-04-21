@@ -16751,6 +16751,8 @@ function renderFipLive(){
   var campSel=document.getElementById('fiplive-sel-camp');
   var gironeSel=document.getElementById('fiplive-sel-girone');
   var vistaSel=document.getElementById('fiplive-sel-vista');
+  // Salva selezione corrente prima di eventuali rebuild
+  if(campSel&&campSel.options.length<=1) _buildFipLiveCampSelect();
   var _prevGirone=gironeSel?gironeSel.value:'';
   _fipCampSel=campSel?campSel.value:'';
   _buildFipLiveGironeSelect(_prevGirone);
@@ -16877,6 +16879,4 @@ function _renderFipRisultati(girone,clr){
   if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessun risultato disponibile.</div>';
   // Raggruppa per giornata
   var byGiornata={};
-  rows.forEach(r=>{var g=r.giornata||'—';if(!byGiornata[g])byGiornata[g]=[];byGiornata[g].push(r);});
-  var h='<div style="margin-bottom:14px">';
-  // Ordina giornate num
+  rows.forEach(r=>{var g=r.giornata||'—';if(!
