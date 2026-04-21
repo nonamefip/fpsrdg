@@ -614,6 +614,16 @@ tr.loss-row td{background:#fdecea!important;}
 .split-block .sb-v{font-size:1.1rem;font-weight:800;color:var(--bl);}
 .split-block .sb-sub{font-size:.68rem;color:var(--mu);margin-top:1px;}
 
+/* ══════════ FIP LIVE ══════════ */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:var(--radius);overflow:hidden;}
+.tbl thead{background:var(--tbl-hdr);}
+.tbl th{color:#fff;padding:7px 9px;text-align:center;font-size:.67rem;font-weight:700;white-space:nowrap;}
+.tbl th:nth-child(2){text-align:left;}
+.tbl td{padding:6px 9px;border-bottom:1px solid var(--tbl-bd);text-align:center;vertical-align:middle;}
+.tbl td:nth-child(2){text-align:left;font-weight:600;}
+.tbl tbody tr:nth-child(even){background:var(--tbl-even);}
+.tbl tbody tr:hover{background:var(--tbl-hover);}
+.fiplive-camp-card{background:#fff;border:1px solid var(--br);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow-sm);border-top:4px solid #1a3060;}
 /* ══════════ DOW CHART ══════════ */
 .dow-chart{display:flex;align-items:flex-end;gap:4px;height:50px;padding:4px 0;}
 .dow-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
@@ -5543,16 +5553,42 @@ function gmTogglePill(btn,type,val){
   }
   const rab=mo.querySelector('#gm-reset-all-btn');
   if(rab)rab.style.display=Object.values(_gmS).some(x=>x.size>0)?'inline-flex':'none';
+  if(type==='prov')gmUpdateCittaCascade();
   gmApplyPillFilters();
+}
+function gmUpdateCittaCascade(){
+  const mo=document.getElementById('dyn-mo-giorno');if(!mo)return;
+  const provSel=_gmS.prov;
+  const cittaEl=mo.querySelectorAll('[data-gm-pill="citta"]');
+  if(provSel.size===0){
+    cittaEl.forEach(p=>{p.style.display='';});
+    return;
+  }
+  // Costruisci mapping città → province dalle righe della tabella
+  const cityProv={};
+  mo.querySelectorAll('#tbl-giorno-body tr').forEach(r=>{
+    const city=r.dataset.citta||'';const prov=r.dataset.prov||'';
+    if(city&&prov){if(!cityProv[city])cityProv[city]=new Set();cityProv[city].add(prov);}
+  });
+  cittaEl.forEach(p=>{
+    const city=p.dataset.gmVal||'';
+    const validProvs=cityProv[city]||new Set();
+    const visible=[...provSel].some(pv=>validProvs.has(pv));
+    p.style.display=visible?'':'none';
+    if(!visible&&_gmS.citta&&_gmS.citta.has(city)){
+      _gmS.citta.delete(city);p.style.opacity='1';p.style.boxShadow='';
+    }
+  });
 }
 function gmResetGrp(type){
   _gmS[type].clear();
   const mo=document.getElementById('dyn-mo-giorno');if(!mo)return;
-  mo.querySelectorAll('[data-gm-pill="'+type+'"]').forEach(p=>{p.style.opacity='1';p.style.boxShadow='';});
+  mo.querySelectorAll('[data-gm-pill="'+type+'"]').forEach(p=>{p.style.opacity='1';p.style.boxShadow='';p.style.display='';});
   const fc=mo.querySelector('#gm-fc-'+type);
   if(fc){const ob=fc.querySelector('.gm-cnt');if(ob)ob.remove();fc.style.borderColor='';fc.style.color='';}
   const rab=mo.querySelector('#gm-reset-all-btn');
   if(rab)rab.style.display=Object.values(_gmS).some(x=>x.size>0)?'inline-flex':'none';
+  if(type==='prov')gmUpdateCittaCascade();
   gmApplyPillFilters();
 }
 function gmResetAll(){['camp','prov','arb','campo','citta'].forEach(t=>gmResetGrp(t));}
@@ -14156,7 +14192,7 @@ function parseProvv(testo, casaGara, ospiteGara) {
   }
 
   return righeUniche.map(r => {
-    const p = { raw: r, societa:'', persona:'', tipo:'', dal:'', al:'', motivo:'', articolo:'' };
+    const p = { raw: r, societa:'', persona:'', tipo:'', dal:'', al:'', motivo:'', articolo:'', importo:'' };
 
     // Formato: "soc. SOCIETA:COSA tipo..." oppure "SOCIETA:COSA tipo..."
     const colonM = r.match(/^(?:soc\.\s*)?([^:]+):(.+)/i);
@@ -14212,6 +14248,9 @@ function parseProvv(testo, casaGara, ospiteGara) {
     // Articolo
     const artM = r.match(/\[?art\.?\s*([\d,/\w]+)\s*(?:RG|RS|RGI|C\.G\.)?\]?/i);
     if(artM) p.articolo = artM[1];
+    // Importo ammenda (es. "Euro 200,00" o "Euro 50")
+    const importoM = r.match(/[Ee]uro\s+([\d.]+(?:[,.]\d{1,2})?)/i);
+    if(importoM) p.importo = '€\u00a0' + importoM[1].replace('.',',');
     // Motivo — salta la parte (nato/a ...) e prende il vero motivo
     const restoSenzaNato = r.replace(/\(nato\/a[^)]*\)/gi, '').replace(/\s{2,}/g,' ');
     const motM = restoSenzaNato.match(/\bper\s+(.+?)(?:\s*\[art|\s*$)/i);
@@ -14420,6 +14459,7 @@ function renderProvvedimenti(){
       <td style="font-size:.7rem">${a1n?`<span class="rn rn-Arbitro" onclick="openPersona('${esc(a1n)}')">${escH(a1n)}</span>`:'—'}${a2n?`<span style="color:var(--mu);margin:0 2px">/</span><span class="rn rn-Arbitro" onclick="openPersona('${esc(a2n)}')">${escH(a2n)}</span>`:''}</td>
       <td style="text-align:center">
         <span style="background:${tipoClr};color:#fff;border-radius:3px;padding:2px 6px;font-size:.65rem;font-weight:700;text-transform:uppercase">${pp.tipo}</span>
+        ${pp.importo?`<span style="display:block;font-size:.72rem;font-weight:700;color:#8e5ea2;margin-top:2px">${escH(pp.importo)}</span>`:''}
         ${statoBadge?'<br>'+statoBadge:''}
         ${dateRange}
       </td>
@@ -15431,7 +15471,7 @@ function swGrt(n){
     var btn=document.getElementById('grt-btn-'+i);
     if(el) el.style.display=(i===n)?'':'none';
     if(btn){
-      btn.className='btn '+(i===n?'b-bl':'');
+      btn.className='btn '+(i===n?'b-bl':'b-gr');
       btn.style.fontSize='.75rem';
     }
   });
@@ -15446,7 +15486,7 @@ function initGironi(camp){
     var el=document.getElementById('grt-'+i);
     var btn=document.getElementById('grt-btn-'+i);
     if(el){el.style.display=(i===0)?'':'none'; el.innerHTML='';}
-    if(btn){btn.className='btn '+(i===0?'b-bl':''); btn.style.fontSize='.75rem';}
+    if(btn){btn.className='btn '+(i===0?'b-bl':'b-gr'); btn.style.fontSize='.75rem';}
   }
   _grtDone[0]=true;
   renderGrt(0);
@@ -16684,7 +16724,7 @@ function _buildFipLiveCampSelect(){
   _buildFipLiveGironeSelect();
 }
 
-function _buildFipLiveGironeSelect(){
+function _buildFipLiveGironeSelect(keepVal){
   var campSel=document.getElementById('fiplive-sel-camp');
   var sel=document.getElementById('fiplive-sel-girone');
   if(!sel||!campSel)return;
@@ -16694,11 +16734,14 @@ function _buildFipLiveGironeSelect(){
   if(!gironi||gironi.length<=1){
     sel.innerHTML='<option value="">—</option>';
     sel.disabled=true;
+    _fipGironeSel='';
   } else {
     sel.disabled=false;
     sel.innerHTML='<option value="">Tutti</option>'+gironi.map(g=>`<option value="${escH(g.nome)}">${escH(g.nome)}</option>`).join('');
+    var target=keepVal!==undefined?keepVal:(_fipGironeSel||'');
+    sel.value=target;
+    if(sel.value!==target) sel.value='';
   }
-  sel.value=_fipGironeSel||'';
 }
 
 function renderFipLive(){
@@ -16706,8 +16749,9 @@ function renderFipLive(){
   var campSel=document.getElementById('fiplive-sel-camp');
   var gironeSel=document.getElementById('fiplive-sel-girone');
   var vistaSel=document.getElementById('fiplive-sel-vista');
+  var _prevGirone=gironeSel?gironeSel.value:'';
   _fipCampSel=campSel?campSel.value:'';
-  _buildFipLiveGironeSelect();
+  _buildFipLiveGironeSelect(_prevGirone);
   _fipGironeSel=gironeSel?gironeSel.value:'';
   var vista=vistaSel?vistaSel.value:'classifica';
 
@@ -16738,23 +16782,23 @@ function renderFipLive(){
 
     // Header campionato
     var clr=_fipCampColor(camp.nome);
-    html+=`<div style="margin-bottom:20px">`;
-    html+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">`;
-    html+=`<span style="display:inline-block;width:5px;height:28px;border-radius:3px;background:${clr};flex-shrink:0"></span>`;
-    html+=`<span style="font-size:.95rem;font-weight:800;color:var(--bl)">${escH(camp.nome)}</span>`;
-    html+=`<span style="font-size:.7rem;color:var(--mu);margin-left:4px">${camp.sesso==='F'?'♀ Femminile':'♂ Maschile'}</span>`;
+    html+=`<div class="fiplive-camp-card" style="border-top-color:${clr}">`;
+    html+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">`;
+    html+=`<span style="display:inline-block;width:6px;height:32px;border-radius:3px;background:${clr};flex-shrink:0"></span>`;
+    html+=`<div><div style="font-size:1rem;font-weight:800;color:var(--bl)">${escH(camp.nome)}</div>`;
+    html+=`<div style="font-size:.7rem;color:var(--mu);margin-top:1px">${camp.sesso==='F'?'♀ Femminile':'♂ Maschile'}</div></div>`;
     html+=`</div>`;
 
     gironi.forEach(girone=>{
       if(gironi.length>1){
-        html+=`<div style="font-size:.78rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 6px 13px">Girone ${escH(girone.nome)}</div>`;
+        html+=`<div style="font-size:.78rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 6px 4px">Girone ${escH(girone.nome)}</div>`;
       }
       if(vista==='classifica') html+=_renderFipClassifica(girone,clr);
       else if(vista==='risultati') html+=_renderFipRisultati(girone,clr);
       else html+=_renderFipProssime(girone,clr);
     });
 
-    html+=`</div>`;
+    html+=`</div>`; // fiplive-camp-card
   });
 
   if(!html) html='<div style="color:var(--mu);padding:20px">Nessun dato per i filtri selezionati.</div>';
@@ -16833,42 +16877,4 @@ function _renderFipRisultati(girone,clr){
   var byGiornata={};
   rows.forEach(r=>{var g=r.giornata||'—';if(!byGiornata[g])byGiornata[g]=[];byGiornata[g].push(r);});
   var h='<div style="margin-bottom:14px">';
-  // Ordina giornate numericamente (desc: più recenti prima)
-  var giornateKeys=Object.keys(byGiornata).sort((a,b)=>{
-    var na=parseInt(a,10),nb=parseInt(b,10);
-    if(!isNaN(na)&&!isNaN(nb))return nb-na;
-    return b>a?1:-1;
-  });
-  giornateKeys.forEach(g=>{
-    var gare=byGiornata[g];
-    h+=`<div style="font-size:.75rem;font-weight:700;color:${clr};text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px 4px">Giornata ${g}</div>`;
-    gare.forEach(r=>{
-      var data=r.data||'';
-      var casa=r.casa||'–';var osp=r.ospite||'–';
-      var sc=r.punteggio||'';var pf=sc.split('-')[0]||'';var ps=sc.split('-')[1]||'';
-      var casaW=pf&&ps&&parseInt(pf)>parseInt(ps);var ospW=pf&&ps&&parseInt(ps)>parseInt(pf);
-      h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
-      h+=`<span style="color:var(--mu);width:70px;flex-shrink:0;font-size:.7rem">${escH(data)}</span>`;
-      h+=`<span style="flex:1;text-align:right;font-weight:${casaW?'700':'400'}">${escH(casa)}</span>`;
-      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;text-align:center">${sc?escH(sc):'–'}</span>`;
-      h+=`<span style="flex:1;font-weight:${ospW?'700':'400'}">${escH(osp)}</span>`;
-      h+=`</div>`;
-    });
-  });
-  h+='</div>';
-  return h;
-}
-
-function _renderFipProssime(girone,clr){
-  var rows=girone.prossime||[];
-  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessuna prossima gara disponibile.</div>';
-  var h='<div style="margin-bottom:14px">';
-  rows.forEach(r=>{
-    var data=r.data||'';var ora=r.ora||'';var casa=r.casa||'–';var osp=r.ospite||'–';
-    var campo=r.campo||'';var giornata=r.giornata?`G${r.giornata}`:'';
-    h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
-    h+=`<span style="color:var(--mu);width:90px;flex-shrink:0;font-size:.7rem">${escH(data)} ${escH(ora)}</span>`;
-    h+=`<span style="flex:1;text-align:right">${escH(casa)}</span>`;
-    h+=`<span style="margin:0 8px;font-weight:700;font-size:.8rem;color:var(--bl);min-width:54px;text-align:center">VS</span>`;
-    h+=`<span style="flex:1">${escH(osp)}</span>`;
-    if(campo)h+=`<span style="font-size:.67rem;color:var(--mu);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escH(campo)}">📍 ${escH(campo)}</span>`;
+  // Ordina giornate num
