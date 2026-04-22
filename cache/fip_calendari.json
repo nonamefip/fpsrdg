@@ -78901,8 +78901,8 @@
   "Under 14 Maschile Regionale": {
     "campionato": "Under 14 Maschile Regionale",
     "n_gare": 348,
-    "n_giocate": 273,
-    "n_programmate": 75,
+    "n_giocate": 274,
+    "n_programmate": 74,
     "data_inizio": "2025-11-02",
     "data_fine": "2026-05-06",
     "n_fasi": 2,
@@ -89063,9 +89063,9 @@
                     "Fase": "Seconda Fase",
                     "Squadra Casa": "ASTRO SSDRL",
                     "Squadra Ospite": "AZZURRA BASKET",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "74",
+                    "Punti Ospite": "68",
+                    "Risultato": "74-68",
                     "Stato Gara": "",
                     "Campo": "PALESTRA SCUOLA EL. A.FRANK, Ottaviano Augusto 09028 SESTU ( CA)",
                     "Arbitro 1": "COCCO MATTIA di QUARTU SANT'ELENA (CA)",
@@ -89188,7 +89188,7 @@
                     "Addetto Referto": "",
                     "Osservatore": "",
                     "Provvedimenti": "",
-                    "_pt_cum_casa": 2,
+                    "_pt_cum_casa": 4,
                     "_pt_cum_osp": 2
                   }
                 ],
@@ -89211,6 +89211,18 @@
                 "pos": 1
               },
               {
+                "sq": "ASTRO SSDRL",
+                "g": 3,
+                "v": 2,
+                "s": 1,
+                "par": 0,
+                "pf": 187,
+                "ps": 177,
+                "punti": 4,
+                "diff": 10,
+                "pos": 2
+              },
+              {
                 "sq": "G.S.O. ELMAS",
                 "g": 1,
                 "v": 1,
@@ -89220,18 +89232,6 @@
                 "ps": 91,
                 "punti": 2,
                 "diff": 18,
-                "pos": 2
-              },
-              {
-                "sq": "ASTRO SSDRL",
-                "g": 2,
-                "v": 1,
-                "s": 1,
-                "par": 0,
-                "pf": 113,
-                "ps": 109,
-                "punti": 2,
-                "diff": 4,
                 "pos": 3
               },
               {
@@ -89260,14 +89260,14 @@
               },
               {
                 "sq": "AZZURRA BASKET",
-                "g": 2,
+                "g": 3,
                 "v": 0,
-                "s": 2,
+                "s": 3,
                 "par": 0,
-                "pf": 130,
-                "ps": 186,
+                "pf": 198,
+                "ps": 260,
                 "punti": 0,
-                "diff": -56,
+                "diff": -62,
                 "pos": 6
               }
             ],
@@ -95977,8 +95977,8 @@
   "Under 15 Maschile Regionale": {
     "campionato": "Under 15 Maschile Regionale",
     "n_gare": 237,
-    "n_giocate": 192,
-    "n_programmate": 45,
+    "n_giocate": 193,
+    "n_programmate": 44,
     "data_inizio": "2025-10-25",
     "data_fine": "2026-05-03",
     "n_fasi": 2,
@@ -103261,9 +103261,9 @@
                     "Fase": "Seconda Fase Sud",
                     "Squadra Casa": "NUOVO BASKET A.S.D.",
                     "Squadra Ospite": "SCUOLA BASKET CARBONIA",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "21",
+                    "Punti Ospite": "87",
+                    "Risultato": "21-87",
                     "Stato Gara": "",
                     "Campo": "Palestra I.T.I.S. Othoca, Via Zara snc - Z.I. 09170 ORISTANO ( OR)",
                     "Arbitro 1": "TURNU ALESSIO di MARRUBIU (OR)",
@@ -103279,7 +103279,7 @@
                     "_pt_cum_osp": 6
                   }
                 ],
-                "completa": false,
+                "completa": true,
                 "data_label": "22 apr"
               },
               {
@@ -103308,7 +103308,7 @@
                     "Addetto Referto": "",
                     "Osservatore": "",
                     "Provvedimenti": "",
-                    "_pt_cum_casa": 6,
+                    "_pt_cum_casa": 8,
                     "_pt_cum_osp": 6
                   }
                 ],
@@ -103344,14 +103344,14 @@
               },
               {
                 "sq": "SCUOLA BASKET CARBONIA",
-                "g": 4,
-                "v": 3,
+                "g": 5,
+                "v": 4,
                 "s": 1,
                 "par": 0,
-                "pf": 257,
-                "ps": 167,
-                "punti": 6,
-                "diff": 90,
+                "pf": 344,
+                "ps": 188,
+                "punti": 8,
+                "diff": 156,
                 "pos": 3
               },
               {
@@ -103367,18 +103367,6 @@
                 "pos": 4
               },
               {
-                "sq": "NUOVO BASKET A.S.D.",
-                "g": 5,
-                "v": 0,
-                "s": 5,
-                "par": 0,
-                "pf": 193,
-                "ps": 446,
-                "punti": 0,
-                "diff": -253,
-                "pos": 5
-              },
-              {
                 "sq": "BASKET LANUSEI",
                 "g": 6,
                 "v": 0,
@@ -103388,6 +103376,18 @@
                 "ps": 521,
                 "punti": 0,
                 "diff": -260,
+                "pos": 5
+              },
+              {
+                "sq": "NUOVO BASKET A.S.D.",
+                "g": 6,
+                "v": 0,
+                "s": 6,
+                "par": 0,
+                "pf": 214,
+                "ps": 533,
+                "punti": 0,
+                "diff": -319,
                 "pos": 6
               }
             ],
@@ -107480,7 +107480,7 @@
                     "Stato Gara": "",
                     "Campo": "Tensostruttura, Via Baronie - Flumini 09045 QUARTU SANT'ELENA ( CA)",
                     "Arbitro 1": "",
-                    "Arbitro 2": "",
+                    "Arbitro 2": "BELTRAMINI ROBERTO di CAPOTERRA (CA)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
                     "Cronometrista": "",
@@ -128380,8 +128380,8 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "PALESTRA SCUOLA EL. A.FRANK, Ottaviano Augusto 09028 SESTU ( CA)",
-                    "Arbitro 1": "",
-                    "Arbitro 2": "",
+                    "Arbitro 1": "FARCI DANIELE di CAGLIARI (CA)",
+                    "Arbitro 2": "COCCO MATTIA di QUARTU SANT'ELENA (CA)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
                     "Cronometrista": "",
@@ -134333,7 +134333,7 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "Palestra Luca Simula, Via Poligono 2 07100 SASSARI ( SS)",
-                    "Arbitro 1": "",
+                    "Arbitro 1": "CHERCHI FEDERICO di SASSARI (SS)",
                     "Arbitro 2": "",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -134359,7 +134359,7 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "Palestra Comunale G.P.Murratzu, Via San Leonardo 07014 OZIERI ( SS)",
-                    "Arbitro 1": "",
+                    "Arbitro 1": "BORTOLATO FILIPPO di SASSARI (SS)",
                     "Arbitro 2": "",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -134385,8 +134385,8 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "PALASERRADIMIGNI, Piazza Segni 07100 SASSARI ( SS)",
-                    "Arbitro 1": "",
-                    "Arbitro 2": "",
+                    "Arbitro 1": "MAMELI MARCO di ITTIRI (SS)",
+                    "Arbitro 2": "MANCA MARIO di SASSARI (SS)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
                     "Cronometrista": "",
@@ -135400,7 +135400,7 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "PALAZZETTO DELLO SPORT , VIA MOROSINI 09170 ORISTANO ( OR)",
-                    "Arbitro 1": "",
+                    "Arbitro 1": "ZARA MASSIMO di ORISTANO (OR)",
                     "Arbitro 2": "",
                     "Arbitro 3": "",
                     "Segnapunti": "",
