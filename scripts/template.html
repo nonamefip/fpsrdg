@@ -7771,46 +7771,37 @@ function openPersona(nome,campFilter){
         <div class="sc" style="background:#2c0066;border-color:#9c27b0"><div class="sv" style="color:#ce93d8">${_qMedal}${_qRankMe}°</div><div class="sv" style="font-size:.58rem;color:#9c27b0">${_qTotMe} arb.</div><div class="sl" style="color:#b39ddb">🏅 Q</div></div>
         <div class="sc" style="background:#1a0040;border-color:#6a1b9a"><div class="sv" style="color:#e040fb">${_lvqMedal}${_lvqRankMe}°</div><div class="sv" style="font-size:.58rem;color:#6a1b9a">${_lvqTotMe} arb.</div><div class="sl" style="color:#ce93d8">🎖 Lv-Q</div></div>
       </div>
-      <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">🚗 Km & Trasferte</div>
-      <div class="scs" style="margin-bottom:14px" data-pnome="${escH(p.nome)}">
+      <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">🚗 Km & Trasferte &nbsp;·&nbsp; 💶 Rimborsi</div>
+      <div class="scs" style="margin-bottom:8px" data-pnome="${escH(p.nome)}">
         ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div>${rankBadgeDyn(km,_kmArr)}<div class="sl">Km stimati</div></div>`:''}
         ${kmGara>0?`<div class="sc"><div class="sv">${kmGara}</div>${rankBadgeDyn(kmGara,_kmGaraArr)}<div class="sl">Km/gara</div></div>`:''}
         <div class="sc" style="background:#1565c0;border-color:#90caf9;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'sede')" title="Clicca per vedere le gare in sede"><div class="sv" style="color:#bbdefb">${_trsP.inSede||0}</div>${rankBadgeDyn(_trsP.inSede||0,_inSedeArr)}<div class="sl" style="color:#90caf9">In sede ↗</div></div>
         <div class="sc" style="background:#1b5e20;border-color:#81c784;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'corta')" title="Clicca per vedere le gare ≤100km"><div class="sv" style="color:#a5d6a7">${_trsP.corta||0}</div>${rankBadgeDyn(_trsP.corta||0,_trsArr)}<div class="sl" style="color:#81c784">&lt;50km ↗</div></div>
         <div class="sc" style="background:#b71c1c;border-color:#ef9a9a;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'lunga')" title="Clicca per vedere le gare >100km"><div class="sv" style="color:#ffcdd2">${_trsP.lunga||0}</div>${rankBadgeDyn(_trsP.lunga||0,_rLungArr)}<div class="sl" style="color:#ef9a9a">&gt;100km ↗</div></div>
-      </div>
-      <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">💶 Rimborsi stimati</div>
-      <div class="scs" style="margin-bottom:14px">
         <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#2e7d32">€ ${rGettoneP}</div>${rankBadgeDyn(rGettoneP,_rGettArr)}<div class="sl">Gettone</div></div>
         <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#1b5e20">€ ${rBenzinaP.toFixed(0)}</div>${rankBadgeDyn(rBenzinaP,_rBenzArr)}<div class="sl">Benzina</div></div>
         <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#33691e">€ ${rAccessorieP.toFixed(0)}</div>${rankBadgeDyn(rAccessorieP,_rAccArr)}<div class="sl">Accessorie</div></div>
         <div class="sc" style="background:#2e7d32;border-color:#1b5e20"><div class="sv" style="color:#fff;font-size:1.2rem">€ ${rTotaleP.toFixed(0)}</div>${rankBadgeDyn(rTotaleP,_rTotArr)}<div class="sl" style="color:#a5d6a7">Totale €</div></div>
       </div>
-      <!-- Rimborsi già mostrati nei quadratini sopra -->
-      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-        ${streakCur>=2||streakMax>=3?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
-          <div class="card-title">🔥 Streak <span style="font-size:.6rem;font-weight:400;color:var(--mu)">(gare arbitrate senza interruzione di 2+ giorni)</span></div>
-          <div><span class="streak-badge">🔥 ${streakCur} di fila</span></div>
-          <div style="font-size:.68rem;color:var(--mu);margin-top:4px">Record stagionale: <b>${streakMax}</b></div>
-        </div>`:''}
-        ${forma.length?`<div class="card" style="flex:1;min-width:140px;margin-bottom:0">
-          <div class="card-title">📈 Ultime ${forma.length} gare <span style="font-size:.6rem;font-weight:400;color:var(--mu)">(🟢=V 🔴=P)</span></div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap">${formaDots}</div>
-        </div>`:''}
-        <div class="card" style="flex:2;min-width:180px;margin-bottom:0">
-          <div class="card-title">📅 Per giorno settimana <span style="font-size:.6rem;font-weight:400;color:var(--mu)">(numero gare arbitrate)</span></div>
-          <div class="dow-chart">${dowBars}</div>
+      <!-- Streak + Forma + DOW in 2-column layout with Copertura -->
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-bottom:8px;align-items:start">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${streakCur>=2||streakMax>=3?`<div class="card" style="margin-bottom:0">
+            <div class="card-title">🔥 Streak</div>
+            <div><span class="streak-badge">🔥 ${streakCur} di fila</span></div>
+            <div style="font-size:.68rem;color:var(--mu);margin-top:4px">Record: <b>${streakMax}</b></div>
+          </div>`:''}
+          ${forma.length?`<div class="card" style="margin-bottom:0">
+            <div class="card-title">📈 Ultime ${forma.length} gare</div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap">${formaDots}</div>
+          </div>`:''}
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title">📅 Per giorno settimana</div>
+            <div class="dow-chart">${dowBars}</div>
+          </div>
         </div>
-      </div>
-      <!-- Km + Copertura (Attività mensile è nel Trend sotto) -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-        ${km>0?`<div class="card" style="margin-bottom:0">
-          <div class="card-title">🚗 Km stimati stagione</div>
-          <div style="font-size:1.6rem;font-weight:900;color:var(--bl)">${km.toLocaleString('it')}</div>
-          <div style="font-size:.72rem;color:var(--mu);margin-top:4px">${p.n_gare_arbitro||allG.length} trasferte · media ${kmGara} km/gara</div>
-        </div>`:'<div></div>'}
         <div class="card" style="margin-bottom:0">
-          <div class="card-title">🔵 Copertura arbitrale</div>
+          <div class="card-title">🔵 Copertura arbitrale${km>0?` &nbsp;<span style="font-weight:400;font-size:.65rem;color:var(--mu)">· 🚗 ${km.toLocaleString('it')} km totali · ${kmGara} km/gara</span>`:''}</div>
           ${(()=>{
             const nArb=p.n_gare_arbitro||0, nSing=p.n_singolo||0, nDopp=nArb-nSing;
             const pctDopp=nArb?Math.round(nDopp/nArb*100):0;
@@ -16897,4 +16888,24 @@ function _renderFipClassifica(girone,clr){
       <td style="text-align:center;color:var(--green)">${r.vinte||0}</td>
       <td style="text-align:center;color:var(--red)">${r.perse||0}</td>
       <td style="text-align:center;font-weight:700;color:var(--bl)">${pt}</td>
-      <td style="text-alig
+      <td style="text-align:center">${pf}</td>
+      <td style="text-align:center">${ps}</td>
+      <td style="text-align:center;color:${diffClr};font-weight:600">${diffStr}</td>
+      <td style="text-align:center;color:var(--mu)">${win}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  return h;
+}
+
+function _renderFipRisultati(girone,clr){
+  var rows=girone.risultati||[];
+  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessun risultato disponibile.</div>';
+  // Raggruppa per giornata
+  var byGiornata={};
+  rows.forEach(r=>{var g=r.giornata||'—';if(!byGiornata[g])byGiornata[g]=[];byGiornata[g].push(r);});
+  var h='<div style="margin-bottom:14px">';
+  // Ordina giornate numericamente (desc: più recenti prima)
+  var giornateKeys=Object.keys(byGiornata).sort((a,b)=>{
+    var na=parseInt(a,10),nb=parseInt(b,10);
+    if(!isN
