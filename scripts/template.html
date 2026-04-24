@@ -10716,7 +10716,7 @@ function openCampionato(camp){
           fasiUniche.forEach((fase,fi)=>{
             const li=faseLabelIcon(fase);
             const isFirst=fi===0;
-            tabsHtml+='<button onclick="campCalFaseSwitch(\''+calId+'\','+fi+')" id="'+calId+'_ft'+fi+'" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:8px;border:1.5px solid '+(isFirst?li.color:'var(--br)')+';background:'+(isFirst?li.color+'18':'#fff')+';color:'+(isFirst?li.color:'var(--mu)')+';font-size:.73rem;font-weight:'+(isFirst?'700':'400')+';cursor:pointer">'+li.icon+' '+li.label+'</button>';
+            tabsHtml+='<button onclick="campCalFaseSwitch(\''+calId+'\','+fi+')" id="'+calId+'_ft'+fi+'" data-fase-color="'+li.color+'" style="display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:8px;border:1.5px solid '+(isFirst?li.color:'var(--br)')+';background:'+(isFirst?li.color+'18':'#fff')+';color:'+(isFirst?li.color:'var(--mu)')+';font-size:.73rem;font-weight:'+(isFirst?'700':'400')+';cursor:pointer">'+li.icon+' '+li.label+'</button>';
           });
           tabsHtml+='</div>';
           // Per ogni fase, contenitore con sub-tabs gironi
@@ -10729,7 +10729,7 @@ function openCampionato(camp){
               fgDiFase.forEach((fg,gi)=>{
                 const fgIdx=allFasiGironi.indexOf(fg);
                 const isFirst=gi===0;
-                tabsHtml+='<button onclick="campCalSwitch(\''+calId+'\','+fgIdx+')" id="'+calId+'_gt'+fgIdx+'" style="padding:4px 12px;border-radius:6px;border:0.5px solid '+(isFirst?li.color:'var(--br)')+';background:'+(isFirst?li.color+'15':'#fff')+';color:'+(isFirst?li.color:'var(--mu)')+';font-size:.7rem;cursor:pointer">'+escH(fg.girone)+'</button>';
+                tabsHtml+='<button onclick="campCalSwitch(\''+calId+'\','+fgIdx+')" id="'+calId+'_gt'+fgIdx+'" data-fase-color="'+li.color+'" style="padding:4px 12px;border-radius:6px;border:0.5px solid '+(isFirst?li.color:'var(--br)')+';background:'+(isFirst?li.color+'15':'#fff')+';color:'+(isFirst?li.color:'var(--mu)')+';font-size:.7rem;cursor:pointer">'+escH(fg.girone)+'</button>';
               });
               tabsHtml+='</div>';
             }
@@ -11262,7 +11262,8 @@ function openCampionato(camp){
 
           gridHtml+=matrixHtml;
 
-          return'<div id="'+calId+'_fg'+fgIdx+'" style="'+(fgIdx>0?'display:none':'')+'">'
+          const _fi=fasiUniche.indexOf(fg.fase);
+          return'<div id="'+calId+'_fg'+fgIdx+'" data-fase-idx="'+_fi+'" style="'+(fgIdx>0?'display:none':'')+'">'
             +(allFasiGironi.length===1?'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 14px;border-radius:8px;background:'+faseLabelIcon(fg.fase).color+'15;border-left:4px solid '+faseLabelIcon(fg.fase).color+'"><span style="font-size:1.1rem">'+faseLabelIcon(fg.fase).icon+'</span><div><div style="font-size:.76rem;font-weight:700;color:'+faseLabelIcon(fg.fase).color+'">'+faseLabelIcon(fg.fase).label+'</div><div style="font-size:.65rem;color:var(--mu)">'+escH(fg.fase)+(fg.girone?' · '+escH(fg.girone):'')+'</div></div></div>':'')
             +'<div id="'+calId+'_classic'+fgIdx+'">'+classicHtml+'</div>'
             +'<div id="'+calId+'_grid'+fgIdx+'" style="display:none">'+gridHtml+'</div>'
@@ -14601,17 +14602,8 @@ function renderH2HArb(){
   if(tlWrap&&tlLegend){
     tlWrap.style.display='block';
     const campList=[...new Set(arbData.flatMap(a=>a.g.map(g=>g.c||g.Campionato||'')))].filter(Boolean).sort((a,b)=>campSortH2H(a)-campSortH2H(b));
-    // Colori fissi per importanza campionato
-    const CAMP_COLORS={'Serie B':'#1a237e','Serie C':'#283593','Divisione regionale 1':'#1565c0',
-      'Divisione regionale 2':'#1976d2','Under 19':'#0288d1','Under 17':'#0097a7',
-      'Under 15':'#00796b','Under 14':'#388e3c','Under 13':'#689f38',
-      'Coppa':'#f57f17','Femminile':'#c2185b','Gold':'#e65100','Eccellenza':'#6a1b9a','Regionale':'#78909c'};
-    function getCampColor(c){
-      const cu=(c||'').toUpperCase();
-      for(const[k,v] of Object.entries(CAMP_COLORS)){if(cu.includes(k.toUpperCase()))return v;}
-      return '#90a4ae';
-    }
-    const campColors=campList.reduce((acc,c)=>{acc[c]=getCampColor(c);return acc;},{});
+    // Usa i colori campionato globali (stessi del resto della dashboard)
+    const campColors=campList.reduce((acc,c)=>{acc[c]=campColor(c);return acc;},{});
     // Altezza rettangolo proporzionale all'importanza (Serie B=60px, scende per categorie minori)
     function getCampH(c){return Math.max(18,60-campSortH2H(c)*4);}
     const isActive=c=>_h2hTimelineActiveCamps.size===0||_h2hTimelineActiveCamps.has(c);
@@ -15382,7 +15374,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   // ── Version badge (v7)
   if(document.getElementById('ver-badge')){
-    document.getElementById('ver-badge').textContent='v7.0  ·  '+((D.meta&&D.meta.generated||D.generated||'').slice(0,10)||'2026');
+    document.getElementById('ver-badge').textContent='v7.0  ·  0000-00-00  ·  #0000';
   }
   ['ft-pv','fa-pv','fu-pv','fo-pv','fs-pv','fg2-pv'].forEach(id=>{
     const el=document.getElementById(id);if(!el)return;
@@ -16093,10 +16085,26 @@ function grtOriginali(gironi,garecamp,camp,clr){
 }
 
 function campCalSwitch(id,idx){
+  // Mostra solo il pannello con l'id corrispondente, lascia gli altri invariati per fase
+  var faseIdx=window['_calCurrFase_'+id]||0;
   var panels=document.querySelectorAll('[id^="'+id+'_fg"]');
-  panels.forEach(function(el,i){el.style.display=i===idx?'':'none';});
+  panels.forEach(function(el){
+    var elFase=parseInt(el.dataset.faseIdx||'0');
+    if(elFase===faseIdx){
+      var thisFgIdx=parseInt(el.id.replace(id+'_fg',''));
+      el.style.display=thisFgIdx===idx?'':'none';
+    }
+    // pannelli di altre fasi rimangono nascosti
+  });
   var tabs=document.querySelectorAll('[id^="'+id+'_gt"]');
-  tabs.forEach(function(bt,i){bt.style.background=i===idx?'#e6f1fb':'#fff';bt.style.color=i===idx?'#0c447c':'var(--mu)';bt.style.borderColor=i===idx?'#185fa5':'var(--br)';});
+  tabs.forEach(function(bt){
+    var thisFgIdx=parseInt(bt.id.replace(id+'_gt',''));
+    var col=bt.dataset.faseColor||'#185fa5';
+    bt.style.background=thisFgIdx===idx?(col+'15'):'#fff';
+    bt.style.color=thisFgIdx===idx?col:'var(--mu)';
+    bt.style.borderColor=thisFgIdx===idx?col:'var(--br)';
+    bt.style.fontWeight=thisFgIdx===idx?'600':'400';
+  });
   window['_calCurrIdx_'+id]=idx;
 }
 function campCalView(id,view){
@@ -16130,21 +16138,39 @@ function filtGare(filtId){
 }
 
 function campCalFaseSwitch(id,faseIdx){
-  // Nasconde tutti i pannelli fase
-  var faseEls=document.querySelectorAll('[id^="'+id+'_fp"]');
-  faseEls.forEach(function(el,i){el.style.display=i===faseIdx?'':'none';});
-  // Aggiorna stile tabs fase
-  var faseBtns=document.querySelectorAll('[id^="'+id+'_ft"]');
-  faseBtns.forEach(function(bt,i){
-    bt.style.fontWeight=i===faseIdx?'700':'400';
-    // Usa il colore dal border attivo già impostato
-    var isActive=i===faseIdx;
-    bt.style.background=isActive?bt.style.borderColor.replace(/[^,]+\)$/,'0.1)'):'#fff';
+  // Nasconde tutti i pannelli contenuto (_fg*) e mostra solo il primo della fase selezionata
+  var allFg=document.querySelectorAll('[id^="'+id+'_fg"]');
+  var firstOfFase=null;
+  allFg.forEach(function(el){
+    el.style.display='none';
+    if(parseInt(el.dataset.faseIdx||'0')===faseIdx&&!firstOfFase){firstOfFase=el;}
   });
-  // Mostra il primo girone di questa fase
-  var fgDentroPanello=document.querySelectorAll('#'+id+'_fp'+faseIdx+' [id^="'+id+'_fg"]');
-  fgDentroPanello.forEach(function(el,i){el.style.display=i===0?'':'none';});
+  if(firstOfFase)firstOfFase.style.display='';
+  // Nasconde/mostra pannelli sub-tab buttons (_fp*)
+  document.querySelectorAll('[id^="'+id+'_fp"]').forEach(function(el,i){el.style.display=i===faseIdx?'':'none';});
+  // Aggiorna stile tabs fase usando data-fase-color
+  document.querySelectorAll('[id^="'+id+'_ft"]').forEach(function(bt,i){
+    var isActive=i===faseIdx;
+    var col=bt.dataset.faseColor||'#185fa5';
+    bt.style.fontWeight=isActive?'700':'400';
+    bt.style.background=isActive?(col+'18'):'#fff';
+    bt.style.color=isActive?col:'var(--mu)';
+    bt.style.borderColor=isActive?col:'var(--br)';
+    bt.style.borderWidth=isActive?'1.5px':'0.5px';
+  });
+  // Ripristina stile girone sub-tab (primo della fase attiva = attivo)
+  var firstFgId=firstOfFase?firstOfFase.id:'';
+  var firstFgIdx=firstFgId?parseInt(firstFgId.replace(id+'_fg','')):-1;
+  document.querySelectorAll('[id^="'+id+'_gt"]').forEach(function(bt){
+    var thisFgIdx=parseInt(bt.id.replace(id+'_gt',''));
+    var col=bt.dataset.faseColor||'#185fa5';
+    bt.style.background=thisFgIdx===firstFgIdx?(col+'15'):'#fff';
+    bt.style.color=thisFgIdx===firstFgIdx?col:'var(--mu)';
+    bt.style.borderColor=thisFgIdx===firstFgIdx?col:'var(--br)';
+    bt.style.fontWeight=thisFgIdx===firstFgIdx?'600':'400';
+  });
   window['_calCurrFase_'+id]=faseIdx;
+  window['_calCurrIdx_'+id]=firstFgIdx>=0?firstFgIdx:0;
 }
 
 
@@ -16886,26 +16912,4 @@ function _renderFipClassifica(girone,clr){
       <td style="padding:4px 8px;${isBold}">${sqLink}</td>
       <td style="text-align:center">${r.pg||'–'}</td>
       <td style="text-align:center;color:var(--green)">${r.vinte||0}</td>
-      <td style="text-align:center;color:var(--red)">${r.perse||0}</td>
-      <td style="text-align:center;font-weight:700;color:var(--bl)">${pt}</td>
-      <td style="text-align:center">${pf}</td>
-      <td style="text-align:center">${ps}</td>
-      <td style="text-align:center;color:${diffClr};font-weight:600">${diffStr}</td>
-      <td style="text-align:center;color:var(--mu)">${win}</td>
-    </tr>`;
-  });
-  h+=`</tbody></table></div>`;
-  return h;
-}
-
-function _renderFipRisultati(girone,clr){
-  var rows=girone.risultati||[];
-  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessun risultato disponibile.</div>';
-  // Raggruppa per giornata
-  var byGiornata={};
-  rows.forEach(r=>{var g=r.giornata||'—';if(!byGiornata[g])byGiornata[g]=[];byGiornata[g].push(r);});
-  var h='<div style="margin-bottom:14px">';
-  // Ordina giornate numericamente (desc: più recenti prima)
-  var giornateKeys=Object.keys(byGiornata).sort((a,b)=>{
-    var na=parseInt(a,10),nb=parseInt(b,10);
-    if(!isN
+      <td style="text-align:ce
