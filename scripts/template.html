@@ -470,7 +470,7 @@ tr.loss-row td{background:#fdecea!important;}
 /* ══════════ STAT CARDS ══════════ */
 .scs{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:12px;}
 .sc{background:#fff;border:1px solid var(--br);border-radius:var(--radius);
-  padding:12px 10px 10px;text-align:center;box-shadow:var(--shadow-sm);
+  padding:12px 10px 10px;text-align:center;box-shadow:var(--shadow-sm);flex-shrink:0;
   transition:box-shadow var(--transition),transform var(--transition);position:relative;overflow:hidden;}
 .sc:hover{box-shadow:var(--shadow);transform:translateY(-2px);}
 .sc .sv{font-size:1.35rem;font-weight:800;color:var(--bl);line-height:1;}
@@ -7618,7 +7618,7 @@ function openPersona(nome,campFilter){
         <div class="fg"><label>Città</label><input type="text" id="mpar-citta" placeholder="Cerca città..." oninput="fgpP('${esc(nome)}')"></div>
         <div class="fg"><label>Provincia</label><select id="mpar-prov" onchange="fgpP('${esc(nome)}')"><option value="">Tutte</option>${['CA','SS','NU','OR','SU','OT','OG','VS','CI'].map(pv=>`<option>${pv}</option>`).join('')}</select></div>
         <div class="fg"><label>Dal</label><input type="date" id="mpar-d1" onchange="fgpP('${esc(nome)}')"></div>
-        <button class="btn b-gr" onclick="resetF('mpar-camp','mpar-d1');document.getElementById('mpar-sq').value='';document.getElementById('mpar-citta').value='';document.getElementById('mpar-prov').value='';fgpP('${esc(nome)}')">↺</button>
+        <button class="btn b-gr" onclick="resetF('mpar-camp','mpar-d1');document.getElementById('mpar-sq').value='';document.getElementById('mpar-citta').value='';document.getElementById('mpar-prov').value='';_mparRoleFilter='';fgpP('${esc(nome)}')">↺</button>
       </div>
       <div class="il" id="mpar-info"></div>
       <!-- Cammino stagione istogrammi -->
@@ -7740,8 +7740,8 @@ function openPersona(nome,campFilter){
     document.getElementById('mpt-0').innerHTML=`
       ${isDual?`<div class="dual-role-notice">⚡ Ruolo doppio: ${(p.categorie||[]).join(' + ')}. Usa le tab dedicate.</div>`:''}
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">📊 Attività</div>
-      <div class="scs" style="margin-bottom:14px">
-        <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()" title="Vedi tutte le gare"><div class="sv">${allG.length}</div>${rankBadge(allG.length,'n_gare')}<div class="sl">Gare totali ↗</div></div>
+      <div class="scs" style="margin-bottom:14px;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:8px">
+        <div class="sc" style="cursor:pointer;flex-shrink:0" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()" title="Vedi tutte le gare"><div class="sv">${allG.length}</div>${rankBadge(allG.length,'n_gare')}<div class="sl">Gare totali ↗</div></div>
         ${p.n_gare_arbitro?`<div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[1]?.click()"><div class="sv">${p.n_gare_arbitro}</div>${rankBadge(p.n_gare_arbitro,'n_gare_arbitro')}<div class="sl">Come Arbitro ↗</div></div>`:''}
         ${p.n_gare_arbitro?`<div class="sc"><div class="sv" style="color:#e17055">${_nSingP}</div>${rankBadge(_nSingP,'n_singolo')}<div class="sl">In singolo</div></div>`:''}
         ${p.n_gare_arbitro?`<div class="sc"><div class="sv">${_nDoppP}</div>${rankBadgeDyn(_nDoppP,_nDoppArr)}<div class="sl">In coppia</div></div>`:''}
@@ -7754,7 +7754,7 @@ function openPersona(nome,campFilter){
         ${_nFutP>0?`<div class="sc"><div class="sv">${_totPrevP}</div><div class="sl">Tot.prev.</div></div>`:''}
       </div>
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">🏅 Qualità & Copertura</div>
-      <div class="scs" style="margin-bottom:14px">
+      <div class="scs" style="margin-bottom:14px;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:8px">
         <div class="sc" style="background:#1a3a6b;border-color:#ffd54f"><div class="sv" style="color:#ffd54f">${_iqaP.toFixed(1)}</div>${rankBadgeDyn(_iqaP,_iqaArr)}<div class="sl" style="color:#b0bec5">⭐ IQA</div></div>
         <div class="sc" style="background:#0a5c36;border-color:#69f0ae"><div class="sv" style="color:#69f0ae">${_copPct}%</div>${rankBadgeDyn(_copPct,_copPctArr)}<div class="sl" style="color:#a5d6a7">% Cop.</div></div>
         <div class="sc" style="cursor:pointer" onclick="document.querySelectorAll('#mp-body .mt')[2]?.click()"><div class="sv">${topCamp.length}</div>${rankBadge(topCamp.length,'n_campionati'||0)}<div class="sl">Campionati ↗</div></div>
@@ -7773,7 +7773,7 @@ function openPersona(nome,campFilter){
         <div class="sc" style="background:#1a0040;border-color:#6a1b9a"><div class="sv" style="color:#e040fb">${_lvqMedal}${_lvqRankMe}°</div><div class="sv" style="font-size:.58rem;color:#6a1b9a">${_lvqTotMe} arb.</div><div class="sl" style="color:#ce93d8">🎖 Lv-Q</div></div>
       </div>
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">🚗 Km & Trasferte</div>
-      <div class="scs" style="margin-bottom:14px" data-pnome="${escH(p.nome)}">
+      <div class="scs" style="margin-bottom:14px;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:8px" data-pnome="${escH(p.nome)}">
         ${km>0?`<div class="sc"><div class="sv">${km.toLocaleString('it')}</div>${rankBadgeDyn(km,_kmArr)}<div class="sl">Km stimati</div></div>`:''}
         ${kmGara>0?`<div class="sc"><div class="sv">${kmGara}</div>${rankBadgeDyn(kmGara,_kmGaraArr)}<div class="sl">Km/gara</div></div>`:''}
         <div class="sc" style="background:#1565c0;border-color:#90caf9;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'sede')" title="Clicca per vedere le gare in sede"><div class="sv" style="color:#bbdefb">${_trsP.inSede||0}</div>${rankBadgeDyn(_trsP.inSede||0,_inSedeArr)}<div class="sl" style="color:#90caf9">In sede ↗</div></div>
@@ -7781,7 +7781,7 @@ function openPersona(nome,campFilter){
         <div class="sc" style="background:#b71c1c;border-color:#ef9a9a;cursor:pointer" onclick="openTrsGareModal(this.closest('[data-pnome]').dataset.pnome,'lunga')" title="Clicca per vedere le gare >100km"><div class="sv" style="color:#ffcdd2">${_trsP.lunga||0}</div>${rankBadgeDyn(_trsP.lunga||0,_rLungArr)}<div class="sl" style="color:#ef9a9a">&gt;100km ↗</div></div>
       </div>
       <div style="font-size:.62rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;padding-left:2px">💶 Rimborsi stimati</div>
-      <div class="scs" style="margin-bottom:14px">
+      <div class="scs" style="margin-bottom:14px;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:8px">
         <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#2e7d32">€ ${rGettoneP}</div>${rankBadgeDyn(rGettoneP,_rGettArr)}<div class="sl">Gettone</div></div>
         <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#1b5e20">€ ${rBenzinaP.toFixed(0)}</div>${rankBadgeDyn(rBenzinaP,_rBenzArr)}<div class="sl">Benzina</div></div>
         <div class="sc" style="background:#e8f5e9;border-color:#a5d6a7"><div class="sv" style="color:#33691e">€ ${rAccessorieP.toFixed(0)}</div>${rankBadgeDyn(rAccessorieP,_rAccArr)}<div class="sl">Accessorie</div></div>
@@ -7835,12 +7835,9 @@ function openPersona(nome,campFilter){
               const col=campColor(cn)||'#456';
               const short=cn.replace('COMITATO REGIONALE SARDEGNA ','').replace('Divisione regionale','DR').replace('Under ','U');
               const isEccBadge=campIsEcc(cn);
-              return `<div style="display:flex;align-items:center;gap:6px;font-size:.68rem;padding:1px 0">
-                <span style="background:${col};color:#fff;border-radius:2px;padding:0 5px;flex-shrink:0;font-size:.6rem${isEccBadge?';border:2px solid #ffd700':''};">${isEccBadge?'⭐ ':''}${escH(short)}</span>
-                <div style="flex:1;height:6px;background:#eee;border-radius:3px;overflow:hidden">
-                  <div style="height:6px;background:${col};width:${Math.min(pctC,100)}%;border-radius:3px"></div>
-                </div>
-                <span style="color:var(--mu);flex-shrink:0;min-width:28px;text-align:right">${pctC}%</span>
+              return `<div style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;background:${col}18;border:1px solid ${col}55;border-radius:6px;padding:3px 6px;font-size:.6rem;flex-shrink:0">
+                <span style="background:${col};color:#fff;border-radius:3px;padding:0 4px;font-size:.55rem;font-weight:700;white-space:nowrap${isEccBadge?';border:1.5px solid #ffd700':''}">${isEccBadge?'⭐':''}${escH(short)}</span>
+                <span style="font-weight:800;color:${col};font-size:.72rem">${pctC}%</span>
               </div>`;
             }).join('');
             // Per provincia
@@ -7873,7 +7870,7 @@ function openPersona(nome,campFilter){
               </div>
               <div style="font-size:.68rem;color:var(--mu);margin-top:2px">${pctDopp}% in coppia</div>
             </div>
-            ${campLvlRows?`<div style="margin-top:8px"><div style="font-size:.65rem;font-weight:700;color:var(--mu);margin-bottom:4px">% per campionato:</div>${campLvlRows}</div>`:''}
+            ${campLvlRows?`<div style="margin-top:8px"><div style="font-size:.65rem;font-weight:700;color:var(--mu);margin-bottom:4px">% per campionato:</div><div style="display:flex;flex-wrap:wrap;gap:4px">${campLvlRows}</div></div>`:''}
             ${pvRows?`<div style="margin-top:8px"><div style="font-size:.65rem;font-weight:700;color:var(--mu);margin-bottom:4px">% per provincia:</div>${pvRows}</div>`:''}`;
           })()}
       </div>
@@ -7901,10 +7898,9 @@ function openPersona(nome,campFilter){
           const short=cn.replace(/COMITATO REGIONALE SARDEGNA /ig,'').replace(/,$/,'').trim()
             .replace('Divisione regionale','Div.Reg.').replace('Under ','U').replace(' Maschile','').replace(' Femminile',' ♀');
           const fem=isFemCamp(cn);
-          return `<div style="display:flex;align-items:center;gap:8px;padding:2px 0;font-size:.7rem">
-            <div style="width:${Math.round(pct*1.5)}px;height:10px;border-radius:3px;background:${col};flex-shrink:0;min-width:3px"></div>
-            <span style="color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${escH(short)}${fem?' <span style="color:'+col+';font-size:8px">♀</span>':''}</span>
-            <span style="font-weight:700;color:${col};flex-shrink:0">${cIqa}</span>
+          return `<div style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;background:${col}18;border:1px solid ${col}55;border-radius:6px;padding:3px 7px;flex-shrink:0">
+            <span style="background:${col};color:#fff;border-radius:3px;padding:0 4px;font-size:.55rem;font-weight:700;white-space:nowrap">${escH(short)}${fem?' ♀':''}</span>
+            <span style="font-weight:800;color:${col};font-size:.72rem">${cIqa}</span>
           </div>`;
         }).join('');
         const topGareHtml=topGare.length?`
@@ -7943,7 +7939,7 @@ function openPersona(nome,campFilter){
             </div>
           </div>
           <div style="font-size:.68rem;font-weight:700;color:var(--mu);margin-bottom:6px">IQA per campionato:</div>
-          ${barsHtml}
+          <div style="display:flex;flex-wrap:wrap;gap:4px">${barsHtml}</div>
           ${topGareHtml}
           <div style="font-size:.6rem;color:var(--mu2);margin-top:8px;padding-top:6px;border-top:1px solid var(--br)">
             Formula: peso campionato (Serie A=100 … minibasket=2) × moltiplicatore fase (×1.0 girone reg. … ×2.8 finale)
@@ -8162,9 +8158,21 @@ function openPersona(nome,campFilter){
           const camps=[...new Set(sqGare.map(g=>g['Campionato']||''))].filter(Boolean);
           const mainCamp=camps.length?camps.sort((a,b)=>sqGare.filter(g=>g['Campionato']===b).length-sqGare.filter(g=>g['Campionato']===a).length)[0]:'Altro';
           if(!sqByCamp[mainCamp])sqByCamp[mainCamp]=[];
-          let v=0,per=0;
-          sqGare.forEach(g=>{if(g['Risultato']){const isCasa=g['Squadra Casa']===sq;const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;if(pc>po)v++;else if(po>pc)per++;}});
-          sqByCamp[mainCamp].push({sq,cnt,v,per});
+          // Filter to this campionato only for per-camp stats (screen 6 fix)
+          const sqGareCamp=sqGare.filter(g=>(g['Campionato']||'')===mainCamp);
+          const campCnt=sqGareCamp.length;
+          let v=0,per=0,nCasa=0,vCasa=0,pCasa=0,nFuori=0,vFuori=0,pFuori=0;
+          sqGareCamp.forEach(g=>{
+            const isCasa=g['Squadra Casa']===sq;
+            if(isCasa)nCasa++;else nFuori++;
+            if(g['Risultato']){
+              const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;
+              const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;
+              if(pc>po){v++;if(isCasa)vCasa++;else vFuori++;}
+              else if(po>pc){per++;if(isCasa)pCasa++;else pFuori++;}
+            }
+          });
+          sqByCamp[mainCamp].push({sq,cnt:campCnt,v,per,nCasa,vCasa,pCasa,nFuori,vFuori,pFuori});
         });
         const campOrder=['Serie B','Serie C','Divisione regionale 1','Divisione regionale 2','Under 19','Under 17','Under 15','Under 14','Under 13'];
         const sortedCamps=Object.keys(sqByCamp).sort((a,b)=>{
@@ -8180,9 +8188,15 @@ function openPersona(nome,campFilter){
             <th style="text-align:center;color:var(--green)">V</th>
             <th style="text-align:center;color:var(--red)">P</th>
             <th style="text-align:center">Win%</th>
-            <th style="min-width:100px">Barra</th>
+            <th style="text-align:center;border-left:2px solid #b0c4de" title="Gare in casa">🏠G</th>
+            <th style="text-align:center;color:var(--green)" title="Vittorie in casa">V</th>
+            <th style="text-align:center;color:var(--red)" title="Sconfitte in casa">P</th>
+            <th style="text-align:center;border-left:2px solid #b0c4de" title="Gare in trasferta">✈G</th>
+            <th style="text-align:center;color:var(--green)" title="Vittorie in trasferta">V</th>
+            <th style="text-align:center;color:var(--red)" title="Sconfitte in trasferta">P</th>
+            <th style="min-width:70px">Barra</th>
           </tr></thead><tbody>${rows}</tbody></table>`;
-        const makeRows=(list)=>list.map(({sq,cnt,v,per})=>{
+        const makeRows=(list)=>list.map(({sq,cnt,v,per,nCasa=0,vCasa=0,pCasa=0,nFuori=0,vFuori=0,pFuori=0})=>{
           const sqd2=SQ[sq];
           const sqPv=sqd2?.prov||sqd2?.provincia||'';
           const wp=cnt?Math.round(v/cnt*100):0;
@@ -8196,6 +8210,12 @@ function openPersona(nome,campFilter){
             <td style="text-align:center;font-weight:700;color:var(--green)">${v}</td>
             <td style="text-align:center;color:var(--red)">${per}</td>
             <td style="text-align:center;font-weight:700;color:${wp>=50?'var(--green)':'var(--red)'}">${wp}%</td>
+            <td style="text-align:center;border-left:2px solid #dde">${nCasa}</td>
+            <td style="text-align:center;color:var(--green);font-weight:700">${vCasa}</td>
+            <td style="text-align:center;color:var(--red)">${pCasa}</td>
+            <td style="text-align:center;border-left:2px solid #dde">${nFuori}</td>
+            <td style="text-align:center;color:var(--green);font-weight:700">${vFuori}</td>
+            <td style="text-align:center;color:var(--red)">${pFuori}</td>
             <td><div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:#eee">
               <div style="background:var(--green);width:${pV}%"></div>
               <div style="background:#eee;width:${100-pV-pP}%"></div>
@@ -8220,9 +8240,13 @@ function openPersona(nome,campFilter){
         }).join('');
         // Blocco "Tutte le squadre" collassabile
         const allSqList=squadre.map(([sq,cnt])=>{
-          let v=0,per=0;
-          allG.filter(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq).forEach(g=>{if(g['Risultato']){const isCasa=g['Squadra Casa']===sq;const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;if(pc>po)v++;else if(po>pc)per++;}});
-          return{sq,cnt,v,per};
+          let v=0,per=0,nCasa=0,vCasa=0,pCasa=0,nFuori=0,vFuori=0,pFuori=0;
+          allG.filter(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq).forEach(g=>{
+            const isCasa=g['Squadra Casa']===sq;
+            if(isCasa)nCasa++;else nFuori++;
+            if(g['Risultato']){const pc=parseInt(isCasa?g['Punti Casa']:g['Punti Ospite'])||0;const po=parseInt(isCasa?g['Punti Ospite']:g['Punti Casa'])||0;if(pc>po){v++;if(isCasa)vCasa++;else vFuori++;}else if(po>pc){per++;if(isCasa)pCasa++;else pFuori++;}}
+          });
+          return{sq,cnt,v,per,nCasa,vCasa,pCasa,nFuori,vFuori,pFuori};
         }).sort((a,b)=>b.cnt-a.cnt);
         const allSqId=uid+'_allsq';
         const allSqBlock=`<div style="margin-top:6px">
@@ -8258,7 +8282,9 @@ function openPersona(nome,campFilter){
       <!-- Calendario presenze — 3 versioni con tab -->
       ${(()=>{
         const mesiGiorniMap={};
+        const futureGiorniMap={};// gare future per giorno
         allG.forEach(g=>{const d=g['Data']||'';if(!d)return;const m=d.slice(0,7);if(!mesiGiorniMap[m])mesiGiorniMap[m]={};mesiGiorniMap[m][d]=(mesiGiorniMap[m][d]||0)+1;});
+        (D.gare_future||[]).filter(g=>['Arbitro 1','Arbitro 2'].some(f=>pns(g[f]||'')===nome)).forEach(g=>{const d=(g['Data']||'').slice(0,10);if(!d)return;const m=d.slice(0,7);if(!mesiGiorniMap[m])mesiGiorniMap[m]={};futureGiorniMap[d]=(futureGiorniMap[d]||0)+1;});
         const mesi=Object.keys(mesiGiorniMap).sort();
         if(!mesi.length)return'';
         const mesiL=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
@@ -8322,24 +8348,25 @@ function openPersona(nome,campFilter){
               const isDom=dow===0;const isSab=dow===6;const isWE=isDom||isSab;
               const isFest=FESTIVI_CAL.includes(ds);
               const isToday=ds===todayDs;
+              const nFut=futureGiorniMap[ds]||0;
               const isMStart=ds.slice(8)==='01';
               const streak=_streakMap[ds]||0;
               const _streakColor=streak>=10?'#e74c3c':streak>=7?'#e67e22':streak>=5?'#f39c12':streak>=2?'#3498db':'';
               const _streakW=streak>=10?5:streak>=7?4:streak>=5?3:streak>=2?2:0;
               const _streakBgAdd=streak>=2?`;border:${_streakW}px solid ${_streakColor};box-shadow:0 0 ${_streakW*2}px ${_streakColor}66`:'';
-              const bg=isToday?'var(--gold)':cnt===0?(isWE?'#ddd8f0':isFest?'#fce4ec':'#e8f4ff'):cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt>=3?'var(--bl)':'#c0392b';
-              const clr=(cnt>1||isToday)?'#fff':(isWE?'#5d4037':'var(--mu)');
-              const border=isFest?'2px solid #e91e63':isToday?'2.5px solid #e0a800':isDom?'1.5px solid var(--gold)':isSab?'1px solid #ffcc80':'1px solid transparent';
+              const bg=isToday?'var(--gold)':nFut>0?'#fff3e0':cnt===0?(isWE?'#ddd8f0':isFest?'#fce4ec':'#e8f4ff'):cnt===1?'var(--bl3)':cnt===2?'var(--bl2)':cnt>=3?'var(--bl)':'#c0392b';
+              const clr=(cnt>1||isToday)?'#fff':nFut>0?'#e65100':(isWE?'#5d4037':'var(--mu)');
+              const border=nFut>0?'2px dashed #e65100':isFest?'2px solid #e91e63':isToday?'2.5px solid #e0a800':isDom?'1.5px solid var(--gold)':isSab?'1px solid #ffcc80':'1px solid transparent';
               const festIcon=isFest&&cnt===0?'🎉':'';
               return `<div data-cal-ds="${ds}" data-cal-bg="${bg}" onclick="calDayClick('${ds}',${cnt})"
                 onmouseover="calDayHover('${ds}');this.style.transform='scale(1.15)'"
                 onmouseout="this.style.transform=''"
-                title="${ds}${isToday?' — OGGI':''}${isFest?' 🎉 Festivo':''}${streak>=5?' 🔥 Streak '+streak+'gg':''}: ${cnt} gar${cnt===1?'a':'e'}"
+                title="${ds}${isToday?' — OGGI':''}${nFut>0?' 📅 '+nFut+' in programma':''}${isFest?' 🎉 Festivo':''}${streak>=5?' 🔥 Streak '+streak+'gg':''}: ${cnt} gar${cnt===1?'a':'e'}"
                 style="flex:1;min-width:10px;aspect-ratio:1;background:${bg};border-radius:3px;border:${border};
                   display:flex;align-items:center;justify-content:center;font-size:.55rem;
-                  font-weight:800;color:${clr};cursor:${cnt>0||isToday?'pointer':'default'};
+                  font-weight:800;color:${clr};cursor:${cnt>0||nFut>0||isToday?'pointer':'default'};
                   transition:transform .1s;margin:1px${_streakBgAdd}"
-              >${festIcon||(cnt>0?cnt:(isToday?'●':''))}</div>`;
+              >${festIcon||(nFut>0?(cnt>0?cnt:'📅'):(cnt>0?cnt:(isToday?'●':'')))||''}</div>`;
             }).join('');
             return`<div style="display:flex;align-items:stretch;width:100%;margin-bottom:2px">
               <div style="width:28px;font-size:.58rem;color:var(--mu);font-weight:${showLbl?600:400};opacity:${showLbl?1:.4};text-align:right;padding-right:4px;flex-shrink:0;display:flex;align-items:center;justify-content:flex-end">${showLbl?dlbl:''}</div>
@@ -8503,7 +8530,9 @@ function openPersona(nome,campFilter){
         return`<div style="margin-top:10px">
           <div style="font-size:.8rem;font-weight:700;color:var(--bl);margin-bottom:6px">🎖️ Ruoli</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
-            ${Object.entries(rc).map(([r,cnt])=>`<span class="badge" style="background:var(--bl2);color:#fff;padding:3px 12px;border-radius:12px;font-size:.72rem">${escH(r)} <b>${cnt}</b></span>`).join('')}
+            ${Object.entries(rc).map(([r,cnt])=>`<span class="badge" style="background:var(--bl2);color:#fff;padding:3px 12px;border-radius:12px;font-size:.72rem;cursor:pointer"
+              onclick="goGareRole('${esc(nome)}','${r}')"
+              title="Vai alle gare come ${escH(r)} →">⚖️ ${escH(r)} <b>${cnt}</b> →</span>`).join('')}
           </div>
         </div>`;
       })()}`;
@@ -9581,7 +9610,17 @@ function computeMultiH2H(){
   result.innerHTML=html;
 }
 
+var _mparRoleFilter='';
+var _mparRoleNome='';
+function goGareRole(nome,role){
+  _mparRoleFilter=role;
+  // Switch to Gare tab (mpt-1)
+  var gareBtn=document.querySelector('#mo-persona .mts .mt[onclick*="mpt-1"]');
+  if(gareBtn)gareBtn.click();
+  fgpP(nome);
+}
 function fgpP(nome){
+  _mparRoleNome=nome;
   const p=P[nome];if(!p)return;
   const camp=document.getElementById('mpar-camp')?.value||'';
   const d1=document.getElementById('mpar-d1')?.value||'';
@@ -9615,11 +9654,16 @@ function fgpP(nome){
       const gpv=cpv(g['Campo']||'');
       if(gpv!==provFilter)return false;
     }
+    if(_mparRoleFilter){
+      if(!pns(g[_mparRoleFilter]||'')||pns(g[_mparRoleFilter]||'')!==nome)return false;
+    }
     return true;
   }).sort((a,b)=>(a['Data']||'').localeCompare(b['Data']||'')||((a['Ora']||'').localeCompare(b['Ora']||'')));
   const nFutInList=gare.filter(g=>!g['Risultato']&&(g['Data']||'')>=_today2).length;
   const info=document.getElementById('mpar-info');
-  if(info)info.textContent=`${gare.length} gare${nFutInList>0?' (di cui '+nFutInList+' future 📅)':''}`;
+  if(info){
+    info.innerHTML=`${gare.length} gare${nFutInList>0?' (di cui '+nFutInList+' future 📅)':''}${_mparRoleFilter?' &nbsp;<span style="background:var(--bl);color:#fff;border-radius:10px;padding:1px 8px;font-size:.68rem;cursor:pointer" onclick="_mparRoleFilter=\'\';fgpP(_mparRoleNome)" title="Rimuovi filtro ruolo">⚖️ '+_mparRoleFilter+' ✕</span>':''}`;
+  }
   // Cammino istogrammi mensili
   try{
     const camminoDiv=document.getElementById('mpar-cammino');
@@ -16901,66 +16945,4 @@ function _renderFipClassifica(girone,clr){
     <th style="text-align:left">Squadra</th>
     <th title="Partite giocate">PG</th>
     <th title="Partite vinte">V</th>
-    <th title="Partite perse">P</th>
-    <th title="Punti classifica">Pt</th>
-    <th title="Punti fatti">PF</th>
-    <th title="Punti subiti">PS</th>
-    <th title="Differenza punti">+/-</th>
-    <th title="Win%">Win%</th>
-  </tr></thead><tbody>`;
-  rows.forEach((r,i)=>{
-    var pos=r.pos||(i+1);
-    var odd=i%2===0?'':'background:var(--tbl-even)';
-    var isBold=pos<=3?'font-weight:700':'';
-    var pt=r.punti!==undefined?r.punti:'–';
-    var pf=r.pf!==undefined?r.pf:'–';
-    var ps=r.ps!==undefined?r.ps:'–';
-    var diff=(r.pf!==undefined&&r.ps!==undefined)?(r.pf-r.ps):'–';
-    var diffStr=typeof diff==='number'?(diff>0?'+'+diff:diff):'–';
-    var diffClr=typeof diff==='number'?(diff>0?'var(--green)':diff<0?'var(--red)':'var(--mu)'):'var(--mu)';
-    var win=r.pg?(((r.vinte||0)/r.pg)*100).toFixed(0)+'%':'–';
-    var sqNome=r.squadra||r.nome||'–';
-    // Evidenzia se squadra presente nel dataset locale
-    var sqLink=SQ&&SQ[sqNome]?`<span style="cursor:pointer;color:var(--bl2);text-decoration:underline dotted" onclick="openSquadra('${esc(sqNome)}')">${escH(sqNome)}</span>`:escH(sqNome);
-    h+=`<tr style="${odd}">
-      <td style="text-align:center;padding:4px 6px">${_posIcon(pos)}</td>
-      <td style="padding:4px 8px;${isBold}">${sqLink}</td>
-      <td style="text-align:center">${r.pg||'–'}</td>
-      <td style="text-align:center;color:var(--green)">${r.vinte||0}</td>
-      <td style="text-align:center;color:var(--red)">${r.perse||0}</td>
-      <td style="text-align:center;font-weight:700;color:var(--bl)">${pt}</td>
-      <td style="text-align:center">${pf}</td>
-      <td style="text-align:center">${ps}</td>
-      <td style="text-align:center;color:${diffClr};font-weight:600">${diffStr}</td>
-      <td style="text-align:center;color:var(--mu)">${win}</td>
-    </tr>`;
-  });
-  h+=`</tbody></table></div>`;
-  return h;
-}
-
-function _renderFipRisultati(girone,clr){
-  var rows=girone.risultati||[];
-  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessun risultato disponibile.</div>';
-  // Raggruppa per giornata
-  var byGiornata={};
-  rows.forEach(r=>{var g=r.giornata||'—';if(!byGiornata[g])byGiornata[g]=[];byGiornata[g].push(r);});
-  var h='<div style="margin-bottom:14px">';
-  // Ordina giornate numericamente (desc: più recenti prima)
-  var giornateKeys=Object.keys(byGiornata).sort((a,b)=>{
-    var na=parseInt(a,10),nb=parseInt(b,10);
-    if(!isNaN(na)&&!isNaN(nb))return nb-na;
-    return b>a?1:-1;
-  });
-  giornateKeys.forEach(g=>{
-    var gare=byGiornata[g];
-    h+=`<div style="font-size:.75rem;font-weight:700;color:${clr};text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px 4px">Giornata ${g}</div>`;
-    gare.forEach(r=>{
-      var data=r.data||'';
-      var casa=r.casa||'–';var osp=r.ospite||'–';
-      var sc=r.punteggio||'';var pf=sc.split('-')[0]||'';var ps=sc.split('-')[1]||'';
-      var casaW=pf&&ps&&parseInt(pf)>parseInt(ps);var ospW=pf&&ps&&parseInt(ps)>parseInt(pf);
-      h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
-      h+=`<span style="color:var(--mu);width:70px;flex-shrink:0;font-size:.7rem">${escH(data)}</span>`;
-      h+=`<span style="flex:1;text-align:right;font-weight:${casaW?'700':'400'}">${escH(casa)}</span>`;
-      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;tex
+    <th title="Partite 
