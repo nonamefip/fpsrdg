@@ -285,4 +285,7 @@ def main():
                     json.dump(existing,f,ensure_ascii=False,indent=2)
                 print(f"💾 Cache aggiornata con provvedimenti: {CACHE_FILE}")
         else:
-            print(f"\n[Fase 2] Nessuna gara recente senza provvedim
+            print(f"\n[Fase 2] Nessuna gara recente senza provvedimento da verificare.")
+
+if __name__=="__main__":
+    main()
