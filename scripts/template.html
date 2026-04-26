@@ -8287,6 +8287,7 @@ function openPersona(nome,campFilter){
       ${(()=>{
         const mesiGiorniMap={};
         const futureGiorniMap={};// gare future per giorno
+        const todayDs=new Date().toISOString().split('T')[0]; // always real today
         allG.forEach(g=>{const d=g['Data']||'';if(!d)return;const m=d.slice(0,7);if(!mesiGiorniMap[m])mesiGiorniMap[m]={};mesiGiorniMap[m][d]=(mesiGiorniMap[m][d]||0)+1;});
         (D.gare_future||[]).filter(g=>['Arbitro 1','Arbitro 2'].some(f=>pns(g[f]||'')===nome)&&(g['Data']||'')>=todayDs).forEach(g=>{const d=(g['Data']||'').slice(0,10);if(!d)return;const m=d.slice(0,7);if(!mesiGiorniMap[m])mesiGiorniMap[m]={};futureGiorniMap[d]=(futureGiorniMap[d]||0)+1;});
         const mesi=Object.keys(mesiGiorniMap).sort();
@@ -8294,8 +8295,6 @@ function openPersona(nome,campFilter){
         const mesiL=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
         const BG=['#e8f4ff','var(--bl3)','var(--bl2)','var(--bl)','#c0392b'];
         const uid='cal_'+Math.random().toString(36).slice(2,7);
-
-        const todayDs=new Date().toISOString().split('T')[0]; // always real today
         // ── VERSIONE A: Heatmap per mese — ogni mese è una griglia indipendente ──
         const FESTIVI_CAL=['2025-11-01','2025-12-08','2025-12-25','2025-12-26',
           '2026-01-01','2026-01-06','2026-04-05','2026-04-06','2026-04-25','2026-05-01','2026-06-02'];
@@ -16943,4 +16942,73 @@ function _posIcon(pos){
 
 function _renderFipClassifica(girone,clr){
   var rows=girone.classifica||[];
-  if(!rows.length)return'<div style="color:var(--mu);f
+  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Classifica non disponibile.</div>';
+  var h=`<div style="overflow-x:auto;margin-bottom:14px"><table class="tbl" id="fiplive-cl-${Math.random().toString(36).slice(2,7)}" style="border-top:3px solid ${clr}">`;
+  h+=`<thead><tr>
+    <th style="width:28px;text-align:center">#</th>
+    <th style="text-align:left">Squadra</th>
+    <th title="Partite giocate">PG</th>
+    <th title="Partite vinte">V</th>
+    <th title="Partite perse">P</th>
+    <th title="Punti classifica">Pt</th>
+    <th title="Punti fatti">PF</th>
+    <th title="Punti subiti">PS</th>
+    <th title="Differenza punti">+/-</th>
+    <th title="Win%">Win%</th>
+  </tr></thead><tbody>`;
+  rows.forEach((r,i)=>{
+    var pos=r.pos||(i+1);
+    var odd=i%2===0?'':'background:var(--tbl-even)';
+    var isBold=pos<=3?'font-weight:700':'';
+    var pt=r.punti!==undefined?r.punti:'–';
+    var pf=r.pf!==undefined?r.pf:'–';
+    var ps=r.ps!==undefined?r.ps:'–';
+    var diff=(r.pf!==undefined&&r.ps!==undefined)?(r.pf-r.ps):'–';
+    var diffStr=typeof diff==='number'?(diff>0?'+'+diff:diff):'–';
+    var diffClr=typeof diff==='number'?(diff>0?'var(--green)':diff<0?'var(--red)':'var(--mu)'):'var(--mu)';
+    var win=r.pg?(((r.vinte||0)/r.pg)*100).toFixed(0)+'%':'–';
+    var sqNome=r.squadra||r.nome||'–';
+    // Evidenzia se squadra presente nel dataset locale
+    var sqLink=SQ&&SQ[sqNome]?`<span style="cursor:pointer;color:var(--bl2);text-decoration:underline dotted" onclick="openSquadra('${esc(sqNome)}')">${escH(sqNome)}</span>`:escH(sqNome);
+    h+=`<tr style="${odd}">
+      <td style="text-align:center;padding:4px 6px">${_posIcon(pos)}</td>
+      <td style="padding:4px 8px;${isBold}">${sqLink}</td>
+      <td style="text-align:center">${r.pg||'–'}</td>
+      <td style="text-align:center;color:var(--green)">${r.vinte||0}</td>
+      <td style="text-align:center;color:var(--red)">${r.perse||0}</td>
+      <td style="text-align:center;font-weight:700;color:var(--bl)">${pt}</td>
+      <td style="text-align:center">${pf}</td>
+      <td style="text-align:center">${ps}</td>
+      <td style="text-align:center;color:${diffClr};font-weight:600">${diffStr}</td>
+      <td style="text-align:center;color:var(--mu)">${win}</td>
+    </tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  return h;
+}
+
+function _renderFipRisultati(girone,clr){
+  var rows=girone.risultati||[];
+  if(!rows.length)return'<div style="color:var(--mu);font-size:.78rem;padding:4px 0 10px 13px">Nessun risultato disponibile.</div>';
+  // Raggruppa per giornata
+  var byGiornata={};
+  rows.forEach(r=>{var g=r.giornata||'—';if(!byGiornata[g])byGiornata[g]=[];byGiornata[g].push(r);});
+  var h='<div style="margin-bottom:14px">';
+  // Ordina giornate numericamente (desc: più recenti prima)
+  var giornateKeys=Object.keys(byGiornata).sort((a,b)=>{
+    var na=parseInt(a,10),nb=parseInt(b,10);
+    if(!isNaN(na)&&!isNaN(nb))return nb-na;
+    return b>a?1:-1;
+  });
+  giornateKeys.forEach(g=>{
+    var gare=byGiornata[g];
+    h+=`<div style="font-size:.75rem;font-weight:700;color:${clr};text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px 4px">Giornata ${g}</div>`;
+    gare.forEach(r=>{
+      var data=r.data||'';
+      var casa=r.casa||'–';var osp=r.ospite||'–';
+      var sc=r.punteggio||'';var pf=sc.split('-')[0]||'';var ps=sc.split('-')[1]||'';
+      var casaW=pf&&ps&&parseInt(pf)>parseInt(ps);var ospW=pf&&ps&&parseInt(ps)>parseInt(pf);
+      h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
+      h+=`<span style="color:var(--mu);width:70px;flex-shrink:0;font-size:.7rem">${escH(data)}</span>`;
+      h+=`<span style="flex:1;text-align:right;font-weight:${casaW?'700':'400'}">${escH(casa)}</span>`;
+      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;tex
