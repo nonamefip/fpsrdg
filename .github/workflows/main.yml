@@ -103,6 +103,8 @@ jobs:
             ${{ runner.os }}-pip-
       - name: Installa dipendenze
         run: pip install -r requirements.txt
+      - name: Crea directory cache
+        run: mkdir -p cache
       - name: Scarica dati FIP (normale)
         if: >
           github.event_name == 'schedule' ||
@@ -169,4 +171,3 @@ jobs:
           touch _ghp/.nojekyll
           cd _ghp
           git add index.html .nojekyll
-          git diff --staged --quiet || git commit -m "Deploy $
