@@ -9,6 +9,7 @@ on:
       - 'cache/data_v5_new.json'
       - 'fip_sarda_data.json'
       - 'scripts/build.py'
+      - 'run_update.txt'
   workflow_dispatch:
     inputs:
       mode:
@@ -80,7 +81,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch'
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && contains(toJson(github.event.commits[0].modified), 'run_update.txt'))
     env:
       PYTHONUNBUFFERED: "1"
     steps:
@@ -167,7 +169,4 @@ jobs:
           touch _ghp/.nojekyll
           cd _ghp
           git add index.html .nojekyll
-          git diff --staged --quiet || git commit -m "Deploy $(date '+%Y-%m-%d %H:%M')"
-          git push origin gh-pages || true
-          cd ..
-          git worktree remove _ghp --force || true
+          git diff --staged --quiet || git commit -m "Deploy $
