@@ -171,3 +171,7 @@ jobs:
           touch _ghp/.nojekyll
           cd _ghp
           git add index.html .nojekyll
+          git diff --staged --quiet || git commit -m "Deploy $(date '+%Y-%m-%d %H:%M')"
+          git push origin gh-pages || true
+          cd ..
+          git worktree remove _ghp --force || true

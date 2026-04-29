@@ -218,7 +218,6 @@ def main():
     print(f"\n✅ Aggiunte {added} nuove gare | Totale: {len(existing)}")
     
     # Salva cache
-    os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
     with open(CACHE_FILE,"w",encoding="utf-8") as f:
         json.dump(existing, f, ensure_ascii=False, indent=2)
     print(f"💾 Cache salvata: {CACHE_FILE}")
