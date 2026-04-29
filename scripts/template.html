@@ -3000,8 +3000,8 @@ function renderPersonsTable(cid,persons,opts={}){
         data-n="${p.nome}" onclick="event.stopPropagation();openPersona(this.dataset.n)">${nGareOggi}</td>
       <td ${tdAtt} data-val="${nGareArbOggiDisp}" style="text-align:center">${(nGareArbOggiDisp&&(isArb||cid==='arb-list'))?mkLink(nGareArbOggiDisp,1,pvColor):(nGareArbOggiDisp&&isDual?`<span style="color:var(--mu2);font-size:.68rem" title="Gare come arbitro (ruolo secondario)">${nGareArbOggiDisp}</span>`:'')}</td>
       ${isArb?(()=>{
-        const _gM=(p.gare_arbitro||[]).filter(g=>!/femmin/i.test(g.c||'')).length;
-        const _gF=(p.gare_arbitro||[]).filter(g=>/femmin/i.test(g.c||'')).length;
+        const _gM=(p.gare_arbitro||[]).filter(g=>!/femmin/i.test(g['Campionato']||g.c||'')).length;
+        const _gF=(p.gare_arbitro||[]).filter(g=>/femmin/i.test(g['Campionato']||g.c||'')).length;
         return `<td data-val="${_gM}" style="text-align:center;background:#e3f2fd;color:#1565c0;font-weight:${_gM>0?700:400}">${_gM||'—'}</td><td data-val="${_gF}" style="text-align:center;background:#fce4ec;color:#ad1457;font-weight:${_gF>0?700:400}">${_gF||'—'}</td>`;
       })():''}
       ${isArb?(()=>{
@@ -15588,7 +15588,9 @@ function renderGrt(n){
   var camp=_grtCamp;
   var cs=CS[camp];
   if(!cs){el.innerHTML='<p class="il">Campionato non trovato</p>';return;}
-  var gironi=(cs.gironi||[]).slice().sort();
+  // Ricava gironi dalle gare reali (non da cs.gironi che può essere desincronizzato)
+  var gironiDaGare=[...new Set(garecamp.map(function(g){return g['Girone']||'';}).filter(Boolean))].sort();
+  var gironi=gironiDaGare.length?gironiDaGare:(cs.gironi||[]).slice().sort();
   if(!gironi.length){el.innerHTML='<p class="il">Nessun girone</p>';return;}
   var garecamp=(D.gare||[]).filter(function(g){return g['Campionato']===camp;});
   var clr=campColor(camp);
@@ -15728,9 +15730,6 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     if(g['Squadra Casa'])sqByGi[gi].add(g['Squadra Casa']);
     if(g['Squadra Ospite'])sqByGi[gi].add(g['Squadra Ospite']);
   });
-
-  var sqPosizioneGirone={};
-  var isDR2=(camp.toLowerCase().indexOf('divisione')>=0&&camp.indexOf('2')>=0);
 
   var sqPosizioneGirone={};
   var isDR2=(camp.toLowerCase().indexOf('divisione')>=0&&camp.indexOf('2')>=0);
