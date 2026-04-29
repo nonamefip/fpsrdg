@@ -15858,7 +15858,7 @@ function grtClassifiche(gironi,garecamp,camp,clr){
         var posLabel=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos+'°';
         var rowBg=idx%2?'#f8faff':'#fff';
         h+='<tr style="background:'+rowBg+';border-bottom:1px solid #f0f0f0">'
-          +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(''+esc(sq)+'')">'+escH(sq)+'</span></td>'
+          +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(\''+esc(sq)+'\')">'+ escH(sq)+'</span></td>'
           +'<td style="padding:4px 6px;text-align:center;font-size:.65rem;color:var(--mu)">'+escH(gironeName)+'</td>'
           +'<td style="padding:4px 6px;text-align:center;font-weight:700;color:'+posClr+'">'+posLabel+'</td>'
           +'</tr>';
