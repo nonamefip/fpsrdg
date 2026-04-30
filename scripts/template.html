@@ -8656,23 +8656,7 @@ function openPersona(nome,campFilter){
       const citta=gps&&gps.city||'';
       return{campo,cnt,pvc,citta,i};
     });
-    function renderCampiTbl(filtCitta,filtProv){
-      const rows=campiAllData.filter(x=>{
-        if(filtCitta&&!x.citta.toLowerCase().includes(filtCitta))return false;
-        if(filtProv&&x.pvc.toLowerCase()!==filtProv.toLowerCase())return false;
-        return true;
-      });
-      return rows.map(({campo,cnt,pvc,citta},ri)=>{
-        const pvColor=PC[pvc]||'#888';
-        return`<tr>
-          <td data-val="${ri+1}" class="rpos">${ri+1}</td>
-          <td style="font-size:.73rem;white-space:normal;max-width:250px">${escH(campo)}</td>
-          <td style="font-size:.73rem;color:${pvColor};font-weight:500">${escH(citta)}</td>
-          <td>${pvc?pvB(pvc):''}</td>
-          <td style="text-align:right"><span style="color:var(--bl);font-weight:700;cursor:pointer;text-decoration:underline" onclick="openSharedSquadGames_Campo('${esc(nome)}','${esc(campo)}')">${cnt}</span></td>
-        </tr>`;
-      }).join('');
-    }
+    // renderCampiTbl definita globalmente sotto
     const allProvCampi=[...new Set(campiAllData.map(x=>x.pvc).filter(Boolean))].sort();
     // Riepilogo per città
     const cittaMap={};
@@ -15589,10 +15573,10 @@ function renderGrt(n){
   var cs=CS[camp];
   if(!cs){el.innerHTML='<p class="il">Campionato non trovato</p>';return;}
   // Ricava gironi dalle gare reali (non da cs.gironi che può essere desincronizzato)
+  var garecamp=(D.gare||[]).filter(function(g){return g['Campionato']===camp;});
   var gironiDaGare=[...new Set(garecamp.map(function(g){return g['Girone']||'';}).filter(Boolean))].sort();
   var gironi=gironiDaGare.length?gironiDaGare:(cs.gironi||[]).slice().sort();
   if(!gironi.length){el.innerHTML='<p class="il">Nessun girone</p>';return;}
-  var garecamp=(D.gare||[]).filter(function(g){return g['Campionato']===camp;});
   var clr=campColor(camp);
   if(n===0) el.innerHTML=grtClassifiche(gironi,garecamp,camp,clr);
   else if(n===1){var h=grtGriglie(gironi,garecamp,camp,clr);el.innerHTML=h||'<p class="il">Nessun risultato</p>';}
@@ -17046,4 +17030,22 @@ function _renderFipRisultati(girone,clr){
       h+=`<div style="display:flex;align-items:center;gap:6px;padding:5px 6px;border-bottom:1px solid var(--tbl-bd);font-size:.8rem">`;
       h+=`<span style="color:var(--mu);width:70px;flex-shrink:0;font-size:.7rem">${escH(data)}</span>`;
       h+=`<span style="flex:1;text-align:right;font-weight:${casaW?'700':'400'}">${escH(casa)}</span>`;
-      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;tex
+      h+=`<span style="margin:0 8px;font-weight:800;font-size:.9rem;color:var(--bl);min-width:54px;te
+function renderCampiTbl(filtCitta,filtProv){
+  const rows=campiAllData.filter(x=>{
+    if(filtCitta&&!x.citta.toLowerCase().includes(filtCitta))return false;
+    if(filtProv&&x.pvc.toLowerCase()!==filtProv.toLowerCase())return false;
+    return true;
+  });
+  return rows.map(({campo,cnt,pvc,citta},ri)=>{
+    const pvColor=PC[pvc]||'#888';
+    return`<tr>
+      <td data-val="${ri+1}" class="rpos">${ri+1}</td>
+      <td style="font-size:.73rem;white-space:normal;max-width:250px">${escH(campo)}</td>
+      <td style="font-size:.73rem;color:${pvColor};font-weight:500">${escH(citta)}</td>
+      <td>${pvc?pvB(pvc):''}</td>
+      <td style="text-align:right"><span style="color:var(--bl);font-weight:700;cursor:pointer;text-decoration:underline" onclick="openSharedSquadGames_Campo('${esc(nome)}','${esc(campo)}')">${cnt}</span></td>
+    </tr>`;
+  }).join('');
+}
+x
