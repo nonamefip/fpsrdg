@@ -15094,7 +15094,7 @@ showPage=function(id){
   if(id==='h2h-arb') initH2HArb();
   if(id==='campi') initCampiPage();
   if(id==='prossime') initProssimePage();
-  if(id==='fiplive'){_buildFipLiveCampSelect();renderFipLive();}
+  if(id==='fiplive'){setTimeout(function(){if(typeof _buildFipLiveCampSelect==='function'){_buildFipLiveCampSelect();renderFipLive();}else if(typeof initFipLive==='function'){initFipLive();}},0);}
 };
 
 // ── PROSSIME GARE ──────────────────────────────────────────────────────
@@ -15638,11 +15638,11 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       +'<th style="padding:3px 2px;text-align:center;font-size:.65rem">#</th>'
       +(hasProv?'<th style="padding:3px 4px;text-align:center;font-size:.6rem;color:var(--mu)">Prov.</th>':'')
       +'<th style="padding:3px 6px;text-align:left;font-size:.65rem">Squadra</th>'
-      +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;'+thS+'"'+thClick(2+colOff)+'>G</th>'
-      +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;color:var(--green);'+thS+'"'+thClick(3+colOff)+'>V</th>'
-      +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;color:var(--red);'+thS+'"'+thClick(4+colOff)+'>P</th>'
-      +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;'+thS+'"'+thClick(5+colOff)+'>PF</th>'
-      +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;color:#aaa;'+thS+'"'+thClick(6+colOff)+'>PS</th>'
+      +'<th style="padding:2px 5px;text-align:center;font-size:.63rem;'+thS+'"'+thClick(2+colOff)+'>G</th>'
+      +'<th style="padding:2px 5px;text-align:center;font-size:.63rem;color:var(--green);'+thS+'"'+thClick(3+colOff)+'>V</th>'
+      +'<th style="padding:2px 5px;text-align:center;font-size:.63rem;color:var(--red);'+thS+'"'+thClick(4+colOff)+'>P</th>'
+      +'<th style="padding:2px 5px;text-align:center;font-size:.63rem;'+thS+'"'+thClick(5+colOff)+'>PF</th>'
+      +'<th style="padding:2px 5px;text-align:center;font-size:.63rem;color:#aaa;'+thS+'"'+thClick(6+colOff)+'>PS</th>'
       +(showAccum?'<th style="padding:3px 4px;text-align:center;font-size:.65rem;color:#e65100;'+thS+'"'+thClick(7+colOff)+' title="Punti portati dal girone precedente">Port.</th>':'')
       +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;font-weight:800;color:'+giClr+';'+thS+'"'+thClick((showAccum?8:7)+colOff)+'>Pt \u25bc</th>'
       +'</tr></thead><tbody>';
