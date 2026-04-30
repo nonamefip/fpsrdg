@@ -1793,23 +1793,25 @@ tr.loss-row td{background:#fdecea!important;}
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center" id="fiplive-tabs">
 <script>
 // Stub FIP Live functions - verranno ridefinite dal blocco JS principale
-// Servono nel caso il JS non abbia ancora caricato quando l'utente clicca
-function setFipLiveTab(s,b){setTimeout(function(){
-  if(typeof _buildFipLiveCampSelect==='function'){
-    window._fipSesso=s;window._fipCampSel='';window._fipGironeSel='';
-    document.querySelectorAll('#fiplive-tabs .naz-tab').forEach(function(x){x.classList.remove('active');});
-    if(b)b.classList.add('active');
+var _fipSesso='M';
+function setFipLiveTab(s,b){
+  _fipSesso=s;
+  setTimeout(function(){
+    if(typeof _buildFipLiveCampSelect==='function'&&_buildFipLiveCampSelect.toString().length>50){
+      _fipCampSel='';_fipGironeSel='';
+      document.querySelectorAll('#fiplive-tabs .naz-tab').forEach(function(x){x.classList.remove('active');});
+      if(b)b.classList.add('active');
+      _buildFipLiveCampSelect();renderFipLive();
+    }
+  },100);
+}
+function initFipLive(){setTimeout(function(){
+  if(typeof _buildFipLiveCampSelect==='function'&&_buildFipLiveCampSelect.toString().length>50){
     _buildFipLiveCampSelect();renderFipLive();
   }
-},50);}
-function initFipLive(){setTimeout(function(){
-  if(typeof _buildFipLiveCampSelect==='function'){_buildFipLiveCampSelect();renderFipLive();}
-},50);}
-function _buildFipLiveCampSelect(){setTimeout(function(){
-  // riprova dopo che il JS è caricato
-  if(typeof renderFipLive==='function')renderFipLive();
 },100);}
-function renderFipLive(){} // stub
+function _buildFipLiveCampSelect(){}
+function renderFipLive(){}
 </script>
     <button class="naz-tab active" id="flt-m" onclick="setFipLiveTab('M',this)">🏀 Maschili</button>
     <button class="naz-tab" id="flt-f" onclick="setFipLiveTab('F',this)">🏀 Femminili</button>
