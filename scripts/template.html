@@ -2427,7 +2427,7 @@ function showPage(id){
   if(id==='province'){renderProvCards();}
   if(id==='campi'){renderCampi();}
   if(id==='nazionale'){initNazionale();}
-  if(id==='fiplive'){initFipLive();}
+  if(id==='fiplive'){if(typeof initFipLive==='function')initFipLive();else{if(typeof _buildFipLiveCampSelect==='function')_buildFipLiveCampSelect();if(typeof renderFipLive==='function')renderFipLive();}}
 }
 
 // HELPERS
