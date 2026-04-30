@@ -10709,18 +10709,21 @@ function openCampionato(camp){
             }
             const totalTurni=tuttiTurni.length;
             // Pair-based detection: controlla se alcune coppie appaiono invertite
+            // Metodo primario: matematico. Un doppio RR ha esattamente 2*(nSq-1) turni (per nSq pari)
+            // o 2*nSq turni (per nSq dispari con riposo). Se totalTurni > nSq-1 è doppio RR.
+            const expectedSingleRR=nSq>1?nSq-1:1;
+            const isMathDoubleRR=nSq>2&&totalTurni>expectedSingleRR;
+            // Metodo empirico: coppie invertite tra gare con risultato
             const _gareConRis=gGir.filter(g=>g['Risultato']);
             const _allPairsRR=new Set(_gareConRis.map(g=>g['Squadra Casa']+'|||'+g['Squadra Ospite']));
-            const isDoubleRRData=nSq>2&&_gareConRis.some(g=>_allPairsRR.has(g['Squadra Ospite']+'|||'+g['Squadra Casa']));
-            // Cerca il punto di svolta: il ritorno inizia quando un turno è speculare al turno 0
+            const isEmpDoubleRR=nSq>2&&_gareConRis.some(g=>_allPairsRR.has(g['Squadra Ospite']+'|||'+g['Squadra Casa']));
+            const isDoubleRRData=isMathDoubleRR||isEmpDoubleRR;
+            // Punto di svolta: matematicamente a nSq-1 (o metà se non torna)
             let andataCount=totalTurni; // default: tutto andata (singolo RR)
             if(isDoubleRRData){
-              // È un doppio RR: cerca l'inizio del ritorno
-              // Il ritorno inizia al turno i tale che turno[i] è speculare a turno[0]
-              // Tipicamente i = nSq-1, ma lo verifichiamo empiricamente
+              // Metodo 1: cerca turno speculare al turno 0 (verifica empirica)
               const expectedAndata=Math.ceil(totalTurni/2);
               let svoltaTrovata=false;
-              // Cerca a partire da metà (tolleranza ±2)
               for(let i=Math.max(1,expectedAndata-2);i<=Math.min(totalTurni-1,expectedAndata+2);i++){
                 if(turnoSpeculare(tuttiTurni[0],tuttiTurni[i])){
                   andataCount=i;
@@ -10728,9 +10731,9 @@ function openCampionato(camp){
                   break;
                 }
               }
-              // Se non trovato vicino a metà, prova con nSq-1
-              if(!svoltaTrovata&&(nSq-1)<totalTurni){
-                if(turnoSpeculare(tuttiTurni[0],tuttiTurni[nSq-1])){
+              if(!svoltaTrovata){
+                // Metodo 2: usa matematicamente nSq-1 se coerente col totale
+                if((nSq-1)<totalTurni&&totalTurni%(nSq-1)===0){
                   andataCount=nSq-1;
                 } else {
                   andataCount=Math.round(totalTurni/2);
@@ -15715,19 +15718,69 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     if(g['Squadra Ospite'])sqByGi[gi].add(g['Squadra Ospite']);
   });
 
+  // Calcola sqPosizioneGirone PRIMA del loop principale
+  // così i gironi di fase 2 possono mostrare da dove vengono le squadre
   var sqPosizioneGirone={};
   var isDR2=(camp.toLowerCase().indexOf('divisione')>=0&&camp.indexOf('2')>=0);
+  // Calcola classifiche fase 1 per provenienza
+  if(faseOrdered.length>1){
+    var fase1=faseOrdered[0];
+    garecamp.filter(function(g){return g['Fase']===fase1&&g['Risultato'];}).forEach(function(){}); // init
+    var giF1=[...new Set(garecamp.filter(function(g){return g['Fase']===fase1;}).map(function(g){return g['Girone']||'';}).filter(Boolean))];
+    giF1.forEach(function(gi){
+      var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
+      var sqSet2=new Set();
+      gGi.forEach(function(g){if(g['Squadra Casa'])sqSet2.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqSet2.add(g['Squadra Ospite']);});
+      var st2={};[...sqSet2].forEach(function(sq){st2[sq]={pt:0,v:0,p:0,pf:0,ps:0};});
+      gGi.filter(function(g){return g['Risultato'];}).forEach(function(g){
+        var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+        var sc=g['Squadra Casa'],so=g['Squadra Ospite'];
+        if(!st2[sc]||!st2[so])return;
+        st2[sc].pf+=pc;st2[sc].ps+=po;st2[so].pf+=po;st2[so].ps+=pc;
+        if(pc>po){st2[sc].pt+=2;st2[sc].v++;st2[so].p++;}
+        else if(po>pc){st2[so].pt+=2;st2[so].v++;st2[sc].p++;}
+        else{st2[sc].pt++;st2[so].pt++;}
+      });
+      var ranked2=Object.entries(st2).sort(function(a,b){return b[1].pt-a[1].pt||(b[1].pf-b[1].ps)-(a[1].pf-a[1].ps);});
+      ranked2.forEach(function(e,idx){sqPosizioneGirone[e[0]]={girone:gi,pos:idx+1};});
+    });
+  }
 
   var cards='<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start">';
 
-  gironi.forEach(function(gi){
+  // Ordina gironi per fase (prima fase 1, poi fase 2, poi playoff ecc.)
+  // e all'interno di ogni fase ordina per nome girone
+  var gironiOrdinati=gironi.slice().sort(function(a,b){
+    var pa=fasePrio(garecamp.find(function(g){return g['Girone']===a;})?garecamp.find(function(g){return g['Girone']===a;})['Fase']||'':'');
+    var pb=fasePrio(garecamp.find(function(g){return g['Girone']===b;})?garecamp.find(function(g){return g['Girone']===b;})['Fase']||'':'');
+    return pa-pb||a.localeCompare(b,'it');
+  });
+
+  // Raggruppa per fase per inserire separatori visivi
+  var faseCorrentePrev='';
+  gironiOrdinati.forEach(function(gi){
     if(/accumulato/i.test(gi))return; // skip, li generiamo noi
     var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
     var sqSet=sqByGi[gi]||new Set();
     var allSqs=[...sqSet].sort();
     if(!allSqs.length)return;
     var giClr=giColor(gi,clr);
-    var isFirstFase=faseOrdered.indexOf(faseOrdered[0])===0;
+    // Determina la fase di questo girone
+    var fasiGi=gGi.map(function(g){return g['Fase']||'';}).filter(Boolean);
+    var faseGi=fasiGi.length?fasiGi[0]:'';
+    var prio=fasePrio(faseGi);
+    // Primo girone è "prima fase" (prio più bassa tra quelli normali)
+    var minPrio=99;
+    gironiOrdinati.forEach(function(gx){if(!/accumulato/i.test(gx)){var fx=garecamp.find(function(g){return g['Girone']===gx;});if(fx){var p=fasePrio(fx['Fase']||'');if(p<minPrio)minPrio=p;}}});
+    var isFirstFase=prio===minPrio;
+    // Separatore tra fasi diverse
+    if(faseGi&&faseGi!==faseCorrentePrev&&!isFaseElim(gi)){
+      if(faseCorrentePrev!=''){
+        cards+='</div><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;margin-top:14px">';
+        cards+='<div style="width:100%;padding:5px 10px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl);font-size:.75rem;font-weight:700;color:var(--bl);margin-bottom:4px">📋 '+escH(faseGi)+'</div>';
+      }
+      faseCorrentePrev=faseGi;
+    }
     var pMap=isFirstFase?null:sqPosizioneGirone;
     cards+=renderCard(calcSt(gGi,allSqs),gGi,giClr,false,gi,pMap);
 
