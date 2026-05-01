@@ -1438,6 +1438,8 @@ tr.loss-row td{background:#fdecea!important;}
     <span class="g-fcat" id="gfc-campo" onclick="gFcatToggle('campo')">Campi <span class="g-fcat-arr">&#9660;</span></span>
     <span class="g-fcat" id="gfc-sq" onclick="gFcatToggle('sq')">Squadre <span class="g-fcat-arr">&#9660;</span></span>
     <span class="g-fcat" id="gfc-citta" onclick="gFcatToggle('citta')">Città <span class="g-fcat-arr">&#9660;</span></span>
+    <span class="g-fcat" id="gfc-provArb" onclick="gFcatToggle('provArb')">Prov. Arbitri <span class="g-fcat-arr">&#9660;</span></span>
+    <span class="g-fcat" id="gfc-ora" onclick="gFcatToggle('ora')">Orario <span class="g-fcat-arr">&#9660;</span></span>
     <button id="g-rst-all" onclick="gResetAll()" style="display:none;align-items:center;border:1.5px solid #c0392b;border-radius:7px;padding:4px 10px;font-size:.68rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">&#10005; Azzera tutto</button>
   </div>
   <div class="g-pp" id="g-pp-camp"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca campionato..." oninput="gPillSearch(this,'camp')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-camp"></div></div>
@@ -1446,6 +1448,8 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="g-pp" id="g-pp-campo"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca campo..." oninput="gPillSearch(this,'campo')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-campo"></div></div>
   <div class="g-pp" id="g-pp-sq"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca squadra..." oninput="gPillSearch(this,'sq')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-sq"></div></div>
   <div class="g-pp" id="g-pp-citta"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca città..." oninput="gPillSearch(this,'citta')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-citta"></div></div>
+  <div class="g-pp" id="g-pp-provArb"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca provincia arbitri..." oninput="gPillSearch(this,'provArb')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-provArb"></div></div>
+  <div class="g-pp" id="g-pp-ora"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca orario..." oninput="gPillSearch(this,'ora')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-ora"></div></div>
   <div class="gare-chips" id="g-chips" style="display:none"></div>
   <div class="gare-restore" id="g-restore"></div>
   <div style="overflow-x:auto">
@@ -6937,6 +6941,8 @@ function _gGetVis(){
     if(_gSEL.campo.size>0&&!_gSEL.campo.has((g['Campo']||'').split(',')[0].trim()))return false;
     if(_gSEL.sq.size>0&&!_gSEL.sq.has(g['Squadra Casa']||'')&&!_gSEL.sq.has(g['Squadra Ospite']||''))return false;
     if(_gSEL.citta.size>0){var _gpsC2=CAMPO_GPS&&CAMPO_GPS[g['Campo']||''];var _cit2=_gpsC2&&_gpsC2.city||'';if(!_gSEL.citta.has(_cit2))return false;}
+    if(_gSEL.provArb.size>0){var _pa1=P&&P[pns(g['Arbitro 1']||'')];var _pa2=P&&P[pns(g['Arbitro 2']||'')];var _pv1=(_pa1&&_pa1.provincia)||'';var _pv2=(_pa2&&_pa2.provincia)||'';if(!_gSEL.provArb.has(_pv1)&&!_gSEL.provArb.has(_pv2))return false;}
+    if(_gSEL.ora.size>0){var _oraG=(g['Ora']||g['ora']||'').trim().substring(0,5);if(!_gSEL.ora.has(_oraG))return false;}
     return true;
   });
 }
@@ -6947,7 +6953,7 @@ function gKpiToggle(key){
   _gRenderChips();_gRenderTable();
 }
 // ── Nuovo sistema pill filter multi-select ──────────────────────────────
-var _gSEL={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),sq:new Set(),citta:new Set()};
+var _gSEL={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),sq:new Set(),citta:new Set(),provArb:new Set(),ora:new Set()};
 function gFcatToggle(type){
   var pp=document.getElementById('g-pp-'+type);
   var fc=document.getElementById('gfc-'+type);
@@ -6994,7 +7000,7 @@ function gResetGrp(type){
   if(rab)rab.style.display=Object.values(_gSEL).some(function(x){return x.size>0;})?'inline-flex':'none';
   _gRenderTable();
 }
-function gResetAll(){['camp','prov','arb','campo','sq','citta'].forEach(function(t){gResetGrp(t);});}
+function gResetAll(){['camp','prov','arb','campo','sq','citta','provArb','ora'].forEach(function(t){gResetGrp(t);});}
 function _gBuildPillBars(){
   var allRows=GARE||[];
   var camps=[...new Set(allRows.map(function(g){return g['Campionato']||'';}))].filter(Boolean).sort(function(a,b){return(typeof livelloC==='function'?livelloC(b)-livelloC(a):0)||a.localeCompare(b,'it');});
@@ -7028,6 +7034,17 @@ function _gBuildPillBars(){
   mkPills('g-pills-sq','sq',squads,function(v){var sq=SQ[v];var pv=sq&&(sq.prov||sq.provincia)||'';return PC[pv]||'#3d4d6b';});
   var citta=[...new Set(allRows.map(function(g){var gps=CAMPO_GPS&&CAMPO_GPS[g['Campo']||''];return gps&&gps.city||'';}).filter(Boolean))].sort();
   mkPills('g-pills-citta','citta',citta,function(v){return'#0f6e56';});
+  // Prov. Arbitri: province degli arbitri designati nelle gare filtrate
+  var provArbs=[...new Set(allRows.flatMap(function(g){
+    var n1=pns(g['Arbitro 1']||''),n2=pns(g['Arbitro 2']||'');
+    var p1=P&&P[n1]&&P[n1].provincia||'';
+    var p2=P&&P[n2]&&P[n2].provincia||'';
+    return[p1,p2];
+  }))].filter(Boolean).sort();
+  mkPills('g-pills-provArb','provArb',provArbs,function(v){return PC[v]||'#5c4a8a';});
+  // Orario: valori unici HH:MM dalle gare
+  var oras=[...new Set(allRows.map(function(g){return(g['Ora']||g['ora']||'').trim().substring(0,5);}))].filter(function(v){return/^\d{2}:\d{2}$/.test(v);}).sort();
+  mkPills('g-pills-ora','ora',oras,function(){return'#1565c0';});
 }
 function _gRenderChips(){
   var el=document.getElementById('g-chips');if(!el)return;
