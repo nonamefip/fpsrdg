@@ -15710,6 +15710,10 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     if(/verde/i.test(gi)&&/\bb\b|\s+b$/i.test(gi))return'#388e3c';
     if(/verde/i.test(gi)&&/\bc\b|\s+c$/i.test(gi))return'#43a047';
     if(/verde/i.test(gi))return'#2e7d32';
+    // Oro/Argento/Bronzo — PRIMA di Nord/Sud per non essere sovrascritti
+    if(/oro/i.test(gi))return'#b8860b';
+    if(/argent/i.test(gi))return'#708090';
+    if(/bronz/i.test(gi))return'#795548';
     // Nord varianti A/B/C
     if(/nord.*\ba\b|nord.*\s+a$/i.test(gi))return'#006064';
     if(/nord.*\bb\b|nord.*\s+b$/i.test(gi))return'#00838f';
@@ -15720,10 +15724,6 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     if(/sud.*\bb\b|sud.*\s+b$/i.test(gi))return'#6a1b9a';
     if(/sud.*\bc\b|sud.*\s+c$/i.test(gi))return'#8e24aa';
     if(/\bsud/i.test(gi))return'#4a148c';
-    // Oro/Argento/Bronzo
-    if(/oro/i.test(gi))return'#b8860b';
-    if(/argent/i.test(gi))return'#708090';
-    if(/bronz/i.test(gi))return'#795548';
     // Colori per nome (rosso, bianco, unico)
     if(/ross/i.test(gi))return'#b71c1c';
     if(/bian/i.test(gi))return'#455a64';
@@ -15944,18 +15944,18 @@ function grtClassifiche(gironi,garecamp,camp,clr){
         else{st[sc].pt++;st[so].pt++;}
       });
       var ranked=Object.entries(st).sort(function(a,b){return b[1].pt-a[1].pt||(b[1].pf-b[1].ps)-(a[1].pf-a[1].ps);});
-      var h='<div style="min-width:220px;flex:1;border:2px solid '+giClr+'88;border-radius:8px;overflow:visible;margin-bottom:4px">';
-      h+='<div style="background:'+giClr+';color:#fff;padding:5px 10px;font-size:.78rem;font-weight:700">'+escH(gi)+'</div>';
-      h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="background:'+giClr+'18">';
+      var h='<div style="min-width:200px;width:220px;flex-shrink:0;border:2px solid '+giClr+'88;border-radius:8px;overflow:visible;margin-bottom:4px">';
+      h+='<div style="background:'+giClr+';color:#fff;padding:5px 10px;font-size:.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(gi)+'</div>';
+      h+='<table style="width:100%;border-collapse:collapse;font-size:.7rem;table-layout:fixed"><thead><tr style="background:'+giClr+'18">';
       if(hasResults){
-        h+='<th style="padding:3px 4px;text-align:center;font-size:.65rem">#</th>'
-          +'<th style="padding:3px 6px;text-align:left">Squadra</th>'
-          +'<th style="padding:2px 4px;text-align:center;font-size:.63rem">G</th>'
-          +'<th style="padding:2px 4px;text-align:center;font-size:.63rem;color:var(--green)">V</th>'
-          +'<th style="padding:2px 4px;text-align:center;font-size:.63rem;color:var(--red)">P</th>'
-          +'<th style="padding:2px 4px;text-align:center;font-size:.63rem">PF</th>'
-          +'<th style="padding:2px 4px;text-align:center;font-size:.63rem;color:#aaa">PS</th>'
-          +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;font-weight:800;color:'+giClr+'">Pt</th>';
+        h+='<th style="padding:3px 2px;text-align:center;width:16px">#</th>'
+          +'<th style="padding:3px 4px;text-align:left">Squadra</th>'
+          +'<th style="padding:2px 3px;text-align:center;width:18px;font-size:.63rem">G</th>'
+          +'<th style="padding:2px 3px;text-align:center;width:18px;font-size:.63rem;color:var(--green)">V</th>'
+          +'<th style="padding:2px 3px;text-align:center;width:18px;font-size:.63rem;color:var(--red)">P</th>'
+          +'<th style="padding:2px 3px;text-align:center;width:26px;font-size:.63rem">PF</th>'
+          +'<th style="padding:2px 3px;text-align:center;width:26px;font-size:.63rem;color:#aaa">PS</th>'
+          +'<th style="padding:2px 3px;text-align:center;width:20px;font-size:.65rem;font-weight:800;color:'+giClr+'">Pt</th>';
       } else {
         h+='<th style="padding:3px 6px;text-align:left">Squadra</th>'
           +'<th style="padding:3px 6px;text-align:center">Girone</th>'
@@ -15996,16 +15996,14 @@ function grtClassifiche(gironi,garecamp,camp,clr){
             +'</tr>';
         });
       }
-      h+='</tbody></table></div></div>';
+      h+='</tbody></table></div>';
       return h;
     }
     function renderFaseSection(fasiArr,icon,label,cols){
       if(!fasiArr.length)return'';
       var sorted=sortFase(fasiArr);
-      // auto-fill con minmax: tutti i gironi stessa larghezza, vanno a capo se necessario
-      var minW=sorted.length<=2?'280px':sorted.length<=4?'220px':'180px';
       var h='<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;color:var(--bl);margin-bottom:8px;padding:6px 12px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl)">'+icon+' '+escH(label)+'</div>'
-        +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax('+minW+',1fr));gap:8px;align-items:flex-start">';
+        +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start">';
       sorted.forEach(function(gi){h+=renderGironeElim(gi);});
       h+='</div></div>';
       return h;
