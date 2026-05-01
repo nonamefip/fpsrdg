@@ -15944,30 +15944,38 @@ function grtClassifiche(gironi,garecamp,camp,clr){
         else{st[sc].pt++;st[so].pt++;}
       });
       var ranked=Object.entries(st).sort(function(a,b){return b[1].pt-a[1].pt||(b[1].pf-b[1].ps)-(a[1].pf-a[1].ps);});
-      var h='<div style="min-width:200px;width:220px;flex-shrink:0;border:2px solid '+giClr+'88;border-radius:8px;overflow:visible;margin-bottom:4px">';
+      var hasProv=Object.keys(sqPosizioneGirone).length>0;
+      var cardW=hasResults?(hasProv?'min-width:300px;width:auto':'min-width:260px;width:auto'):'min-width:220px;width:auto';
+      var h='<div style="'+cardW+';flex-shrink:0;border:2px solid '+giClr+'88;border-radius:8px;overflow:visible;margin-bottom:4px">';
       h+='<div style="background:'+giClr+';color:#fff;padding:5px 10px;font-size:.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(gi)+'</div>';
-      h+='<table style="width:100%;border-collapse:collapse;font-size:.7rem;table-layout:fixed"><thead><tr style="background:'+giClr+'18">';
+      h+='<table style="width:100%;border-collapse:collapse;font-size:.7rem;table-layout:auto"><thead><tr style="background:'+giClr+'18">';
       if(hasResults){
         h+='<th style="padding:3px 2px;text-align:center;width:16px">#</th>'
+          +(hasProv?'<th style="padding:3px 3px;text-align:center;font-size:.6rem;color:var(--mu);width:46px">Prov.</th>':'')
           +'<th style="padding:3px 4px;text-align:left">Squadra</th>'
-          +'<th style="padding:2px 3px;text-align:center;width:18px;font-size:.63rem">G</th>'
-          +'<th style="padding:2px 3px;text-align:center;width:18px;font-size:.63rem;color:var(--green)">V</th>'
-          +'<th style="padding:2px 3px;text-align:center;width:18px;font-size:.63rem;color:var(--red)">P</th>'
-          +'<th style="padding:2px 3px;text-align:center;width:26px;font-size:.63rem">PF</th>'
-          +'<th style="padding:2px 3px;text-align:center;width:26px;font-size:.63rem;color:#aaa">PS</th>'
-          +'<th style="padding:2px 3px;text-align:center;width:20px;font-size:.65rem;font-weight:800;color:'+giClr+'">Pt</th>';
+          +'<th style="padding:2px 4px;text-align:center;width:20px;font-size:.63rem">G</th>'
+          +'<th style="padding:2px 4px;text-align:center;width:20px;font-size:.63rem;color:var(--green)">V</th>'
+          +'<th style="padding:2px 4px;text-align:center;width:20px;font-size:.63rem;color:var(--red)">P</th>'
+          +'<th style="padding:2px 4px;text-align:center;width:30px;font-size:.63rem">PF</th>'
+          +'<th style="padding:2px 4px;text-align:center;width:30px;font-size:.63rem;color:#aaa">PS</th>'
+          +'<th style="padding:2px 4px;text-align:center;width:22px;font-size:.65rem;font-weight:800;color:'+giClr+'">Pt</th>';
       } else {
         h+='<th style="padding:3px 6px;text-align:left">Squadra</th>'
-          +'<th style="padding:3px 6px;text-align:center">Girone</th>'
-          +'<th style="padding:3px 6px;text-align:center">Pos.</th>';
+          +'<th style="padding:3px 6px;text-align:center;width:56px">Girone</th>'
+          +'<th style="padding:3px 6px;text-align:center;width:36px">Pos.</th>';
       }
       h+='</tr></thead><tbody>';
       if(hasResults){
         ranked.forEach(function(e,idx){
           var sq=e[0],s=e[1];
           var posClr=idx===0?'var(--gold)':idx===1?'#aaa':idx===2?'#cd7f32':'var(--mu)';
-          h+='<tr style="background:'+(idx%2?'#f8faff':'#fff')+';border-bottom:1px solid #f0f0f0">'
+          var prov=hasProv?sqPosizioneGirone[sq]:null;
+          var provGiNm=prov?(prov.girone||'').replace(/girone\s*/i,'').trim():'';
+          var provGiClr=prov?GIRONE_COLORS_MAP[prov.girone||'']||giColor(prov.girone||'',giClr):giClr;
+          var provCell=prov?'<td style="padding:2px 3px;text-align:center;border-bottom:1px solid #f0f0f0"><div style="display:inline-flex;flex-direction:column;align-items:center;gap:1px"><span style="background:'+provGiClr+';color:#fff;border-radius:3px;padding:0 4px;font-size:.56rem;font-weight:700;white-space:nowrap">'+escH(provGiNm)+'</span><span style="font-size:.58rem;color:'+provGiClr+';font-weight:700">'+prov.pos+'°</span></div></td>':'';
+          h+='<tr style="background:'+(idx%2?'#f8faff':'#fff')+';border-bottom:1px solid #f0f0f0;border-left:3px solid '+(prov?provGiClr:'transparent')+'">'
             +'<td style="padding:3px;text-align:center;color:'+posClr+';font-size:.62rem">'+(idx+1)+'</td>'
+            +(hasProv?provCell:'')
             +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+escH(sq)+'">'+escH(sq)+'</span></td>'
             +'<td style="padding:3px;text-align:center;font-size:.72rem">'+s.g+'</td>'
             +'<td style="padding:3px;text-align:center;color:var(--green);font-weight:700;font-size:.72rem">'+s.v+'</td>'
@@ -15986,12 +15994,13 @@ function grtClassifiche(gironi,garecamp,camp,clr){
         }).forEach(function(sq,idx){
           var info=sqPosizioneGirone[sq];
           var gironeName=info?info.girone.replace(/girone\s*/i,'').trim():'–';
+          var giNmClr=info?GIRONE_COLORS_MAP[info.girone||'']||giColor(info.girone||'',giClr):giClr;
           var pos=info?info.pos:'–';
           var posClr=pos===1?'var(--gold)':pos===2?'#aaa':pos===3?'#cd7f32':'var(--mu)';
           var posLabel=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos+'°';
-          h+='<tr style="background:'+(idx%2?'#f8faff':'#fff')+';border-bottom:1px solid #f0f0f0">'
+          h+='<tr style="background:'+(idx%2?'#f8faff':'#fff')+';border-bottom:1px solid #f0f0f0;border-left:3px solid '+giNmClr+'">'
             +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+escH(sq)+'">'+escH(sq)+'</span></td>'
-            +'<td style="padding:4px 6px;text-align:center;font-size:.65rem;color:var(--mu)">'+escH(gironeName)+'</td>'
+            +'<td style="padding:4px 6px;text-align:center"><span style="background:'+giNmClr+';color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;font-weight:700;white-space:nowrap">'+escH(gironeName)+'</span></td>'
             +'<td style="padding:4px 6px;text-align:center;font-weight:700;color:'+posClr+'">'+posLabel+'</td>'
             +'</tr>';
         });
