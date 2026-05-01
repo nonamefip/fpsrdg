@@ -3797,6 +3797,11 @@ function openGiornoMulti(dates){
   var arbSet2=[...new Set(allGare.flatMap(function(g){return[pns(g['Arbitro 1']||''),pns(g['Arbitro 2']||'')].filter(Boolean);}))].sort();
   var campoSet2=[...new Set(allGare.map(function(g){return g['Campo']||'';}).filter(Boolean))].sort();
   var cittaSet2=[...new Set(allGare.map(function(g){var gps=CAMPO_GPS[g['Campo']||''];return gps&&gps.city?gps.city:'';}).filter(Boolean))].sort();
+  var provArbSet2=[...new Set(allGare.flatMap(function(g){
+    var n1=pns(g['Arbitro 1']||''),n2=pns(g['Arbitro 2']||'');
+    return[(P[n1]&&P[n1].provincia)||'',(P[n2]&&P[n2].provincia)||''];
+  }))].filter(Boolean).sort();
+  var oraSet2=[...new Set(allGare.map(function(g){return(g['Ora']||g['ora']||'').trim().substring(0,5);}))].filter(function(v){return/^\d{2}:\d{2}$/.test(v);}).sort();
 
   function _mgmFcatHtml(type,label){
     return '<span class="gm-fcat" id="mgm-fc-'+type+'" data-grp="'+type+'" onclick="_mgmToggleGrp(this.dataset.grp)" style="display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--tbl-bdr,#dde3f0);border-radius:7px;padding:5px 13px;font-size:.72rem;font-weight:600;cursor:pointer;background:var(--tbl-bg,#fff);color:var(--txt,#1a2340);margin-bottom:2px">'+label+' <span style="font-size:9px;opacity:.6">▼</span></span>';
@@ -3818,6 +3823,8 @@ function openGiornoMulti(dates){
     +_mgmFcatHtml('arb','Arbitri')
     +_mgmFcatHtml('campo','Campi')
     +_mgmFcatHtml('citta','Città')
+    +_mgmFcatHtml('provArb','Prov. Arbitri')
+    +_mgmFcatHtml('ora','Orario')
     +'<button id="mgm-reset-all-btn" onclick="_mgmResetAll()" style="display:none;border:1.5px solid #c0392b;border-radius:7px;padding:5px 11px;font-size:.7rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">✕ Azzera tutto</button>'
     +'</div>'
     +'<div class="gm-pp" id="mgm-pp-camp" style="max-height:0;overflow:hidden;transition:max-height .25s,opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center">'
@@ -3840,20 +3847,28 @@ function openGiornoMulti(dates){
     +cittaSet2.map(function(c){return _mgmPillHtml('citta',c,c,'#37474f');}).join('')
     +'<button data-rg="citta" onclick="_mgmResetGrp(this.dataset.rg)" style="background:none;border:0.5px solid var(--br,#dde3f0);color:var(--mu);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button>'
     +'</div></div>'
+    +'<div class="gm-pp" id="mgm-pp-provArb" style="max-height:0;overflow:hidden;transition:max-height .25s,opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center">'
+    +provArbSet2.map(function(pv){return _mgmPillHtml('provArb',pv,pv,PC[pv]||'#5c4a8a');}).join('')
+    +'<button data-rg="provArb" onclick="_mgmResetGrp(this.dataset.rg)" style="background:none;border:0.5px solid var(--br,#dde3f0);color:var(--mu);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button>'
+    +'</div></div>'
+    +'<div class="gm-pp" id="mgm-pp-ora" style="max-height:0;overflow:hidden;transition:max-height .25s,opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center">'
+    +oraSet2.map(function(o){return _mgmPillHtml('ora',o,o,'#1565c0');}).join('')
+    +'<button data-rg="ora" onclick="_mgmResetGrp(this.dataset.rg)" style="background:none;border:0.5px solid var(--br,#dde3f0);color:var(--mu);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button>'
+    +'</div></div>'
     +'<div id="mgm-info" style="font-size:.72rem;color:var(--mu);margin-bottom:4px">'+tot+' gare</div>'
     +'<div style="overflow-x:auto"><table class="gtbl" style="font-size:.73rem"><thead><tr>'
     +'<th>Data</th><th>Ora</th><th>N°</th><th>Camp.</th><th>Prov.</th><th>Casa</th><th>Risultato</th><th>Ospite</th><th>Arb.1</th><th>Arb.2</th><th>Campo</th>'
     +'</tr></thead><tbody id="mgm-tbody">'+buildRows(allGare)+'</tbody></table></div>';
 
   window._mgmAllGare=allGare;
-  window._mgmActivePills={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),citta:new Set()};
+  window._mgmActivePills={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),citta:new Set(),provArb:new Set(),ora:new Set()};
   window._mgmToggleGrp=function(grp){
     var pp=document.getElementById('mgm-pp-'+grp);
     var fc=document.getElementById('mgm-fc-'+grp);
     if(!pp)return;
     var open=pp.style.maxHeight!=='0px'&&pp.style.maxHeight!=='';
     // close all
-    ['camp','prov','arb','campo','citta'].forEach(function(g){
+    ['camp','prov','arb','campo','citta','provArb','ora'].forEach(function(g){
       var p2=document.getElementById('mgm-pp-'+g);
       if(p2){p2.style.maxHeight='0px';p2.style.opacity='0';}
     });
@@ -3894,6 +3909,8 @@ function openGiornoMulti(dates){
       if(ap.campo.size&&!ap.campo.has(campo))return false;
       var city=CAMPO_GPS[campo]?.city||'';
       if(ap.citta.size&&!ap.citta.has(city))return false;
+      if(ap.provArb.size){var _pa1=P[pns(g['Arbitro 1']||'')],_pa2=P[pns(g['Arbitro 2']||'')];var _pv1=(_pa1&&_pa1.provincia)||'',_pv2=(_pa2&&_pa2.provincia)||'';if(!ap.provArb.has(_pv1)&&!ap.provArb.has(_pv2))return false;}
+      if(ap.ora.size){var _oraG=(g['Ora']||g['ora']||'').trim().substring(0,5);if(!ap.ora.has(_oraG))return false;}
       return true;
     });
     var info=document.getElementById('mgm-info');
