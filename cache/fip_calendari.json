@@ -3746,7 +3746,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Aquilotti Small": {
     "campionato": "Aquilotti Small",
@@ -11067,20 +11067,21 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Divisione regionale 1": {
     "campionato": "Divisione regionale 1",
-    "n_gare": 201,
+    "n_gare": 203,
     "n_giocate": 193,
-    "n_programmate": 8,
+    "n_programmate": 10,
     "data_inizio": "2025-10-04",
-    "data_fine": "2026-05-09",
-    "n_fasi": 3,
+    "data_fine": "2026-05-10",
+    "n_fasi": 4,
     "fasi_nomi": [
       "Qualificazione",
       "Fase Playout",
-      "Fase Playoff QT"
+      "Fase Playoff QT",
+      "Fase Playoff SF"
     ],
     "fasi": [
       {
@@ -16407,7 +16408,7 @@
                     "Arbitro 3": "",
                     "Segnapunti": "LUSSU ELEKTRA di ASSEMINI (CA)",
                     "Cronometrista": "",
-                    "24 Secondi": "",
+                    "24 Secondi": "BASSO VALENTINA di ELMAS (CA)",
                     "Addetto Referto": "",
                     "Osservatore": "",
                     "Provvedimenti": "",
@@ -17105,9 +17106,9 @@
                     "Arbitro 1": "FIORIN GIANMARCO di NURACHI (OR)",
                     "Arbitro 2": "FORTUNATO DIEGO di OLBIA (SS)",
                     "Arbitro 3": "",
-                    "Segnapunti": "",
+                    "Segnapunti": "DEMURTAS ILARIA di CAGLIARI (CA)",
                     "Cronometrista": "MARINO ELENA di QUARTU SANT'ELENA (CA)",
-                    "24 Secondi": "",
+                    "24 Secondi": "MELONI BEATRICE di QUARTU SANT'ELENA (CA)",
                     "Addetto Referto": "",
                     "Osservatore": "",
                     "Provvedimenti": "",
@@ -17149,17 +17150,169 @@
             "serie": []
           }
         ]
+      },
+      {
+        "nome": "Fase Playoff SF",
+        "tipo": "girone",
+        "sort_key": 99,
+        "n_gironi": 2,
+        "gironi": [
+          {
+            "nome": "Prima Semifinale",
+            "squadre": [
+              "ASTRO SSDRL",
+              "C.M.B. PORTO TORRES"
+            ],
+            "n_squadre": 2,
+            "n_gare": 1,
+            "giornate": [
+              {
+                "n": 1,
+                "gare": [
+                  {
+                    "Data": "2026-05-10",
+                    "Ora": "18:00",
+                    "Numero Gara": "005337",
+                    "Campionato": "Divisione regionale 1",
+                    "Girone": "Prima Semifinale",
+                    "Fase": "Fase Playoff SF",
+                    "Squadra Casa": "C.M.B. PORTO TORRES",
+                    "Squadra Ospite": "ASTRO SSDRL",
+                    "Punti Casa": "",
+                    "Punti Ospite": "",
+                    "Risultato": "",
+                    "Stato Gara": "",
+                    "Campo": "Palazzetto dello Sport, Via Palladio 07046 PORTO TORRES ( SS)",
+                    "Arbitro 1": "",
+                    "Arbitro 2": "",
+                    "Arbitro 3": "",
+                    "Segnapunti": "",
+                    "Cronometrista": "",
+                    "24 Secondi": "",
+                    "Addetto Referto": "",
+                    "Osservatore": "",
+                    "Provvedimenti": "",
+                    "_pt_cum_casa": 0,
+                    "_pt_cum_osp": 0
+                  }
+                ],
+                "completa": false,
+                "data_label": "10 mag"
+              }
+            ],
+            "n_giornate": 1,
+            "classifica": [
+              {
+                "sq": "ASTRO SSDRL",
+                "g": 0,
+                "v": 0,
+                "s": 0,
+                "par": 0,
+                "pf": 0,
+                "ps": 0,
+                "punti": 0,
+                "diff": 0,
+                "pos": 1
+              },
+              {
+                "sq": "C.M.B. PORTO TORRES",
+                "g": 0,
+                "v": 0,
+                "s": 0,
+                "par": 0,
+                "pf": 0,
+                "ps": 0,
+                "punti": 0,
+                "diff": 0,
+                "pos": 2
+              }
+            ],
+            "serie": []
+          },
+          {
+            "nome": "Seconda Semifinale",
+            "squadre": [
+              "1a - Terzo Quarto - Fase Playo",
+              "G.S.O. ELMAS"
+            ],
+            "n_squadre": 2,
+            "n_gare": 1,
+            "giornate": [
+              {
+                "n": 1,
+                "gare": [
+                  {
+                    "Data": "2026-05-09",
+                    "Ora": "19:00",
+                    "Numero Gara": "005340",
+                    "Campionato": "Divisione regionale 1",
+                    "Girone": "Seconda Semifinale",
+                    "Fase": "Fase Playoff SF",
+                    "Squadra Casa": "G.S.O. ELMAS",
+                    "Squadra Ospite": "1a - Terzo Quarto - Fase Playo",
+                    "Punti Casa": "",
+                    "Punti Ospite": "",
+                    "Risultato": "",
+                    "Stato Gara": "",
+                    "Campo": "PALAZZETTO COMUNALE, Via Giliacquas 09030 ELMAS ( CA)",
+                    "Arbitro 1": "",
+                    "Arbitro 2": "",
+                    "Arbitro 3": "",
+                    "Segnapunti": "",
+                    "Cronometrista": "",
+                    "24 Secondi": "",
+                    "Addetto Referto": "",
+                    "Osservatore": "",
+                    "Provvedimenti": "",
+                    "_pt_cum_casa": 0,
+                    "_pt_cum_osp": 0
+                  }
+                ],
+                "completa": false,
+                "data_label": "9 mag"
+              }
+            ],
+            "n_giornate": 1,
+            "classifica": [
+              {
+                "sq": "1a - Terzo Quarto - Fase Playo",
+                "g": 0,
+                "v": 0,
+                "s": 0,
+                "par": 0,
+                "pf": 0,
+                "ps": 0,
+                "punti": 0,
+                "diff": 0,
+                "pos": 1
+              },
+              {
+                "sq": "G.S.O. ELMAS",
+                "g": 0,
+                "v": 0,
+                "s": 0,
+                "par": 0,
+                "pf": 0,
+                "ps": 0,
+                "punti": 0,
+                "diff": 0,
+                "pos": 2
+              }
+            ],
+            "serie": []
+          }
+        ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Divisione regionale 2": {
     "campionato": "Divisione regionale 2",
-    "n_gare": 414,
-    "n_giocate": 384,
+    "n_gare": 415,
+    "n_giocate": 385,
     "n_programmate": 30,
     "data_inizio": "2025-10-11",
-    "data_fine": "2026-05-14",
+    "data_fine": "2026-05-15",
     "n_fasi": 3,
     "fasi_nomi": [
       "Qualificazione",
@@ -20606,7 +20759,7 @@
               "SCUOLA BASKET CARBONIA"
             ],
             "n_squadre": 16,
-            "n_gare": 230,
+            "n_gare": 231,
             "giornate": [
               {
                 "n": 1,
@@ -26411,7 +26564,7 @@
                     "Stato Gara": "",
                     "Campo": "Palestra Scuola Elementare, Via Lussu 09040 SETTIMO SAN PIETRO ( CA)",
                     "Arbitro 1": "MARONGIU CRISTIAN di SERRAMANNA (SU)",
-                    "Arbitro 2": "MILIA LUCA di SESTU (CA)",
+                    "Arbitro 2": "ZARA MASSIMO di ORISTANO (OR)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
                     "Cronometrista": "",
@@ -26495,8 +26648,8 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "Palestra scuole medie , Salita S. Cristina 09014 CARLOFORTE ( SU)",
-                    "Arbitro 1": "",
-                    "Arbitro 2": "",
+                    "Arbitro 1": "SEU ALESSANDRA di QUARTUCCIU (CA)",
+                    "Arbitro 2": "SADDI NICOLA di QUARTU SANT'ELENA (CA)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
                     "Cronometrista": "",
@@ -26521,7 +26674,7 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "CUPOLA GEODETICA, Via Capo Comino 09042 MONSERRATO ( CA)",
-                    "Arbitro 1": "",
+                    "Arbitro 1": "FRAU DAVIDE di MONSERRATO (CA)",
                     "Arbitro 2": "",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -26799,10 +26952,36 @@
                     "Provvedimenti": "",
                     "_pt_cum_casa": 4,
                     "_pt_cum_osp": 40
+                  },
+                  {
+                    "Data": "2026-05-15",
+                    "Ora": "20:45",
+                    "Numero Gara": "000726",
+                    "Campionato": "Divisione regionale 2",
+                    "Girone": "Girone Sud",
+                    "Fase": "Qualificazione",
+                    "Squadra Casa": "POL. SERRAMANNA",
+                    "Squadra Ospite": "LA CASA DEL SORRISO",
+                    "Punti Casa": "",
+                    "Punti Ospite": "",
+                    "Risultato": "",
+                    "Stato Gara": "",
+                    "Campo": "PALAZZETTO DELLO SPORT , VIA NURAMINIS 09038 SERRAMANNA ( SU)",
+                    "Arbitro 1": "",
+                    "Arbitro 2": "",
+                    "Arbitro 3": "",
+                    "Segnapunti": "",
+                    "Cronometrista": "",
+                    "24 Secondi": "",
+                    "Addetto Referto": "",
+                    "Osservatore": "",
+                    "Provvedimenti": "",
+                    "_pt_cum_casa": 46,
+                    "_pt_cum_osp": 36
                   }
                 ],
                 "completa": false,
-                "data_label": "9 mag–14 mag"
+                "data_label": "9 mag–15 mag"
               },
               {
                 "n": 43,
@@ -29242,7 +29421,7 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "Palestra Scuola Media, Via Nanni 07026 OLBIA ( SS)",
-                    "Arbitro 1": "FORTUNATO DIEGO di OLBIA (SS)",
+                    "Arbitro 1": "",
                     "Arbitro 2": "",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -29414,9 +29593,9 @@
                     "Fase": "Spareggi Playoff Nor",
                     "Squadra Casa": "ACCADEMIA OLMEDO",
                     "Squadra Ospite": "SHARDANA BASKET",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "62",
+                    "Punti Ospite": "76",
+                    "Risultato": "62-76",
                     "Stato Gara": "",
                     "Campo": "PALESTRA, Via EMILIO LUSSU 18 07040 OLMEDO ( SS)",
                     "Arbitro 1": "SPISSU ALESSANDRO di ALGHERO (SS)",
@@ -29432,7 +29611,7 @@
                     "_pt_cum_osp": 0
                   }
                 ],
-                "completa": false,
+                "completa": true,
                 "data_label": "29 apr"
               },
               {
@@ -29461,7 +29640,7 @@
                     "Addetto Referto": "",
                     "Osservatore": "",
                     "Provvedimenti": "",
-                    "_pt_cum_casa": 0,
+                    "_pt_cum_casa": 2,
                     "_pt_cum_osp": 0
                   }
                 ],
@@ -29472,27 +29651,27 @@
             "n_giornate": 2,
             "classifica": [
               {
-                "sq": "ACCADEMIA OLMEDO",
-                "g": 0,
-                "v": 0,
+                "sq": "SHARDANA BASKET",
+                "g": 1,
+                "v": 1,
                 "s": 0,
                 "par": 0,
-                "pf": 0,
-                "ps": 0,
-                "punti": 0,
-                "diff": 0,
+                "pf": 76,
+                "ps": 62,
+                "punti": 2,
+                "diff": 14,
                 "pos": 1
               },
               {
-                "sq": "SHARDANA BASKET",
-                "g": 0,
+                "sq": "ACCADEMIA OLMEDO",
+                "g": 1,
                 "v": 0,
-                "s": 0,
+                "s": 1,
                 "par": 0,
-                "pf": 0,
-                "ps": 0,
+                "pf": 62,
+                "ps": 76,
                 "punti": 0,
-                "diff": 0,
+                "diff": -14,
                 "pos": 2
               }
             ],
@@ -29606,7 +29785,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Esordienti Femminile": {
     "campionato": "Esordienti Femminile",
@@ -29614,7 +29793,7 @@
     "n_giocate": 54,
     "n_programmate": 21,
     "data_inizio": "2025-11-28",
-    "data_fine": "2026-05-12",
+    "data_fine": "2026-05-15",
     "n_fasi": 1,
     "fasi_nomi": [
       "Qualificazione"
@@ -30372,39 +30551,6 @@
                 "n": 16,
                 "gare": [
                   {
-                    "Data": "2026-03-08",
-                    "Ora": "16:00",
-                    "Numero Gara": "002836",
-                    "Campionato": "Esordienti Femminile",
-                    "Girone": "Gir A SUD COMPETITIVO",
-                    "Fase": "Qualificazione",
-                    "Squadra Casa": "BASKET ANTONIANUM",
-                    "Squadra Ospite": "A.S.D. BASKET DECIMO",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
-                    "Stato Gara": "",
-                    "Campo": "Pala Antonianum, Via Mons. Angioni 46 09045 QUARTU SANT'ELENA ( CA)",
-                    "Arbitro 1": "",
-                    "Arbitro 2": "",
-                    "Arbitro 3": "",
-                    "Segnapunti": "",
-                    "Cronometrista": "",
-                    "24 Secondi": "",
-                    "Addetto Referto": "",
-                    "Osservatore": "",
-                    "Provvedimenti": "",
-                    "_pt_cum_casa": 4,
-                    "_pt_cum_osp": 12
-                  }
-                ],
-                "completa": false,
-                "data_label": "8 mar"
-              },
-              {
-                "n": 17,
-                "gare": [
-                  {
                     "Data": "2026-03-14",
                     "Ora": "16:00",
                     "Numero Gara": "002830",
@@ -30461,7 +30607,7 @@
                 "data_label": "14 mar–15 mar"
               },
               {
-                "n": 18,
+                "n": 17,
                 "gare": [
                   {
                     "Data": "2026-03-23",
@@ -30494,7 +30640,7 @@
                 "data_label": "23 mar"
               },
               {
-                "n": 19,
+                "n": 18,
                 "gare": [
                   {
                     "Data": "2026-05-12",
@@ -30521,13 +30667,39 @@
                     "Provvedimenti": "",
                     "_pt_cum_casa": 8,
                     "_pt_cum_osp": 8
+                  },
+                  {
+                    "Data": "2026-05-15",
+                    "Ora": "18:00",
+                    "Numero Gara": "002836",
+                    "Campionato": "Esordienti Femminile",
+                    "Girone": "Gir A SUD COMPETITIVO",
+                    "Fase": "Qualificazione",
+                    "Squadra Casa": "BASKET ANTONIANUM",
+                    "Squadra Ospite": "A.S.D. BASKET DECIMO",
+                    "Punti Casa": "",
+                    "Punti Ospite": "",
+                    "Risultato": "",
+                    "Stato Gara": "",
+                    "Campo": "Pala Antonianum, Via Mons. Angioni 46 09045 QUARTU SANT'ELENA ( CA)",
+                    "Arbitro 1": "",
+                    "Arbitro 2": "",
+                    "Arbitro 3": "",
+                    "Segnapunti": "",
+                    "Cronometrista": "",
+                    "24 Secondi": "",
+                    "Addetto Referto": "",
+                    "Osservatore": "",
+                    "Provvedimenti": "",
+                    "_pt_cum_casa": 4,
+                    "_pt_cum_osp": 16
                   }
                 ],
                 "completa": false,
-                "data_label": "12 mag"
+                "data_label": "12 mag–15 mag"
               }
             ],
-            "n_giornate": 19,
+            "n_giornate": 18,
             "classifica": [
               {
                 "sq": "A.S.D. BASKET DECIMO",
@@ -32195,13 +32367,13 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Gazzelle Big": {
     "campionato": "Gazzelle Big",
     "n_gare": 28,
-    "n_giocate": 23,
-    "n_programmate": 5,
+    "n_giocate": 24,
+    "n_programmate": 4,
     "data_inizio": "2025-12-14",
     "data_fine": "2026-04-29",
     "n_fasi": 1,
@@ -32936,9 +33108,9 @@
                     "Fase": "Qualificazione",
                     "Squadra Casa": "VIRTUS CAGLIARI",
                     "Squadra Ospite": "BASKET ANTONIANUM",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "14",
+                    "Punti Ospite": "10",
+                    "Risultato": "14-10",
                     "Stato Gara": "",
                     "Campo": "Palestra Virtus, Via Pessagno (loc. Montemixi) 09126 CAGLIARI ( CA)",
                     "Arbitro 1": "",
@@ -32954,7 +33126,7 @@
                     "_pt_cum_osp": 10
                   }
                 ],
-                "completa": false,
+                "completa": true,
                 "data_label": "29 apr"
               }
             ],
@@ -32962,26 +33134,26 @@
             "classifica": [
               {
                 "sq": "VIRTUS CAGLIARI",
-                "g": 7,
-                "v": 7,
+                "g": 8,
+                "v": 8,
                 "s": 0,
                 "par": 0,
-                "pf": 114,
-                "ps": 54,
-                "punti": 14,
-                "diff": 60,
+                "pf": 128,
+                "ps": 64,
+                "punti": 16,
+                "diff": 64,
                 "pos": 1
               },
               {
                 "sq": "BASKET ANTONIANUM",
-                "g": 6,
+                "g": 7,
                 "v": 5,
-                "s": 1,
+                "s": 2,
                 "par": 0,
-                "pf": 93,
-                "ps": 51,
+                "pf": 103,
+                "ps": 65,
                 "punti": 10,
-                "diff": 42,
+                "diff": 38,
                 "pos": 2
               },
               {
@@ -33289,7 +33461,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Gazzelle Small": {
     "campionato": "Gazzelle Small",
@@ -34678,7 +34850,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Libellule Big": {
     "campionato": "Libellule Big",
@@ -35705,7 +35877,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Scoiattoli Big": {
     "campionato": "Scoiattoli Big",
@@ -36634,7 +36806,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Scoiattoli Small": {
     "campionato": "Scoiattoli Small",
@@ -41099,7 +41271,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Serie B Femminile": {
     "campionato": "Serie B Femminile",
@@ -44430,7 +44602,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Serie C": {
     "campionato": "Serie C",
@@ -48892,15 +49064,15 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Trofeo Esordienti": {
     "campionato": "Trofeo Esordienti",
-    "n_gare": 224,
+    "n_gare": 225,
     "n_giocate": 191,
-    "n_programmate": 33,
+    "n_programmate": 34,
     "data_inizio": "2025-11-20",
-    "data_fine": "2026-05-11",
+    "data_fine": "2026-05-15",
     "n_fasi": 1,
     "fasi_nomi": [
       "Qualificazione"
@@ -50875,7 +51047,7 @@
               "P.G.S. CONDOR"
             ],
             "n_squadre": 9,
-            "n_gare": 71,
+            "n_gare": 72,
             "giornate": [
               {
                 "n": 1,
@@ -52939,9 +53111,42 @@
                 ],
                 "completa": false,
                 "data_label": "11 mag"
+              },
+              {
+                "n": 32,
+                "gare": [
+                  {
+                    "Data": "2026-05-15",
+                    "Ora": "18:00",
+                    "Numero Gara": "002847",
+                    "Campionato": "Trofeo Esordienti",
+                    "Girone": "Girone A SUD COMPETITIVO",
+                    "Fase": "Qualificazione",
+                    "Squadra Casa": "CUS CAGLIARI",
+                    "Squadra Ospite": "BASKET DECIMO",
+                    "Punti Casa": "",
+                    "Punti Ospite": "",
+                    "Risultato": "",
+                    "Stato Gara": "",
+                    "Campo": "PALACUS, Via Is Mirrionis 3 - 9 09123 CAGLIARI ( CA)",
+                    "Arbitro 1": "",
+                    "Arbitro 2": "",
+                    "Arbitro 3": "",
+                    "Segnapunti": "",
+                    "Cronometrista": "",
+                    "24 Secondi": "",
+                    "Addetto Referto": "",
+                    "Osservatore": "",
+                    "Provvedimenti": "",
+                    "_pt_cum_casa": 0,
+                    "_pt_cum_osp": 4
+                  }
+                ],
+                "completa": false,
+                "data_label": "15 mag"
               }
             ],
-            "n_giornate": 31,
+            "n_giornate": 32,
             "classifica": [
               {
                 "sq": "ESPERIA A.S. DIL.",
@@ -56464,7 +56669,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 13 Femminile Regionale": {
     "campionato": "Under 13 Femminile Regionale",
@@ -61947,7 +62152,7 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "Palestra Comunale, Via Garau, Sn 09026 SAN SPERATE ( SU)",
-                    "Arbitro 1": "",
+                    "Arbitro 1": "LACONI MARCO di VILLASIMIUS (SU)",
                     "Arbitro 2": "",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -62044,7 +62249,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 13 Maschile Regionale": {
     "campionato": "Under 13 Maschile Regionale",
@@ -71529,7 +71734,7 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "Palazzetto dello Sport, Asse Mediano 09036 GUSPINI ( SU)",
-                    "Arbitro 1": "",
+                    "Arbitro 1": "SUSMEL RICCARDO di SELARGIUS (CA)",
                     "Arbitro 2": "",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -73064,7 +73269,7 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "Hangar Sport Center, Via Gioscari 9 07100 SASSARI ( SS)",
-                    "Arbitro 1": "",
+                    "Arbitro 1": "BRANCA GIORDANO di OLMEDO (SS)",
                     "Arbitro 2": "CARINELLI FEDERICO di ALGHERO (SS)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -73124,7 +73329,7 @@
                     "Stato Gara": "",
                     "Campo": "Hangar Sport Center, Via Gioscari 9 07100 SASSARI ( SS)",
                     "Arbitro 1": "COCCO FRANCESCO di SASSARI (SS)",
-                    "Arbitro 2": "",
+                    "Arbitro 2": "BRANCA GIORDANO di OLMEDO (SS)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
                     "Cronometrista": "",
@@ -75061,13 +75266,13 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 14 Femminile Regionale": {
     "campionato": "Under 14 Femminile Regionale",
     "n_gare": 173,
-    "n_giocate": 158,
-    "n_programmate": 15,
+    "n_giocate": 160,
+    "n_programmate": 13,
     "data_inizio": "2025-10-27",
     "data_fine": "2026-05-11",
     "n_fasi": 4,
@@ -79497,9 +79702,9 @@
                     "Fase": "Seconda Fase",
                     "Squadra Casa": "ACLI SUPERGA",
                     "Squadra Ospite": "VIRTUS CAGLIARI",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "40",
+                    "Punti Ospite": "49",
+                    "Risultato": "40-49",
                     "Stato Gara": "",
                     "Campo": "Palestra Oratorio Salesiano, Piazza Giovanni X X I I I 09131 CAGLIARI ( CA)",
                     "Arbitro 1": "MASCIA ANDREA di SELARGIUS (CA)",
@@ -79541,12 +79746,24 @@
                     "_pt_cum_osp": 14
                   }
                 ],
-                "completa": false,
+                "completa": true,
                 "data_label": "28 apr"
               }
             ],
             "n_giornate": 16,
             "classifica": [
+              {
+                "sq": "VIRTUS CAGLIARI",
+                "g": 10,
+                "v": 8,
+                "s": 2,
+                "par": 0,
+                "pf": 574,
+                "ps": 422,
+                "punti": 16,
+                "diff": 152,
+                "pos": 1
+              },
               {
                 "sq": "G.S. ORATORIO ELMAS",
                 "g": 10,
@@ -79557,7 +79774,7 @@
                 "ps": 334,
                 "punti": 16,
                 "diff": 146,
-                "pos": 1
+                "pos": 2
               },
               {
                 "sq": "BASKET ANTONIANUM",
@@ -79569,30 +79786,18 @@
                 "ps": 422,
                 "punti": 16,
                 "diff": 143,
-                "pos": 2
-              },
-              {
-                "sq": "VIRTUS CAGLIARI",
-                "g": 9,
-                "v": 7,
-                "s": 2,
-                "par": 0,
-                "pf": 525,
-                "ps": 382,
-                "punti": 14,
-                "diff": 143,
                 "pos": 3
               },
               {
                 "sq": "ACLI SUPERGA",
-                "g": 9,
+                "g": 10,
                 "v": 3,
-                "s": 6,
+                "s": 7,
                 "par": 0,
-                "pf": 447,
-                "ps": 416,
+                "pf": 487,
+                "ps": 465,
                 "punti": 6,
-                "diff": 31,
+                "diff": 22,
                 "pos": 4
               },
               {
@@ -80403,12 +80608,12 @@
                     "Fase": "Seconda Fase Nord",
                     "Squadra Casa": "BASKET NULVI",
                     "Squadra Ospite": "BASKET GHILARZA",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "58",
+                    "Punti Ospite": "29",
+                    "Risultato": "58-29",
                     "Stato Gara": "",
                     "Campo": "Palazzetto dello Sport, Zona Sportiva 07032 NULVI ( SS)",
-                    "Arbitro 1": "",
+                    "Arbitro 1": "SOLINAS GIANFRANCO di SASSARI (SS)",
                     "Arbitro 2": "",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -80490,6 +80695,18 @@
                 "pos": 3
               },
               {
+                "sq": "BASKET NULVI",
+                "g": 6,
+                "v": 4,
+                "s": 2,
+                "par": 0,
+                "pf": 320,
+                "ps": 244,
+                "punti": 8,
+                "diff": 76,
+                "pos": 4
+              },
+              {
                 "sq": "DINAMO LAB",
                 "g": 7,
                 "v": 3,
@@ -80499,18 +80716,6 @@
                 "ps": 303,
                 "punti": 6,
                 "diff": 82,
-                "pos": 4
-              },
-              {
-                "sq": "BASKET NULVI",
-                "g": 5,
-                "v": 3,
-                "s": 2,
-                "par": 0,
-                "pf": 262,
-                "ps": 215,
-                "punti": 6,
-                "diff": 47,
                 "pos": 5
               },
               {
@@ -80527,14 +80732,14 @@
               },
               {
                 "sq": "BASKET GHILARZA",
-                "g": 6,
+                "g": 7,
                 "v": 1,
-                "s": 5,
+                "s": 6,
                 "par": 0,
-                "pf": 177,
-                "ps": 409,
+                "pf": 206,
+                "ps": 467,
                 "punti": 2,
-                "diff": -232,
+                "diff": -261,
                 "pos": 7
               },
               {
@@ -80691,8 +80896,8 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "Palestra Luca Simula, Via Poligono 2 07100 SASSARI ( SS)",
-                    "Arbitro 1": "",
-                    "Arbitro 2": "",
+                    "Arbitro 1": "PUGGIONI GABRIELE di SASSARI (SS)",
+                    "Arbitro 2": "PUGGIONI SAMUELE di SASSARI (SS)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
                     "Cronometrista": "",
@@ -80902,7 +81107,7 @@
                     "Stato Gara": "",
                     "Campo": "Hangar Sport Center, Via Gioscari 9 07100 SASSARI ( SS)",
                     "Arbitro 1": "",
-                    "Arbitro 2": "",
+                    "Arbitro 2": "FRAU MARCO di SASSARI (SS)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
                     "Cronometrista": "",
@@ -80983,15 +81188,15 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 14 Maschile Regionale": {
     "campionato": "Under 14 Maschile Regionale",
-    "n_gare": 365,
-    "n_giocate": 306,
+    "n_gare": 366,
+    "n_giocate": 307,
     "n_programmate": 59,
     "data_inizio": "2025-11-02",
-    "data_fine": "2026-05-14",
+    "data_fine": "2026-05-15",
     "n_fasi": 2,
     "fasi_nomi": [
       "Qualificazione",
@@ -89843,7 +90048,7 @@
               "VIRTUS OLBIA"
             ],
             "n_squadre": 6,
-            "n_gare": 12,
+            "n_gare": 13,
             "giornate": [
               {
                 "n": 1,
@@ -90191,9 +90396,42 @@
                 ],
                 "completa": false,
                 "data_label": "10 mag"
+              },
+              {
+                "n": 6,
+                "gare": [
+                  {
+                    "Data": "2026-05-15",
+                    "Ora": "18:00",
+                    "Numero Gara": "005208",
+                    "Campionato": "Under 14 Maschile Regionale",
+                    "Girone": "Girone Arancio Nord",
+                    "Fase": "Seconda Fase",
+                    "Squadra Casa": "MERCEDE ALGHERO",
+                    "Squadra Ospite": "C.M.B. PORTO TORRES",
+                    "Punti Casa": "",
+                    "Punti Ospite": "",
+                    "Risultato": "",
+                    "Stato Gara": "",
+                    "Campo": "Palestra Vittorio Corbia, Via Pacinotti Snc 07041 ALGHERO ( SS)",
+                    "Arbitro 1": "",
+                    "Arbitro 2": "",
+                    "Arbitro 3": "",
+                    "Segnapunti": "",
+                    "Cronometrista": "",
+                    "24 Secondi": "",
+                    "Addetto Referto": "",
+                    "Osservatore": "",
+                    "Provvedimenti": "",
+                    "_pt_cum_casa": 0,
+                    "_pt_cum_osp": 2
+                  }
+                ],
+                "completa": false,
+                "data_label": "15 mag"
               }
             ],
-            "n_giornate": 5,
+            "n_giornate": 6,
             "classifica": [
               {
                 "sq": "BASKET S. FRANCESCO",
@@ -90870,9 +91108,9 @@
                     "Fase": "Seconda Fase",
                     "Squadra Casa": "BASKET CORAL 93",
                     "Squadra Ospite": "SCUOLA BASKET SASSARI",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "57",
+                    "Punti Ospite": "68",
+                    "Risultato": "57-68",
                     "Stato Gara": "",
                     "Campo": "Palestra Ist.Industriale, Via Degli Orti 07041 ALGHERO ( SS)",
                     "Arbitro 1": "SPISSU ALESSANDRO di ALGHERO (SS)",
@@ -90969,7 +91207,7 @@
                     "Addetto Referto": "",
                     "Osservatore": "",
                     "Provvedimenti": "",
-                    "_pt_cum_casa": 4,
+                    "_pt_cum_casa": 6,
                     "_pt_cum_osp": 0
                   }
                 ],
@@ -91061,7 +91299,7 @@
                     "Addetto Referto": "",
                     "Osservatore": "",
                     "Provvedimenti": "",
-                    "_pt_cum_casa": 4,
+                    "_pt_cum_casa": 6,
                     "_pt_cum_osp": 2
                   },
                   {
@@ -91120,7 +91358,7 @@
                     "Addetto Referto": "",
                     "Osservatore": "",
                     "Provvedimenti": "",
-                    "_pt_cum_casa": 4,
+                    "_pt_cum_casa": 6,
                     "_pt_cum_osp": 4
                   }
                 ],
@@ -91131,27 +91369,27 @@
             "n_giornate": 7,
             "classifica": [
               {
-                "sq": "BASKET CORAL 93",
-                "g": 2,
-                "v": 2,
+                "sq": "SCUOLA BASKET SASSARI",
+                "g": 3,
+                "v": 3,
                 "s": 0,
                 "par": 0,
-                "pf": 183,
-                "ps": 77,
-                "punti": 4,
-                "diff": 106,
+                "pf": 244,
+                "ps": 173,
+                "punti": 6,
+                "diff": 71,
                 "pos": 1
               },
               {
-                "sq": "SCUOLA BASKET SASSARI",
-                "g": 2,
+                "sq": "BASKET CORAL 93",
+                "g": 3,
                 "v": 2,
-                "s": 0,
+                "s": 1,
                 "par": 0,
-                "pf": 176,
-                "ps": 116,
+                "pf": 240,
+                "ps": 145,
                 "punti": 4,
-                "diff": 60,
+                "diff": 95,
                 "pos": 2
               },
               {
@@ -92381,7 +92619,7 @@
                     "Stato Gara": "",
                     "Campo": "Palestra I.T.I.S. Othoca, Via Zara snc - Z.I. 09170 ORISTANO ( OR)",
                     "Arbitro 1": "SANNA VANESSA di ORISTANO (OR)",
-                    "Arbitro 2": "",
+                    "Arbitro 2": "ATZORI SAMUELE di CABRAS (OR)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
                     "Cronometrista": "",
@@ -92621,7 +92859,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 15 Femminile Regionale": {
     "campionato": "Under 15 Femminile Regionale",
@@ -95904,7 +96142,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 15 Maschile Eccellenza": {
     "campionato": "Under 15 Maschile Eccellenza",
@@ -98585,13 +98823,13 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 15 Maschile Regionale": {
     "campionato": "Under 15 Maschile Regionale",
     "n_gare": 241,
-    "n_giocate": 211,
-    "n_programmate": 30,
+    "n_giocate": 213,
+    "n_programmate": 28,
     "data_inizio": "2025-10-25",
     "data_fine": "2026-05-14",
     "n_fasi": 2,
@@ -101472,9 +101710,9 @@
                     "Fase": "Qualificazione",
                     "Squadra Casa": "BASKET MACOMER 2.0",
                     "Squadra Ospite": "A.S.DIL. BASKET CORAL 93",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "48",
+                    "Punti Ospite": "66",
+                    "Risultato": "48-66",
                     "Stato Gara": "",
                     "Campo": "Palestra Scolastica, Localitа Sertinu 08015 MACOMER ( NU)",
                     "Arbitro 1": "CICCHINELLI MASSIMO di MACOMER (NU)",
@@ -101562,7 +101800,7 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "Palestra Scolastica, Localitа Sertinu 08015 MACOMER ( NU)",
-                    "Arbitro 1": "",
+                    "Arbitro 1": "CICCHINELLI MASSIMO di MACOMER (NU)",
                     "Arbitro 2": "VITALI MATTEO di MACOMER (NU)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -101648,7 +101886,7 @@
                     "Stato Gara": "",
                     "Campo": "Palestra Montigeddu, Via Massarenti 07036 SENNORI ( SS)",
                     "Arbitro 1": "GAVINI ANTONIO di SASSARI (SS)",
-                    "Arbitro 2": "",
+                    "Arbitro 2": "BRANCA GIORDANO di OLMEDO (SS)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
                     "Cronometrista": "",
@@ -101683,7 +101921,7 @@
                     "Osservatore": "",
                     "Provvedimenti": "",
                     "_pt_cum_casa": 0,
-                    "_pt_cum_osp": 34
+                    "_pt_cum_osp": 36
                   }
                 ],
                 "completa": false,
@@ -101692,6 +101930,18 @@
             ],
             "n_giornate": 33,
             "classifica": [
+              {
+                "sq": "A.S.DIL. BASKET CORAL 93",
+                "g": 18,
+                "v": 18,
+                "s": 0,
+                "par": 0,
+                "pf": 1594,
+                "ps": 714,
+                "punti": 36,
+                "diff": 880,
+                "pos": 1
+              },
               {
                 "sq": "PALL. OLIMPIA OLBIA",
                 "g": 19,
@@ -101702,30 +101952,18 @@
                 "ps": 674,
                 "punti": 34,
                 "diff": 935,
-                "pos": 1
-              },
-              {
-                "sq": "A.S.DIL. BASKET CORAL 93",
-                "g": 17,
-                "v": 17,
-                "s": 0,
-                "par": 0,
-                "pf": 1528,
-                "ps": 666,
-                "punti": 34,
-                "diff": 862,
                 "pos": 2
               },
               {
                 "sq": "BASKET MACOMER 2.0",
-                "g": 17,
+                "g": 18,
                 "v": 14,
-                "s": 3,
+                "s": 4,
                 "par": 0,
-                "pf": 1191,
-                "ps": 843,
+                "pf": 1239,
+                "ps": 909,
                 "punti": 28,
-                "diff": 348,
+                "diff": 330,
                 "pos": 3
               },
               {
@@ -105084,9 +105322,9 @@
                     "Fase": "Seconda Fase Sud",
                     "Squadra Casa": "BASKET DECIMO",
                     "Squadra Ospite": "AZZURRA ORISTANO",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "57",
+                    "Punti Ospite": "66",
+                    "Risultato": "57-66",
                     "Stato Gara": "",
                     "Campo": "PAL. COMUNALE, Via E. D' Arborea 09033 DECIMOMANNU ( CA)",
                     "Arbitro 1": "GRUSSU FABIO di SILIQUA (SU)",
@@ -105184,7 +105422,7 @@
                     "Osservatore": "",
                     "Provvedimenti": "",
                     "_pt_cum_casa": 6,
-                    "_pt_cum_osp": 4
+                    "_pt_cum_osp": 6
                   },
                   {
                     "Data": "2026-05-07",
@@ -105268,7 +105506,7 @@
                     "Addetto Referto": "",
                     "Osservatore": "",
                     "Provvedimenti": "",
-                    "_pt_cum_casa": 4,
+                    "_pt_cum_casa": 6,
                     "_pt_cum_osp": 4
                   },
                   {
@@ -105397,6 +105635,18 @@
             "n_giornate": 13,
             "classifica": [
               {
+                "sq": "AZZURRA ORISTANO",
+                "g": 3,
+                "v": 3,
+                "s": 0,
+                "par": 0,
+                "pf": 222,
+                "ps": 151,
+                "punti": 6,
+                "diff": 71,
+                "pos": 1
+              },
+              {
                 "sq": "ASTRO SSDRL",
                 "g": 3,
                 "v": 3,
@@ -105406,7 +105656,7 @@
                 "ps": 132,
                 "punti": 6,
                 "diff": 56,
-                "pos": 1
+                "pos": 2
               },
               {
                 "sq": "BASKET S.SALVATORE",
@@ -105418,30 +105668,18 @@
                 "ps": 126,
                 "punti": 6,
                 "diff": 25,
-                "pos": 2
-              },
-              {
-                "sq": "AZZURRA ORISTANO",
-                "g": 2,
-                "v": 2,
-                "s": 0,
-                "par": 0,
-                "pf": 156,
-                "ps": 94,
-                "punti": 4,
-                "diff": 62,
                 "pos": 3
               },
               {
                 "sq": "BASKET DECIMO",
-                "g": 3,
+                "g": 4,
                 "v": 2,
-                "s": 1,
+                "s": 2,
                 "par": 0,
-                "pf": 172,
-                "ps": 154,
+                "pf": 229,
+                "ps": 220,
                 "punti": 4,
-                "diff": 18,
+                "diff": 9,
                 "pos": 4
               },
               {
@@ -106120,7 +106358,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 17 Femminile Regionale": {
     "campionato": "Under 17 Femminile Regionale",
@@ -109561,8 +109799,8 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "Pala Bsk90 - GLM, Via Luna e Sole 07100 SASSARI ( SS)",
-                    "Arbitro 1": "PUGGIONI SAMUELE di SASSARI (SS)",
-                    "Arbitro 2": "PUGGIONI GABRIELE di SASSARI (SS)",
+                    "Arbitro 1": "",
+                    "Arbitro 2": "",
                     "Arbitro 3": "",
                     "Segnapunti": "",
                     "Cronometrista": "",
@@ -111363,7 +111601,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 17 Maschile Eccellenza": {
     "campionato": "Under 17 Maschile Eccellenza",
@@ -113476,9 +113714,9 @@
                     "Arbitro 2": "BELTRAMINI ROBERTO di CAPOTERRA (CA)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
-                    "Cronometrista": "",
+                    "Cronometrista": "MASALA ENRICO di CAGLIARI (CA)",
                     "24 Secondi": "RUGGERI DANIELE di SELARGIUS (CA)",
-                    "Addetto Referto": "",
+                    "Addetto Referto": "SERRA GABRIELE di CAGLIARI (CA)",
                     "Osservatore": "",
                     "Provvedimenti": "",
                     "_pt_cum_casa": 4,
@@ -113602,7 +113840,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 17 Maschile Gold": {
     "campionato": "Under 17 Maschile Gold",
@@ -121983,7 +122221,7 @@
                     "Stato Gara": "",
                     "Campo": "PalaManchia, Via Mauro Manca 07041 ALGHERO ( SS)",
                     "Arbitro 1": "CAPPELLONI RICCARDO di SASSARI (SS)",
-                    "Arbitro 2": "CRISTIANI NICOLAS di SASSARI (SS)",
+                    "Arbitro 2": "",
                     "Arbitro 3": "",
                     "Segnapunti": "",
                     "Cronometrista": "",
@@ -123012,7 +123250,7 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "Palestra, Via Alessandro Volta 09074 GHILARZA ( OR)",
-                    "Arbitro 1": "",
+                    "Arbitro 1": "RUDELLAT MARCO di NUORO (NU)",
                     "Arbitro 2": "LACONI MARCO di VILLASIMIUS (SU)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -123914,13 +124152,13 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 17 Maschile Regionale": {
     "campionato": "Under 17 Maschile Regionale",
     "n_gare": 159,
-    "n_giocate": 136,
-    "n_programmate": 23,
+    "n_giocate": 137,
+    "n_programmate": 22,
     "data_inizio": "2025-10-25",
     "data_fine": "2026-05-14",
     "n_fasi": 2,
@@ -127115,9 +127353,9 @@
                     "Fase": "Seconda fase",
                     "Squadra Casa": "A.S.D. AMPURIAS",
                     "Squadra Ospite": "VIRTUS OLBIA",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "60",
+                    "Punti Ospite": "57",
+                    "Risultato": "60-57",
                     "Stato Gara": "",
                     "Campo": "PALAZZETTO DELLO SPORT, VIA ASPRONI 21 07039 VALLEDORIA ( SS)",
                     "Arbitro 1": "BORTOLATO FILIPPO di SASSARI (SS)",
@@ -127133,7 +127371,7 @@
                     "_pt_cum_osp": 10
                   }
                 ],
-                "completa": false,
+                "completa": true,
                 "data_label": "26 apr–30 apr"
               },
               {
@@ -127189,7 +127427,7 @@
                     "Osservatore": "",
                     "Provvedimenti": "",
                     "_pt_cum_casa": 10,
-                    "_pt_cum_osp": 4
+                    "_pt_cum_osp": 6
                   }
                 ],
                 "completa": false,
@@ -127313,7 +127551,7 @@
                     "Addetto Referto": "",
                     "Osservatore": "",
                     "Provvedimenti": "",
-                    "_pt_cum_casa": 4,
+                    "_pt_cum_casa": 6,
                     "_pt_cum_osp": 0
                   },
                   {
@@ -127373,7 +127611,7 @@
                     "Osservatore": "",
                     "Provvedimenti": "",
                     "_pt_cum_casa": 6,
-                    "_pt_cum_osp": 4
+                    "_pt_cum_osp": 6
                   }
                 ],
                 "completa": false,
@@ -127405,7 +127643,7 @@
                     "Addetto Referto": "",
                     "Osservatore": "",
                     "Provvedimenti": "",
-                    "_pt_cum_casa": 4,
+                    "_pt_cum_casa": 6,
                     "_pt_cum_osp": 4
                   }
                 ],
@@ -127417,15 +127655,27 @@
             "classifica": [
               {
                 "sq": "VIRTUS OLBIA",
-                "g": 6,
+                "g": 7,
                 "v": 5,
-                "s": 1,
+                "s": 2,
                 "par": 0,
-                "pf": 388,
-                "ps": 275,
+                "pf": 445,
+                "ps": 335,
                 "punti": 10,
-                "diff": 113,
+                "diff": 110,
                 "pos": 1
+              },
+              {
+                "sq": "A.S.D. AMPURIAS",
+                "g": 3,
+                "v": 3,
+                "s": 0,
+                "par": 0,
+                "pf": 225,
+                "ps": 155,
+                "punti": 6,
+                "diff": 70,
+                "pos": 2
               },
               {
                 "sq": "BASKET FERRINI B",
@@ -127437,18 +127687,6 @@
                 "ps": 263,
                 "punti": 6,
                 "diff": 53,
-                "pos": 2
-              },
-              {
-                "sq": "A.S.D. AMPURIAS",
-                "g": 2,
-                "v": 2,
-                "s": 0,
-                "par": 0,
-                "pf": 165,
-                "ps": 98,
-                "punti": 4,
-                "diff": 67,
                 "pos": 3
               },
               {
@@ -128958,7 +129196,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 19 Femminile Regionale": {
     "campionato": "Under 19 Femminile Regionale",
@@ -131944,7 +132182,7 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   },
   "Under 19 Maschile Gold": {
     "campionato": "Under 19 Maschile Gold",
@@ -138853,7 +139091,7 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "Palestra Esperia, Via Pessagno snc 09126 CAGLIARI ( CA)",
-                    "Arbitro 1": "",
+                    "Arbitro 1": "MULARGIA CHENG di CAGLIARI (CA)",
                     "Arbitro 2": "COCCO MATTIA di QUARTU SANT'ELENA (CA)",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -139336,6 +139574,6 @@
         ]
       }
     ],
-    "last_update": "2026-04-30"
+    "last_update": "2026-05-01"
   }
 }
