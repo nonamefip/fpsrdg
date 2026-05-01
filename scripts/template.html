@@ -15721,7 +15721,7 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     if(/sud.*\bc\b|sud.*\s+c$/i.test(gi))return'#8e24aa';
     if(/\bsud/i.test(gi))return'#4a148c';
     // Oro/Argento/Bronzo
-    if(/\boro/i.test(gi))return'#b8860b';
+    if(/oro/i.test(gi))return'#b8860b';
     if(/argent/i.test(gi))return'#708090';
     if(/bronz/i.test(gi))return'#795548';
     // Colori per nome (rosso, bianco, unico)
@@ -15928,30 +15928,75 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       gGi.forEach(function(g){if(g['Squadra Casa'])sqSet.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqSet.add(g['Squadra Ospite']);});
       var sqs=[...sqSet];
       if(!sqs.length)return'';
-      var h='<div style="min-width:220px;flex:1;border:2px solid '+clr+'55;border-radius:8px;overflow:hidden;margin-bottom:4px">';
-      h+='<div style="background:'+clr+';color:#fff;padding:5px 10px;font-size:.78rem;font-weight:700">'+escH(gi)+'</div>';
-      h+='<table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="background:#f0f4ff">';
-      h+='<th style="padding:3px 6px;text-align:left">Squadra</th><th style="padding:3px 6px;text-align:center">Girone</th><th style="padding:3px 6px;text-align:center">Pos.</th>';
-      h+='</tr></thead><tbody>';
-      sqs.sort(function(a,b){
-        var pa=sqPosizioneGirone[a],pb=sqPosizioneGirone[b];
-        if(!pa&&!pb)return a.localeCompare(b);
-        if(!pa)return 1;if(!pb)return -1;
-        return pa.pos-pb.pos||(pa.girone||'').localeCompare(pb.girone||'');
-      }).forEach(function(sq,idx){
-        var info=sqPosizioneGirone[sq];
-        var gironeName=info?info.girone.replace(/girone\s*/i,'').trim():'–';
-        var pos=info?info.pos:'–';
-        var posClr=pos===1?'var(--gold)':pos===2?'#aaa':pos===3?'#cd7f32':'var(--mu)';
-        var posLabel=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos+'°';
-        var rowBg=idx%2?'#f8faff':'#fff';
-        h+='<tr style="background:'+rowBg+';border-bottom:1px solid #f0f0f0">'
-          +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+ escH(sq)+'">'+ escH(sq)+'</span></td>'
-          +'<td style="padding:4px 6px;text-align:center;font-size:.65rem;color:var(--mu)">'+escH(gironeName)+'</td>'
-          +'<td style="padding:4px 6px;text-align:center;font-weight:700;color:'+posClr+'">'+posLabel+'</td>'
-          +'</tr>';
+      var giClr=giColor(gi,clr);
+      // Calcola classifica interna al girone elim
+      var st={};
+      sqs.forEach(function(sq){st[sq]={pt:0,g:0,v:0,p:0,pf:0,ps:0};});
+      var hasResults=false;
+      gGi.filter(function(g){return g['Risultato'];}).forEach(function(g){
+        hasResults=true;
+        var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+        var sc=g['Squadra Casa'],so=g['Squadra Ospite'];
+        if(!st[sc]||!st[so])return;
+        st[sc].g++;st[so].g++;st[sc].pf+=pc;st[sc].ps+=po;st[so].pf+=po;st[so].ps+=pc;
+        if(pc>po){st[sc].v++;st[sc].pt+=2;st[so].p++;}
+        else if(po>pc){st[so].v++;st[so].pt+=2;st[sc].p++;}
+        else{st[sc].pt++;st[so].pt++;}
       });
-      h+='</tbody></table></div>';
+      var ranked=Object.entries(st).sort(function(a,b){return b[1].pt-a[1].pt||(b[1].pf-b[1].ps)-(a[1].pf-a[1].ps);});
+      var h='<div style="min-width:220px;flex:1;border:2px solid '+giClr+'88;border-radius:8px;overflow:visible;margin-bottom:4px">';
+      h+='<div style="background:'+giClr+';color:#fff;padding:5px 10px;font-size:.78rem;font-weight:700">'+escH(gi)+'</div>';
+      h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="background:'+giClr+'18">';
+      if(hasResults){
+        h+='<th style="padding:3px 4px;text-align:center;font-size:.65rem">#</th>'
+          +'<th style="padding:3px 6px;text-align:left">Squadra</th>'
+          +'<th style="padding:2px 4px;text-align:center;font-size:.63rem">G</th>'
+          +'<th style="padding:2px 4px;text-align:center;font-size:.63rem;color:var(--green)">V</th>'
+          +'<th style="padding:2px 4px;text-align:center;font-size:.63rem;color:var(--red)">P</th>'
+          +'<th style="padding:2px 4px;text-align:center;font-size:.63rem">PF</th>'
+          +'<th style="padding:2px 4px;text-align:center;font-size:.63rem;color:#aaa">PS</th>'
+          +'<th style="padding:3px 4px;text-align:center;font-size:.65rem;font-weight:800;color:'+giClr+'">Pt</th>';
+      } else {
+        h+='<th style="padding:3px 6px;text-align:left">Squadra</th>'
+          +'<th style="padding:3px 6px;text-align:center">Girone</th>'
+          +'<th style="padding:3px 6px;text-align:center">Pos.</th>';
+      }
+      h+='</tr></thead><tbody>';
+      if(hasResults){
+        ranked.forEach(function(e,idx){
+          var sq=e[0],s=e[1];
+          var posClr=idx===0?'var(--gold)':idx===1?'#aaa':idx===2?'#cd7f32':'var(--mu)';
+          h+='<tr style="background:'+(idx%2?'#f8faff':'#fff')+';border-bottom:1px solid #f0f0f0">'
+            +'<td style="padding:3px;text-align:center;color:'+posClr+';font-size:.62rem">'+(idx+1)+'</td>'
+            +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+escH(sq)+'">'+escH(sq)+'</span></td>'
+            +'<td style="padding:3px;text-align:center;font-size:.72rem">'+s.g+'</td>'
+            +'<td style="padding:3px;text-align:center;color:var(--green);font-weight:700;font-size:.72rem">'+s.v+'</td>'
+            +'<td style="padding:3px;text-align:center;color:var(--red);font-size:.72rem">'+s.p+'</td>'
+            +'<td style="padding:3px;text-align:center;font-size:.72rem">'+s.pf+'</td>'
+            +'<td style="padding:3px;text-align:center;color:#aaa;font-size:.72rem">'+s.ps+'</td>'
+            +'<td style="padding:3px;text-align:center;font-weight:800;font-size:.72rem;color:'+giClr+'">'+s.pt+'</td>'
+            +'</tr>';
+        });
+      } else {
+        sqs.sort(function(a,b){
+          var pa=sqPosizioneGirone[a],pb=sqPosizioneGirone[b];
+          if(!pa&&!pb)return a.localeCompare(b);
+          if(!pa)return 1;if(!pb)return -1;
+          return pa.pos-pb.pos||(pa.girone||'').localeCompare(pb.girone||'');
+        }).forEach(function(sq,idx){
+          var info=sqPosizioneGirone[sq];
+          var gironeName=info?info.girone.replace(/girone\s*/i,'').trim():'–';
+          var pos=info?info.pos:'–';
+          var posClr=pos===1?'var(--gold)':pos===2?'#aaa':pos===3?'#cd7f32':'var(--mu)';
+          var posLabel=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos+'°';
+          h+='<tr style="background:'+(idx%2?'#f8faff':'#fff')+';border-bottom:1px solid #f0f0f0">'
+            +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+escH(sq)+'">'+escH(sq)+'</span></td>'
+            +'<td style="padding:4px 6px;text-align:center;font-size:.65rem;color:var(--mu)">'+escH(gironeName)+'</td>'
+            +'<td style="padding:4px 6px;text-align:center;font-weight:700;color:'+posClr+'">'+posLabel+'</td>'
+            +'</tr>';
+        });
+      }
+      h+='</tbody></table></div></div>';
       return h;
     }
     function renderFaseSection(fasiArr,icon,label,cols){
