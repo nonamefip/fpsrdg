@@ -15630,7 +15630,13 @@ function sortRtbl(tid,ci){
 function grtClassifiche(gironi,garecamp,camp,clr){
   var faseOrdine=['qualific','prima','fase 1','second','fase 2','orologio','regional','classific','playoff','semifinal','quart','final','ottav'];
   function fasePrio(f){var fl=(f||'').toLowerCase();for(var i=0;i<faseOrdine.length;i++){if(fl.includes(faseOrdine[i]))return i;}return 99;}
-  function isFaseElim(gi){return /\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff|\bplayout/i.test(gi);}
+  function isFaseElim(gi){
+    if(/\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff|\bplayout/i.test(gi))return true;
+    // Controlla anche il campo Fase delle gare di questo girone
+    var gx=garecamp.find(function(g){return g['Girone']===gi;});
+    var f=(gx?gx['Fase']||'':'').toLowerCase();
+    return /ottav|quart|semifinal|final|playoff|playout/.test(f);
+  }
   var giByFase={};var faseOrdered=[];
   garecamp.forEach(function(g){var f=g['Fase']||'';var gi=g['Girone']||'';if(!gi)return;if(!giByFase[f]){giByFase[f]=new Set();faseOrdered.push(f);}giByFase[f].add(gi);});
   faseOrdered=[...new Set(faseOrdered)].sort(function(a,b){return fasePrio(a)-fasePrio(b);});
@@ -15715,8 +15721,8 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     if(/sud.*\bc\b|sud.*\s+c$/i.test(gi))return'#8e24aa';
     if(/\bsud/i.test(gi))return'#4a148c';
     // Oro/Argento/Bronzo
-    if(/\boro/i.test(gi))return'#e65100';
-    if(/argent/i.test(gi))return'#607d8b';
+    if(/\boro/i.test(gi))return'#b8860b';
+    if(/argent/i.test(gi))return'#708090';
     if(/bronz/i.test(gi))return'#795548';
     // Colori per nome (rosso, bianco, unico)
     if(/ross/i.test(gi))return'#b71c1c';
@@ -15822,9 +15828,8 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       cards+='<div style="padding:5px 10px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl);font-size:.75rem;font-weight:700;color:var(--bl);margin:14px 0 6px">📋 '+escH(fase)+'</div>';
     }
 
-    // ── Costruisci le card base e le card accumulato separatamente ──
-    var cardsBase='';
-    var cardsAcc='';
+    // ── Costruisci la riga interlacciata per questa fase ──
+    var rigaInterlacciata='';
     gironiFase.forEach(function(gi){
       var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
       var sqSet=sqByGi[gi]||new Set();
@@ -15885,20 +15890,69 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       }
     });
 
-    // Unica riga: prima tutti i gironi base, poi tutti gli accumulati
+    // Unica riga: base e accumulato alternati (Azzurro, Azzurro Acc, Verde, Verde Acc)
     if(cardsBase||cardsAcc){
-      cards+='<div style="display:flex;flex-wrap:nowrap;gap:10px;align-items:flex-start;overflow-x:auto;padding-bottom:4px">'
-        +cardsBase+cardsAcc+'</div>';
+      // Ricostruisce la riga interlacciando base e acc per ogni girone
+      var rigaInterlacciata='';
+      gironiFase.forEach(function(gi){
+        var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
+        var sqSet=sqByGi[gi]||new Set();
+        var allSqs=[...sqSet].sort();
+        if(!allSqs.length)return;
+        var giClr=giColor(gi,clr);
+        var pMap=isFirstFase?null:sqPosizioneGirone;
+        rigaInterlacciata+='<div style="flex:1;min-width:280px;max-width:600px;border:2.5px solid '+giClr+'99;border-radius:8px;overflow:visible;margin-bottom:4px">'
+          +'<div style="background:'+giClr+';color:#fff;padding:6px 12px;display:flex;justify-content:space-between;align-items:center">'
+          +'<b style="font-size:.82rem">'+escH(gi)+'</b>'
+          +'<span style="font-size:.63rem;opacity:.85">'+allSqs.length+' sq · '+gGi.length+'g</span></div>'
+          +'<div style="overflow-x:auto">'+renderTabella(calcSt(gGi,allSqs),giClr,false,pMap)+'</div>'
+          +'</div>';
+        if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
+          var rowsAcc=calcSt(gGi,allSqs);
+          rowsAcc.forEach(function(e){
+            var sq=e[0],s=e[1];
+            var gNordSq=sqGironeNord[sq];
+            if(!gNordSq){s.pt_port=0;return;}
+            var avvDaPortare=new Set();
+            garecamp.filter(function(g){return g['Girone']===gNordSq&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq);}).forEach(function(g){var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];if(sqSet.has(avv))avvDaPortare.add(avv);});
+            var ptPort=0,seenGare=new Set();
+            garecamp.filter(function(g){return g['Girone']===gNordSq&&g['Risultato']&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq);}).forEach(function(g){
+              var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];
+              if(!avvDaPortare.has(avv))return;
+              var key=g['Squadra Casa']+'|'+g['Squadra Ospite']+'|'+g['Data']+'|'+g['Punti Casa']+'|'+g['Punti Ospite'];
+              if(seenGare.has(key))return;seenGare.add(key);
+              var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+              var mp=g['Squadra Casa']===sq?pc:po,ap=g['Squadra Casa']===sq?po:pc;
+              if(mp>ap)ptPort+=2;else if(mp===ap)ptPort+=1;
+            });
+            s.pt_port=ptPort;
+          });
+          rowsAcc.sort(function(a,b){var ta=a[1].pt+(a[1].pt_port||0),tb=b[1].pt+(b[1].pt_port||0);return tb-ta||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps));});
+          var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
+          var accLabel=gi+' Accumulato';
+          rigaInterlacciata+='<div style="flex:1;min-width:280px;max-width:600px;border:2.5px solid '+accClr+'99;border-radius:8px;overflow:visible;margin-bottom:4px">'
+            +'<div style="background:'+accClr+';color:#fff;padding:6px 12px;display:flex;justify-content:space-between;align-items:center">'
+            +'<b style="font-size:.82rem">'+escH(accLabel)+'</b>'
+            +'<span style="font-size:.63rem;opacity:.85">'+allSqs.length+' sq · '+gGi.length+'g</span></div>'
+            +'<div style="overflow-x:auto">'+renderTabella(rowsAcc,accClr,true,sqPosizioneGirone)+'</div>'
+            +'</div>';
+        }
+      });
+      cards+='<div style="display:flex;flex-wrap:nowrap;gap:10px;align-items:flex-start;overflow-x:auto;padding-bottom:4px">'+rigaInterlacciata+'</div>';
     }
   });
 
   // ── TABELLONE OTTAVI ──────────────────────────────────────────────
   // Rileva gironi tipo "Ottavo Ottavo", "Primo Ottavo", "Quarto Ottavo" ecc.
+  function getFase(gi){var gx=garecamp.find(function(g){return g['Girone']===gi;});return (gx?gx['Fase']||'':'').toLowerCase();}
   var fasiElimGironi=gironi.filter(function(gi){return isFaseElim(gi);});
-  var ottaviGironi=gironi.filter(function(gi){return /\bottav/i.test(gi);});
-  var quartiGironi=gironi.filter(function(gi){return /\bquart/i.test(gi)&&!/\bottav/i.test(gi);});
-  var semifGironi=gironi.filter(function(gi){return /\bsemifinal/i.test(gi);});
-  var finalGironi=gironi.filter(function(gi){return /\bfinal/i.test(gi)&&!/\bsemifinal/i.test(gi)&&!/\bottav/i.test(gi)&&!/\bquart/i.test(gi);});
+  var ottaviGironi=gironi.filter(function(gi){return /\bottav/i.test(gi)||/ottav/.test(getFase(gi));});
+  var quartiGironi=gironi.filter(function(gi){return (/\bquart/i.test(gi)||/quart/.test(getFase(gi)))&&!ottaviGironi.includes(gi);});
+  var semifGironi=gironi.filter(function(gi){return /\bsemifinal/i.test(gi)||/semifinal/.test(getFase(gi));});
+  var finalGironi=gironi.filter(function(gi){
+    var f=getFase(gi);
+    return (/\bfinal/i.test(gi)||/final/.test(f))&&!semifGironi.includes(gi)&&!ottaviGironi.includes(gi)&&!quartiGironi.includes(gi);
+  });
   if(fasiElimGironi.length>=1){
     var gironiRegolari=gironi.filter(function(gi){return!isFaseElim(gi);});
     // Mappa squadra → posizione nel girone regolare
