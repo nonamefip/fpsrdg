@@ -15829,6 +15829,7 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     }
 
     // ── Costruisci la riga interlacciata per questa fase ──
+    // ── Riga interlacciata: base e accumulato alternati per ogni girone ──
     var rigaInterlacciata='';
     gironiFase.forEach(function(gi){
       var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
@@ -15837,15 +15838,12 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       if(!allSqs.length)return;
       var giClr=giColor(gi,clr);
       var pMap=isFirstFase?null:sqPosizioneGirone;
-      // Card base — min-width abbondante, no overflow hidden
-      cardsBase+='<div style="flex:1;min-width:280px;max-width:600px;border:2.5px solid '+giClr+'99;border-radius:8px;overflow:visible;margin-bottom:4px">'
+      rigaInterlacciata+='<div style="flex:1;min-width:280px;max-width:600px;border:2.5px solid '+giClr+'99;border-radius:8px;overflow:visible;margin-bottom:4px">'
         +'<div style="background:'+giClr+';color:#fff;padding:6px 12px;display:flex;justify-content:space-between;align-items:center">'
         +'<b style="font-size:.82rem">'+escH(gi)+'</b>'
         +'<span style="font-size:.63rem;opacity:.85">'+allSqs.length+' sq · '+gGi.length+'g</span></div>'
         +'<div style="overflow-x:auto">'+renderTabella(calcSt(gGi,allSqs),giClr,false,pMap)+'</div>'
         +'</div>';
-
-      // Card accumulato (solo DR2, solo Azzurro/Verde)
       if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
         var rowsAcc=calcSt(gGi,allSqs);
         rowsAcc.forEach(function(e){
@@ -15853,35 +15851,23 @@ function grtClassifiche(gironi,garecamp,camp,clr){
           var gNordSq=sqGironeNord[sq];
           if(!gNordSq){s.pt_port=0;return;}
           var avvDaPortare=new Set();
-          garecamp.filter(function(g){
-            return g['Girone']===gNordSq&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
-          }).forEach(function(g){
-            var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];
-            if(sqSet.has(avv))avvDaPortare.add(avv);
-          });
+          garecamp.filter(function(g){return g['Girone']===gNordSq&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq);}).forEach(function(g){var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];if(sqSet.has(avv))avvDaPortare.add(avv);});
           var ptPort=0,seenGare=new Set();
-          garecamp.filter(function(g){
-            return g['Girone']===gNordSq&&g['Risultato']&&
-              (g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
-          }).forEach(function(g){
+          garecamp.filter(function(g){return g['Girone']===gNordSq&&g['Risultato']&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq);}).forEach(function(g){
             var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];
             if(!avvDaPortare.has(avv))return;
             var key=g['Squadra Casa']+'|'+g['Squadra Ospite']+'|'+g['Data']+'|'+g['Punti Casa']+'|'+g['Punti Ospite'];
-            if(seenGare.has(key))return;
-            seenGare.add(key);
+            if(seenGare.has(key))return;seenGare.add(key);
             var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
             var mp=g['Squadra Casa']===sq?pc:po,ap=g['Squadra Casa']===sq?po:pc;
             if(mp>ap)ptPort+=2;else if(mp===ap)ptPort+=1;
           });
           s.pt_port=ptPort;
         });
-        rowsAcc.sort(function(a,b){
-          var ta=a[1].pt+(a[1].pt_port||0),tb=b[1].pt+(b[1].pt_port||0);
-          return tb-ta||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps));
-        });
+        rowsAcc.sort(function(a,b){var ta=a[1].pt+(a[1].pt_port||0),tb=b[1].pt+(b[1].pt_port||0);return tb-ta||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps));});
         var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
         var accLabel=gi+' Accumulato';
-        cardsAcc+='<div style="flex:1;min-width:280px;max-width:600px;border:2.5px solid '+accClr+'99;border-radius:8px;overflow:visible;margin-bottom:4px">'
+        rigaInterlacciata+='<div style="flex:1;min-width:280px;max-width:600px;border:2.5px solid '+accClr+'99;border-radius:8px;overflow:visible;margin-bottom:4px">'
           +'<div style="background:'+accClr+';color:#fff;padding:6px 12px;display:flex;justify-content:space-between;align-items:center">'
           +'<b style="font-size:.82rem">'+escH(accLabel)+'</b>'
           +'<span style="font-size:.63rem;opacity:.85">'+allSqs.length+' sq · '+gGi.length+'g</span></div>'
@@ -15889,55 +15875,7 @@ function grtClassifiche(gironi,garecamp,camp,clr){
           +'</div>';
       }
     });
-
-    // Unica riga: base e accumulato alternati (Azzurro, Azzurro Acc, Verde, Verde Acc)
-    if(cardsBase||cardsAcc){
-      // Ricostruisce la riga interlacciando base e acc per ogni girone
-      var rigaInterlacciata='';
-      gironiFase.forEach(function(gi){
-        var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
-        var sqSet=sqByGi[gi]||new Set();
-        var allSqs=[...sqSet].sort();
-        if(!allSqs.length)return;
-        var giClr=giColor(gi,clr);
-        var pMap=isFirstFase?null:sqPosizioneGirone;
-        rigaInterlacciata+='<div style="flex:1;min-width:280px;max-width:600px;border:2.5px solid '+giClr+'99;border-radius:8px;overflow:visible;margin-bottom:4px">'
-          +'<div style="background:'+giClr+';color:#fff;padding:6px 12px;display:flex;justify-content:space-between;align-items:center">'
-          +'<b style="font-size:.82rem">'+escH(gi)+'</b>'
-          +'<span style="font-size:.63rem;opacity:.85">'+allSqs.length+' sq · '+gGi.length+'g</span></div>'
-          +'<div style="overflow-x:auto">'+renderTabella(calcSt(gGi,allSqs),giClr,false,pMap)+'</div>'
-          +'</div>';
-        if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
-          var rowsAcc=calcSt(gGi,allSqs);
-          rowsAcc.forEach(function(e){
-            var sq=e[0],s=e[1];
-            var gNordSq=sqGironeNord[sq];
-            if(!gNordSq){s.pt_port=0;return;}
-            var avvDaPortare=new Set();
-            garecamp.filter(function(g){return g['Girone']===gNordSq&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq);}).forEach(function(g){var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];if(sqSet.has(avv))avvDaPortare.add(avv);});
-            var ptPort=0,seenGare=new Set();
-            garecamp.filter(function(g){return g['Girone']===gNordSq&&g['Risultato']&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq);}).forEach(function(g){
-              var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];
-              if(!avvDaPortare.has(avv))return;
-              var key=g['Squadra Casa']+'|'+g['Squadra Ospite']+'|'+g['Data']+'|'+g['Punti Casa']+'|'+g['Punti Ospite'];
-              if(seenGare.has(key))return;seenGare.add(key);
-              var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
-              var mp=g['Squadra Casa']===sq?pc:po,ap=g['Squadra Casa']===sq?po:pc;
-              if(mp>ap)ptPort+=2;else if(mp===ap)ptPort+=1;
-            });
-            s.pt_port=ptPort;
-          });
-          rowsAcc.sort(function(a,b){var ta=a[1].pt+(a[1].pt_port||0),tb=b[1].pt+(b[1].pt_port||0);return tb-ta||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps));});
-          var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
-          var accLabel=gi+' Accumulato';
-          rigaInterlacciata+='<div style="flex:1;min-width:280px;max-width:600px;border:2.5px solid '+accClr+'99;border-radius:8px;overflow:visible;margin-bottom:4px">'
-            +'<div style="background:'+accClr+';color:#fff;padding:6px 12px;display:flex;justify-content:space-between;align-items:center">'
-            +'<b style="font-size:.82rem">'+escH(accLabel)+'</b>'
-            +'<span style="font-size:.63rem;opacity:.85">'+allSqs.length+' sq · '+gGi.length+'g</span></div>'
-            +'<div style="overflow-x:auto">'+renderTabella(rowsAcc,accClr,true,sqPosizioneGirone)+'</div>'
-            +'</div>';
-        }
-      });
+    if(rigaInterlacciata){
       cards+='<div style="display:flex;flex-wrap:nowrap;gap:10px;align-items:flex-start;overflow-x:auto;padding-bottom:4px">'+rigaInterlacciata+'</div>';
     }
   });
