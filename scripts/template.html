@@ -15885,15 +15885,10 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       }
     });
 
-    // Riga 1: gironi base affiancati (scroll orizzontale se troppi)
-    if(cardsBase){
+    // Unica riga: prima tutti i gironi base, poi tutti gli accumulati
+    if(cardsBase||cardsAcc){
       cards+='<div style="display:flex;flex-wrap:nowrap;gap:10px;align-items:flex-start;overflow-x:auto;padding-bottom:4px">'
-        +cardsBase+'</div>';
-    }
-    // Riga 2 (stessa fase): accumulati affiancati subito sotto
-    if(cardsAcc){
-      cards+='<div style="display:flex;flex-wrap:nowrap;gap:10px;align-items:flex-start;overflow-x:auto;padding-bottom:4px;margin-top:8px">'
-        +cardsAcc+'</div>';
+        +cardsBase+cardsAcc+'</div>';
     }
   });
 
