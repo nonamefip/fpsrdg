@@ -8886,27 +8886,44 @@ function openPersona(nome,campFilter){
         let html='<div style="font-size:.72rem;color:var(--mu);margin-bottom:14px">Province di competenza: <b>'+pvLabel+'</b>'+(arbPv==='SS'?' (include NU per accordo territoriale)':arbPv==='NU'?' (include SS per accordo territoriale)':'')+'</div>';
 
         // ── SEZ A: Squadre NON arbitrate in provincia (tabella con categoria) ──
+        // Livello massimo arbitro: arbitra solo campionati con rank >= _maxLv
+        const _lvArb=livelloArb(p);
+        const _maxLv=_lvArb.lv;
+        function rankCampTerr(cn){
+          if(/serie c/i.test(cn))return 0;
+          if(/serie b/i.test(cn))return 0;
+          if(/divisione reg.*1|regionale 1/i.test(cn))return 1;
+          if(/divisione reg.*2|regionale 2/i.test(cn))return 2;
+          if(/under 19|u19/i.test(cn))return 3;
+          if(/under 17.*eccellenza|u17.*eccellenza/i.test(cn))return 4;
+          if(/under 17|u17/i.test(cn))return 5;
+          if(/under 15.*eccellenza|u15.*eccellenza/i.test(cn))return 6;
+          if(/under 15|u15/i.test(cn))return 7;
+          if(/under 14|u14/i.test(cn))return 8;
+          if(/under 13|u13/i.test(cn))return 9;
+          return 10;
+        }
+        // Filtra squadre con almeno un campionato entro la competenza dell'arbitro
+        const sqDiCompFiltrate=sqDiComp.filter(n=>{
+          const s=SQ[n]||{};
+          return Object.keys(s.campionati||{}).some(cn=>rankCampTerr(cn)>=_maxLv);
+        });
+        const sqNonVistateFiltrate=sqDiCompFiltrate.filter(n=>!sqVisitate.has(n));
         html+='<div style="margin-bottom:18px">';
-        html+='<div style="font-size:.75rem;font-weight:700;color:#c0392b;margin-bottom:8px">';
-        html+='❌ Squadre NON ancora arbitrate ('+pvLabel+') <span style="font-size:.65rem;font-weight:400;color:var(--mu)">'+sqNonVisitate.length+' su '+sqDiComp.length+'</span></div>';
-        if(sqNonVisitate.length===0){
+        html+='<div style="font-size:.75rem;font-weight:700;color:#c0392b;margin-bottom:4px">';
+        html+='❌ Squadre NON ancora arbitrate ('+pvLabel+') <span style="font-size:.65rem;font-weight:400;color:var(--mu)">'+sqNonVistateFiltrate.length+' su '+sqDiCompFiltrate.length+'</span></div>';
+        html+='<div style="font-size:.65rem;color:var(--mu);margin-bottom:8px">Campionati di competenza: da <b>'+_lvArb.label+'</b> in giù (inclusi Eccellenza e Femminile)</div>';
+        if(sqNonVistateFiltrate.length===0){
           html+='<div style="color:var(--green);font-size:.72rem;padding:6px 10px;background:#e6f8ee;border-radius:6px">✅ Tutte le squadre della provincia arbitrate almeno una volta!</div>';
         }else{
           const byCamp={};
-          sqNonVisitate.forEach(n=>{
+          sqNonVistateFiltrate.forEach(n=>{
             const s=SQ[n]||{};
-            // Usa TUTTI i campionati della squadra, non solo quelli già arbitrati
-            const allCamps=Object.keys(s.campionati||{});
-            if(!allCamps.length){
-              // Squadra senza campionato noto: metti in "Sconosciuto"
-              const pv=s.prov||'?';
-              const key='__nessun_camp__||'+pv;
-              if(!byCamp[key])byCamp[key]={camp:'(nessun campionato)',pv,sqs:[]};
-              byCamp[key].sqs.push(n);
-              return;
-            }
-            // Campionato principale: quello con più gare
-            const camp=allCamps.sort((a,b)=>(s.campionati[b]||0)-(s.campionati[a]||0))[0];
+            // Solo campionati entro la competenza (rank >= _maxLv)
+            const validCamps=Object.keys(s.campionati||{}).filter(cn=>rankCampTerr(cn)>=_maxLv);
+            if(!validCamps.length)return;
+            // Campionato principale: quello col rank più vicino al massimo dell'arbitro
+            const camp=validCamps.sort((a,b)=>rankCampTerr(a)-rankCampTerr(b))[0];
             const pv=s.prov||'?';
             const key=camp+'||'+pv;
             if(!byCamp[key])byCamp[key]={camp,pv,sqs:[]};
