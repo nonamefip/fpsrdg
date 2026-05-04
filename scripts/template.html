@@ -10707,8 +10707,8 @@ function openCampionato(camp){
     </div>
     <div class="mtc hidden" id="mct-6">
       ${(()=>{
-        const faseOrder=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi','Playoff Semifinale','Finale Playoff'];
-        const fasePlain=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi'];
+        const faseOrder=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi','Fase Playout','Playoff Semifinale','Finale Playoff'];
+        const fasePlain=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi','Fase Playout'];
         const fasi=[...new Set(allCampGare.map(g=>g['Fase']||'').filter(Boolean))];
         fasi.sort((a,b)=>{const ia=faseOrder.findIndex(x=>a.includes(x)),ib=faseOrder.findIndex(x=>b.includes(x));return(ia<0?99:ia)-(ib<0?99:ib);});
         const fasiCalendario=fasi.filter(f=>fasePlain.some(fp=>f.includes(fp)));
@@ -10721,6 +10721,7 @@ function openCampionato(camp){
           if(/orologio/i.test(fase)) return {icon:'🕐',color:'#6a1b9a',label:'Fase Orologio'};
           if(/regional/i.test(fase)) return {icon:'🌍',color:'#2e7d32',label:'Fase Regionale'};
           if(/classific/i.test(fase)) return {icon:'📊',color:'#37474f',label:'Classificazione'};
+          if(/playout/i.test(fase)) return {icon:'⬇️',color:'#c0392b',label:'Playout'};
           return {icon:'📅',color:'#37474f',label:fase};
         }
         if(!fasiCalendario.length) return '<div style="padding:20px;text-align:center;color:var(--mu)">Nessun dato disponibile</div>';
