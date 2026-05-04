@@ -1438,8 +1438,6 @@ tr.loss-row td{background:#fdecea!important;}
     <span class="g-fcat" id="gfc-campo" onclick="gFcatToggle('campo')">Campi <span class="g-fcat-arr">&#9660;</span></span>
     <span class="g-fcat" id="gfc-sq" onclick="gFcatToggle('sq')">Squadre <span class="g-fcat-arr">&#9660;</span></span>
     <span class="g-fcat" id="gfc-citta" onclick="gFcatToggle('citta')">Città <span class="g-fcat-arr">&#9660;</span></span>
-    <span class="g-fcat" id="gfc-provArb" onclick="gFcatToggle('provArb')">Prov. Arbitri <span class="g-fcat-arr">&#9660;</span></span>
-    <span class="g-fcat" id="gfc-ora" onclick="gFcatToggle('ora')">Orario <span class="g-fcat-arr">&#9660;</span></span>
     <button id="g-rst-all" onclick="gResetAll()" style="display:none;align-items:center;border:1.5px solid #c0392b;border-radius:7px;padding:4px 10px;font-size:.68rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">&#10005; Azzera tutto</button>
   </div>
   <div class="g-pp" id="g-pp-camp"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca campionato..." oninput="gPillSearch(this,'camp')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-camp"></div></div>
@@ -1448,8 +1446,6 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="g-pp" id="g-pp-campo"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca campo..." oninput="gPillSearch(this,'campo')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-campo"></div></div>
   <div class="g-pp" id="g-pp-sq"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca squadra..." oninput="gPillSearch(this,'sq')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-sq"></div></div>
   <div class="g-pp" id="g-pp-citta"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca città..." oninput="gPillSearch(this,'citta')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-citta"></div></div>
-  <div class="g-pp" id="g-pp-provArb"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca provincia arbitri..." oninput="gPillSearch(this,'provArb')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-provArb"></div></div>
-  <div class="g-pp" id="g-pp-ora"><div style="padding:4px 2px 2px"><input class="g-pp-search" placeholder="Cerca orario..." oninput="gPillSearch(this,'ora')" style="width:100%;font-size:11px;padding:3px 7px;border:0.5px solid var(--br);border-radius:5px;background:var(--bg2);color:var(--tx)"></div><div style="display:flex;flex-wrap:wrap;gap:4px;padding:3px 2px 3px;align-items:center" id="g-pills-ora"></div></div>
   <div class="gare-chips" id="g-chips" style="display:none"></div>
   <div class="gare-restore" id="g-restore"></div>
   <div style="overflow-x:auto">
@@ -1796,26 +1792,14 @@ tr.loss-row td{background:#fdecea!important;}
   <!-- Sub-tab bar -->
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center" id="fiplive-tabs">
 <script>
-// Stub FIP Live functions - verranno ridefinite dal blocco JS principale
-var _fipSesso='M';
-function setFipLiveTab(s,b){
-  _fipSesso=s;
-  setTimeout(function(){
-    if(typeof _buildFipLiveCampSelect==='function'&&_buildFipLiveCampSelect.toString().length>50){
-      _fipCampSel='';_fipGironeSel='';
-      document.querySelectorAll('#fiplive-tabs .naz-tab').forEach(function(x){x.classList.remove('active');});
-      if(b)b.classList.add('active');
-      _buildFipLiveCampSelect();renderFipLive();
-    }
-  },100);
-}
-function initFipLive(){setTimeout(function(){
-  if(typeof _buildFipLiveCampSelect==='function'&&_buildFipLiveCampSelect.toString().length>50){
-    _buildFipLiveCampSelect();renderFipLive();
-  }
-},100);}
-function _buildFipLiveCampSelect(){}
-function renderFipLive(){}
+// Queste variabili globali servono prima del caricamento del JS principale
+var _fipSesso='M', _fipCampSel='', _fipGironeSel='';
+// Le funzioni reali vengono definite dopo — questi wrapper chiamano le versioni reali
+// usando window per non interferire con le dichiarazioni successive
+window._fipTabPending=null;
+window._fipInitPending=false;
+function setFipLiveTab(s,b){window._fipTabPending={s:s,b:b};_fipSesso=s;}
+function initFipLive(){window._fipInitPending=true;}
 </script>
     <button class="naz-tab active" id="flt-m" onclick="setFipLiveTab('M',this)">🏀 Maschili</button>
     <button class="naz-tab" id="flt-f" onclick="setFipLiveTab('F',this)">🏀 Femminili</button>
@@ -3797,11 +3781,6 @@ function openGiornoMulti(dates){
   var arbSet2=[...new Set(allGare.flatMap(function(g){return[pns(g['Arbitro 1']||''),pns(g['Arbitro 2']||'')].filter(Boolean);}))].sort();
   var campoSet2=[...new Set(allGare.map(function(g){return g['Campo']||'';}).filter(Boolean))].sort();
   var cittaSet2=[...new Set(allGare.map(function(g){var gps=CAMPO_GPS[g['Campo']||''];return gps&&gps.city?gps.city:'';}).filter(Boolean))].sort();
-  var provArbSet2=[...new Set(allGare.flatMap(function(g){
-    var n1=pns(g['Arbitro 1']||''),n2=pns(g['Arbitro 2']||'');
-    return[(P[n1]&&P[n1].provincia)||'',(P[n2]&&P[n2].provincia)||''];
-  }))].filter(Boolean).sort();
-  var oraSet2=[...new Set(allGare.map(function(g){return(g['Ora']||g['ora']||'').trim().substring(0,5);}))].filter(function(v){return/^\d{2}:\d{2}$/.test(v);}).sort();
 
   function _mgmFcatHtml(type,label){
     return '<span class="gm-fcat" id="mgm-fc-'+type+'" data-grp="'+type+'" onclick="_mgmToggleGrp(this.dataset.grp)" style="display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--tbl-bdr,#dde3f0);border-radius:7px;padding:5px 13px;font-size:.72rem;font-weight:600;cursor:pointer;background:var(--tbl-bg,#fff);color:var(--txt,#1a2340);margin-bottom:2px">'+label+' <span style="font-size:9px;opacity:.6">▼</span></span>';
@@ -3823,8 +3802,6 @@ function openGiornoMulti(dates){
     +_mgmFcatHtml('arb','Arbitri')
     +_mgmFcatHtml('campo','Campi')
     +_mgmFcatHtml('citta','Città')
-    +_mgmFcatHtml('provArb','Prov. Arbitri')
-    +_mgmFcatHtml('ora','Orario')
     +'<button id="mgm-reset-all-btn" onclick="_mgmResetAll()" style="display:none;border:1.5px solid #c0392b;border-radius:7px;padding:5px 11px;font-size:.7rem;font-weight:600;cursor:pointer;background:none;color:#c0392b">✕ Azzera tutto</button>'
     +'</div>'
     +'<div class="gm-pp" id="mgm-pp-camp" style="max-height:0;overflow:hidden;transition:max-height .25s,opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center">'
@@ -3847,28 +3824,20 @@ function openGiornoMulti(dates){
     +cittaSet2.map(function(c){return _mgmPillHtml('citta',c,c,'#37474f');}).join('')
     +'<button data-rg="citta" onclick="_mgmResetGrp(this.dataset.rg)" style="background:none;border:0.5px solid var(--br,#dde3f0);color:var(--mu);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button>'
     +'</div></div>'
-    +'<div class="gm-pp" id="mgm-pp-provArb" style="max-height:0;overflow:hidden;transition:max-height .25s,opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center">'
-    +provArbSet2.map(function(pv){return _mgmPillHtml('provArb',pv,pv,PC[pv]||'#5c4a8a');}).join('')
-    +'<button data-rg="provArb" onclick="_mgmResetGrp(this.dataset.rg)" style="background:none;border:0.5px solid var(--br,#dde3f0);color:var(--mu);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button>'
-    +'</div></div>'
-    +'<div class="gm-pp" id="mgm-pp-ora" style="max-height:0;overflow:hidden;transition:max-height .25s,opacity .2s;opacity:0"><div style="display:flex;flex-wrap:wrap;gap:4px;padding:6px 2px 4px;align-items:center">'
-    +oraSet2.map(function(o){return _mgmPillHtml('ora',o,o,'#1565c0');}).join('')
-    +'<button data-rg="ora" onclick="_mgmResetGrp(this.dataset.rg)" style="background:none;border:0.5px solid var(--br,#dde3f0);color:var(--mu);border-radius:5px;padding:2px 8px;font-size:.65rem;cursor:pointer">✕ Tutti</button>'
-    +'</div></div>'
     +'<div id="mgm-info" style="font-size:.72rem;color:var(--mu);margin-bottom:4px">'+tot+' gare</div>'
     +'<div style="overflow-x:auto"><table class="gtbl" style="font-size:.73rem"><thead><tr>'
     +'<th>Data</th><th>Ora</th><th>N°</th><th>Camp.</th><th>Prov.</th><th>Casa</th><th>Risultato</th><th>Ospite</th><th>Arb.1</th><th>Arb.2</th><th>Campo</th>'
     +'</tr></thead><tbody id="mgm-tbody">'+buildRows(allGare)+'</tbody></table></div>';
 
   window._mgmAllGare=allGare;
-  window._mgmActivePills={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),citta:new Set(),provArb:new Set(),ora:new Set()};
+  window._mgmActivePills={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),citta:new Set()};
   window._mgmToggleGrp=function(grp){
     var pp=document.getElementById('mgm-pp-'+grp);
     var fc=document.getElementById('mgm-fc-'+grp);
     if(!pp)return;
     var open=pp.style.maxHeight!=='0px'&&pp.style.maxHeight!=='';
     // close all
-    ['camp','prov','arb','campo','citta','provArb','ora'].forEach(function(g){
+    ['camp','prov','arb','campo','citta'].forEach(function(g){
       var p2=document.getElementById('mgm-pp-'+g);
       if(p2){p2.style.maxHeight='0px';p2.style.opacity='0';}
     });
@@ -3909,8 +3878,6 @@ function openGiornoMulti(dates){
       if(ap.campo.size&&!ap.campo.has(campo))return false;
       var city=CAMPO_GPS[campo]?.city||'';
       if(ap.citta.size&&!ap.citta.has(city))return false;
-      if(ap.provArb.size){var _pa1=P[pns(g['Arbitro 1']||'')],_pa2=P[pns(g['Arbitro 2']||'')];var _pv1=(_pa1&&_pa1.provincia)||'',_pv2=(_pa2&&_pa2.provincia)||'';if(!ap.provArb.has(_pv1)&&!ap.provArb.has(_pv2))return false;}
-      if(ap.ora.size){var _oraG=(g['Ora']||g['ora']||'').trim().substring(0,5);if(!ap.ora.has(_oraG))return false;}
       return true;
     });
     var info=document.getElementById('mgm-info');
@@ -6958,8 +6925,6 @@ function _gGetVis(){
     if(_gSEL.campo.size>0&&!_gSEL.campo.has((g['Campo']||'').split(',')[0].trim()))return false;
     if(_gSEL.sq.size>0&&!_gSEL.sq.has(g['Squadra Casa']||'')&&!_gSEL.sq.has(g['Squadra Ospite']||''))return false;
     if(_gSEL.citta.size>0){var _gpsC2=CAMPO_GPS&&CAMPO_GPS[g['Campo']||''];var _cit2=_gpsC2&&_gpsC2.city||'';if(!_gSEL.citta.has(_cit2))return false;}
-    if(_gSEL.provArb.size>0){var _pa1=P&&P[pns(g['Arbitro 1']||'')];var _pa2=P&&P[pns(g['Arbitro 2']||'')];var _pv1=(_pa1&&_pa1.provincia)||'';var _pv2=(_pa2&&_pa2.provincia)||'';if(!_gSEL.provArb.has(_pv1)&&!_gSEL.provArb.has(_pv2))return false;}
-    if(_gSEL.ora.size>0){var _oraG=(g['Ora']||g['ora']||'').trim().substring(0,5);if(!_gSEL.ora.has(_oraG))return false;}
     return true;
   });
 }
@@ -6970,7 +6935,7 @@ function gKpiToggle(key){
   _gRenderChips();_gRenderTable();
 }
 // ── Nuovo sistema pill filter multi-select ──────────────────────────────
-var _gSEL={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),sq:new Set(),citta:new Set(),provArb:new Set(),ora:new Set()};
+var _gSEL={camp:new Set(),prov:new Set(),arb:new Set(),campo:new Set(),sq:new Set(),citta:new Set()};
 function gFcatToggle(type){
   var pp=document.getElementById('g-pp-'+type);
   var fc=document.getElementById('gfc-'+type);
@@ -7017,7 +6982,7 @@ function gResetGrp(type){
   if(rab)rab.style.display=Object.values(_gSEL).some(function(x){return x.size>0;})?'inline-flex':'none';
   _gRenderTable();
 }
-function gResetAll(){['camp','prov','arb','campo','sq','citta','provArb','ora'].forEach(function(t){gResetGrp(t);});}
+function gResetAll(){['camp','prov','arb','campo','sq','citta'].forEach(function(t){gResetGrp(t);});}
 function _gBuildPillBars(){
   var allRows=GARE||[];
   var camps=[...new Set(allRows.map(function(g){return g['Campionato']||'';}))].filter(Boolean).sort(function(a,b){return(typeof livelloC==='function'?livelloC(b)-livelloC(a):0)||a.localeCompare(b,'it');});
@@ -7051,17 +7016,6 @@ function _gBuildPillBars(){
   mkPills('g-pills-sq','sq',squads,function(v){var sq=SQ[v];var pv=sq&&(sq.prov||sq.provincia)||'';return PC[pv]||'#3d4d6b';});
   var citta=[...new Set(allRows.map(function(g){var gps=CAMPO_GPS&&CAMPO_GPS[g['Campo']||''];return gps&&gps.city||'';}).filter(Boolean))].sort();
   mkPills('g-pills-citta','citta',citta,function(v){return'#0f6e56';});
-  // Prov. Arbitri: province degli arbitri designati nelle gare filtrate
-  var provArbs=[...new Set(allRows.flatMap(function(g){
-    var n1=pns(g['Arbitro 1']||''),n2=pns(g['Arbitro 2']||'');
-    var p1=P&&P[n1]&&P[n1].provincia||'';
-    var p2=P&&P[n2]&&P[n2].provincia||'';
-    return[p1,p2];
-  }))].filter(Boolean).sort();
-  mkPills('g-pills-provArb','provArb',provArbs,function(v){return PC[v]||'#5c4a8a';});
-  // Orario: valori unici HH:MM dalle gare
-  var oras=[...new Set(allRows.map(function(g){return(g['Ora']||g['ora']||'').trim().substring(0,5);}))].filter(function(v){return/^\d{2}:\d{2}$/.test(v);}).sort();
-  mkPills('g-pills-ora','ora',oras,function(){return'#1565c0';});
 }
 function _gRenderChips(){
   var el=document.getElementById('g-chips');if(!el)return;
@@ -8938,13 +8892,21 @@ function openPersona(nome,campFilter){
         if(sqNonVisitate.length===0){
           html+='<div style="color:var(--green);font-size:.72rem;padding:6px 10px;background:#e6f8ee;border-radius:6px">✅ Tutte le squadre della provincia arbitrate almeno una volta!</div>';
         }else{
-          const campArbitrati=new Set(gaArb.map(g=>g.c||'').filter(Boolean));
           const byCamp={};
           sqNonVisitate.forEach(n=>{
             const s=SQ[n]||{};
-            const camps=Object.keys(s.campionati||{}).filter(cp=>campArbitrati.has(cp));
-            if(!camps.length)return;
-            const camp=camps.sort((a,b)=>(s.campionati[b]||0)-(s.campionati[a]||0))[0];
+            // Usa TUTTI i campionati della squadra, non solo quelli già arbitrati
+            const allCamps=Object.keys(s.campionati||{});
+            if(!allCamps.length){
+              // Squadra senza campionato noto: metti in "Sconosciuto"
+              const pv=s.prov||'?';
+              const key='__nessun_camp__||'+pv;
+              if(!byCamp[key])byCamp[key]={camp:'(nessun campionato)',pv,sqs:[]};
+              byCamp[key].sqs.push(n);
+              return;
+            }
+            // Campionato principale: quello con più gare
+            const camp=allCamps.sort((a,b)=>(s.campionati[b]||0)-(s.campionati[a]||0))[0];
             const pv=s.prov||'?';
             const key=camp+'||'+pv;
             if(!byCamp[key])byCamp[key]={camp,pv,sqs:[]};
@@ -10707,8 +10669,8 @@ function openCampionato(camp){
     </div>
     <div class="mtc hidden" id="mct-6">
       ${(()=>{
-        const faseOrder=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi','Fase Playout','Playoff Semifinale','Finale Playoff'];
-        const fasePlain=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi','Fase Playout'];
+        const faseOrder=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi','Playoff Semifinale','Finale Playoff'];
+        const fasePlain=['Qualificazione','Seconda Fase','Seconda fase','Seconda Fase Nord','Seconda Fase Sud','Fase Orologio','Fase Regionale','Fase di Classificazi'];
         const fasi=[...new Set(allCampGare.map(g=>g['Fase']||'').filter(Boolean))];
         fasi.sort((a,b)=>{const ia=faseOrder.findIndex(x=>a.includes(x)),ib=faseOrder.findIndex(x=>b.includes(x));return(ia<0?99:ia)-(ib<0?99:ib);});
         const fasiCalendario=fasi.filter(f=>fasePlain.some(fp=>f.includes(fp)));
@@ -10721,7 +10683,6 @@ function openCampionato(camp){
           if(/orologio/i.test(fase)) return {icon:'🕐',color:'#6a1b9a',label:'Fase Orologio'};
           if(/regional/i.test(fase)) return {icon:'🌍',color:'#2e7d32',label:'Fase Regionale'};
           if(/classific/i.test(fase)) return {icon:'📊',color:'#37474f',label:'Classificazione'};
-          if(/playout/i.test(fase)) return {icon:'⬇️',color:'#c0392b',label:'Playout'};
           return {icon:'📅',color:'#37474f',label:fase};
         }
         if(!fasiCalendario.length) return '<div style="padding:20px;text-align:center;color:var(--mu)">Nessun dato disponibile</div>';
@@ -15665,13 +15626,6 @@ function sortRtbl(tid,ci){
 function grtClassifiche(gironi,garecamp,camp,clr){
   var faseOrdine=['qualific','prima','fase 1','second','fase 2','orologio','regional','classific','playoff','semifinal','quart','final','ottav'];
   function fasePrio(f){var fl=(f||'').toLowerCase();for(var i=0;i<faseOrdine.length;i++){if(fl.includes(faseOrdine[i]))return i;}return 99;}
-  function isFaseElim(gi){
-    if(/\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff|\bplayout/i.test(gi))return true;
-    // Controlla anche il campo Fase delle gare di questo girone
-    var gx=garecamp.find(function(g){return g['Girone']===gi;});
-    var f=(gx?gx['Fase']||'':'').toLowerCase();
-    return /ottav|quart|semifinal|final|playoff|playout/.test(f);
-  }
   var giByFase={};var faseOrdered=[];
   garecamp.forEach(function(g){var f=g['Fase']||'';var gi=g['Girone']||'';if(!gi)return;if(!giByFase[f]){giByFase[f]=new Set();faseOrdered.push(f);}giByFase[f].add(gi);});
   faseOrdered=[...new Set(faseOrdered)].sort(function(a,b){return fasePrio(a)-fasePrio(b);});
@@ -15745,10 +15699,6 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     if(/verde/i.test(gi)&&/\bb\b|\s+b$/i.test(gi))return'#388e3c';
     if(/verde/i.test(gi)&&/\bc\b|\s+c$/i.test(gi))return'#43a047';
     if(/verde/i.test(gi))return'#2e7d32';
-    // Oro/Argento/Bronzo — PRIMA di Nord/Sud per non essere sovrascritti
-    if(/oro/i.test(gi))return'#b8860b';
-    if(/argent/i.test(gi))return'#708090';
-    if(/bronz/i.test(gi))return'#795548';
     // Nord varianti A/B/C
     if(/nord.*\ba\b|nord.*\s+a$/i.test(gi))return'#006064';
     if(/nord.*\bb\b|nord.*\s+b$/i.test(gi))return'#00838f';
@@ -15759,6 +15709,10 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     if(/sud.*\bb\b|sud.*\s+b$/i.test(gi))return'#6a1b9a';
     if(/sud.*\bc\b|sud.*\s+c$/i.test(gi))return'#8e24aa';
     if(/\bsud/i.test(gi))return'#4a148c';
+    // Oro/Argento/Bronzo
+    if(/\boro/i.test(gi))return'#e65100';
+    if(/argent/i.test(gi))return'#607d8b';
+    if(/bronz/i.test(gi))return'#795548';
     // Colori per nome (rosso, bianco, unico)
     if(/ross/i.test(gi))return'#b71c1c';
     if(/bian/i.test(gi))return'#455a64';
@@ -15831,101 +15785,192 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     });
   }
 
-  // ── Raggruppa i gironi regolari per fase ──────────────────────────
-  // Struttura: { faseLabel: { prio, gironi: [gi,...] } }
-  var faseBucket={};
+  // ── COLORI CON GRADAZIONI PER FAMIGLIA ───────────────────────────────────
+  function isFaseElim(gi){return /\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff|\bplayout/i.test(gi);}
+
+  var FAMILY_PALETTES={
+    azzurro:['#0d47a1','#1565c0','#1976d2','#0288d1','#0097a7'],
+    verde:  ['#1b5e20','#2e7d32','#388e3c','#43a047','#4caf50'],
+    nord:   ['#004d40','#00695c','#00796b','#00838f','#0097a7'],
+    sud:    ['#4a148c','#6a1b9a','#7b1fa2','#8e24aa','#9c27b0'],
+    rosso:  ['#b71c1c','#c62828','#d32f2f','#e53935','#f44336'],
+    bianco: ['#37474f','#455a64','#546e7a','#607d8b','#78909c'],
+    oro:    ['#bf360c','#e64a19','#f4511e','#f57c00','#ff9800'],
+    argento:['#455a64','#546e7a','#607d8b','#78909c','#90a4ae'],
+    bronzo: ['#4e342e','#5d4037','#6d4c41','#795548','#8d6e63']
+  };
+  function getFam(gi){
+    if(/azzurr/i.test(gi))return'azzurro';
+    if(/verde/i.test(gi))return'verde';
+    if(/nord/i.test(gi))return'nord';
+    if(/sud/i.test(gi))return'sud';
+    if(/ross/i.test(gi))return'rosso';
+    if(/bian/i.test(gi))return'bianco';
+    if(/\boro\b/i.test(gi))return'oro';
+    if(/argent/i.test(gi))return'argento';
+    if(/bronz/i.test(gi))return'bronzo';
+    return null;
+  }
+  // Costruisce mappa girone→colore con gradazioni per stessa famiglia
+  var GRAD_CLR={};
+  var famIdx={};
+  // Prima passata: raccoglie gironi per famiglia (esclusi accumulati)
+  var famGironi={};
+  gironi.forEach(function(gi){if(/accumulato/i.test(gi))return;var f=getFam(gi);if(f){if(!famGironi[f])famGironi[f]=[];famGironi[f].push(gi);}});
+  Object.keys(famGironi).forEach(function(f){famGironi[f].sort(function(a,b){return a.localeCompare(b,'it');});});
   gironi.forEach(function(gi){
     if(/accumulato/i.test(gi))return;
-    if(isFaseElim(gi))return;
-    var gx=garecamp.find(function(g){return g['Girone']===gi;});
-    var f=gx?gx['Fase']||'':'';
-    if(!faseBucket[f])faseBucket[f]={prio:fasePrio(f),gironi:[]};
-    faseBucket[f].gironi.push(gi);
-  });
-  // Ordina le fasi per priorità
-  var fasiRegolari=Object.keys(faseBucket).sort(function(a,b){
-    return faseBucket[a].prio-faseBucket[b].prio;
-  });
-
-  // Calcola la prio minima (= prima fase)
-  var minPrioReg=fasiRegolari.length?faseBucket[fasiRegolari[0]].prio:99;
-
-  var cards='<div style="display:flex;flex-direction:column;gap:0px">';
-
-  fasiRegolari.forEach(function(fase,fIdx){
-    var bucket=faseBucket[fase];
-    var isFirstFase=bucket.prio===minPrioReg;
-    // Ordina i gironi dentro la fase per nome
-    var gironiFase=bucket.gironi.slice().sort(function(a,b){return a.localeCompare(b,'it');});
-
-    // Separatore di fase (solo dalla seconda fase in poi)
-    if(fIdx>0&&fase){
-      cards+='<div style="padding:5px 10px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl);font-size:.75rem;font-weight:700;color:var(--bl);margin:14px 0 6px">📋 '+escH(fase)+'</div>';
+    var f=getFam(gi);
+    if(f&&FAMILY_PALETTES[f]){
+      if(famIdx[f]===undefined)famIdx[f]=0;
+      var idx=famGironi[f].indexOf(gi);
+      GRAD_CLR[gi]=FAMILY_PALETTES[f][Math.min(idx,FAMILY_PALETTES[f].length-1)];
     }
+  });
+  function giColorGrad(gi){return GRAD_CLR[gi]||giColor(gi,clr);}
+  function hasFamClr(gi){return !!GRAD_CLR[gi];}
 
-    // ── Costruisci la riga interlacciata per questa fase ──
-    // ── Riga interlacciata: base e accumulato alternati per ogni girone ──
-    var rigaInterlacciata='';
-    gironiFase.forEach(function(gi){
+  // ── FUNZIONE CARD con bordo colorato e larghezza minima garantita ─────────
+  function renderCardNew(rows,gGi,giName,giClr,showAccum,label,provMap){
+    var fam=hasFamClr(giName.replace(/ Accumulato$/i,'').trim());
+    var borderTop=fam?'border-top:4px solid '+giClr:'border-top:2px solid '+giClr+'88';
+    var borderSide=fam?'border:2px solid '+giClr:'border:1.5px solid '+giClr+'55';
+    var tid='rt'+Math.random().toString(36).slice(2,7);
+    var hasProv=provMap&&Object.keys(provMap).length>0;
+    var colOff=hasProv?1:0;
+    var thS='cursor:pointer;user-select:none;white-space:nowrap;';
+    function thClick(ci){return ' onclick="sortRtbl(\''+tid+'\','+ci+')"';}
+    // Header card
+    var h='<div style="flex-shrink:0;'+borderSide+';'+borderTop+';border-radius:10px;overflow:visible;margin-bottom:4px;background:#fff">'
+      +'<div style="background:linear-gradient(135deg,'+giClr+' 0%,'+giClr+'cc 100%);color:#fff;padding:7px 13px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0">'
+      +'<b style="font-size:.82rem;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.25)">'+escH(label)+'</b>'
+      +'<span style="font-size:.62rem;opacity:.9;background:rgba(0,0,0,.18);border-radius:10px;padding:2px 7px;margin-left:8px;white-space:nowrap">'+rows.length+' sq · '+gGi.length+'g</span>'
+      +'</div>';
+    // Tabella con tutte le colonne visibili, niente overflow hidden
+    h+='<div style="overflow-x:auto"><table id="'+tid+'" style="border-collapse:collapse;font-size:.75rem;white-space:nowrap"><thead><tr style="background:'+giClr+'15">'
+      +'<th style="padding:3px 4px;text-align:center;font-size:.65rem">#</th>'
+      +(hasProv?'<th style="padding:3px 4px;text-align:center;font-size:.6rem;color:var(--mu)">Prov.</th>':'')
+      +'<th style="padding:3px 8px;text-align:left;font-size:.65rem">Squadra</th>'
+      +'<th style="padding:2px 6px;text-align:center;font-size:.63rem;'+thS+'"'+thClick(2+colOff)+'>G</th>'
+      +'<th style="padding:2px 6px;text-align:center;font-size:.63rem;color:var(--green);'+thS+'"'+thClick(3+colOff)+'>V</th>'
+      +'<th style="padding:2px 6px;text-align:center;font-size:.63rem;color:var(--red);'+thS+'"'+thClick(4+colOff)+'>P</th>'
+      +'<th style="padding:2px 6px;text-align:center;font-size:.63rem;'+thS+'"'+thClick(5+colOff)+'>PF</th>'
+      +'<th style="padding:2px 6px;text-align:center;font-size:.63rem;color:#aaa;'+thS+'"'+thClick(6+colOff)+'>PS</th>'
+      +(showAccum?'<th style="padding:3px 5px;text-align:center;font-size:.63rem;color:#e65100;'+thS+'"'+thClick(7+colOff)+' title="Punti portati">Port.</th>':'')
+      +'<th style="padding:3px 6px;text-align:center;font-size:.65rem;font-weight:800;color:'+giClr+';'+thS+'"'+thClick((showAccum?8:7)+colOff)+'>Pt ▼</th>'
+      +'</tr></thead><tbody>';
+    rows.forEach(function(e,i){
+      var sq=e[0],s=e[1],ptTot=showAccum?s.pt+(s.pt_port||0):s.pt;
+      var prov=hasProv?provMap[sq]:null;
+      var provGiNm=prov?(prov.girone||'').replace(/girone\s*/i,'').trim():'';
+      var provGiClr=prov?GRAD_CLR[prov.girone||'']||giColor(prov.girone||'',clr):clr;
+      var provBadge=prov?'<td style="padding:2px 4px;text-align:center;border-bottom:1px solid #f0f0f0"><div style="display:inline-flex;flex-direction:column;align-items:center;gap:1px"><span style="background:'+provGiClr+';color:#fff;border-radius:3px;padding:0 4px;font-size:.56rem;font-weight:700;white-space:nowrap">'+escH(provGiNm)+'</span><span style="font-size:.58rem;color:'+provGiClr+';font-weight:700">'+prov.pos+'°</span></div></td>':'';
+      h+='<tr style="background:'+(i%2?'#f8faff':'#fff')+';border-bottom:1px solid #f0f0f0;border-left:3px solid '+(prov?provGiClr:'transparent')+'">'
+        +'<td style="padding:3px 4px;text-align:center;color:#aaa;font-size:.62rem">'+(i+1)+'</td>'
+        +(hasProv?provBadge:'')
+        +'<td style="padding:3px 8px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(\''+esc(sq)+'\',\''+esc(camp)+'\')">'+escH(sq)+'</span></td>'
+        +'<td style="padding:3px 6px;text-align:center;font-size:.72rem">'+s.g+'</td>'
+        +'<td style="padding:3px 6px;text-align:center;color:var(--green);font-weight:700;font-size:.72rem">'+s.v+'</td>'
+        +'<td style="padding:3px 6px;text-align:center;color:var(--red);font-size:.72rem">'+s.p+'</td>'
+        +'<td style="padding:3px 6px;text-align:center;font-size:.72rem">'+s.pf+'</td>'
+        +'<td style="padding:3px 6px;text-align:center;color:#aaa;font-size:.72rem">'+s.ps+'</td>'
+        +(showAccum?'<td style="padding:3px 6px;text-align:center;color:#e65100;font-weight:700;font-size:.72rem">'+(s.pt_port||0)+'</td>':'')
+        +'<td style="padding:3px 6px;text-align:center;font-weight:800;font-size:.72rem;color:'+giClr+'">'+ptTot+'</td>'
+        +'</tr>';
+    });
+    h+='</tbody></table></div></div>';
+    return h;
+  }
+
+  // ── HELPER calcolo accumulato DR2 ─────────────────────────────────────────
+  function calcAccumulato(gi,sqSet,gGi){
+    var rowsAcc=calcSt(gGi,[...sqSet].sort());
+    rowsAcc.forEach(function(e){
+      var sq=e[0],s=e[1];
+      var gNordSq=sqGironeNord[sq];
+      if(!gNordSq){s.pt_port=0;return;}
+      var avvDaPortare=new Set();
+      garecamp.filter(function(g){return g['Girone']===gNordSq&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq);})
+        .forEach(function(g){var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];if(sqSet.has(avv))avvDaPortare.add(avv);});
+      var ptPort=0,seenGare=new Set();
+      garecamp.filter(function(g){return g['Girone']===gNordSq&&g['Risultato']&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq);})
+        .forEach(function(g){
+          var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];
+          if(!avvDaPortare.has(avv))return;
+          var key=g['Squadra Casa']+'|'+g['Squadra Ospite']+'|'+g['Data']+'|'+g['Punti Casa']+'|'+g['Punti Ospite'];
+          if(seenGare.has(key))return;seenGare.add(key);
+          var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+          var mp=g['Squadra Casa']===sq?pc:po,ap=g['Squadra Casa']===sq?po:pc;
+          if(mp>ap)ptPort+=2;else if(mp===ap)ptPort+=1;
+        });
+      s.pt_port=ptPort;
+    });
+    rowsAcc.sort(function(a,b){var ta=a[1].pt+(a[1].pt_port||0),tb=b[1].pt+(b[1].pt_port||0);return tb-ta||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps));});
+    return rowsAcc;
+  }
+
+  // ── RAGGRUPPA GIRONI PER FASE → UNA RIGA PER FASE ────────────────────────
+  var gironiOrdinati=gironi.slice().filter(function(gi){return!/accumulato/i.test(gi)&&!isFaseElim(gi);}).sort(function(a,b){
+    var ga=garecamp.find(function(g){return g['Girone']===a;});
+    var gb=garecamp.find(function(g){return g['Girone']===b;});
+    var pa=fasePrio(ga?ga['Fase']||'':'');
+    var pb=fasePrio(gb?gb['Fase']||'':'');
+    return pa-pb||a.localeCompare(b,'it');
+  });
+  var minPrio=99;
+  gironiOrdinati.forEach(function(gx){var fx=garecamp.find(function(g){return g['Girone']===gx;});if(fx){var p=fasePrio(fx['Fase']||'');if(p<minPrio)minPrio=p;}});
+
+  // Raggruppa per fase
+  var fasiGroups=[];
+  var faseGruppoMap={};
+  gironiOrdinati.forEach(function(gi){
+    var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
+    if(!(sqByGi[gi]&&sqByGi[gi].size))return;
+    var faseGi=(gGi.map(function(g){return g['Fase']||'';}).filter(Boolean)[0])||'';
+    var key=faseGi||'__nofase__';
+    if(!faseGruppoMap[key]){faseGruppoMap[key]={fase:faseGi,gironi:[]};fasiGroups.push(faseGruppoMap[key]);}
+    faseGruppoMap[key].gironi.push(gi);
+  });
+
+  // Costruisce HTML
+  var cards='<div style="display:flex;flex-direction:column;gap:18px">';
+
+  fasiGroups.forEach(function(grp,grpIdx){
+    var isFirstFase=(grpIdx===0);
+    var rowLabel=grp.fase
+      ?'<div style="padding:6px 12px;background:linear-gradient(90deg,#e8f0ff,#f5f8ff);border-radius:8px;border-left:4px solid var(--bl);font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:8px">📋 '+escH(grp.fase)+'</div>'
+      :'';
+    // Gironi base (prima tutti)
+    var baseCards='',accCards='';
+    grp.gironi.forEach(function(gi){
       var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
       var sqSet=sqByGi[gi]||new Set();
-      var allSqs=[...sqSet].sort();
-      if(!allSqs.length)return;
-      var giClr=giColor(gi,clr);
+      if(!sqSet.size)return;
+      var giClr=giColorGrad(gi);
       var pMap=isFirstFase?null:sqPosizioneGirone;
-      rigaInterlacciata+='<div style="flex:1;min-width:280px;max-width:600px;border:2.5px solid '+giClr+'99;border-radius:8px;overflow:visible;margin-bottom:4px">'
-        +'<div style="background:'+giClr+';color:#fff;padding:6px 12px;display:flex;justify-content:space-between;align-items:center">'
-        +'<b style="font-size:.82rem">'+escH(gi)+'</b>'
-        +'<span style="font-size:.63rem;opacity:.85">'+allSqs.length+' sq · '+gGi.length+'g</span></div>'
-        +'<div style="overflow-x:auto">'+renderTabella(calcSt(gGi,allSqs),giClr,false,pMap)+'</div>'
-        +'</div>';
+      baseCards+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
+      // Accumulato DR2: aggiunto in coda separata
       if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
-        var rowsAcc=calcSt(gGi,allSqs);
-        rowsAcc.forEach(function(e){
-          var sq=e[0],s=e[1];
-          var gNordSq=sqGironeNord[sq];
-          if(!gNordSq){s.pt_port=0;return;}
-          var avvDaPortare=new Set();
-          garecamp.filter(function(g){return g['Girone']===gNordSq&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq);}).forEach(function(g){var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];if(sqSet.has(avv))avvDaPortare.add(avv);});
-          var ptPort=0,seenGare=new Set();
-          garecamp.filter(function(g){return g['Girone']===gNordSq&&g['Risultato']&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq);}).forEach(function(g){
-            var avv=g['Squadra Casa']===sq?g['Squadra Ospite']:g['Squadra Casa'];
-            if(!avvDaPortare.has(avv))return;
-            var key=g['Squadra Casa']+'|'+g['Squadra Ospite']+'|'+g['Data']+'|'+g['Punti Casa']+'|'+g['Punti Ospite'];
-            if(seenGare.has(key))return;seenGare.add(key);
-            var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
-            var mp=g['Squadra Casa']===sq?pc:po,ap=g['Squadra Casa']===sq?po:pc;
-            if(mp>ap)ptPort+=2;else if(mp===ap)ptPort+=1;
-          });
-          s.pt_port=ptPort;
-        });
-        rowsAcc.sort(function(a,b){var ta=a[1].pt+(a[1].pt_port||0),tb=b[1].pt+(b[1].pt_port||0);return tb-ta||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps));});
         var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
-        var accLabel=gi+' Accumulato';
-        rigaInterlacciata+='<div style="flex:1;min-width:280px;max-width:600px;border:2.5px solid '+accClr+'99;border-radius:8px;overflow:visible;margin-bottom:4px">'
-          +'<div style="background:'+accClr+';color:#fff;padding:6px 12px;display:flex;justify-content:space-between;align-items:center">'
-          +'<b style="font-size:.82rem">'+escH(accLabel)+'</b>'
-          +'<span style="font-size:.63rem;opacity:.85">'+allSqs.length+' sq · '+gGi.length+'g</span></div>'
-          +'<div style="overflow-x:auto">'+renderTabella(rowsAcc,accClr,true,sqPosizioneGirone)+'</div>'
-          +'</div>';
+        accCards+=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,accClr,true,gi+' Accumulato',sqPosizioneGirone);
       }
     });
-    if(rigaInterlacciata){
-      cards+='<div style="display:flex;flex-wrap:nowrap;gap:10px;align-items:flex-start;overflow-x:auto;padding-bottom:4px">'+rigaInterlacciata+'</div>';
-    }
+    cards+='<div>'
+      +rowLabel
+      +'<div style="display:flex;flex-wrap:nowrap;gap:10px;align-items:flex-start;overflow-x:auto;padding-bottom:6px">'
+      +baseCards+accCards
+      +'</div></div>';
   });
+
+  cards+='</div>';
 
   // ── TABELLONE OTTAVI ──────────────────────────────────────────────
   // Rileva gironi tipo "Ottavo Ottavo", "Primo Ottavo", "Quarto Ottavo" ecc.
-  function getFase(gi){var gx=garecamp.find(function(g){return g['Girone']===gi;});return (gx?gx['Fase']||'':'').toLowerCase();}
   var fasiElimGironi=gironi.filter(function(gi){return isFaseElim(gi);});
-  var ottaviGironi=gironi.filter(function(gi){return /\bottav/i.test(gi)||/ottav/.test(getFase(gi));});
-  var quartiGironi=gironi.filter(function(gi){return (/\bquart/i.test(gi)||/quart/.test(getFase(gi)))&&!ottaviGironi.includes(gi);});
-  var semifGironi=gironi.filter(function(gi){return /\bsemifinal/i.test(gi)||/semifinal/.test(getFase(gi));});
-  var finalGironi=gironi.filter(function(gi){
-    var f=getFase(gi);
-    return (/\bfinal/i.test(gi)||/final/.test(f))&&!semifGironi.includes(gi)&&!ottaviGironi.includes(gi)&&!quartiGironi.includes(gi);
-  });
+  var ottaviGironi=gironi.filter(function(gi){return /\bottav/i.test(gi);});
+  var quartiGironi=gironi.filter(function(gi){return /\bquart/i.test(gi)&&!/\bottav/i.test(gi);});
+  var semifGironi=gironi.filter(function(gi){return /\bsemifinal/i.test(gi);});
+  var finalGironi=gironi.filter(function(gi){return /\bfinal/i.test(gi)&&!/\bsemifinal/i.test(gi)&&!/\bottav/i.test(gi)&&!/\bquart/i.test(gi);});
   if(fasiElimGironi.length>=1){
     var gironiRegolari=gironi.filter(function(gi){return!isFaseElim(gi);});
     // Mappa squadra → posizione nel girone regolare
@@ -15963,91 +16008,39 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       gGi.forEach(function(g){if(g['Squadra Casa'])sqSet.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqSet.add(g['Squadra Ospite']);});
       var sqs=[...sqSet];
       if(!sqs.length)return'';
-      var giClr=giColor(gi,clr);
-      // Calcola classifica interna al girone elim
-      var st={};
-      sqs.forEach(function(sq){st[sq]={pt:0,g:0,v:0,p:0,pf:0,ps:0};});
-      var hasResults=false;
-      gGi.filter(function(g){return g['Risultato'];}).forEach(function(g){
-        hasResults=true;
-        var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
-        var sc=g['Squadra Casa'],so=g['Squadra Ospite'];
-        if(!st[sc]||!st[so])return;
-        st[sc].g++;st[so].g++;st[sc].pf+=pc;st[sc].ps+=po;st[so].pf+=po;st[so].ps+=pc;
-        if(pc>po){st[sc].v++;st[sc].pt+=2;st[so].p++;}
-        else if(po>pc){st[so].v++;st[so].pt+=2;st[sc].p++;}
-        else{st[sc].pt++;st[so].pt++;}
-      });
-      var ranked=Object.entries(st).sort(function(a,b){return b[1].pt-a[1].pt||(b[1].pf-b[1].ps)-(a[1].pf-a[1].ps);});
-      var hasProv=Object.keys(sqPosizioneGirone).length>0;
-      var cardW=hasResults?(hasProv?'min-width:300px;width:auto':'min-width:260px;width:auto'):'min-width:220px;width:auto';
-      var h='<div style="'+cardW+';flex-shrink:0;border:2px solid '+giClr+'88;border-radius:8px;overflow:visible;margin-bottom:4px">';
-      h+='<div style="background:'+giClr+';color:#fff;padding:5px 10px;font-size:.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escH(gi)+'</div>';
-      h+='<table style="width:100%;border-collapse:collapse;font-size:.7rem;table-layout:auto"><thead><tr style="background:'+giClr+'18">';
-      if(hasResults){
-        h+='<th style="padding:3px 2px;text-align:center;width:16px">#</th>'
-          +(hasProv?'<th style="padding:3px 3px;text-align:center;font-size:.6rem;color:var(--mu);width:46px">Prov.</th>':'')
-          +'<th style="padding:3px 4px;text-align:left">Squadra</th>'
-          +'<th style="padding:2px 4px;text-align:center;width:20px;font-size:.63rem">G</th>'
-          +'<th style="padding:2px 4px;text-align:center;width:20px;font-size:.63rem;color:var(--green)">V</th>'
-          +'<th style="padding:2px 4px;text-align:center;width:20px;font-size:.63rem;color:var(--red)">P</th>'
-          +'<th style="padding:2px 4px;text-align:center;width:30px;font-size:.63rem">PF</th>'
-          +'<th style="padding:2px 4px;text-align:center;width:30px;font-size:.63rem;color:#aaa">PS</th>'
-          +'<th style="padding:2px 4px;text-align:center;width:22px;font-size:.65rem;font-weight:800;color:'+giClr+'">Pt</th>';
-      } else {
-        h+='<th style="padding:3px 6px;text-align:left">Squadra</th>'
-          +'<th style="padding:3px 6px;text-align:center;width:56px">Girone</th>'
-          +'<th style="padding:3px 6px;text-align:center;width:36px">Pos.</th>';
-      }
+      var h='<div style="min-width:220px;flex:1;border:2px solid '+clr+'55;border-radius:8px;overflow:hidden;margin-bottom:4px">';
+      h+='<div style="background:'+clr+';color:#fff;padding:5px 10px;font-size:.78rem;font-weight:700">'+escH(gi)+'</div>';
+      h+='<table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="background:#f0f4ff">';
+      h+='<th style="padding:3px 6px;text-align:left">Squadra</th><th style="padding:3px 6px;text-align:center">Girone</th><th style="padding:3px 6px;text-align:center">Pos.</th>';
       h+='</tr></thead><tbody>';
-      if(hasResults){
-        ranked.forEach(function(e,idx){
-          var sq=e[0],s=e[1];
-          var posClr=idx===0?'var(--gold)':idx===1?'#aaa':idx===2?'#cd7f32':'var(--mu)';
-          var prov=hasProv?sqPosizioneGirone[sq]:null;
-          var provGiNm=prov?(prov.girone||'').replace(/girone\s*/i,'').trim():'';
-          var provGiClr=prov?GIRONE_COLORS_MAP[prov.girone||'']||giColor(prov.girone||'',giClr):giClr;
-          var provCell=prov?'<td style="padding:2px 3px;text-align:center;border-bottom:1px solid #f0f0f0"><div style="display:inline-flex;flex-direction:column;align-items:center;gap:1px"><span style="background:'+provGiClr+';color:#fff;border-radius:3px;padding:0 4px;font-size:.56rem;font-weight:700;white-space:nowrap">'+escH(provGiNm)+'</span><span style="font-size:.58rem;color:'+provGiClr+';font-weight:700">'+prov.pos+'°</span></div></td>':'';
-          h+='<tr style="background:'+(idx%2?'#f8faff':'#fff')+';border-bottom:1px solid #f0f0f0;border-left:3px solid '+(prov?provGiClr:'transparent')+'">'
-            +'<td style="padding:3px;text-align:center;color:'+posClr+';font-size:.62rem">'+(idx+1)+'</td>'
-            +(hasProv?provCell:'')
-            +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+escH(sq)+'">'+escH(sq)+'</span></td>'
-            +'<td style="padding:3px;text-align:center;font-size:.72rem">'+s.g+'</td>'
-            +'<td style="padding:3px;text-align:center;color:var(--green);font-weight:700;font-size:.72rem">'+s.v+'</td>'
-            +'<td style="padding:3px;text-align:center;color:var(--red);font-size:.72rem">'+s.p+'</td>'
-            +'<td style="padding:3px;text-align:center;font-size:.72rem">'+s.pf+'</td>'
-            +'<td style="padding:3px;text-align:center;color:#aaa;font-size:.72rem">'+s.ps+'</td>'
-            +'<td style="padding:3px;text-align:center;font-weight:800;font-size:.72rem;color:'+giClr+'">'+s.pt+'</td>'
-            +'</tr>';
-        });
-      } else {
-        sqs.sort(function(a,b){
-          var pa=sqPosizioneGirone[a],pb=sqPosizioneGirone[b];
-          if(!pa&&!pb)return a.localeCompare(b);
-          if(!pa)return 1;if(!pb)return -1;
-          return pa.pos-pb.pos||(pa.girone||'').localeCompare(pb.girone||'');
-        }).forEach(function(sq,idx){
-          var info=sqPosizioneGirone[sq];
-          var gironeName=info?info.girone.replace(/girone\s*/i,'').trim():'–';
-          var giNmClr=info?GIRONE_COLORS_MAP[info.girone||'']||giColor(info.girone||'',giClr):giClr;
-          var pos=info?info.pos:'–';
-          var posClr=pos===1?'var(--gold)':pos===2?'#aaa':pos===3?'#cd7f32':'var(--mu)';
-          var posLabel=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos+'°';
-          h+='<tr style="background:'+(idx%2?'#f8faff':'#fff')+';border-bottom:1px solid #f0f0f0;border-left:3px solid '+giNmClr+'">'
-            +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+escH(sq)+'">'+escH(sq)+'</span></td>'
-            +'<td style="padding:4px 6px;text-align:center"><span style="background:'+giNmClr+';color:#fff;border-radius:3px;padding:1px 5px;font-size:.6rem;font-weight:700;white-space:nowrap">'+escH(gironeName)+'</span></td>'
-            +'<td style="padding:4px 6px;text-align:center;font-weight:700;color:'+posClr+'">'+posLabel+'</td>'
-            +'</tr>';
-        });
-      }
+      sqs.sort(function(a,b){
+        var pa=sqPosizioneGirone[a],pb=sqPosizioneGirone[b];
+        if(!pa&&!pb)return a.localeCompare(b);
+        if(!pa)return 1;if(!pb)return -1;
+        return pa.pos-pb.pos||(pa.girone||'').localeCompare(pb.girone||'');
+      }).forEach(function(sq,idx){
+        var info=sqPosizioneGirone[sq];
+        var gironeName=info?info.girone.replace(/girone\s*/i,'').trim():'–';
+        var pos=info?info.pos:'–';
+        var posClr=pos===1?'var(--gold)':pos===2?'#aaa':pos===3?'#cd7f32':'var(--mu)';
+        var posLabel=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos+'°';
+        var rowBg=idx%2?'#f8faff':'#fff';
+        h+='<tr style="background:'+rowBg+';border-bottom:1px solid #f0f0f0">'
+          +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+ escH(sq)+'">'+ escH(sq)+'</span></td>'
+          +'<td style="padding:4px 6px;text-align:center;font-size:.65rem;color:var(--mu)">'+escH(gironeName)+'</td>'
+          +'<td style="padding:4px 6px;text-align:center;font-weight:700;color:'+posClr+'">'+posLabel+'</td>'
+          +'</tr>';
+      });
       h+='</tbody></table></div>';
       return h;
     }
     function renderFaseSection(fasiArr,icon,label,cols){
       if(!fasiArr.length)return'';
       var sorted=sortFase(fasiArr);
+      // auto-fill con minmax: tutti i gironi stessa larghezza, vanno a capo se necessario
+      var minW=sorted.length<=2?'280px':sorted.length<=4?'220px':'180px';
       var h='<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;color:var(--bl);margin-bottom:8px;padding:6px 12px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl)">'+icon+' '+escH(label)+'</div>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start">';
+        +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax('+minW+',1fr));gap:8px;align-items:flex-start">';
       sorted.forEach(function(gi){h+=renderGironeElim(gi);});
       h+='</div></div>';
       return h;
@@ -16060,7 +16053,6 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     // Il tabellone va su riga separata, in un div block (non dentro il flex dei gironi)
     cards+=tabHtml;
   }
-  cards+='</div>'; // chiude div colonna principale
   return cards;
 }
 
@@ -16994,7 +16986,13 @@ var _fipInited=false;
 function initFipLive(){
   if(!_fipInited){
     _fipInited=true;
-    setFipLiveTab('M',document.getElementById('flt-m'));
+    // Controlla se c'era un tab selezionato prima del caricamento JS
+    if(window._fipTabPending){
+      var p=window._fipTabPending;window._fipTabPending=null;
+      setFipLiveTab(p.s,p.b);
+    } else {
+      setFipLiveTab(_fipSesso||'M',document.getElementById(_fipSesso==='F'?'flt-f':'flt-m'));
+    }
   }
 }
 
