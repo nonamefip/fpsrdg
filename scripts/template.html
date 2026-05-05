@@ -10719,11 +10719,22 @@ function openCampionato(camp){
             const squadre=[...new Set(gGir.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]))].filter(Boolean);
             const nSq=squadre.length;
             const garePerTurno=Math.max(1,Math.floor(nSq/2));
-            // Ordina per numero gara: riflette l'ordine giornata FIP esatto
-            const gareSorted=[...gGir].sort((a,b)=>(a['Numero Gara']||'').localeCompare(b['Numero Gara']||''));
+            // Ordina per data+ora primario, numero gara come secondario
+            // (evita problemi con ordinamento alfanumerico del Numero Gara)
+            const gareSorted=[...gGir].sort((a,b)=>{
+              const da=(a['Data']||'?'),db=(b['Data']||'?');
+              if(da!=='?'&&db!=='?'&&da!==db)return da.localeCompare(db);
+              const oa=(a['Ora']||''),ob=(b['Ora']||'');
+              if(oa&&ob&&oa!==ob)return oa.localeCompare(ob);
+              // fallback: numero gara (numericamente se possibile)
+              const na=parseInt((a['Numero Gara']||'').replace(/\D/g,'')||'0');
+              const nb=parseInt((b['Numero Gara']||'').replace(/\D/g,'')||'0');
+              if(na&&nb&&na!==nb)return na-nb;
+              return (a['Numero Gara']||'').localeCompare(b['Numero Gara']||'');
+            });
             const fmtD=d=>{if(!d||d==='?')return'';const[y,m,dd]=d.split('-');const ms=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];return parseInt(dd)+' '+ms[parseInt(m)-1];};
 
-            // Costruisci i turni in blocchi fissi di garePerTurno (ordine FIP)
+            // Costruisci i turni in blocchi fissi di garePerTurno (ordine cronologico FIP)
             const tuttiTurni=[];
             for(let i=0;i<gareSorted.length;i+=garePerTurno){
               const turno=gareSorted.slice(i,i+garePerTurno);
@@ -10732,50 +10743,73 @@ function openCampionato(camp){
               tuttiTurni.push(turno);
             }
 
-            // ── ABBINAMENTO ANDATA/RITORNO ──
-            // Strategia: trova il punto di svolta REALE cercando il primo turno i che è
-            // speculare (stesse coppie invertite) rispetto al turno 0.
-            // Questo funziona indipendentemente da quanti turni ci sono (7+7, 8+8, ecc.)
+            // ── ABBINAMENTO ANDATA/RITORNO — logica robusta ──
+            // Verifica se due turni sono speculari (stesse coppie casa/ospite invertite)
             function turnoSpeculare(ta,tr){
-              if(!ta||!tr)return false;
+              if(!ta||!tr||ta.length===0||tr.length===0)return false;
               const pairsA=new Set(ta.map(g=>g['Squadra Casa']+'|||'+g['Squadra Ospite']));
               const matchCount=tr.filter(g=>pairsA.has(g['Squadra Ospite']+'|||'+g['Squadra Casa'])).length;
-              return matchCount>=Math.floor(ta.length*0.6);
+              return matchCount>=Math.floor(Math.min(ta.length,tr.length)*0.6);
+            }
+            // Verifica globale: conta tutte le coppie duplicate invertite nel calendario
+            function contaCoppieInvertite(){
+              const allPairs=new Set();let invertite=0;
+              tuttiTurni.forEach(t=>t.forEach(g=>{
+                const k=g['Squadra Casa']+'|||'+g['Squadra Ospite'];
+                const ki=g['Squadra Ospite']+'|||'+g['Squadra Casa'];
+                if(allPairs.has(ki))invertite++;
+                allPairs.add(k);
+              }));
+              return invertite;
             }
             const totalTurni=tuttiTurni.length;
-            // Pair-based detection: controlla se alcune coppie appaiono invertite
-            // Metodo primario: matematico. Un doppio RR ha esattamente 2*(nSq-1) turni (per nSq pari)
-            // o 2*nSq turni (per nSq dispari con riposo). Se totalTurni > nSq-1 è doppio RR.
+            const totalGare=gareSorted.length;
+            // Rilevamento doppio RR:
+            // 1. Matematico: se totalTurni > nSq-1 probabilmente è doppio RR
+            // 2. Empirico: cerca il miglior punto di split dove i turni dopo sono speculari
             const expectedSingleRR=nSq>1?nSq-1:1;
             const isMathDoubleRR=nSq>2&&totalTurni>expectedSingleRR;
-            // Metodo empirico: coppie invertite tra gare con risultato
-            const _gareConRis=gGir.filter(g=>g['Risultato']);
-            const _allPairsRR=new Set(_gareConRis.map(g=>g['Squadra Casa']+'|||'+g['Squadra Ospite']));
-            const isEmpDoubleRR=nSq>2&&_gareConRis.some(g=>_allPairsRR.has(g['Squadra Ospite']+'|||'+g['Squadra Casa']));
+            const nCoppieInv=contaCoppieInvertite();
+            const isEmpDoubleRR=nSq>2&&nCoppieInv>=Math.floor(garePerTurno*0.6);
             const isDoubleRRData=isMathDoubleRR||isEmpDoubleRR;
-            // Punto di svolta: matematicamente a nSq-1 (o metà se non torna)
+            // Calcolo punto di svolta con strategia a più livelli
             let andataCount=totalTurni; // default: tutto andata (singolo RR)
             if(isDoubleRRData){
-              // Metodo 1: cerca turno speculare al turno 0 (verifica empirica)
-              const expectedAndata=Math.ceil(totalTurni/2);
-              let svoltaTrovata=false;
-              for(let i=Math.max(1,expectedAndata-2);i<=Math.min(totalTurni-1,expectedAndata+2);i++){
-                if(turnoSpeculare(tuttiTurni[0],tuttiTurni[i])){
-                  andataCount=i;
-                  svoltaTrovata=true;
-                  break;
-                }
-              }
-              if(!svoltaTrovata){
-                // Metodo 2: usa matematicamente nSq-1 se coerente col totale
-                if((nSq-1)<totalTurni&&totalTurni%(nSq-1)===0){
-                  andataCount=nSq-1;
+              // Strategia 1: cerca speculare all'indice matematico nSq-1
+              const mathSplit=nSq-1;
+              if(mathSplit>0&&mathSplit<totalTurni){
+                if(turnoSpeculare(tuttiTurni[0],tuttiTurni[mathSplit])){
+                  andataCount=mathSplit;
                 } else {
-                  andataCount=Math.round(totalTurni/2);
+                  // Strategia 2: cerca il turno speculare nell'intervallo attorno alla metà
+                  const halfT=Math.round(totalTurni/2);
+                  let svoltaTrovata=false;
+                  // Cerca in un range ampio attorno alla metà
+                  for(let delta=0;delta<=3&&!svoltaTrovata;delta++){
+                    for(const i of [halfT-delta,halfT+delta]){
+                      if(i>0&&i<totalTurni&&turnoSpeculare(tuttiTurni[0],tuttiTurni[i])){
+                        andataCount=i;svoltaTrovata=true;break;
+                      }
+                    }
+                  }
+                  if(!svoltaTrovata){
+                    // Strategia 3: cerca il punto dove il numero di coppie invertite è massimo
+                    // (split che massimizza la simmetria andata/ritorno)
+                    let bestScore=-1,bestSplit=halfT;
+                    for(let s=Math.max(1,halfT-3);s<=Math.min(totalTurni-1,halfT+3);s++){
+                      const a=tuttiTurni.slice(0,s),r=tuttiTurni.slice(s);
+                      const pA=new Set(a.flatMap(t=>t.map(g=>g['Squadra Casa']+'|||'+g['Squadra Ospite'])));
+                      const sc=r.reduce((acc,t)=>acc+t.filter(g=>pA.has(g['Squadra Ospite']+'|||'+g['Squadra Casa'])).length,0);
+                      if(sc>bestScore){bestScore=sc;bestSplit=s;}
+                    }
+                    andataCount=bestSplit;
+                  }
                 }
+              } else {
+                andataCount=Math.round(totalTurni/2);
               }
             }
-            const isDoubleRR=isDoubleRRData&&andataCount<totalTurni;
+            const isDoubleRR=isDoubleRRData&&andataCount>0&&andataCount<totalTurni;
             const turniAndata=tuttiTurni.slice(0,andataCount);
             const turniRitorno=tuttiTurni.slice(andataCount);
             // Alias per retrocompatibilità
@@ -15611,7 +15645,13 @@ function renderGrt(n){
   var cs=CS[camp];
   if(!cs){el.innerHTML='<p class="il">Campionato non trovato</p>';return;}
   // Ricava gironi dalle gare reali (non da cs.gironi che può essere desincronizzato)
-  var garecamp=(D.gare||[]).filter(function(g){return g['Campionato']===camp;});
+  // Unisce gare passate E future per avere tutti i gironi del campionato
+  var _gareFut=(D.gare_future||[]).filter(function(g){return g['Campionato']===camp;});
+  var _garePas=(D.gare||[]).filter(function(g){return g['Campionato']===camp;});
+  // Deduplicazione per Numero Gara (le future non hanno ancora risultato)
+  var _seenNG=new Set(_garePas.map(function(g){return g['Numero Gara']||'';}));
+  var _gareFutUniq=_gareFut.filter(function(g){var ng=g['Numero Gara']||'';return!ng||!_seenNG.has(ng);});
+  var garecamp=_garePas.concat(_gareFutUniq);
   var gironiDaGare=[...new Set(garecamp.map(function(g){return g['Girone']||'';}).filter(Boolean))].sort();
   var gironi=gironiDaGare.length?gironiDaGare:(cs.gironi||[]).slice().sort();
   if(!gironi.length){el.innerHTML='<p class="il">Nessun girone</p>';return;}
