@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FIP Sardegna – Preview Redesign</title>
+<style>
+:root{
+  --bg:#f0f2f7;--card:#fff;--bl:#1a2a4a;--mu:#6b7a99;--mu2:#9aa5be;
+  --br:#dde3f0;--green:#1db954;--red:#e74c3c;--acc:#2563eb;
+  --CA:#e74c3c;--SS:#2563eb;--SU:#8b5cf6;--NU:#f59e0b;--OR:#10b981;
+  --shadow:0 2px 12px rgba(30,40,80,.09);
+  --radius:12px;
+}
+[data-dark]{
+  --bg:#0f1117;--card:#1a1d27;--bl:#e8ecf5;--mu:#8892aa;--mu2:#555e75;
+  --br:#2a2f42;--shadow:0 2px 16px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--bl);min-height:100vh;transition:background .3s,color .3s}
+
+/* ── TOP BAR ── */
+.topbar{background:linear-gradient(135deg,#1a2a4a 0%,#243660 100%);color:#fff;padding:0 20px;display:flex;align-items:center;gap:12px;height:52px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.topbar .logo{font-weight:800;font-size:.95rem;letter-spacing:.5px}
+.topbar .subtitle{font-size:.7rem;opacity:.6;margin-left:4px}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.dark-toggle{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 12px;color:#fff;cursor:pointer;font-size:.72rem;font-weight:600;transition:.2s}
+.dark-toggle:hover{background:rgba(255,255,255,.25)}
+
+/* ── PROVINCE STRIP ── */
+.pv-strip{display:flex;gap:0;height:4px;width:100%}
+.pv-strip span{flex:1;transition:.3s}
+.pv-strip span:hover{filter:brightness(1.3)}
+
+/* ── NAV ── */
+.nav{background:var(--card);border-bottom:1px solid var(--br);padding:0 20px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;position:sticky;top:52px;z-index:99;box-shadow:0 1px 6px rgba(30,40,80,.06)}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{background:none;border:none;padding:10px 14px;font-size:.78rem;font-weight:600;color:var(--mu);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:.2s}
+.nav-btn:hover{color:var(--bl)}
+.nav-btn.active{color:var(--acc);border-bottom-color:var(--acc)}
+
+/* ── LAYOUT ── */
+.page{display:none;padding:20px;max-width:1400px;margin:0 auto}
+.page.active{display:block}
+
+/* ── SEZIONE LABEL ── */
+.sec-label{font-size:.65rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mu);margin:24px 0 10px;display:flex;align-items:center;gap:8px}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--br)}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:8px}
+.kpi-card{background:var(--card);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);border:1px solid var(--br);transition:.2s;cursor:pointer;position:relative;overflow:hidden}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(30,40,80,.13)}
+.kpi-card .kpi-icon{font-size:1.4rem;margin-bottom:6px;opacity:.85}
+.kpi-card .kpi-val{font-size:1.8rem;font-weight:800;color:var(--bl);line-height:1}
+.kpi-card .kpi-lbl{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--mu);margin-top:4px}
+.kpi-card .kpi-delta{font-size:.7rem;font-weight:700;margin-top:8px;display:flex;align-items:center;gap:4px}
+.kpi-card .kpi-delta.up{color:#10b981}
+.kpi-card .kpi-delta.down{color:#ef4444}
+.kpi-card .kpi-delta.neu{color:var(--mu)}
+.kpi-sparkline{margin-top:10px;height:32px;width:100%}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0;background:var(--kpi-accent,var(--acc))}
+
+/* ── ALERT CARD ── */
+.alert-strip{background:linear-gradient(135deg,#fff4e6,#fffaf0);border:1px solid #ffd59e;border-radius:var(--radius);padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:16px}
+[data-dark] .alert-strip{background:linear-gradient(135deg,#2a1f0a,#1f1a0e);border-color:#7a5c1e}
+.alert-strip .alert-icon{font-size:1.3rem;flex-shrink:0}
+.alert-strip .alert-text{font-size:.78rem;color:#92400e;font-weight:500}
+[data-dark] .alert-strip .alert-text{color:#fbbf24}
+.alert-strip .alert-count{background:#ef4444;color:#fff;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700;margin-left:auto;flex-shrink:0}
+
+/* ── CARD ── */
+.card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border:1px solid var(--br);margin-bottom:14px}
+.card-hd{font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card-hd .card-hd-sub{font-size:.68rem;font-weight:400;color:var(--mu);margin-left:auto}
+
+/* ── GRID 2-3 ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
+
+/* ── PROVINCE STATS ── */
+.pv-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media(max-width:900px){.pv-cards{grid-template-columns:repeat(3,1fr)}}
+.pv-card{border-radius:10px;padding:14px 12px;text-align:center;position:relative;overflow:hidden}
+.pv-card .pv-name{font-size:1.1rem;font-weight:800;color:#fff}
+.pv-card .pv-city{font-size:.6rem;color:rgba(255,255,255,.7);margin-bottom:8px}
+.pv-card .pv-val{font-size:1.6rem;font-weight:800;color:#fff;line-height:1}
+.pv-card .pv-sub{font-size:.6rem;color:rgba(255,255,255,.75);margin-top:2px}
+.pv-card .pv-bar{position:absolute;bottom:0;left:0;height:4px;background:rgba(255,255,255,.4);transition:.8s}
+
+/* ── TREND BARS ── */
+.trend-wrap{display:flex;align-items:flex-end;gap:3px;height:80px}
+.trend-bar-col{display:flex;flex-direction:column;align-items:center;flex:1;gap:2px}
+.trend-bar{width:100%;border-radius:4px 4px 0 0;transition:.5s;min-height:4px;cursor:pointer;position:relative}
+.trend-bar:hover::after{content:attr(data-tip);position:absolute;top:-24px;left:50%;transform:translateX(-50%);background:#1a2a4a;color:#fff;font-size:.6rem;padding:2px 6px;border-radius:4px;white-space:nowrap;z-index:10}
+.trend-lbl{font-size:.55rem;color:var(--mu);text-align:center;white-space:nowrap}
+
+/* ── TOP LIST ── */
+.top-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--br)}
+.top-item:last-child{border-bottom:none}
+.top-rank{font-size:.65rem;font-weight:800;color:var(--mu2);min-width:18px;text-align:center}
+.top-rank.gold{color:#f59e0b}
+.top-rank.silver{color:#94a3b8}
+.top-rank.bronze{color:#cd7f32}
+.top-name{font-size:.8rem;font-weight:600;flex:1}
+.top-sub{font-size:.65rem;color:var(--mu)}
+.top-val{font-size:.85rem;font-weight:800;color:var(--acc)}
+.pv-badge{border-radius:4px;padding:1px 6px;font-size:.6rem;font-weight:700;color:#fff;flex-shrink:0}
+
+/* ── SETTIMANA CARD ── */
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.week-day{background:var(--bg);border-radius:8px;padding:8px 6px;text-align:center;cursor:pointer;transition:.2s;border:1px solid transparent}
+.week-day:hover{background:var(--acc);color:#fff;border-color:var(--acc)}
+.week-day.has-games{border-color:var(--acc);background:rgba(37,99,235,.08)}
+.week-day.today{background:var(--acc);color:#fff}
+.week-day .wd-name{font-size:.58rem;font-weight:700;text-transform:uppercase;color:inherit;opacity:.7}
+.week-day .wd-num{font-size:1rem;font-weight:800}
+.week-day .wd-count{font-size:.6rem;font-weight:600;color:var(--acc)}
+.week-day.today .wd-count,.week-day:hover .wd-count{color:rgba(255,255,255,.85)}
+
+/* ── ARBITRO CARD ── */
+.arb-card{background:linear-gradient(135deg,#1a2a4a,#243660);border-radius:var(--radius);padding:20px;color:#fff;position:relative;overflow:hidden}
+.arb-card::after{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,.05);border-radius:50%}
+.arb-name{font-size:1.1rem;font-weight:800;margin-bottom:2px}
+.arb-meta{font-size:.7rem;opacity:.7;display:flex;gap:10px;flex-wrap:wrap}
+.arb-tabs{display:flex;gap:2px;margin:14px 0 0;background:rgba(0,0,0,.2);border-radius:8px;padding:3px;overflow-x:auto}
+.arb-tab{background:none;border:none;padding:6px 12px;font-size:.72rem;font-weight:600;color:rgba(255,255,255,.55);cursor:pointer;border-radius:6px;transition:.2s;white-space:nowrap;position:relative}
+.arb-tab.active{background:rgba(255,255,255,.18);color:#fff}
+.arb-tab .tab-dot{position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:50%;background:#ef4444}
+
+/* ── STAT BADGES ── */
+.stat-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.stat-badge{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 14px;text-align:center;min-width:70px}
+.stat-badge .sb-val{font-size:1.2rem;font-weight:800;color:#fff}
+.stat-badge .sb-lbl{font-size:.58rem;opacity:.65;margin-top:1px}
+
+/* ── COPERTURA CAMPIONATO ── */
+.camp-item{margin-bottom:10px}
+.camp-item-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:8px}
+.camp-badge{border-radius:4px;padding:2px 8px;font-size:.65rem;font-weight:700;color:#fff}
+.camp-pct{font-size:.72rem;font-weight:700;color:var(--bl)}
+.camp-bar-bg{height:8px;background:var(--br);border-radius:20px;overflow:hidden}
+.camp-bar-fill{height:100%;border-radius:20px;transition:.8s}
+
+/* ── COPPIE ── */
+.coppia-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--br)}
+.coppia-item:last-child{border-bottom:none}
+.coppia-names{font-size:.78rem;font-weight:600;flex:1}
+.coppia-sub{font-size:.62rem;color:var(--mu)}
+.coppia-count{background:var(--acc);color:#fff;border-radius:20px;padding:2px 10px;font-size:.72rem;font-weight:700}
+
+/* ── PROSSIMI 7GG ── */
+.cov-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--br);font-size:.75rem}
+.cov-row:last-child{border-bottom:none}
+.cov-date{min-width:80px;font-weight:600;color:var(--mu)}
+.cov-bars{flex:1;display:flex;gap:4px}
+.cov-seg{height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;color:#fff;min-width:24px;padding:0 6px}
+.cov-ok{background:#10b981}
+.cov-warn{background:#f59e0b}
+.cov-ko{background:#ef4444}
+
+/* ── PROVV ALERT ── */
+.provv-list .provv-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--br)}
+.provv-item:last-child{border-bottom:none}
+.provv-icon{font-size:1rem;flex-shrink:0;margin-top:1px}
+.provv-text{font-size:.75rem;flex:1}
+.provv-text b{display:block;font-weight:700;margin-bottom:1px}
+.provv-text span{color:var(--mu);font-size:.68rem}
+
+/* ── PERCENTILE ── */
+.percentile-wrap{display:flex;align-items:center;gap:10px;margin-top:10px}
+.percentile-bar{flex:1;height:10px;background:var(--br);border-radius:20px;overflow:hidden;position:relative}
+.percentile-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#10b981,#2563eb)}
+.percentile-marker{position:absolute;top:-3px;height:16px;width:2px;background:#1a2a4a;border-radius:2px;transform:translateX(-50%)}
+[data-dark] .percentile-marker{background:#e8ecf5}
+.percentile-label{font-size:.7rem;font-weight:700;color:var(--acc);min-width:40px;text-align:right}
+
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <span style="font-size:1.3rem">🏀</span>
+  <div>
+    <div class="logo">FIP – Comitato Regionale Sardegna</div>
+    <div class="subtitle">Dashboard Ufficiali 2025/2026</div>
+  </div>
+  <div class="topbar-right">
+    <span style="font-size:.7rem;opacity:.6">Aggiornato 19 Apr · v7.0</span>
+    <button class="dark-toggle" onclick="toggleDark()">🌙 Dark</button>
+  </div>
+</div>
+
+<!-- PROVINCE STRIP -->
+<div class="pv-strip">
+  <span style="background:var(--CA);flex:4" title="CA 40%"></span>
+  <span style="background:var(--SS);flex:3.3" title="SS 33%"></span>
+  <span style="background:var(--SU);flex:1.3" title="SU 13%"></span>
+  <span style="background:var(--NU);flex:0.7" title="NU 7%"></span>
+  <span style="background:var(--OR);flex:0.6" title="OR 6%"></span>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="showTab('home',this)">🏠 Home</button>
+  <button class="nav-btn" onclick="showTab('arbitri',this)">👤 Arbitri</button>
+  <button class="nav-btn" onclick="showTab('campionati',this)">🏆 Campionati</button>
+  <button class="nav-btn" onclick="showTab('copertura',this)">📡 Copertura</button>
+  <button class="nav-btn" onclick="showTab('province',this)">📍 Province</button>
+</div>
+
+<!-- ═══════════════════ HOME ═══════════════════ -->
+<div class="page active" id="tab-home">
+
+  <!-- ALERT: gare senza arbitro -->
+  <div class="sec-label">⚠️ Criticità</div>
+  <div class="alert-strip">
+    <span class="alert-icon">🚨</span>
+    <span class="alert-text">Gare <b>senza arbitro designato</b> nei prossimi 7 giorni — verificare copertura</span>
+    <span class="alert-count">8 gare</span>
+  </div>
+
+  <!-- KPI -->
+  <div class="sec-label">📊 Stagione in corso</div>
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--kpi-accent:#2563eb">
+      <div class="kpi-icon">📋</div>
+      <div class="kpi-val">2.134</div>
+      <div class="kpi-lbl">Gare disputate</div>
+      <div class="kpi-delta up">↑ 63 questa settimana</div>
+      <svg class="kpi-sparkline" viewBox="0 0 100 32" preserveAspectRatio="none">
+        <polyline points="0,28 15,24 30,20 45,22 60,14 75,10 90,8 100,6" fill="none" stroke="#2563eb" stroke-width="2" opacity=".6"/>
+        <polyline points="0,32 0,28 15,24 30,20 45,22 60,14 75,10 90,8 100,6 100,32" fill="rgba(37,99,235,.08)" stroke="none"/>
+      </svg>
+    </div>
+    <div class="kpi-card" style="--kpi-accent:#10b981">
+      <div class="kpi-icon">👤</div>
+      <div class="kpi-val">45</div>
+      <div class="kpi-lbl">Arbitri attivi</div>
+      <div class="kpi-delta neu">= rispetto mese scorso</div>
+      <svg class="kpi-sparkline" viewBox="0 0 100 32" preserveAspectRatio="none">
+        <polyline points="0,20 15,20 30,18 45,18 60,16 75,18 90,16 100,16" fill="none" stroke="#10b981" stroke-width="2" opacity=".6"/>
+        <polyline points="0,32 0,20 15,20 30,18 45,18 60,16 75,18 90,16 100,16 100,32" fill="rgba(16,185,129,.08)" stroke="none"/>
+      </svg>
+    </div>
+    <div class="kpi-card" style="--kpi-accent:#8b5cf6">
+      <div class="kpi-icon">🏟</div>
+      <div class="kpi-val">222</div>
+      <div class="kpi-lbl">Squadre</div>
+      <div class="kpi-delta up">↑ 3 nuove iscrizioni</div>
+      <svg class="kpi-sparkline" viewBox="0 0 100 32" preserveAspectRatio="none">
+        <polyline points="0,22 15,22 30,22 45,20 60,20 75,20 90,18 100,16" fill="none" stroke="#8b5cf6" stroke-width="2" opacity=".6"/>
+        <polyline points="0,32 0,22 15,22 30,22 45,20 60,20 75,20 90,18 100,16 100,32" fill="rgba(139,92,246,.08)" stroke="none"/>
+      </svg>
+    </div>
+    <div class="kpi-card" style="--kpi-accent:#f59e0b">
+      <div class="kpi-icon">📈</div>
+      <div class="kpi-val">74%</div>
+      <div class="kpi-lbl">Stagione completata</div>
+      <div class="kpi-delta up">↑ 3% vs settimana scorsa</div>
+      <div style="margin-top:10px;height:8px;background:var(--br);border-radius:20px;overflow:hidden">
+        <div style="height:100%;width:74%;background:linear-gradient(90deg,#f59e0b,#10b981);border-radius:20px;transition:.8s"></div>
+      </div>
+    </div>
+    <div class="kpi-card" style="--kpi-accent:#10b981">
+      <div class="kpi-icon">🤝</div>
+      <div class="kpi-val">61%</div>
+      <div class="kpi-lbl">Copertura doppia</div>
+      <div class="kpi-delta down">↓ 2% vs mese scorso</div>
+      <svg class="kpi-sparkline" viewBox="0 0 100 32" preserveAspectRatio="none">
+        <polyline points="0,10 15,12 30,14 45,12 60,16 75,14 90,18 100,20" fill="none" stroke="#ef4444" stroke-width="2" opacity=".6"/>
+        <polyline points="0,32 0,10 15,12 30,14 45,12 60,16 75,14 90,18 100,20 100,32" fill="rgba(239,68,68,.06)" stroke="none"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- QUESTA SETTIMANA -->
+  <div class="sec-label">📅 Questa settimana</div>
+  <div class="card">
+    <div class="card-hd">Gare per giorno <span class="card-hd-sub">14 – 20 Aprile 2026</span></div>
+    <div class="week-grid">
+      <div class="week-day has-games" onclick="">
+        <div class="wd-name">Lun</div><div class="wd-num">14</div><div class="wd-count">12 gare</div>
+      </div>
+      <div class="week-day" onclick="">
+        <div class="wd-name">Mar</div><div class="wd-num">15</div><div class="wd-count" style="color:var(--mu2)">—</div>
+      </div>
+      <div class="week-day has-games" onclick="">
+        <div class="wd-name">Mer</div><div class="wd-num">16</div><div class="wd-count">8 gare</div>
+      </div>
+      <div class="week-day has-games" onclick="">
+        <div class="wd-name">Gio</div><div class="wd-num">17</div><div class="wd-count">5 gare</div>
+      </div>
+      <div class="week-day has-games" onclick="">
+        <div class="wd-name">Ven</div><div class="wd-num">18</div><div class="wd-count">3 gare</div>
+      </div>
+      <div class="week-day has-games" onclick="">
+        <div class="wd-name">Sab</div><div class="wd-num">19</div><div class="wd-count">28 gare</div>
+      </div>
+      <div class="week-day today" onclick="">
+        <div class="wd-name">Dom</div><div class="wd-num">20</div><div class="wd-count">7 gare</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TREND + TOP -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hd">📈 Gare per mese <span class="card-hd-sub">stagione 2025/26</span></div>
+      <div class="trend-wrap" id="trend-bars"></div>
+      <div style="display:flex;gap:3px;margin-top:4px" id="trend-labels"></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">🏅 Top arbitri <span class="card-hd-sub">questa stagione</span></div>
+      <div id="top-arb-list"></div>
+    </div>
+  </div>
+
+  <!-- COPPIE + COPERTURA 7GG -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hd">🤝 Coppie più frequenti</div>
+      <div class="coppia-item">
+        <div style="flex:1">
+          <div class="coppia-names">Rossi M. + Bianchi L.</div>
+          <div class="coppia-sub">CA · Mainly Serie C, Under 19</div>
+        </div>
+        <span class="coppia-count">24</span>
+      </div>
+      <div class="coppia-item">
+        <div style="flex:1">
+          <div class="coppia-names">Solinas G. + Bortolato F.</div>
+          <div class="coppia-sub">SS · Under 19 Gold, Under 17</div>
+        </div>
+        <span class="coppia-count">18</span>
+      </div>
+      <div class="coppia-item">
+        <div style="flex:1">
+          <div class="coppia-names">Melis A. + Serra C.</div>
+          <div class="coppia-sub">CA · Under 15, Under 14</div>
+        </div>
+        <span class="coppia-count">15</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">📡 Copertura prossimi 7 giorni</div>
+      <div class="cov-row"><span class="cov-date">Dom 20 Apr</span><div class="cov-bars"><span class="cov-seg cov-ok">CA ✓</span><span class="cov-seg cov-ok">SS ✓</span><span class="cov-seg cov-warn">SU ~</span></div></div>
+      <div class="cov-row"><span class="cov-date">Lun 21 Apr</span><div class="cov-bars"><span class="cov-seg cov-ok">CA ✓</span></div></div>
+      <div class="cov-row"><span class="cov-date">Mar 22 Apr</span><div class="cov-bars"><span style="font-size:.68rem;color:var(--mu)">Nessuna gara</span></div></div>
+      <div class="cov-row"><span class="cov-date">Mer 23 Apr</span><div class="cov-bars"><span class="cov-seg cov-ok">CA ✓</span><span class="cov-seg cov-ko">SS ✗</span></div></div>
+      <div class="cov-row"><span class="cov-date">Gio 24 Apr</span><div class="cov-bars"><span class="cov-seg cov-ok">CA ✓</span><span class="cov-seg cov-warn">OR ~</span></div></div>
+      <div class="cov-row"><span class="cov-date">Ven 25 Apr</span><div class="cov-bars"><span class="cov-seg cov-ko">CA ✗</span><span class="cov-seg cov-ko">SS ✗</span></div></div>
+      <div class="cov-row"><span class="cov-date">Sab 26 Apr</span><div class="cov-bars"><span class="cov-seg cov-ok">CA ✓</span><span class="cov-seg cov-ok">SS ✓</span><span class="cov-seg cov-ok">SU ✓</span><span class="cov-seg cov-ok">NU ✓</span></div></div>
+    </div>
+  </div>
+
+</div><!-- /home -->
+
+<!-- ═══════════════════ ARBITRI ═══════════════════ -->
+<div class="page" id="tab-arbitri">
+
+  <div class="sec-label">👤 Scheda Arbitro — esempio: Bortolato Filippo</div>
+
+  <!-- HEADER ARBITRO -->
+  <div class="arb-card" style="margin-bottom:14px">
+    <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+      <div style="flex:1">
+        <div class="arb-name">BORTOLATO FILIPPO</div>
+        <div class="arb-meta">
+          <span>⚖️ Arbitro</span>
+          <span style="background:var(--SS);padding:1px 8px;border-radius:4px;color:#fff;font-weight:700;font-size:.65rem">SS</span>
+          <span>📍 Sassari</span>
+          <span>📋 027682</span>
+          <span>📅 4 in programma</span>
+        </div>
+      </div>
+      <!-- Percentile vs provincia -->
+      <div style="background:rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;min-width:200px">
+        <div style="font-size:.65rem;opacity:.7;margin-bottom:6px">Posizione in SS (gare)</div>
+        <div class="percentile-wrap" style="--acc:#fff">
+          <div class="percentile-bar" style="background:rgba(255,255,255,.15)">
+            <div class="percentile-fill" style="width:72%;background:linear-gradient(90deg,rgba(255,255,255,.3),rgba(255,255,255,.8))"></div>
+          </div>
+          <span style="font-size:.75rem;font-weight:800;color:#fff;min-width:40px;text-align:right">72°</span>
+        </div>
+        <div style="font-size:.6rem;opacity:.6;margin-top:4px">migliore del 72% degli arbitri SS</div>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-badge"><div class="sb-val">110</div><div class="sb-lbl">Gare tot.</div></div>
+      <div class="stat-badge"><div class="sb-val">8</div><div class="sb-lbl">Camp.</div></div>
+      <div class="stat-badge"><div class="sb-val">1.240</div><div class="sb-lbl">Km tot.</div></div>
+      <div class="stat-badge"><div class="sb-val">€ 340</div><div class="sb-lbl">Rimborso</div></div>
+      <div class="stat-badge"><div class="sb-val" style="color:#f59e0b">🔥 12</div><div class="sb-lbl">Streak</div></div>
+      <div class="stat-badge"><div class="sb-val" style="color:#10b981">0</div><div class="sb-lbl">Provv.</div></div>
+    </div>
+    <div class="arb-tabs">
+      <button class="arb-tab active">📊 Generale</button>
+      <button class="arb-tab">📅 Ultime gare</button>
+      <button class="arb-tab">🏆 Campionati</button>
+      <button class="arb-tab" style="position:relative">📍 Territorio <span class="tab-dot"></span></button>
+      <button class="arb-tab">📈 Trend</button>
+      <button class="arb-tab">💶 Rimborsi</button>
+      <button class="arb-tab">🏟 Campi</button>
+    </div>
+  </div>
+
+  <!-- CONTENUTO TAB GENERALE -->
+  <div class="grid2">
+    <div class="card">
+      <div class="card-hd">🏆 Campionati arbitrati</div>
+      <div class="camp-item">
+        <div class="camp-item-hd">
+          <span class="camp-badge" style="background:#e74c3c">⭐ Under 15 Masch. Eccellenza</span>
+          <span class="camp-pct" style="color:#10b981">92%</span>
+        </div>
+        <div class="camp-bar-bg"><div class="camp-bar-fill" style="width:92%;background:linear-gradient(90deg,#10b981,#059669)"></div></div>
+      </div>
+      <div class="camp-item">
+        <div class="camp-item-hd">
+          <span class="camp-badge" style="background:#2563eb">Under 19 Maschile Gold</span>
+          <span class="camp-pct" style="color:#10b981">78%</span>
+        </div>
+        <div class="camp-bar-bg"><div class="camp-bar-fill" style="width:78%;background:linear-gradient(90deg,#2563eb,#1d4ed8)"></div></div>
+      </div>
+      <div class="camp-item">
+        <div class="camp-item-hd">
+          <span class="camp-badge" style="background:#8b5cf6">Under 17 Maschile Reg.</span>
+          <span class="camp-pct" style="color:#f59e0b">45%</span>
+        </div>
+        <div class="camp-bar-bg"><div class="camp-bar-fill" style="width:45%;background:linear-gradient(90deg,#f59e0b,#d97706)"></div></div>
+      </div>
+      <div class="camp-item">
+        <div class="camp-item-hd">
+          <span class="camp-badge" style="background:#10b981">Under 14 Maschile Reg.</span>
+          <span class="camp-pct" style="color:#ef4444">22%</span>
+        </div>
+        <div class="camp-bar-bg"><div class="camp-bar-fill" style="width:22%;background:linear-gradient(90deg,#ef4444,#dc2626)"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd">⚠️ Provvedimenti recenti</div>
+      <div class="provv-list">
+        <div class="provv-item">
+          <span class="provv-icon">✅</span>
+          <div class="provv-text"><b>Nessun provvedimento</b><span>Stagione pulita — ottimo!</span></div>
+        </div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="card-hd">🏟 Campi più frequentati</div>
+        <div class="top-item">
+          <span class="top-rank gold">1</span>
+          <div style="flex:1"><div class="top-name">Palestra Luca Simula</div><div class="top-sub">Sassari (SS)</div></div>
+          <span class="top-val">28×</span>
+        </div>
+        <div class="top-item">
+          <span class="top-rank silver">2</span>
+          <div style="flex:1"><div class="top-name">PalaManchia</div><div class="top-sub">Alghero (SS)</div></div>
+          <span class="top-val">14×</span>
+        </div>
+        <div class="top-item">
+          <span class="top-rank bronze">3</span>
+          <div style="flex:1"><div class="top-name">PalaSertinu</div><div class="top-sub">Macomer (NU)</div></div>
+          <span class="top-val">9×</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /arbitri -->
+
+<!-- ═══════════════════ CAMPIONATI ═══════════════════ -->
+<div class="page" id="tab-campionati">
+  <div class="sec-label">🏆 Completamento campionati</div>
+  <div class="card">
+    <div class="card-hd">Avanzamento stagione per campionato</div>
+    <div id="camp-list-preview"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ COPERTURA ═══════════════════ -->
+<div class="page" id="tab-copertura">
+  <div class="sec-label">📡 Copertura arbitrale</div>
+  <div class="card">
+    <div class="card-hd">Arbitri meno attivi — ultimi 30 giorni</div>
+    <div id="fermi-list"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════ PROVINCE ═══════════════════ -->
+<div class="page" id="tab-province">
+  <div class="sec-label">📍 Statistiche per provincia</div>
+  <div class="pv-cards" id="pv-cards"></div>
+</div>
+
+<script>
+// Dark mode
+function toggleDark(){
+  document.body.toggleAttribute('data-dark');
+  const btn=document.querySelector('.dark-toggle');
+  btn.textContent=document.body.hasAttribute('data-dark')?'☀️ Light':'🌙 Dark';
+}
+
+// Tab navigation
+function showTab(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Trend bars
+const trendData=[
+  {m:'Set',v:180},{m:'Ott',v:210},{m:'Nov',v:195},{m:'Dic',v:140},
+  {m:'Gen',v:225},{m:'Feb',v:240},{m:'Mar',v:260},{m:'Apr',v:180}
+];
+const maxV=Math.max(...trendData.map(d=>d.v));
+const barsEl=document.getElementById('trend-bars');
+const lblsEl=document.getElementById('trend-labels');
+trendData.forEach((d,i)=>{
+  const pct=Math.round(d.v/maxV*100);
+  const isLast=i===trendData.length-1;
+  // Colore gradiente: verde se alto, giallo se medio, rosso se basso
+  const hue=pct>=70?160:pct>=40?40:0;
+  const col=`hsl(${hue},70%,${isLast?45:50}%)`;
+  const bar=document.createElement('div');
+  bar.className='trend-bar-col';
+  bar.innerHTML=`<div class="trend-bar" style="height:${pct}%;background:${isLast?'var(--acc)':col};opacity:${isLast?1:.75}" data-tip="${d.m}: ${d.v} gare"></div>`;
+  barsEl.appendChild(bar);
+  const lbl=document.createElement('div');
+  lbl.className='trend-bar-col';
+  lbl.innerHTML=`<div class="trend-lbl" style="flex:1;display:flex;align-items:center;justify-content:center">${d.m}</div>`;
+  lblsEl.appendChild(lbl);
+});
+lblsEl.style.display='flex';lblsEl.style.gap='3px';lblsEl.style.marginTop='4px';
+
+// Top arbitri
+const topArb=[
+  {nome:'Rossi Marco',pv:'CA',gare:134,delta:'+8%'},
+  {nome:'Melis Andrea',pv:'CA',gare:128,delta:'+3%'},
+  {nome:'Solinas Gianfranco',pv:'SS',gare:119,delta:'+12%'},
+  {nome:'Serra Claudia',pv:'CA',gare:112,delta:'+1%'},
+  {nome:'Bortolato Filippo',pv:'SS',gare:110,delta:'+5%'},
+];
+const pvC={CA:'var(--CA)',SS:'var(--SS)',SU:'var(--SU)',NU:'var(--NU)',OR:'var(--OR)'};
+const rankCls=['gold','silver','bronze','',''];
+document.getElementById('top-arb-list').innerHTML=topArb.map((a,i)=>`
+<div class="top-item">
+  <span class="top-rank ${rankCls[i]}">${i+1}</span>
+  <div style="flex:1">
+    <div class="top-name">${a.nome}</div>
+    <div class="top-sub">${a.gare} gare · <span style="color:#10b981;font-weight:700">${a.delta}</span></div>
+  </div>
+  <span class="pv-badge" style="background:${pvC[a.pv]}">${a.pv}</span>
+</div>`).join('');
+
+// Province cards
+const pvData=[
+  {pv:'CA',city:'Cagliari',gare:1658,arb:45,pct:40},
+  {pv:'SS',city:'Sassari',gare:1366,arb:41,pct:33},
+  {pv:'SU',city:'Sud Sardegna',gare:541,arb:11,pct:13},
+  {pv:'NU',city:'Nuoro',gare:291,arb:7,pct:7},
+  {pv:'OR',city:'Oristano',gare:259,arb:14,pct:6},
+];
+const pvColors={CA:'#e74c3c',SS:'#2563eb',SU:'#8b5cf6',NU:'#f59e0b',OR:'#10b981'};
+document.getElementById('pv-cards').innerHTML=pvData.map(p=>`
+<div class="pv-card" style="background:${pvColors[p.pv]}">
+  <div class="pv-name">${p.pv}</div>
+  <div class="pv-city">${p.city}</div>
+  <div class="pv-val">${p.gare.toLocaleString()}</div>
+  <div class="pv-sub">gare nel campo · ${p.arb} arb.</div>
+  <div class="pv-bar" style="width:${p.pct*2.4}%"></div>
+</div>`).join('');
+
+// Campionati
+const campData=[
+  {nome:'⭐ Eccellenza Maschile',col:'#e74c3c',pct:88},
+  {nome:'⭐ Eccellenza Femminile',col:'#e91e8c',pct:82},
+  {nome:'Under 19 Maschile Gold',col:'#2563eb',pct:75},
+  {nome:'Serie C Maschile',col:'#1a2a4a',pct:95},
+  {nome:'Divisione Regionale 1',col:'#0891b2',pct:68},
+  {nome:'Under 17 Maschile Reg.',col:'#8b5cf6',pct:55},
+  {nome:'Under 15 Maschile Reg.',col:'#10b981',pct:48},
+  {nome:'Under 14 Maschile Reg.',col:'#f59e0b',pct:42},
+];
+document.getElementById('camp-list-preview').innerHTML=campData.map(c=>{
+  const color=c.pct>=80?'#10b981':c.pct>=50?'#f59e0b':'#ef4444';
+  return`<div class="camp-item">
+    <div class="camp-item-hd">
+      <span class="camp-badge" style="background:${c.col}">${c.nome}</span>
+      <span class="camp-pct" style="color:${color}">${c.pct}%</span>
+    </div>
+    <div class="camp-bar-bg"><div class="camp-bar-fill" style="width:${c.pct}%;background:linear-gradient(90deg,${c.col}99,${c.col})"></div></div>
+  </div>`;
+}).join('');
+
+// Arbitri fermi
+const fermi=[
+  {nome:'Verdi Luigi',pv:'OR',giorni:45},
+  {nome:'Neri Paolo',pv:'NU',giorni:38},
+  {nome:'Esposito M.',pv:'CA',giorni:32},
+];
+document.getElementById('fermi-list').innerHTML=fermi.map(f=>`
+<div class="top-item">
+  <span style="font-size:1.1rem">😴</span>
+  <div style="flex:1">
+    <div class="top-name">${f.nome}</div>
+    <div class="top-sub">Ultimo incarico: ${f.giorni} giorni fa</div>
+  </div>
+  <span class="pv-badge" style="background:${pvColors[f.pv]}">${f.pv}</span>
+  <span style="background:#fee2e2;color:#ef4444;border-radius:10px;padding:2px 10px;font-size:.72rem;font-weight:700">${f.giorni}gg</span>
+</div>`).join('');
+</script>
+</body>
+</html>

@@ -87,26 +87,93 @@ def date_label(gare):
 
 def build_giornate(gare_g):
     """
-    Raggruppa le gare in 'giornate' con finestra 7 giorni (weekend FIP).
-    Partite del ven-dom (o recuperi ravvicinati) vanno nella stessa giornata.
-    Ogni squadra appare max 1 volta per giornata.
+    Raggruppa le gare in giornate.
+    Strategia primaria: usa il campo 'Giornata' se presente (da fip_scraper_sarda).
+    Strategia secondaria: raggruppa per finestra temporale 6 giorni (ven-dom).
+    Separa sempre Andata da Ritorno usando il campo 'leg' (A/R) se disponibile.
     """
     from datetime import datetime, timedelta
+    from collections import defaultdict
 
+    # ── Strategia 1: giornata numerica esplicita (da fip_scraper_sarda) ──
+    ha_giornata = any(g.get("giornata") is not None for g in gare_g)
+    ha_leg      = any(g.get("leg") for g in gare_g)
+
+    if ha_giornata:
+        # Raggruppa per (leg, giornata)
+        bucket = defaultdict(list)
+        for g in gare_g:
+            leg = g.get("leg", "A")
+            gn  = g.get("giornata", 0)
+            bucket[(leg, gn)].append(g)
+
+        giornate = []
+        # Ordina: prima tutte le andate (A), poi tutti i ritorni (R),
+        # dentro ogni leg ordina per numero giornata
+        for (leg, gn) in sorted(bucket.keys(), key=lambda x: (0 if x[0]=="A" else 1, x[1])):
+            turno = sorted(bucket[(leg, gn)], key=lambda x: (x.get("Data",""), x.get("Ora","")))
+            giornate.append({
+                "n":          len(giornate) + 1,
+                "gare":       turno,
+                "leg":        leg,
+                "giornata_fip": gn,
+                "completa":   all(g.get("punteggio") or g.get("Risultato") for g in turno),
+                "data_label": date_label(turno),
+            })
+
+        # Aggiorna punti cumulativi
+        squadre_all = set(g.get("casa","") or g.get("Squadra Casa","") for g in gare_g) |                       set(g.get("ospite","") or g.get("Squadra Ospite","") for g in gare_g)
+        pt_cum = {sq: 0 for sq in squadre_all}
+        for giornata in giornate:
+            for g in giornata["gare"]:
+                g["_pt_cum_casa"] = pt_cum.get(g.get("casa","") or g.get("Squadra Casa",""), 0)
+                g["_pt_cum_osp"]  = pt_cum.get(g.get("ospite","") or g.get("Squadra Ospite",""), 0)
+            for g in giornata["gare"]:
+                pc_str = g.get("Punti Casa","") or (g.get("punteggio","") or "").split("-")[0]
+                po_str = g.get("Punti Ospite","") or (g.get("punteggio","") or "").split("-")[-1]
+                try:
+                    pc, po = int(pc_str), int(po_str)
+                    casa   = g.get("Squadra Casa","") or g.get("casa","")
+                    ospite = g.get("Squadra Ospite","") or g.get("ospite","")
+                    if pc > po:
+                        pt_cum[casa]   = pt_cum.get(casa, 0) + 2
+                    elif po > pc:
+                        pt_cum[ospite] = pt_cum.get(ospite, 0) + 2
+                except Exception:
+                    pass
+        return giornate
+
+    # ── Strategia 2: finestra temporale (da fip_scraper.py legacy) ──
     gare_sorted = sorted(gare_g, key=lambda x: (x.get("Data",""), x.get("Ora","")))
+
+    # Se abbiamo leg A/R, separa prima e poi ricomponi in ordine
+    if ha_leg:
+        gare_A = [g for g in gare_sorted if g.get("leg","A") == "A"]
+        gare_R = [g for g in gare_sorted if g.get("leg","A") == "R"]
+        giornate_A = _finestra_giornate(gare_A, leg="A")
+        giornate_R = _finestra_giornate(gare_R, leg="R")
+        # Rinumera
+        for i, g in enumerate(giornate_A): g["n"] = i + 1
+        base = len(giornate_A)
+        for i, g in enumerate(giornate_R): g["n"] = base + i + 1
+        return giornate_A + giornate_R
+    else:
+        return _finestra_giornate(gare_sorted)
+
+
+def _finestra_giornate(gare_sorted, leg=None):
+    """Raggruppa gare in giornate usando finestra temporale di 6 giorni."""
+    from datetime import datetime, timedelta
 
     gare_left = list(gare_sorted)
     giornate = []
-    # Punti cumulativi per squadra (per annotare pt progressivi)
-    squadre_all = set(g["Squadra Casa"] for g in gare_sorted) | set(g["Squadra Ospite"] for g in gare_sorted)
+    squadre_all = set(g.get("Squadra Casa","") for g in gare_sorted) |                   set(g.get("Squadra Ospite","") for g in gare_sorted)
     pt_cum = {sq: 0 for sq in squadre_all}
-
     safety = 0
-    WINDOW_DAYS = 6  # venerdì → domenica + eventuale lunedì
+    WINDOW_DAYS = 6
 
     while gare_left and safety < 500:
         safety += 1
-
         first_date_str = gare_left[0].get("Data", "")
         try:
             first_date = datetime.strptime(first_date_str, "%Y-%m-%d")
@@ -119,10 +186,9 @@ def build_giornate(gare_g):
         da_rimuovere = []
 
         for idx, g in enumerate(gare_left):
-            c, o = g["Squadra Casa"], g["Squadra Ospite"]
+            c, o = g.get("Squadra Casa",""), g.get("Squadra Ospite","")
             if c in sq_usate or o in sq_usate:
                 continue
-            # Controlla finestra temporale
             if window_end:
                 try:
                     g_date = datetime.strptime(g.get("Data",""), "%Y-%m-%d")
@@ -136,7 +202,6 @@ def build_giornate(gare_g):
             da_rimuovere.append(idx)
 
         if not turno:
-            # Forza prima gara rimanente
             turno = [gare_left[0]]
             da_rimuovere = [0]
 
@@ -146,8 +211,8 @@ def build_giornate(gare_g):
 
         # Annota punti cumulativi prima di questa giornata
         for g in turno:
-            g["_pt_cum_casa"] = pt_cum.get(g["Squadra Casa"], 0)
-            g["_pt_cum_osp"]  = pt_cum.get(g["Squadra Ospite"], 0)
+            g["_pt_cum_casa"] = pt_cum.get(g.get("Squadra Casa",""), 0)
+            g["_pt_cum_osp"]  = pt_cum.get(g.get("Squadra Ospite",""), 0)
 
         # Aggiorna pt cumulativi con questa giornata
         for g in turno:
@@ -162,12 +227,15 @@ def build_giornate(gare_g):
             except Exception:
                 pass
 
-        giornate.append({
-            "n": len(giornate) + 1,
-            "gare": turno,
-            "completa": all(g.get("Risultato") for g in turno),
+        entry = {
+            "n":          len(giornate) + 1,
+            "gare":       turno,
+            "completa":   all(g.get("Risultato") for g in turno),
             "data_label": date_label(turno),
-        })
+        }
+        if leg:
+            entry["leg"] = leg
+        giornate.append(entry)
 
     return giornate
 

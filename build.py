@@ -105,7 +105,7 @@ if FIP_PLACEHOLDER in template:
             fip_clean = {'aggiornato': str(fip_raw.get('aggiornato', '')), 'campionati': camps_validi}
             fip_json = json.dumps(fip_clean, ensure_ascii=False, separators=(',', ':'))
             # Escape </script> per evitare che il browser chiuda il tag script prematuramente
-            fip_json = fip_json.replace('</', '<\/')
+            fip_json = fip_json.replace('<', '\u003c')
 
             # Verifica finale che sia JSON valido
             json.loads(fip_json)
@@ -131,7 +131,7 @@ if f"#{hash4}" not in template:
         ver_str
     )
 
-data = data.replace('</', '<\/')
+data = data.replace('<', '\u003c')
 output = template.replace('__DATA__', data)
 
 os.makedirs('docs', exist_ok=True)
