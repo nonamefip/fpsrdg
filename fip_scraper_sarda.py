@@ -81,62 +81,12 @@ def build_url(**kw):
 
 
 def select_opts(soup, idx):
-    """Fallback per indice — preferisci select_by_name."""
     sels = soup.find_all('select')
     if idx >= len(sels):
         return []
     return [(o.get('value','').strip(), o.get_text(strip=True))
             for o in sels[idx].find_all('option')
             if o.get('value','').strip()]
-
-
-def select_by_name(soup, *names):
-    """Cerca select per name/id — più robusto degli indici fissi."""
-    for name in names:
-        sel = soup.find('select', {'name': name}) or soup.find('select', {'id': name})
-        if sel:
-            return [(o.get('value','').strip(), o.get_text(strip=True))
-                    for o in sel.find_all('option')
-                    if o.get('value','').strip()]
-    return []
-
-
-def get_all_fasi_opts(soup):
-    """Estrae opzioni fasi da select o da link nella pagina (più robusto)."""
-    # Prova prima per name
-    opts = select_by_name(soup, 'codice_fase', 'fase', 'codice-fase')
-    if opts:
-        return opts
-    # Fallback: cerca link con codice_fase= nella pagina
-    from urllib.parse import urlparse, parse_qs
-    trovati = {}
-    for a in soup.find_all('a', href=re.compile(r'codice_fase=')):
-        qs = parse_qs(urlparse(a['href']).query)
-        cf = qs.get('codice_fase', [''])[0]
-        if cf and cf not in trovati:
-            trovati[cf] = a.get_text(strip=True) or cf
-    if trovati:
-        return list(trovati.items())
-    # Ultimo fallback: indice 3
-    return select_opts(soup, 3)
-
-
-def get_all_gironi_opts(soup):
-    """Estrae opzioni gironi da select o da link nella pagina."""
-    opts = select_by_name(soup, 'codice_girone', 'girone', 'codice-girone')
-    if opts:
-        return opts
-    from urllib.parse import urlparse, parse_qs
-    trovati = {}
-    for a in soup.find_all('a', href=re.compile(r'codice_girone=')):
-        qs = parse_qs(urlparse(a['href']).query)
-        cg = qs.get('codice_girone', [''])[0]
-        if cg and cg not in trovati:
-            trovati[cg] = a.get_text(strip=True) or cg
-    if trovati:
-        return list(trovati.items())
-    # Ultimo fallback: indice 4
-    return select_opts(soup, 4)
 
 
 def parse_classifica(soup):
@@ -206,16 +156,15 @@ def parse_partite(soup, giornata=None):
 
 
 def scrape_leg(sesso, camp_code, fase_code, girone_code, codice_ar, leg_len):
-    """Scarica un leg: andata (codice_ar=1) o ritorno (codice_ar=0)."""
+    """Scarica andata (codice_ar=1) o ritorno (codice_ar=0) separatamente."""
     base_kw = dict(sesso=sesso, codice_campionato=camp_code,
                    codice_fase=fase_code or None,
                    codice_girone=girone_code or None,
                    codice_ar=codice_ar)
-    max_g = leg_len + 4
+    leg_label = 'A' if codice_ar == 1 else 'R'
     ris, pro = [], []
     vuote = 0
-    leg_label = 'A' if codice_ar == 1 else 'R'
-    for g in range(1, max_g + 1):
+    for g in range(1, leg_len + 5):
         soup = fetch(build_url(**base_kw, giornata=g))
         time.sleep(SLEEP)
         if not soup:
@@ -228,16 +177,18 @@ def scrape_leg(sesso, camp_code, fase_code, girone_code, codice_ar, leg_len):
             if vuote >= 3: break
             continue
         vuote = 0
-        for entry in r + p:
-            entry['leg'] = leg_label
+        for e in r + p:
+            e['leg'] = leg_label
         ris.extend(r)
         pro.extend(p)
     return ris, pro
 
 
 def scrape_girone(sesso, camp_code, fase_code, girone_code, girone_nome, classifica):
-    """Scarica TUTTE le partite di un girone usando codice_ar separato
-    per Andata (=1) e Ritorno (=0), garantendo allineamento corretto delle giornate."""
+    """Scarica TUTTE le partite di un girone.
+    Usa codice_ar=1 (Andata) e codice_ar=0 (Ritorno) separatamente
+    per garantire allineamento corretto delle giornate.
+    """
     n_sq = len(classifica)
     leg_len = max(n_sq - 1, 1) if n_sq > 1 else 18
 
@@ -247,7 +198,7 @@ def scrape_girone(sesso, camp_code, fase_code, girone_code, girone_nome, classif
     ris = ris_a + ris_r
     pro = pro_a + pro_r
 
-    log(f"       '{girone_nome}': A={len(ris_a)}r+{len(pro_a)}p  R={len(ris_r)}r+{len(pro_r)}p")
+    log(f"       '{girone_nome}': A={len(ris_a)}r+{len(pro_a)}p R={len(ris_r)}r+{len(pro_r)}p")
     return {
         'nome':       girone_nome,
         'classifica': classifica,
@@ -263,19 +214,15 @@ def scrape_campionato(sesso, camp_code, camp_nome):
     if not soup_base:
         return None
 
-    # ── Raccoglie TUTTE le fasi disponibili ───────────────────
-    # Prima passata: fasi dal select
-    fase_opts = get_all_fasi_opts(soup_base)
+    # Tutte le fasi disponibili
+    fase_opts = select_opts(soup_base, 3)
     if not fase_opts:
         fase_opts = [('', '')]
 
-    # Seconda passata: dopo aver caricato ogni fase, controlla se
-    # ne sono apparse di nuove (fasi aperte in corso di stagione)
+    # Cerca fasi aggiuntive aperte in corso di stagione:
+    # carica ogni fase e controlla se nel suo select appaiono fasi nuove
     fasi_viste = set(f[0] for f in fase_opts)
-    fasi_da_controllare = list(fase_opts)
-    fase_opts_completo = list(fase_opts)
-
-    for fase_code, _ in fasi_da_controllare:
+    for fase_code, _ in list(fase_opts):
         if not fase_code:
             continue
         sf = fetch(build_url(sesso=sesso, codice_campionato=camp_code,
@@ -283,21 +230,21 @@ def scrape_campionato(sesso, camp_code, camp_nome):
         time.sleep(SLEEP)
         if not sf:
             continue
-        nuove = get_all_fasi_opts(sf)
+        nuove = select_opts(sf, 3)
         for fc, fn in nuove:
             if fc and fc not in fasi_viste:
-                log(f"     ++ Nuova fase trovata: {fc} '{fn}'")
+                log(f"     ++ Nuova fase scoperta: {fc!r} '{fn}'")
                 fasi_viste.add(fc)
-                fase_opts_completo.append((fc, fn))
+                fase_opts.append((fc, fn))
 
-    log(f"     fasi totali: {[f[0] for f in fase_opts_completo]}")
+    log(f"     fasi: {[f[0] for f in fase_opts]}")
 
     gironi_out = []
-    cl_globale = []
-    multi_fasi = len([f for f in fase_opts_completo if f[0]]) > 1
+    cl_globale = []   # prima classifica valida trovata (fallback)
+    multi_fasi = len(fase_opts) > 1
 
     # ── Itera TUTTE le fasi ────────────────────────────────────
-    for fase_code, fase_nome in fase_opts_completo:
+    for fase_code, fase_nome in fase_opts:
         if fase_code:
             soup_fase = fetch(build_url(sesso=sesso, codice_campionato=camp_code,
                                         codice_fase=fase_code))
@@ -313,7 +260,7 @@ def scrape_campionato(sesso, camp_code, camp_nome):
             cl_globale = cl_fase
 
         # Gironi di questa fase
-        girone_opts = get_all_gironi_opts(soup_fase)
+        girone_opts = select_opts(soup_fase, 4)
         if not girone_opts:
             girone_opts = [('', 'Girone Unico')]
 
