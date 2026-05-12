@@ -10686,22 +10686,14 @@ function openCampionato(camp){
     </div>
     <div class="mtc hidden" id="mct-6">
       ${(()=>{
-        // Ordine fasi reali FIP Sardegna 2025/2026 (da formule ufficiali)
         const faseOrder=[
           'Qualificazione','Prima Fase',
           'Seconda Fase Nord','Seconda Fase Sud','Seconda Fase','Seconda fase',
-          'Girone Verde Nord','Girone Verde Sud','Girone Verde',
-          'Girone Azzurro',
-          'Girone Arancio Nord','Girone Arancio Sud','Girone Arancio',
-          'Girone Rosso Nord','Girone Rosso Sud','Girone Rosso',
-          'Girone Viola Nord','Girone Viola Sud','Girone Viola',
-          'Fase Regionale','Fase regionale',
-          'Fase Orologio','Orologio',
+          'Girone Verde','Girone Azzurro','Girone Arancio','Girone Rosso','Girone Viola',
+          'Fase Regionale','Fase regionale','Fase Orologio','Orologio',
           'Fase di Classificazi','Classificazione',
-          'Playout','Playout 1','Playout 2',
-          'Playoff','Playoff QT','Playoff SF',
-          'Ottavi','Quarti','Primo Quarto','Secondo Quarto','Terzo Quarto','Quarto Quarto',
-          'Semifinal','Finale Playoff','Finale'
+          'Fase Playout','Playout',
+          'Fase Playoff','Playoff','Quarti','Semifinal','Finale'
         ];
         const fasi=[...new Set(allCampGare.map(g=>g['Fase']||'').filter(Boolean))];
         fasi.sort((a,b)=>{
@@ -10710,44 +10702,30 @@ function openCampionato(camp){
           const ib=faseOrder.findIndex(x=>bl.includes(x.toLowerCase()));
           return(ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b,'it');
         });
-        // Tutte le fasi presenti nei dati (niente whitelist)
         const fasiCalendario=fasi.filter(f=>allCampGare.some(g=>g['Fase']===f&&g['Girone']));
-        // Fasi playoff best-of-3 (gare secche, non A/R)
         function isFaseElimDirCal(fase){
           const fl=fase.toLowerCase();
-          return(/playoff|quart.*fin|semifinal|ottav.*fin/.test(fl)||/\bfinale\b/.test(fl))&&!/playout/.test(fl);
+          return(/playoff|quart|semifinal|finale/.test(fl))&&!/playout/.test(fl);
         }
-        // Icone e colori per ogni tipo di fase FIP Sardegna
         function faseLabelIcon(fase){
           const fl=fase.toLowerCase();
-          if(/qualific|prima fase/.test(fl))          return {icon:'🏀',color:'#1e3a6e',label:'Qualificazione'};
-          if(/girone verde nord/.test(fl))            return {icon:'🟢',color:'#1b5e20',label:'Girone Verde Nord'};
-          if(/girone verde sud/.test(fl))             return {icon:'🟢',color:'#2e7d32',label:'Girone Verde Sud'};
-          if(/girone verde/.test(fl))                 return {icon:'🟢',color:'#2e7d32',label:'Girone Verde'};
-          if(/girone azzurr/.test(fl))                return {icon:'🔵',color:'#1565c0',label:'Girone Azzurro'};
-          if(/girone arancio nord/.test(fl))          return {icon:'🟠',color:'#bf360c',label:'Girone Arancio Nord'};
-          if(/girone arancio sud/.test(fl))           return {icon:'🟠',color:'#e64a19',label:'Girone Arancio Sud'};
-          if(/girone arancio/.test(fl))               return {icon:'🟠',color:'#e64a19',label:'Girone Arancio'};
-          if(/girone rosso nord/.test(fl))            return {icon:'🔴',color:'#b71c1c',label:'Girone Rosso Nord'};
-          if(/girone rosso sud/.test(fl))             return {icon:'🔴',color:'#c62828',label:'Girone Rosso Sud'};
-          if(/girone rosso/.test(fl))                 return {icon:'🔴',color:'#c62828',label:'Girone Rosso'};
-          if(/girone viola nord/.test(fl))            return {icon:'🟣',color:'#4a148c',label:'Girone Viola Nord'};
-          if(/girone viola sud/.test(fl))             return {icon:'🟣',color:'#6a1b9a',label:'Girone Viola Sud'};
-          if(/girone viola/.test(fl))                 return {icon:'🟣',color:'#6a1b9a',label:'Girone Viola'};
-          if(/girone oro/.test(fl))                   return {icon:'🥇',color:'#c98a00',label:'Girone Oro'};
-          if(/girone argento/.test(fl))               return {icon:'🥈',color:'#546e7a',label:'Girone Argento'};
-          if(/seconda fase nord/.test(fl))            return {icon:'🔄',color:'#1565c0',label:'2ª Fase Nord'};
-          if(/seconda fase sud/.test(fl))             return {icon:'🔄',color:'#1565c0',label:'2ª Fase Sud'};
-          if(/seconda fase/.test(fl))                 return {icon:'🔄',color:'#1565c0',label:'2ª Fase'};
-          if(/orologio/.test(fl))                     return {icon:'🕐',color:'#6a1b9a',label:'Fase Orologio'};
-          if(/fase regional|regionale/.test(fl))      return {icon:'🌍',color:'#2e7d32',label:'Fase Regionale'};
-          if(/classific/.test(fl))                    return {icon:'📊',color:'#37474f',label:'Classificazione'};
-          if(/playout/.test(fl))                      return {icon:'⬇️',color:'#b84c00',label:'Playout'};
-          if(/ottav/.test(fl))                        return {icon:'🎯',color:'#0a5a8e',label:'Ottavi di Finale'};
-          if(/quart.*fin|playoff.*qt/.test(fl))       return {icon:'⚔️',color:'#0a5a8e',label:'Quarti di Finale'};
-          if(/semifinal|playoff.*sf/.test(fl))        return {icon:'🥊',color:'#0a5a8e',label:'Semifinali'};
-          if(/playoff/.test(fl))                      return {icon:'🏆',color:'#0a5a8e',label:'Playoff'};
-          if(/\bfinale\b/.test(fl))                   return {icon:'🏆',color:'#c98a00',label:'Finale'};
+          if(/qualific|prima fase/.test(fl))   return {icon:'🏀',color:'#1e3a6e',label:'Qualificazione'};
+          if(/girone verde/.test(fl))          return {icon:'🟢',color:'#2e7d32',label:'Girone Verde'};
+          if(/girone azzurr/.test(fl))         return {icon:'🔵',color:'#1565c0',label:'Girone Azzurro'};
+          if(/girone arancio/.test(fl))        return {icon:'🟠',color:'#e64a19',label:'Girone Arancio'};
+          if(/girone rosso/.test(fl))          return {icon:'🔴',color:'#c62828',label:'Girone Rosso'};
+          if(/girone viola/.test(fl))          return {icon:'🟣',color:'#6a1b9a',label:'Girone Viola'};
+          if(/seconda fase nord/.test(fl))     return {icon:'🔄',color:'#1565c0',label:'2ª Fase Nord'};
+          if(/seconda fase sud/.test(fl))      return {icon:'🔄',color:'#1565c0',label:'2ª Fase Sud'};
+          if(/seconda fase/.test(fl))          return {icon:'🔄',color:'#1565c0',label:'2ª Fase'};
+          if(/orologio/.test(fl))              return {icon:'🕐',color:'#6a1b9a',label:'Fase Orologio'};
+          if(/regional/.test(fl))              return {icon:'🌍',color:'#2e7d32',label:'Fase Regionale'};
+          if(/classific/.test(fl))             return {icon:'📊',color:'#37474f',label:'Classificazione'};
+          if(/playout/.test(fl))               return {icon:'⬇️',color:'#b84c00',label:'Playout'};
+          if(/quart/.test(fl))                 return {icon:'⚔️',color:'#0a5a8e',label:'Quarti di Finale'};
+          if(/semifinal/.test(fl))             return {icon:'🥊',color:'#0a5a8e',label:'Semifinali'};
+          if(/playoff/.test(fl))               return {icon:'🏆',color:'#0a5a8e',label:'Playoff'};
+          if(/finale/.test(fl))                return {icon:'🏆',color:'#c98a00',label:'Finale'};
           return {icon:'📅',color:'#37474f',label:fase};
         }
         if(!fasiCalendario.length) return '<div style="padding:20px;text-align:center;color:var(--mu)">Nessun dato disponibile</div>';
@@ -10941,7 +10919,6 @@ function openCampionato(camp){
             const hdrBg=allDone?'#1e3a6e':isProg?'var(--bl4)':'#2a4a7e';
             const hdrTx=(allDone||!isProg)?'#fff':'var(--bl)';
             const dateLabel=turno._dateLabel||'';
-            const turnoLabel=labelOverride||(isRitorno?'Ritorno':'Andata')+' · Giornata '+n;
             const rows=turno.map(m=>{
               const pc=parseInt(m['Punti Casa'])||0,po=parseInt(m['Punti Ospite'])||0;
               const aW=m['Risultato']&&pc>po,bW=m['Risultato']&&po>pc;
@@ -10978,7 +10955,7 @@ function openCampionato(camp){
               +'<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:'+hdrBg+'">'
               +'<div style="display:flex;align-items:center;gap:8px">'
               +'<span style="width:24px;height:24px;border-radius:50%;background:'+accentColor+';color:#fff;font-size:.7rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center">'+n+'</span>'
-              +'<div><div style="font-size:.75rem;font-weight:600;color:'+hdrTx+'">'+turnoLabel+(dateLabel?' <span style="font-weight:400;opacity:.8">· '+escH(dateLabel)+'</span>':'')+'</div>'
+              +'<div><div style="font-size:.75rem;font-weight:600;color:'+hdrTx+'">'+(labelOverride||(isRitorno?'Ritorno':'Andata')+' · Giornata '+n)+(dateLabel?' <span style="font-weight:400;opacity:.8">· '+escH(dateLabel)+'</span>':'')+'</div>'
               +'<div style="font-size:.6rem;color:'+(allDone||!isProg?'rgba(255,255,255,.5)':'var(--mu2)')+'">'+turno.length+' '+(turno.length===1?'partita':'partite')+'</div></div>'
               +'</div>'
               +(allDone?'<span style="font-size:.61rem;background:rgba(255,255,255,.18);color:#fff;border-radius:3px;padding:2px 8px">✓ Completata</span>'
@@ -10992,16 +10969,14 @@ function openCampionato(camp){
           const hasRitorno=!fg.isElimDir&&turniR.length>0;
           let classicRows='';
           if(fg.isElimDir){
-            // Playoff best-of-3: Gara 1 / Gara 2 / Gara 3 in colonna unica
             fg.turni.forEach((t,i)=>{classicRows+=renderGiornataClassica(t,i+1,false,'Gara '+(i+1));});
           } else if(hasRitorno){
             const maxRows=Math.max(turniA.length,turniR.length);
             for(let i=0;i<maxRows;i++){
               const tA=turniA[i],tR=turniR[i];
-              const colA=tA?renderGiornataClassica(tA,i+1,false):'';
-              const colR=tR?renderGiornataClassica(tR,i+1,true):'';
               classicRows+='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-bottom:0">'
-                +'<div>'+colA+'</div><div>'+colR+'</div></div>';
+                +'<div>'+(tA?renderGiornataClassica(tA,i+1,false):'')+'</div>'
+                +'<div>'+(tR?renderGiornataClassica(tR,i+1,true):'')+'</div></div>';
             }
           } else {
             turniA.forEach((t,i)=>{classicRows+=renderGiornataClassica(t,i+1,false);});
@@ -15894,22 +15869,14 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   }
 
   // ── COLORI CON GRADAZIONI PER FAMIGLIA ───────────────────────────────────
-  // Controlla se un girone appartiene a una fase di eliminazione diretta (playoff bracket)
-  // NON include il playout che ha una classifica normale
-  function getFaseOfGirone(gi){
-    var g=garecamp.find(function(x){return x['Girone']===gi;});
-    return g?(g['Fase']||''):'';
+  function isFaseElim(gi,fase){
+    var t=(gi||'')+(fase?'|'+fase:'');
+    var hasElim=/\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff/i.test(t);
+    var hasPlayout=/playout/i.test(t);
+    return hasElim&&!hasPlayout;
   }
-  function isFaseElim(gi){
-    // Controlla sia il nome del girone sia la fase a cui appartiene
-    var fase=getFaseOfGirone(gi);
-    var nomeTest=/\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff/i.test(gi)||/\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff/i.test(fase);
-    var isPlayout=/playout/i.test(gi)||/playout/i.test(fase);
-    return nomeTest&&!isPlayout;
-  }
-  function isFasePlayout(gi){
-    var fase=getFaseOfGirone(gi);
-    return /playout/i.test(gi)||/playout/i.test(fase);
+  function isFasePlayout(gi,fase){
+    return /playout/i.test((gi||'')+(fase?'|'+fase:''));
   }
 
   var FAMILY_PALETTES={
@@ -16034,26 +16001,42 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   }
 
   // ── RAGGRUPPA GIRONI PER FASE → UNA RIGA PER FASE ────────────────────────
-  var gironiOrdinati=gironi.slice().filter(function(gi){return!/accumulato/i.test(gi)&&!isFaseElim(gi);}).sort(function(a,b){
-    var ga=garecamp.find(function(g){return g['Girone']===a;});
-    var gb=garecamp.find(function(g){return g['Girone']===b;});
-    var pa=fasePrio(ga?ga['Fase']||'':'');
-    var pb=fasePrio(gb?gb['Fase']||'':'');
-    return pa-pb||a.localeCompare(b,'it');
+  // Usa Fase+Girone come chiave unica: "Girone Unico" del Playout ≠ "Girone Unico" della Qualificazione
+  var fasegironiItems=[]; // {fase, girone, gare, sqSet}
+  var _fgSeen=new Set();
+  garecamp.forEach(function(g){
+    var gi=g['Girone']||'';
+    var fa=g['Fase']||'';
+    if(!gi)return;
+    var key=fa+'|||'+gi;
+    if(!_fgSeen.has(key)){
+      _fgSeen.add(key);
+      fasegironiItems.push({fase:fa,girone:gi,gare:[],sqSet:new Set()});
+    }
+    var item=fasegironiItems.find(function(x){return x.fase===fa&&x.girone===gi;});
+    if(item){
+      item.gare.push(g);
+      if(g['Squadra Casa'])item.sqSet.add(g['Squadra Casa']);
+      if(g['Squadra Ospite'])item.sqSet.add(g['Squadra Ospite']);
+    }
   });
-  var minPrio=99;
-  gironiOrdinati.forEach(function(gx){var fx=garecamp.find(function(g){return g['Girone']===gx;});if(fx){var p=fasePrio(fx['Fase']||'');if(p<minPrio)minPrio=p;}});
+
+  // Filtra ed ordina: esclude accumulati e fasi eliminazione diretta (playoff bracket)
+  fasegironiItems=fasegironiItems.filter(function(x){
+    return!/accumulato/i.test(x.girone)&&!isFaseElim(x.girone,x.fase)&&x.sqSet.size>0;
+  });
+  fasegironiItems.sort(function(a,b){
+    var pa=fasePrio(a.fase),pb=fasePrio(b.fase);
+    return pa-pb||a.girone.localeCompare(b.girone,'it');
+  });
 
   // Raggruppa per fase
   var fasiGroups=[];
   var faseGruppoMap={};
-  gironiOrdinati.forEach(function(gi){
-    var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
-    if(!(sqByGi[gi]&&sqByGi[gi].size))return;
-    var faseGi=(gGi.map(function(g){return g['Fase']||'';}).filter(Boolean)[0])||'';
-    var key=faseGi||'__nofase__';
-    if(!faseGruppoMap[key]){faseGruppoMap[key]={fase:faseGi,gironi:[]};fasiGroups.push(faseGruppoMap[key]);}
-    faseGruppoMap[key].gironi.push(gi);
+  fasegironiItems.forEach(function(item){
+    var key=item.fase||'__nofase__';
+    if(!faseGruppoMap[key]){faseGruppoMap[key]={fase:item.fase,items:[]};fasiGroups.push(faseGruppoMap[key]);}
+    faseGruppoMap[key].items.push(item);
   });
 
   // Costruisce HTML
@@ -16061,23 +16044,21 @@ function grtClassifiche(gironi,garecamp,camp,clr){
 
   fasiGroups.forEach(function(grp,grpIdx){
     var isFirstFase=(grpIdx===0);
-    var hasPlayout=grp.gironi.some(function(gi){return isFasePlayout(gi);});
+    var isPlayout=isFasePlayout('',grp.fase);
     var rowLabel=grp.fase
-      ?(hasPlayout
+      ?(isPlayout
         ?'<div style="padding:6px 12px;background:linear-gradient(90deg,#fff0e0,#fff8f0);border-radius:8px;border-left:4px solid #b84c00;font-size:.78rem;font-weight:700;color:#b84c00;margin-bottom:8px">⬇️ '+escH(grp.fase)+' — Salvezza</div>'
         :'<div style="padding:6px 12px;background:linear-gradient(90deg,#e8f0ff,#f5f8ff);border-radius:8px;border-left:4px solid var(--bl);font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:8px">📋 '+escH(grp.fase)+'</div>'
       )
-      :(hasPlayout?'<div style="padding:6px 12px;background:linear-gradient(90deg,#fff0e0,#fff8f0);border-radius:8px;border-left:4px solid #b84c00;font-size:.78rem;font-weight:700;color:#b84c00;margin-bottom:8px">⬇️ Fase Playout — Salvezza</div>':'');
-    // Gironi base (prima tutti)
+      :'';
     var baseCards='',accCards='';
-    grp.gironi.forEach(function(gi){
-      var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
-      var sqSet=sqByGi[gi]||new Set();
-      if(!sqSet.size)return;
-      var giClr=isFasePlayout(gi)?'#b84c00':giColorGrad(gi);
+    grp.items.forEach(function(item){
+      var gi=item.girone,gGi=item.gare,sqSet=item.sqSet;
+      var giClr=isPlayout?'#b84c00':giColorGrad(gi);
       var pMap=isFirstFase?null:sqPosizioneGirone;
-      baseCards+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
-      // Accumulato DR2: aggiunto in coda separata
+      // Etichetta: se più fasi hanno lo stesso nome girone, mostra anche la fase
+      var label=gi;
+      baseCards+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,label,pMap);
       if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
         var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
         accCards+=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,accClr,true,gi+' Accumulato',sqPosizioneGirone);
@@ -16094,7 +16075,10 @@ function grtClassifiche(gironi,garecamp,camp,clr){
 
   // ── TABELLONE OTTAVI ──────────────────────────────────────────────
   // Rileva gironi tipo "Ottavo Ottavo", "Primo Ottavo", "Quarto Ottavo" ecc.
-  var fasiElimGironi=gironi.filter(function(gi){return isFaseElim(gi);});
+  var fasiElimGironi=gironi.filter(function(gi){
+    var fa=getFaseOfGirone(gi);
+    return isFaseElim(gi,fa);
+  });
   var ottaviGironi=gironi.filter(function(gi){return /\bottav/i.test(gi);});
   var quartiGironi=gironi.filter(function(gi){return /\bquart/i.test(gi)&&!/\bottav/i.test(gi);});
   var semifGironi=gironi.filter(function(gi){return /\bsemifinal/i.test(gi);});
