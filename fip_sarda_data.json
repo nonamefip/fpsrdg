@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-05-12 11:44",
+  "aggiornato": "2026-05-12 16:57",
   "campionati": [
     {
       "nome": "Serie C",
@@ -8,6 +8,8 @@
       "gironi": [
         {
           "nome": "Qualificazione",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -1116,6 +1118,8 @@
         },
         {
           "nome": "Fase Playoff QT – Primo Quarto",
+          "fase": "Fase Playoff QT",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -1261,6 +1265,8 @@
         },
         {
           "nome": "Fase Playoff QT – Secondo Quarto",
+          "fase": "Fase Playoff QT",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -1406,6 +1412,8 @@
         },
         {
           "nome": "Fase Playoff QT – Terzo Quarto",
+          "fase": "Fase Playoff QT",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -1542,6 +1550,8 @@
         },
         {
           "nome": "Fase Playoff QT – Quarto Quarto",
+          "fase": "Fase Playoff QT",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -1678,6 +1688,8 @@
         },
         {
           "nome": "Playout 1° turno – Finale",
+          "fase": "Playout 1° turno",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -1791,15 +1803,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "DEMONES OZIERI",
-              "ospite": "SCUOLA BASKET CARBONIA",
-              "data": "14 Marzo 2026",
-              "ora": "18:00",
-              "giornata": 1,
-              "punteggio": "71-80",
-              "leg": "A"
-            },
             {
               "casa": "SCUOLA BASKET CARBONIA",
               "ospite": "DEMONES OZIERI",
@@ -1807,13 +1810,15 @@
               "ora": "18:00",
               "giornata": 1,
               "punteggio": "72-62",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Fase Playoff SF – Prima Semifinale",
+          "fase": "Fase Playoff SF",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -1928,22 +1933,13 @@
           ],
           "risultati": [
             {
-              "casa": "POL. DINAMO",
-              "ospite": "BASKET S. ORSOLA",
-              "data": "11 Aprile 2026",
-              "ora": "20:00",
-              "giornata": 1,
-              "punteggio": "81-69",
-              "leg": "A"
-            },
-            {
               "casa": "BASKET S. ORSOLA",
               "ospite": "POL. DINAMO",
               "data": "18 Aprile 2026",
               "ora": "17:30",
               "giornata": 1,
               "punteggio": "75-72",
-              "leg": "R"
+              "gara": 1
             },
             {
               "casa": "POL. DINAMO",
@@ -1952,13 +1948,15 @@
               "ora": "20:00",
               "giornata": 2,
               "punteggio": "90-77",
-              "leg": "R"
+              "gara": 2
             }
           ],
           "prossime": []
         },
         {
           "nome": "Fase Playoff SF – Seconda Semifinale",
+          "fase": "Fase Playoff SF",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -2073,22 +2071,13 @@
           ],
           "risultati": [
             {
-              "casa": "SEF TORRES",
-              "ospite": "FISIOKONS AUREA SASSARI",
-              "data": "11 Aprile 2026",
-              "ora": "17:30",
-              "giornata": 1,
-              "punteggio": "68-62",
-              "leg": "A"
-            },
-            {
               "casa": "FISIOKONS AUREA SASSARI",
               "ospite": "SEF TORRES",
               "data": "18 Aprile 2026",
               "ora": "20:00",
               "giornata": 1,
               "punteggio": "81-67",
-              "leg": "R"
+              "gara": 1
             },
             {
               "casa": "SEF TORRES",
@@ -2097,13 +2086,15 @@
               "ora": "17:30",
               "giornata": 2,
               "punteggio": "87-78",
-              "leg": "R"
+              "gara": 2
             }
           ],
           "prossime": []
         },
         {
           "nome": "Playout 2° turno – Finale",
+          "fase": "Playout 2° turno",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -2217,15 +2208,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "DEMONES OZIERI",
-              "ospite": "FERRINI PISANO ARREDAMENTI",
-              "data": "11 Aprile 2026",
-              "ora": "19:00",
-              "giornata": 1,
-              "punteggio": "82-70",
-              "leg": "A"
-            },
             {
               "casa": "FERRINI PISANO ARREDAMENTI",
               "ospite": "DEMONES OZIERI",
@@ -2233,13 +2215,15 @@
               "ora": "19:00",
               "giornata": 1,
               "punteggio": "77-81",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Playoff Finale – Finale",
+          "fase": "Playoff Finale",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -2354,22 +2338,13 @@
           ],
           "risultati": [
             {
-              "casa": "POL. DINAMO",
-              "ospite": "SEF TORRES",
-              "data": "02 Maggio 2026",
-              "ora": "18:30",
-              "giornata": 1,
-              "punteggio": "79-89",
-              "leg": "A"
-            },
-            {
               "casa": "SEF TORRES",
               "ospite": "POL. DINAMO",
               "data": "09 Maggio 2026",
               "ora": "18:30",
               "giornata": 1,
               "punteggio": "108-81",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": [
@@ -2379,7 +2354,7 @@
               "data": "16 Maggio 2026",
               "ora": "18:30",
               "giornata": 2,
-              "leg": "R"
+              "gara": 2
             }
           ]
         }
@@ -2392,6 +2367,8 @@
       "gironi": [
         {
           "nome": "Qualificazione",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -4178,6 +4155,8 @@
         },
         {
           "nome": "Fase Playoff QT – Primo Quarto",
+          "fase": "Fase Playoff QT",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -4344,6 +4323,8 @@
         },
         {
           "nome": "Fase Playoff QT – Secondo Quarto",
+          "fase": "Fase Playoff QT",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -4510,6 +4491,8 @@
         },
         {
           "nome": "Fase Playoff QT – Terzo Quarto",
+          "fase": "Fase Playoff QT",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -4685,6 +4668,8 @@
         },
         {
           "nome": "Fase Playoff QT – Quarto Quarto",
+          "fase": "Fase Playoff QT",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -4851,6 +4836,8 @@
         },
         {
           "nome": "Fase Playout",
+          "fase": "Fase Playout",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -4911,7 +4898,7 @@
               "ora": "19:00",
               "giornata": 1,
               "punteggio": "72-95",
-              "leg": "A"
+              "gara": 1
             },
             {
               "casa": "BASKET SAN SPERATE",
@@ -4920,7 +4907,7 @@
               "ora": "18:30",
               "giornata": 2,
               "punteggio": "110-93",
-              "leg": "A"
+              "gara": 2
             },
             {
               "casa": "G.S.DIL. BASKET FERRINI",
@@ -4929,7 +4916,7 @@
               "ora": "19:00",
               "giornata": 2,
               "punteggio": "85-68",
-              "leg": "A"
+              "gara": 2
             },
             {
               "casa": "BASKET ASSEMINI",
@@ -4938,7 +4925,7 @@
               "ora": "19:30",
               "giornata": 3,
               "punteggio": "77-88",
-              "leg": "A"
+              "gara": 3
             },
             {
               "casa": "SANTA CROCE OLBIA",
@@ -4947,7 +4934,7 @@
               "ora": "19:30",
               "giornata": 3,
               "punteggio": "97-53",
-              "leg": "A"
+              "gara": 3
             },
             {
               "casa": "SANTA CROCE OLBIA",
@@ -4956,7 +4943,7 @@
               "ora": "18:30",
               "giornata": 4,
               "punteggio": "92-65",
-              "leg": "A"
+              "gara": 4
             },
             {
               "casa": "BASKET MOGORO",
@@ -4965,7 +4952,7 @@
               "ora": "19:00",
               "giornata": 4,
               "punteggio": "63-56",
-              "leg": "A"
+              "gara": 4
             }
           ],
           "prossime": [
@@ -4975,7 +4962,7 @@
               "data": "30 Giugno 2026",
               "ora": "20:30",
               "giornata": 1,
-              "leg": "A"
+              "gara": 1
             },
             {
               "casa": "G.S.DIL. BASKET FERRINI",
@@ -4983,7 +4970,7 @@
               "data": "16 Maggio 2026",
               "ora": "18:00",
               "giornata": 5,
-              "leg": "A"
+              "gara": 5
             },
             {
               "casa": "BASKET ASSEMINI",
@@ -4991,92 +4978,14 @@
               "data": "17 Maggio 2026",
               "ora": "18:30",
               "giornata": 5,
-              "leg": "A"
-            },
-            {
-              "casa": "BASKET SAN SPERATE",
-              "ospite": "BASKET MOGORO",
-              "data": "23 Maggio 2026",
-              "ora": "19:00",
-              "giornata": 1,
-              "leg": "R"
-            },
-            {
-              "casa": "BASKET ASSEMINI",
-              "ospite": "G.S.DIL. BASKET FERRINI",
-              "data": "23 Maggio 2026",
-              "ora": "19:30",
-              "giornata": 1,
-              "leg": "R"
-            },
-            {
-              "casa": "BASKET MOGORO",
-              "ospite": "G.S.DIL. BASKET FERRINI",
-              "data": "30 Maggio 2026",
-              "ora": "19:00",
-              "giornata": 2,
-              "leg": "R"
-            },
-            {
-              "casa": "SANTA CROCE OLBIA",
-              "ospite": "BASKET SAN SPERATE",
-              "data": "31 Maggio 2026",
-              "ora": "18:30",
-              "giornata": 2,
-              "leg": "R"
-            },
-            {
-              "casa": "BASKET MOGORO",
-              "ospite": "SANTA CROCE OLBIA",
-              "data": "05 Giugno 2026",
-              "ora": "19:00",
-              "giornata": 3,
-              "leg": "R"
-            },
-            {
-              "casa": "BASKET SAN SPERATE",
-              "ospite": "BASKET ASSEMINI",
-              "data": "06 Giugno 2026",
-              "ora": "19:30",
-              "giornata": 3,
-              "leg": "R"
-            },
-            {
-              "casa": "G.S.DIL. BASKET FERRINI",
-              "ospite": "SANTA CROCE OLBIA",
-              "data": "14 Giugno 2026",
-              "ora": "18:00",
-              "giornata": 4,
-              "leg": "R"
-            },
-            {
-              "casa": "BASKET ASSEMINI",
-              "ospite": "BASKET MOGORO",
-              "data": "14 Giugno 2026",
-              "ora": "20:30",
-              "giornata": 4,
-              "leg": "R"
-            },
-            {
-              "casa": "BASKET SAN SPERATE",
-              "ospite": "G.S.DIL. BASKET FERRINI",
-              "data": "09 Giugno 2026",
-              "ora": "20:30",
-              "giornata": 5,
-              "leg": "R"
-            },
-            {
-              "casa": "SANTA CROCE OLBIA",
-              "ospite": "BASKET ASSEMINI",
-              "data": "20 Giugno 2026",
-              "ora": "18:30",
-              "giornata": 5,
-              "leg": "R"
+              "gara": 5
             }
           ]
         },
         {
           "nome": "Fase Playoff SF – Prima Semifinale",
+          "fase": "Fase Playoff SF",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -5227,30 +5136,15 @@
               "ora": "18:00",
               "giornata": 1,
               "punteggio": "89-68",
-              "leg": "A"
+              "gara": 1
             }
           ],
-          "prossime": [
-            {
-              "casa": "ASTRO SSDRL",
-              "ospite": "C.M.B. PORTO TORRES",
-              "data": "16 Maggio 2026",
-              "ora": "18:00",
-              "giornata": 1,
-              "leg": "R"
-            },
-            {
-              "casa": "C.M.B. PORTO TORRES",
-              "ospite": "ASTRO SSDRL",
-              "data": "23 Maggio 2026",
-              "ora": "18:00",
-              "giornata": 2,
-              "leg": "R"
-            }
-          ]
+          "prossime": []
         },
         {
           "nome": "Fase Playoff SF – Seconda Semifinale",
+          "fase": "Fase Playoff SF",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -5393,17 +5287,7 @@
               "ps": 2109
             }
           ],
-          "risultati": [
-            {
-              "casa": "G.S.O. ELMAS",
-              "ospite": "A.S.D. GENNERUXI",
-              "data": "09 Maggio 2026",
-              "ora": "19:00",
-              "giornata": 1,
-              "punteggio": "77-84",
-              "leg": "A"
-            }
-          ],
+          "risultati": [],
           "prossime": [
             {
               "casa": "A.S.D. GENNERUXI",
@@ -5411,7 +5295,7 @@
               "data": "16 Maggio 2026",
               "ora": "18:30",
               "giornata": 1,
-              "leg": "R"
+              "gara": 1
             },
             {
               "casa": "G.S.O. ELMAS",
@@ -5419,7 +5303,7 @@
               "data": "23 Maggio 2026",
               "ora": "18:00",
               "giornata": 2,
-              "leg": "R"
+              "gara": 2
             }
           ]
         }
@@ -5432,6 +5316,8 @@
       "gironi": [
         {
           "nome": "Qualificazione – Girone Sud",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -7743,6 +7629,8 @@
         },
         {
           "nome": "Qualificazione – Girone Nord A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -8335,6 +8223,8 @@
         },
         {
           "nome": "Qualificazione – Girone Nord B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -8927,6 +8817,8 @@
         },
         {
           "nome": "Seconda Fase Nord – Girone Verde",
+          "fase": "Seconda Fase Nord",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -9303,6 +9195,8 @@
         },
         {
           "nome": "Seconda Fase Nord – Girone Azzurro",
+          "fase": "Seconda Fase Nord",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -9679,6 +9573,8 @@
         },
         {
           "nome": "Spareggi Playoff Nor – Primo Quarto",
+          "fase": "Spareggi Playoff Nor",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -9865,6 +9761,8 @@
         },
         {
           "nome": "Spareggi Playoff Nor – Secondo Quarto",
+          "fase": "Spareggi Playoff Nor",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -10051,6 +9949,8 @@
         },
         {
           "nome": "Spareggi Playoff Nor – Terzo Quarto",
+          "fase": "Spareggi Playoff Nor",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -10237,6 +10137,8 @@
         },
         {
           "nome": "Spareggi Playoff Nor – Quarto Quarto",
+          "fase": "Spareggi Playoff Nor",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -10423,6 +10325,8 @@
         },
         {
           "nome": "Playoff - Quarti – Primo Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -10593,30 +10497,15 @@
               "ora": "19:15",
               "giornata": 1,
               "punteggio": "95-87",
-              "leg": "A"
+              "gara": 1
             }
           ],
-          "prossime": [
-            {
-              "casa": "DINAMO BASKET 2000",
-              "ospite": "PALL. SENNORI",
-              "data": "16 Maggio 2026",
-              "ora": "19:00",
-              "giornata": 1,
-              "leg": "R"
-            },
-            {
-              "casa": "PALL. SENNORI",
-              "ospite": "DINAMO BASKET 2000",
-              "data": "24 Maggio 2026",
-              "ora": "08:00",
-              "giornata": 2,
-              "leg": "R"
-            }
-          ]
+          "prossime": []
         },
         {
           "nome": "Playoff - Quarti – Secondo Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -10787,28 +10676,14 @@
               "data": "30 Giugno 2026",
               "ora": "21:00",
               "giornata": 1,
-              "leg": "A"
-            },
-            {
-              "casa": "MERCEDE ALGHERO",
-              "ospite": "POL. S. ELENE",
-              "data": "15 Maggio 2026",
-              "ora": "21:00",
-              "giornata": 1,
-              "leg": "R"
-            },
-            {
-              "casa": "MERCEDE ALGHERO",
-              "ospite": "POL. S. ELENE",
-              "data": "24 Maggio 2026",
-              "ora": "08:00",
-              "giornata": 2,
-              "leg": "R"
+              "gara": 1
             }
           ]
         },
         {
           "nome": "Playoff - Quarti – Terzo Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -10979,30 +10854,15 @@
               "ora": "16:00",
               "giornata": 1,
               "punteggio": "77-67",
-              "leg": "A"
+              "gara": 1
             }
           ],
-          "prossime": [
-            {
-              "casa": "SHARDANA BASKET",
-              "ospite": "MASTERS SASSARI",
-              "data": "17 Maggio 2026",
-              "ora": "18:00",
-              "giornata": 1,
-              "leg": "R"
-            },
-            {
-              "casa": "MASTERS SASSARI",
-              "ospite": "SHARDANA BASKET",
-              "data": "24 Maggio 2026",
-              "ora": "08:00",
-              "giornata": 2,
-              "leg": "R"
-            }
-          ]
+          "prossime": []
         },
         {
           "nome": "Playoff - Quarti – Quarto Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -11173,27 +11033,10 @@
               "ora": "20:00",
               "giornata": 1,
               "punteggio": "73-84",
-              "leg": "A"
+              "gara": 1
             }
           ],
-          "prossime": [
-            {
-              "casa": "PALL. OLIMPIA OLBIA",
-              "ospite": "BASKET MACOMER 2.0",
-              "data": "18 Maggio 2026",
-              "ora": "20:30",
-              "giornata": 1,
-              "leg": "R"
-            },
-            {
-              "casa": "BASKET MACOMER 2.0",
-              "ospite": "PALL. OLIMPIA OLBIA",
-              "data": "23 Maggio 2026",
-              "ora": "19:00",
-              "giornata": 2,
-              "leg": "R"
-            }
-          ]
+          "prossime": []
         }
       ]
     },
@@ -11204,6 +11047,8 @@
       "gironi": [
         {
           "nome": "Qualificazione – Girone Nord A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -11442,6 +11287,8 @@
         },
         {
           "nome": "Qualificazione – Girone Nord B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -11680,6 +11527,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -12136,6 +11985,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -12474,6 +12325,8 @@
         },
         {
           "nome": "Fase Regionale",
+          "fase": "Fase Regionale",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -12987,6 +12840,8 @@
         },
         {
           "nome": "Fase di Classificazi – Girone Rosso",
+          "fase": "Fase di Classificazi",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -13324,6 +13179,8 @@
         },
         {
           "nome": "Fase di Classificazi – Girone Verde",
+          "fase": "Fase di Classificazi",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -13772,6 +13629,8 @@
         },
         {
           "nome": "Fase Playoff SF – Prima Semifinale",
+          "fase": "Fase Playoff SF",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -13832,13 +13691,15 @@
               "ora": "19:45",
               "giornata": 1,
               "punteggio": "78-61",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Fase Playoff SF – Seconda Semifinale",
+          "fase": "Fase Playoff SF",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -13899,13 +13760,15 @@
               "ora": "20:00",
               "giornata": 1,
               "punteggio": "93-73",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Finale Regionale – Finale",
+          "fase": "Finale Regionale",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -13960,22 +13823,13 @@
           ],
           "risultati": [
             {
-              "casa": "POL. DINAMO A",
-              "ospite": "BASKET FERRINI",
-              "data": "20 Aprile 2026",
-              "ora": "19:00",
-              "giornata": 1,
-              "punteggio": "70-80",
-              "leg": "A"
-            },
-            {
               "casa": "BASKET FERRINI",
               "ospite": "POL. DINAMO A",
               "data": "29 Aprile 2026",
               "ora": "19:30",
               "giornata": 1,
               "punteggio": "84-90",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
@@ -13989,6 +13843,8 @@
       "gironi": [
         {
           "nome": "Qualificazione",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -14445,6 +14301,8 @@
         },
         {
           "nome": "Playoff Semifinale – Prima Semifinale",
+          "fase": "Playoff Semifinale",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -14518,15 +14376,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "FERRINI PISANO ARREDAMENTI",
-              "ospite": "S.A.P. ALGHERO",
-              "data": "01 Febbraio 2026",
-              "ora": "11:30",
-              "giornata": 1,
-              "punteggio": "69-73",
-              "leg": "A"
-            },
             {
               "casa": "S.A.P. ALGHERO",
               "ospite": "FERRINI PISANO ARREDAMENTI",
@@ -14534,13 +14383,15 @@
               "ora": "19:30",
               "giornata": 1,
               "punteggio": "91-69",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Playoff Semifinale – Seconda Semifinale",
+          "fase": "Playoff Semifinale",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -14614,15 +14465,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "DINAMO BASKET 2000",
-              "ospite": "POL. DINAMO SRL",
-              "data": "05 Febbraio 2026",
-              "ora": "20:30",
-              "giornata": 1,
-              "punteggio": "56-73",
-              "leg": "A"
-            },
             {
               "casa": "POL. DINAMO SRL",
               "ospite": "DINAMO BASKET 2000",
@@ -14630,13 +14472,15 @@
               "ora": "20:00",
               "giornata": 1,
               "punteggio": "78-84",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Finale Playoff – Finale",
+          "fase": "Finale Playoff",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -14711,28 +14555,21 @@
           ],
           "risultati": [
             {
-              "casa": "POL. DINAMO SRL",
-              "ospite": "S.A.P. ALGHERO",
-              "data": "18 Febbraio 2026",
-              "ora": "20:00",
-              "giornata": 1,
-              "punteggio": "59-108",
-              "leg": "A"
-            },
-            {
               "casa": "S.A.P. ALGHERO",
               "ospite": "POL. DINAMO SRL",
               "data": "22 Febbraio 2026",
               "ora": "19:30",
               "giornata": 1,
               "punteggio": "92-72",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Classificazione",
+          "fase": "Classificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -14941,6 +14778,8 @@
       "gironi": [
         {
           "nome": "Qualificazione – Girone Oro Nord",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -15859,6 +15698,8 @@
         },
         {
           "nome": "Qualificazione – Girone Oro Sud A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -16315,6 +16156,8 @@
         },
         {
           "nome": "Qualificazione – Girone Oro Sud B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -16907,6 +16750,8 @@
         },
         {
           "nome": "Qualificazione – Girone Argento Nord",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -17245,6 +17090,8 @@
         },
         {
           "nome": "Fase Playoff Ottavi – Primo Ottavo",
+          "fase": "Fase Playoff Ottavi",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -17348,15 +17195,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "BASKET GHILARZA",
-              "ospite": "GENNERUXI ROSSO",
-              "data": "14 Marzo 2026",
-              "ora": "17:30",
-              "giornata": 1,
-              "punteggio": "68-44",
-              "leg": "A"
-            },
             {
               "casa": "GENNERUXI ROSSO",
               "ospite": "BASKET GHILARZA",
@@ -17364,13 +17202,15 @@
               "ora": "16:30",
               "giornata": 1,
               "punteggio": "48-51",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Fase Playoff Ottavi – Secondo Ottavo",
+          "fase": "Fase Playoff Ottavi",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -17474,15 +17314,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "GENNERUXI BIANCO",
-              "ospite": "POL. IL GABBIANO",
-              "data": "15 Marzo 2026",
-              "ora": "20:00",
-              "giornata": 1,
-              "punteggio": "58-54",
-              "leg": "A"
-            },
             {
               "casa": "POL. IL GABBIANO",
               "ospite": "GENNERUXI BIANCO",
@@ -17490,13 +17321,15 @@
               "ora": "19:30",
               "giornata": 1,
               "punteggio": "56-64",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Fase Playoff Ottavi – Terzo Ottavo",
+          "fase": "Fase Playoff Ottavi",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -17600,15 +17433,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "AZZURRA ORISTANO",
-              "ospite": "BASKET SAN SPERATE",
-              "data": "18 Marzo 2026",
-              "ora": "19:30",
-              "giornata": 1,
-              "punteggio": "78-43",
-              "leg": "A"
-            },
             {
               "casa": "BASKET SAN SPERATE",
               "ospite": "AZZURRA ORISTANO",
@@ -17616,13 +17440,15 @@
               "ora": "18:30",
               "giornata": 1,
               "punteggio": "42-73",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Fase Playoff Ottavi – Quarto Ottavo",
+          "fase": "Fase Playoff Ottavi",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -17726,15 +17552,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "SANTA CROCE OLBIA GIALLA",
-              "ospite": "G.S.O. ELMAS",
-              "data": "19 Marzo 2026",
-              "ora": "18:15",
-              "giornata": 1,
-              "punteggio": "75-69",
-              "leg": "A"
-            },
             {
               "casa": "G.S.O. ELMAS",
               "ospite": "SANTA CROCE OLBIA GIALLA",
@@ -17742,13 +17559,15 @@
               "ora": "16:15",
               "giornata": 1,
               "punteggio": "46-64",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Fase Playoff Ottavi – Quinto Ottavo",
+          "fase": "Fase Playoff Ottavi",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -17852,15 +17671,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "SCUOLA BASKET CARBONIA",
-              "ospite": "SANTA CROCE OLBIA BLU",
-              "data": "13 Marzo 2026",
-              "ora": "19:15",
-              "giornata": 1,
-              "punteggio": "84-85",
-              "leg": "A"
-            },
             {
               "casa": "SANTA CROCE OLBIA BLU",
               "ospite": "SCUOLA BASKET CARBONIA",
@@ -17868,13 +17678,15 @@
               "ora": "17:45",
               "giornata": 1,
               "punteggio": "69-57",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Fase Playoff Ottavi – Sesto Ottavo",
+          "fase": "Fase Playoff Ottavi",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -17978,15 +17790,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "BASKET 90",
-              "ospite": "BASKET ANTONIANUM",
-              "data": "15 Marzo 2026",
-              "ora": "11:30",
-              "giornata": 1,
-              "punteggio": "71-46",
-              "leg": "A"
-            },
             {
               "casa": "BASKET ANTONIANUM",
               "ospite": "BASKET 90",
@@ -17994,13 +17797,15 @@
               "ora": "11:00",
               "giornata": 1,
               "punteggio": "53-76",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Fase Playoff Ottavi – Settimo Ottavo",
+          "fase": "Fase Playoff Ottavi",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -18104,15 +17909,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "C.M.B. PORTO TORRES",
-              "ospite": "CGP CARLOFORTE",
-              "data": "15 Marzo 2026",
-              "ora": "16:00",
-              "giornata": 1,
-              "punteggio": "75-53",
-              "leg": "A"
-            },
             {
               "casa": "CGP CARLOFORTE",
               "ospite": "C.M.B. PORTO TORRES",
@@ -18120,13 +17916,15 @@
               "ora": "16:00",
               "giornata": 1,
               "punteggio": "43-57",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Fase Playoff Ottavi – Ottavo Ottavo",
+          "fase": "Fase Playoff Ottavi",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -18231,28 +18029,21 @@
           ],
           "risultati": [
             {
-              "casa": "ESPERIA A.S. DIL.",
-              "ospite": "PALL. OLIMPIA OLBIA",
-              "data": "15 Marzo 2026",
-              "ora": "12:00",
-              "giornata": 1,
-              "punteggio": "62-78",
-              "leg": "A"
-            },
-            {
               "casa": "PALL. OLIMPIA OLBIA",
               "ospite": "ESPERIA A.S. DIL.",
               "data": "27 Marzo 2026",
               "ora": "19:00",
               "giornata": 1,
               "punteggio": "81-68",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Classificazione – Girone Azzurro",
+          "fase": "Classificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -18582,6 +18373,8 @@
         },
         {
           "nome": "Classificazione – Girone Rosso",
+          "fase": "Classificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -18844,6 +18637,8 @@
         },
         {
           "nome": "Fase Playoff QT – Primo Quarto",
+          "fase": "Fase Playoff QT",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -18979,6 +18774,8 @@
         },
         {
           "nome": "Fase Playoff QT – Secondo Quarto",
+          "fase": "Fase Playoff QT",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -19105,6 +18902,8 @@
         },
         {
           "nome": "Fase Playoff QT – Terzo Quarto",
+          "fase": "Fase Playoff QT",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -19240,6 +19039,8 @@
         },
         {
           "nome": "Fase Playoff QT – Quarto Quarto",
+          "fase": "Fase Playoff QT",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -19375,6 +19176,8 @@
         },
         {
           "nome": "Coppa Primavera",
+          "fase": "Coppa Primavera",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -19575,6 +19378,8 @@
         },
         {
           "nome": "Fase Playoff SF – Prima Semifinale",
+          "fase": "Fase Playoff SF",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -19677,17 +19482,7 @@
               "ps": 1525
             }
           ],
-          "risultati": [
-            {
-              "casa": "BASKET GHILARZA",
-              "ospite": "AZZURRA ORISTANO",
-              "data": "10 Maggio 2026",
-              "ora": "18:30",
-              "giornata": 1,
-              "punteggio": "60-45",
-              "leg": "A"
-            }
-          ],
+          "risultati": [],
           "prossime": [
             {
               "casa": "AZZURRA ORISTANO",
@@ -19695,7 +19490,7 @@
               "data": "16 Maggio 2026",
               "ora": "18:30",
               "giornata": 1,
-              "leg": "R"
+              "gara": 1
             },
             {
               "casa": "BASKET GHILARZA",
@@ -19703,12 +19498,14 @@
               "data": "30 Giugno 2026",
               "ora": "18:00",
               "giornata": 2,
-              "leg": "R"
+              "gara": 2
             }
           ]
         },
         {
           "nome": "Fase Playoff SF – Seconda Semifinale",
+          "fase": "Fase Playoff SF",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -19811,17 +19608,7 @@
               "ps": 1525
             }
           ],
-          "risultati": [
-            {
-              "casa": "BASKET 90",
-              "ospite": "PALL. OLIMPIA OLBIA",
-              "data": "08 Maggio 2026",
-              "ora": "20:00",
-              "giornata": 1,
-              "punteggio": "70-67",
-              "leg": "A"
-            }
-          ],
+          "risultati": [],
           "prossime": [
             {
               "casa": "PALL. OLIMPIA OLBIA",
@@ -19829,7 +19616,7 @@
               "data": "12 Maggio 2026",
               "ora": "19:30",
               "giornata": 1,
-              "leg": "R"
+              "gara": 1
             },
             {
               "casa": "BASKET 90",
@@ -19837,7 +19624,7 @@
               "data": "17 Maggio 2026",
               "ora": "18:00",
               "giornata": 2,
-              "leg": "R"
+              "gara": 2
             }
           ]
         }
@@ -19850,6 +19637,8 @@
       "gironi": [
         {
           "nome": "Qualificazione – Girone Nord",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -20442,6 +20231,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -20780,6 +20571,8 @@
         },
         {
           "nome": "Seconda fase – Girone Regionale",
+          "fase": "Seconda fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -21361,6 +21154,8 @@
         },
         {
           "nome": "Seconda fase – Classificazione",
+          "fase": "Seconda fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -21699,6 +21494,8 @@
       "gironi": [
         {
           "nome": "Qualificazione",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -22291,6 +22088,8 @@
         },
         {
           "nome": "Fase Orologio",
+          "fase": "Fase Orologio",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -22638,6 +22437,8 @@
       "gironi": [
         {
           "nome": "Qualificazione – Girone Nord",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -23742,6 +23543,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -24198,6 +24001,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -24654,6 +24459,8 @@
         },
         {
           "nome": "Seconda Fase Sud – Girone Verde",
+          "fase": "Seconda Fase Sud",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -24884,6 +24691,8 @@
         },
         {
           "nome": "Seconda Fase Sud – Girone Arancio",
+          "fase": "Seconda Fase Sud",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -25251,6 +25060,8 @@
         },
         {
           "nome": "Playoff - Quarti – Primo Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -25371,20 +25182,14 @@
               "data": "18 Maggio 2026",
               "ora": "18:00",
               "giornata": 1,
-              "leg": "A"
-            },
-            {
-              "casa": "A.S.DIL. BASKET CORAL 93",
-              "ospite": "BASKET IGLESIAS",
-              "data": "23 Maggio 2026",
-              "ora": "18:00",
-              "giornata": 1,
-              "leg": "R"
+              "gara": 1
             }
           ]
         },
         {
           "nome": "Playoff - Quarti – Secondo Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -25505,20 +25310,14 @@
               "data": "16 Maggio 2026",
               "ora": "16:30",
               "giornata": 1,
-              "leg": "A"
-            },
-            {
-              "casa": "PALL. OLIMPIA OLBIA",
-              "ospite": "SCUOLA BASKET CARBONIA",
-              "data": "23 Maggio 2026",
-              "ora": "17:00",
-              "giornata": 1,
-              "leg": "R"
+              "gara": 1
             }
           ]
         },
         {
           "nome": "Playoff - Quarti – Terzo Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -25639,20 +25438,14 @@
               "data": "29 Giugno 2026",
               "ora": "08:00",
               "giornata": 1,
-              "leg": "A"
-            },
-            {
-              "casa": "BASKET FERRINI",
-              "ospite": "BASKET MACOMER 2.0",
-              "data": "29 Giugno 2026",
-              "ora": "08:00",
-              "giornata": 1,
-              "leg": "R"
+              "gara": 1
             }
           ]
         },
         {
           "nome": "Playoff - Quarti – Quarto Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -25773,19 +25566,10 @@
               "ora": "12:00",
               "giornata": 1,
               "punteggio": "42-77",
-              "leg": "A"
+              "gara": 1
             }
           ],
-          "prossime": [
-            {
-              "casa": "CALASETTA BASKET",
-              "ospite": "SHARDANA FUTURA",
-              "data": "23 Maggio 2026",
-              "ora": "17:30",
-              "giornata": 1,
-              "leg": "R"
-            }
-          ]
+          "prossime": []
         }
       ]
     },
@@ -25796,6 +25580,8 @@
       "gironi": [
         {
           "nome": "Qualificazione – Girone Nord A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -26542,6 +26328,8 @@
         },
         {
           "nome": "Qualificazione – Girone Nord B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -27288,6 +27076,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -28034,6 +27824,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -28780,6 +28572,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Verde Nord",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -29005,6 +28799,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Verde Sud",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -29228,6 +29024,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Arancio Nord",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -29446,6 +29244,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Arancio Sud",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -29663,6 +29463,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Viola Nord",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -29881,6 +29683,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Viola Sud",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -30105,6 +29909,8 @@
       "gironi": [
         {
           "nome": "Qualificazione – Girone Nord A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -30697,6 +30503,8 @@
         },
         {
           "nome": "Qualificazione – Girone Nord B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -31289,6 +31097,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -31745,6 +31555,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -32201,6 +32013,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud C",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -32793,6 +32607,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Verde Nord",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -33168,6 +32984,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Verde Sud",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -33506,6 +33324,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Arancio Nord",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -33865,6 +33685,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Arancio Sud",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -34194,6 +34016,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Rosso Sud",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -34420,6 +34244,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Viola Sud",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -34649,6 +34475,8 @@
         },
         {
           "nome": "Final 4 - Semifinali – Prima Semifinale",
+          "fase": "Final 4 - Semifinali",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -34739,13 +34567,15 @@
               "ora": "17:00",
               "giornata": 1,
               "punteggio": "98-70",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Final 4 - Semifinali – Seconda Semifinale",
+          "fase": "Final 4 - Semifinali",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -34836,13 +34666,15 @@
               "ora": "19:00",
               "giornata": 1,
               "punteggio": "66-77",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Final 4 - Finale – Finale",
+          "fase": "Final 4 - Finale",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -34933,7 +34765,7 @@
               "ora": "17:30",
               "giornata": 1,
               "punteggio": "58-56",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
@@ -34947,6 +34779,8 @@
       "gironi": [
         {
           "nome": "Qualificazione",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -35693,6 +35527,8 @@
         },
         {
           "nome": "Fase Orologio",
+          "fase": "Fase Orologio",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -36121,6 +35957,8 @@
       "gironi": [
         {
           "nome": "Qualificazione",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -36867,6 +36705,8 @@
         },
         {
           "nome": "Fase Playoff SF – Prima Semifinale",
+          "fase": "Fase Playoff SF",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -36960,15 +36800,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "MERCEDE ALGHERO",
-              "ospite": "G.S.O. ELMAS",
-              "data": "18 Marzo 2026",
-              "ora": "19:30",
-              "giornata": 1,
-              "punteggio": "87-60",
-              "leg": "A"
-            },
             {
               "casa": "G.S.O. ELMAS",
               "ospite": "MERCEDE ALGHERO",
@@ -36976,13 +36807,15 @@
               "ora": "19:00",
               "giornata": 1,
               "punteggio": "65-84",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Fase Playoff SF – Seconda Semifinale",
+          "fase": "Fase Playoff SF",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -37077,28 +36910,21 @@
           ],
           "risultati": [
             {
-              "casa": "BASKET S.SALVATORE",
-              "ospite": "SAP ALGHERO",
-              "data": "16 Marzo 2026",
-              "ora": "19:15",
-              "giornata": 1,
-              "punteggio": "72-52",
-              "leg": "A"
-            },
-            {
               "casa": "SAP ALGHERO",
               "ospite": "BASKET S.SALVATORE",
               "data": "25 Marzo 2026",
               "ora": "19:30",
               "giornata": 1,
               "punteggio": "62-66",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Coppa Primavera",
+          "fase": "Coppa Primavera",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -37247,6 +37073,8 @@
         },
         {
           "nome": "Finale Regionale – Finale",
+          "fase": "Finale Regionale",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -37341,22 +37169,13 @@
           ],
           "risultati": [
             {
-              "casa": "MERCEDE ALGHERO",
-              "ospite": "BASKET S.SALVATORE",
-              "data": "16 Aprile 2026",
-              "ora": "19:30",
-              "giornata": 1,
-              "punteggio": "83-49",
-              "leg": "A"
-            },
-            {
               "casa": "BASKET S.SALVATORE",
               "ospite": "MERCEDE ALGHERO",
               "data": "20 Aprile 2026",
               "ora": "19:45",
               "giornata": 1,
               "punteggio": "50-74",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
@@ -37370,6 +37189,8 @@
       "gironi": [
         {
           "nome": "Qualificazione – Girone Sud A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -37708,6 +37529,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -37946,6 +37769,8 @@
         },
         {
           "nome": "Qualificazione – Girone Nord",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -38284,6 +38109,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Regionale",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -38622,6 +38449,8 @@
         },
         {
           "nome": "Seconda Fase – Classificazione Rosso",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -38956,6 +38785,8 @@
         },
         {
           "nome": "Seconda Fase – Classificazione Verde",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -39200,6 +39031,8 @@
       "gironi": [
         {
           "nome": "Qualificazione – Girone A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -39538,6 +39371,8 @@
         },
         {
           "nome": "Qualificazione – Girone B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -39876,6 +39711,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Verde",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -40106,6 +39943,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Arancio",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -40328,6 +40167,8 @@
         },
         {
           "nome": "Finale Regionale – Finale",
+          "fase": "Finale Regionale",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -40398,7 +40239,7 @@
               "ora": "17:30",
               "giornata": 1,
               "punteggio": "31-26",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
@@ -40412,6 +40253,8 @@
       "gironi": [
         {
           "nome": "Qualificazione – Girone Nord",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -41004,6 +40847,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -41242,6 +41087,8 @@
         },
         {
           "nome": "Qualificazione – Girone Sud B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -41480,6 +41327,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Verde",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -41818,6 +41667,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Arancio",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -41974,6 +41825,8 @@
         },
         {
           "nome": "Seconda Fase Nord – Girone Nord Orologio",
+          "fase": "Seconda Fase Nord",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -42313,6 +42166,8 @@
         },
         {
           "nome": "Playoff - Quarti – Primo Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -42396,15 +42251,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "ACLI SUPERGA",
-              "ospite": "MERCEDE ALGHERO",
-              "data": "08 Maggio 2026",
-              "ora": "17:30",
-              "giornata": 1,
-              "punteggio": "22-64",
-              "leg": "A"
-            },
             {
               "casa": "MERCEDE ALGHERO",
               "ospite": "ACLI SUPERGA",
@@ -42412,13 +42258,15 @@
               "ora": "15:30",
               "giornata": 1,
               "punteggio": "77-46",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Playoff - Quarti – Secondo Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -42501,17 +42349,7 @@
               "ps": 1158
             }
           ],
-          "risultati": [
-            {
-              "casa": "G.S. ORATORIO ELMAS",
-              "ospite": "S.A.P. ALGHERO",
-              "data": "03 Maggio 2026",
-              "ora": "11:30",
-              "giornata": 1,
-              "punteggio": "36-73",
-              "leg": "A"
-            }
-          ],
+          "risultati": [],
           "prossime": [
             {
               "casa": "S.A.P. ALGHERO",
@@ -42519,12 +42357,14 @@
               "data": "15 Maggio 2026",
               "ora": "19:00",
               "giornata": 1,
-              "leg": "R"
+              "gara": 1
             }
           ]
         },
         {
           "nome": "Playoff - Quarti – Terzo Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -42608,15 +42448,6 @@
             }
           ],
           "risultati": [
-            {
-              "casa": "DINAMO BASKET 2000",
-              "ospite": "VIRTUS CAGLIARI",
-              "data": "03 Maggio 2026",
-              "ora": "12:00",
-              "giornata": 1,
-              "punteggio": "65-34",
-              "leg": "A"
-            },
             {
               "casa": "VIRTUS CAGLIARI",
               "ospite": "DINAMO BASKET 2000",
@@ -42624,13 +42455,15 @@
               "ora": "17:00",
               "giornata": 1,
               "punteggio": "66-56",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Playoff - Quarti – Quarto Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -42715,22 +42548,13 @@
           ],
           "risultati": [
             {
-              "casa": "DINAMO LAB",
-              "ospite": "BASKET ANTONIANUM",
-              "data": "02 Maggio 2026",
-              "ora": "18:00",
-              "giornata": 1,
-              "punteggio": "53-43",
-              "leg": "A"
-            },
-            {
               "casa": "BASKET ANTONIANUM",
               "ospite": "DINAMO LAB",
               "data": "09 Maggio 2026",
               "ora": "18:00",
               "giornata": 1,
               "punteggio": "55-46",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
@@ -42744,6 +42568,8 @@
       "gironi": [
         {
           "nome": "Qualificazione – Girone A",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -42982,6 +42808,8 @@
         },
         {
           "nome": "Qualificazione – Girone B",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -43220,6 +43048,8 @@
         },
         {
           "nome": "Qualificazione – Girone C",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -43458,6 +43288,8 @@
         },
         {
           "nome": "Qualificazione – Girone D",
+          "fase": "Qualificazione",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -43696,6 +43528,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Verde A",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -44034,6 +43868,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Verde B",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -44372,6 +44208,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Arancio A",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -44526,6 +44364,8 @@
         },
         {
           "nome": "Seconda Fase – Girone Arancio B",
+          "fase": "Seconda Fase",
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -44682,6 +44522,8 @@
         },
         {
           "nome": "Final 4 - Semifinali – Prima Semifinale",
+          "fase": "Final 4 - Semifinali",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -44742,13 +44584,15 @@
               "ora": "17:00",
               "giornata": 1,
               "punteggio": "58-55",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Final 4 - Semifinali – Seconda Semifinale",
+          "fase": "Final 4 - Semifinali",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -44809,13 +44653,15 @@
               "ora": "19:00",
               "giornata": 1,
               "punteggio": "93-25",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Final 4 - Finali – Prima Semifinale",
+          "fase": "Final 4 - Finali",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -44876,13 +44722,15 @@
               "ora": "16:30",
               "giornata": 1,
               "punteggio": "88-56",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
         },
         {
           "nome": "Final 4 - Finali – Seconda Semifinale",
+          "fase": "Final 4 - Finali",
+          "elim": true,
           "classifica": [
             {
               "pos": 1,
@@ -44943,7 +44791,7 @@
               "ora": "18:30",
               "giornata": 1,
               "punteggio": "32-41",
-              "leg": "R"
+              "gara": 1
             }
           ],
           "prossime": []
