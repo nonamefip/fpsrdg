@@ -15968,7 +15968,7 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     var thS='cursor:pointer;user-select:none;white-space:nowrap;';
     function thClick(ci){return ' onclick="sortRtbl(\''+tid+'\','+ci+')"';}
     // Header card
-    var h='<div style="flex-shrink:0;'+borderSide+';'+borderTop+';border-radius:10px;overflow:visible;margin-bottom:4px;background:#fff">'
+    var h='<div style="flex:1;min-width:280px;'+borderSide+';'+borderTop+';border-radius:10px;overflow:visible;margin-bottom:4px;background:#fff">'
       +'<div style="background:linear-gradient(135deg,'+giClr+' 0%,'+giClr+'cc 100%);color:#fff;padding:7px 13px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0">'
       +'<b style="font-size:.82rem;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,.25)">'+escH(label)+'</b>'
       +'<span style="font-size:.62rem;opacity:.9;background:rgba(0,0,0,.18);border-radius:10px;padding:2px 7px;margin-left:8px;white-space:nowrap">'+rows.length+' sq · '+gGi.length+'g</span>'
@@ -16104,7 +16104,7 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     });
     cards+='<div>'
       +rowLabel
-      +'<div style="display:flex;flex-wrap:nowrap;gap:10px;align-items:flex-start;overflow-x:auto;padding-bottom:6px">'
+      +'<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;padding-bottom:6px">'
       +baseCards+accCards
       +'</div></div>';
   });
@@ -16150,7 +16150,10 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       return ai-bi;
     });}
     function renderGironeElim(gi){
-      var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
+      // Trova la fase corretta per questo girone (esclude playout)
+      var faGi=garecamp.find(function(g){return g['Girone']===gi&&isFaseElim(g['Girone']);});
+      var faseGi=faGi?faGi['Fase']||'':'';
+      var gGi=garecamp.filter(function(g){return g['Girone']===gi&&(!faseGi||g['Fase']===faseGi);});
       var sqSet=new Set();
       gGi.forEach(function(g){if(g['Squadra Casa'])sqSet.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqSet.add(g['Squadra Ospite']);});
       var sqs=[...sqSet];
