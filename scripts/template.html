@@ -15918,8 +15918,8 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   }
 
   // ── COLORI CON GRADAZIONI PER FAMIGLIA ───────────────────────────────────
-  function isFaseElim(gi){return /\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff|\bplayout/i.test(gi);}
-  function isFasePlayout(gi){return /playout|play.out/i.test(gi);}
+  function isFaseElim(gi){return /\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff/i.test(gi)&&!/playout/i.test(gi);}
+  function isFasePlayout(gi,fase){return /playout/i.test(gi)||/playout/i.test(fase||'');}
 
   var FAMILY_PALETTES={
     azzurro:['#0d47a1','#1565c0','#1976d2','#0288d1','#0097a7'],
