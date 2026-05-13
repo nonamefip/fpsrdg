@@ -16158,9 +16158,15 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     if(!_elimSeen.has(key)){_elimSeen.add(key);_elimPairs.push({fase:fa,girone:gi});}
   });
 
-  var ottaviGironi=gironi.filter(function(gi){return /\bottav/i.test(gi)&&!/playout/i.test(gi);});
-  var quartiGironi=gironi.filter(function(gi){return /\bquart/i.test(gi)&&!/\bottav/i.test(gi)&&!/playout/i.test(gi);});
-  var semifGironi=gironi.filter(function(gi){return /\bsemifinal/i.test(gi)&&!/playout/i.test(gi);});
+  var ottaviPairs=_elimPairs.filter(function(x){return /\bottav/i.test(x.girone)&&!/playout/i.test(x.fase);});
+  var spareggiPairs=_elimPairs.filter(function(x){return /spareggi/i.test(x.fase)&&/quart/i.test(x.girone);});
+  var quartiPairs=_elimPairs.filter(function(x){return /\bquart/i.test(x.girone)&&!/\bottav/i.test(x.girone)&&!/playout/i.test(x.fase)&&!/spareggi/i.test(x.fase);});
+  var semifPairs=_elimPairs.filter(function(x){return /\bsemifinal/i.test(x.girone)&&!/playout/i.test(x.fase);});
+
+  // Per compatibilità con renderFaseSection che accetta anche stringhe
+  var ottaviGironi=ottaviPairs;
+  var quartiGironi=quartiPairs;
+  var semifGironi=semifPairs;
 
   // Finale Playoff: coppie con girone "Finale" e fase NON playout
   var finalPairs=_elimPairs.filter(function(x){return /\bfinal/i.test(x.girone)&&!/\bsemifinal/i.test(x.girone)&&!/\bottav/i.test(x.girone)&&!/\bquart/i.test(x.girone)&&!/playout/i.test(x.fase);});
@@ -16274,6 +16280,7 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     }
     var tabHtml='';
     tabHtml+=renderFaseSection(ottaviGironi,'🎯','Tabellone Ottavi di Finale');
+    tabHtml+=renderFaseSection(spareggiPairs,'🎯','Spareggi Playoff');
     tabHtml+=renderFaseSection(quartiGironi,'⚔️','Tabellone Quarti di Finale');
     tabHtml+=renderFaseSection(semifGironi,'🥊','Tabellone Semifinali');
     tabHtml+=renderFaseSection(finalPairs,'🏆','Tabellone Finale');
