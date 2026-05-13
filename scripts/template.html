@@ -16169,7 +16169,6 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       return ai-bi;
     });}
     function renderGironeElim(gi){
-      // Trova la fase corretta per questo girone (esclude playout)
       var faGi=garecamp.find(function(g){return g['Girone']===gi&&isFaseElim(g['Girone']);});
       var faseGi=faGi?faGi['Fase']||'':'';
       var gGi=garecamp.filter(function(g){return g['Girone']===gi&&(!faseGi||g['Fase']===faseGi);});
@@ -16177,7 +16176,7 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       gGi.forEach(function(g){if(g['Squadra Casa'])sqSet.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqSet.add(g['Squadra Ospite']);});
       var sqs=[...sqSet];
       if(!sqs.length)return'';
-      var h='<div style="min-width:220px;flex:1;border:2px solid '+clr+'55;border-radius:8px;overflow:hidden;margin-bottom:4px">';
+      var h='<div style="min-width:170px;flex:1;border:2px solid '+clr+'55;border-radius:8px;overflow:hidden;margin-bottom:4px">';
       h+='<div style="background:'+clr+';color:#fff;padding:5px 10px;font-size:.78rem;font-weight:700">'+escH(gi)+'</div>';
       h+='<table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="background:#f0f4ff">';
       h+='<th style="padding:3px 6px;text-align:left">Squadra</th><th style="padding:3px 6px;text-align:center">Girone</th><th style="padding:3px 6px;text-align:center">Pos.</th>';
@@ -16195,23 +16194,47 @@ function grtClassifiche(gironi,garecamp,camp,clr){
         var posLabel=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos+'°';
         var rowBg=idx%2?'#f8faff':'#fff';
         h+='<tr style="background:'+rowBg+';border-bottom:1px solid #f0f0f0">'
-          +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+ escH(sq)+'">'+ escH(sq)+'</span></td>'
+          +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+escH(sq)+'">'+escH(sq)+'</span></td>'
           +'<td style="padding:4px 6px;text-align:center;font-size:.65rem;color:var(--mu)">'+escH(gironeName)+'</td>'
           +'<td style="padding:4px 6px;text-align:center;font-weight:700;color:'+posClr+'">'+posLabel+'</td>'
           +'</tr>';
       });
-      h+='</tbody></table></div>';
+      h+='</tbody></table>';
+      // Risultati gare disputate
+      var giocate=gGi.filter(function(g){return g['Risultato']&&g['Risultato']!=='-';});
+      if(giocate.length){
+        h+='<div style="border-top:1px solid #e0e8ff;padding:4px 6px;background:#f8faff">';
+        h+='<div style="font-size:.62rem;font-weight:700;color:var(--mu);margin-bottom:3px">RISULTATI</div>';
+        giocate.forEach(function(g){
+          var numG=g['Numero Gara']||'';
+          var label=numG?'G'+numG.slice(-2):'';
+          h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #eef;font-size:.65rem">'
+            +'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escH(g['Squadra Casa'])+'">'+escH(g['Squadra Casa'])+'</span>'
+            +'<span style="font-weight:700;margin:0 4px;color:'+clr+';white-space:nowrap">'+escH(g['Risultato'])+'</span>'
+            +'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right" title="'+escH(g['Squadra Ospite'])+'">'+escH(g['Squadra Ospite'])+'</span>'
+            +'</div>';
+        });
+        h+='</div>';
+      }
+      h+='</div>';
       return h;
     }
     function renderFaseSection(fasiArr,icon,label,cols){
       if(!fasiArr.length)return'';
       var sorted=sortFase(fasiArr);
-      // minWidth adattiva: più gironi = card più strette per evitare sovrapposizioni
       var n=sorted.length;
-      var minW=n<=2?'280px':n<=4?'220px':n<=6?'180px':n<=8?'160px':'140px';
-      var h='<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;color:var(--bl);margin-bottom:8px;padding:6px 12px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl)">'+icon+' '+escH(label)+'</div>'
-        +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax('+minW+',1fr));gap:8px;align-items:start">';
-      sorted.forEach(function(gi){h+=renderGironeElim(gi);});
+      var h='<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;color:var(--bl);margin-bottom:8px;padding:6px 12px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl)">'+icon+' '+escH(label)+'</div>';
+      if(n>4){
+        // Riga orizzontale scrollabile per ottavi con tanti gironi
+        h+='<div style="display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;padding-bottom:6px">';
+        sorted.forEach(function(gi){
+          h+='<div style="flex:0 0 auto;width:170px">'+renderGironeElim(gi)+'</div>';
+        });
+      } else {
+        var minW=n<=2?'280px':n<=4?'220px':'180px';
+        h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax('+minW+',1fr));gap:8px;align-items:start">';
+        sorted.forEach(function(gi){h+=renderGironeElim(gi);});
+      }
       h+='</div></div>';
       return h;
     }
