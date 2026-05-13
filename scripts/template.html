@@ -16231,8 +16231,8 @@ function grtClassifiche(gironi,garecamp,camp,clr){
           h+='<div style="flex:0 0 auto;width:170px">'+renderGironeElim(gi)+'</div>';
         });
       } else {
-        var minW=n<=2?'280px':n<=4?'220px':'180px';
-        h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax('+minW+',1fr));gap:8px;align-items:start">';
+        // Grid che occupa tutta la larghezza: ogni card si espande uguale
+        h+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:8px;align-items:start">';
         sorted.forEach(function(gi){h+=renderGironeElim(gi);});
       }
       h+='</div></div>';
