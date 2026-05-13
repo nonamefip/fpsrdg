@@ -16167,15 +16167,34 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   // ── TABELLONE OTTAVI ──────────────────────────────────────────────
   // Rileva gironi tipo "Ottavo Ottavo", "Primo Ottavo", "Quarto Ottavo" ecc.
   var fasiElimGironi=gironi.filter(function(gi){return isFaseElim(gi);});
+  // Usa coppie Fase+Girone per distinguere "Finale" del Playoff da "Finale" del Playout
+  var _elimPairs=[];
+  var _elimSeen=new Set();
+  garecamp.forEach(function(g){
+    var gi=g['Girone']||'',fa=g['Fase']||'';
+    if(!gi||!isFaseElim(gi))return;
+    var key=fa+'|||'+gi;
+    if(!_elimSeen.has(key)){_elimSeen.add(key);_elimPairs.push({fase:fa,girone:gi});}
+  });
+  // Aggiunge anche i gironi playout con elim diretta (es. "Fase Playout" con girone "Finale")
+  garecamp.forEach(function(g){
+    var gi=g['Girone']||'',fa=g['Fase']||'';
+    if(!gi||!/playout/i.test(fa))return;
+    var key=fa+'|||'+gi;
+    if(!_elimSeen.has(key)){_elimSeen.add(key);_elimPairs.push({fase:fa,girone:gi});}
+  });
+
   var ottaviGironi=gironi.filter(function(gi){return /\bottav/i.test(gi)&&!/playout/i.test(gi);});
   var quartiGironi=gironi.filter(function(gi){return /\bquart/i.test(gi)&&!/\bottav/i.test(gi)&&!/playout/i.test(gi);});
   var semifGironi=gironi.filter(function(gi){return /\bsemifinal/i.test(gi)&&!/playout/i.test(gi);});
-  // finalGironi: gironi elim con "finale" nel nome, esclude semifinale, ottavi, quarti, playout-girone
-  // MA include gironi elim-diretta che appartengono a una fase playout (es. girone "Finale" in "Fase Playout")
-  var playoutFaseGironi=new Set();
-  garecamp.forEach(function(g){if(/playout/i.test(g['Fase']||'')&&g['Girone'])playoutFaseGironi.add(g['Girone']);});
-  var finalGironi=gironi.filter(function(gi){return /\bfinal/i.test(gi)&&!/\bsemifinal/i.test(gi)&&!/\bottav/i.test(gi)&&!/\bquart/i.test(gi)&&!playoutFaseGironi.has(gi);});
-  var playoutElimGironi=gironi.filter(function(gi){return (/playout/i.test(gi)&&isFaseElim(gi))||playoutFaseGironi.has(gi);});
+
+  // Finale Playoff: coppie con girone "Finale" e fase NON playout
+  var finalPairs=_elimPairs.filter(function(x){return /\bfinal/i.test(x.girone)&&!/\bsemifinal/i.test(x.girone)&&!/\bottav/i.test(x.girone)&&!/\bquart/i.test(x.girone)&&!/playout/i.test(x.fase);});
+  var finalGironi=finalPairs.map(function(x){return x.girone;});
+
+  // Playout elim: coppie con fase playout
+  var playoutElimPairs=_elimPairs.filter(function(x){return /playout/i.test(x.fase);});
+  var playoutElimGironi=playoutElimPairs.map(function(x){return x.girone;});
   if(fasiElimGironi.length>=1){
     var gironiRegolari=gironi.filter(function(gi){return!isFaseElim(gi);});
     // Mappa squadra → posizione nel girone regolare
@@ -16207,10 +16226,12 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       if(ai<0)ai=99;if(bi<0)bi=99;
       return ai-bi;
     });}
-    function renderGironeElim(gi){
-      var faGi=garecamp.find(function(g){return g['Girone']===gi&&isFaseElim(g['Girone']);});
-      var faseGi=faGi?faGi['Fase']||'':'';
-      var gGi=garecamp.filter(function(g){return g['Girone']===gi&&(!faseGi||g['Fase']===faseGi);});
+    function renderGironeElim(gi,faseFilter){
+      var gGi=garecamp.filter(function(g){
+        if(g['Girone']!==gi)return false;
+        if(faseFilter)return g['Fase']===faseFilter;
+        return isFaseElim(gi)||/playout/i.test(g['Fase']||'');
+      });
       var sqSet=new Set();
       gGi.forEach(function(g){if(g['Squadra Casa'])sqSet.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqSet.add(g['Squadra Ospite']);});
       var sqs=[...sqSet];
@@ -16260,29 +16281,29 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     }
     function renderFaseSection(fasiArr,icon,label,cols){
       if(!fasiArr.length)return'';
-      var sorted=sortFase(fasiArr);
-      var n=sorted.length;
+      // Supporta sia array di stringhe (gironi) che array di oggetti {fase,girone}
+      var pairs=fasiArr.map(function(x){return typeof x==='string'?{girone:x,fase:''}:x;});
+      pairs.sort(function(a,b){return a.girone.localeCompare(b.girone,'it');});
+      var n=pairs.length;
       var h='<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;color:var(--bl);margin-bottom:8px;padding:6px 12px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl)">'+icon+' '+escH(label)+'</div>';
       if(n>4){
-        // Riga orizzontale scrollabile per ottavi con tanti gironi
         h+='<div style="display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding-bottom:8px">';
-        sorted.forEach(function(gi){
-          h+='<div style="flex:0 0 auto;width:220px">'+renderGironeElim(gi)+'</div>';
+        pairs.forEach(function(p){
+          h+='<div style="flex:0 0 auto;width:220px">'+renderGironeElim(p.girone,p.fase)+'</div>';
         });
       } else {
-        // Grid che occupa tutta la larghezza: ogni card si espande uguale
         h+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:8px;align-items:start">';
-        sorted.forEach(function(gi){h+=renderGironeElim(gi);});
+        pairs.forEach(function(p){h+=renderGironeElim(p.girone,p.fase);});
       }
       h+='</div></div>';
       return h;
     }
     var tabHtml='';
-    tabHtml+=renderFaseSection(sortFase(ottaviGironi),'🎯','Tabellone Ottavi di Finale',Math.min(4,ottaviGironi.length)||1);
-    tabHtml+=renderFaseSection(sortFase(quartiGironi),'⚔️','Tabellone Quarti di Finale',Math.min(4,quartiGironi.length)||1);
-    tabHtml+=renderFaseSection(sortFase(semifGironi),'🥊','Tabellone Semifinali',Math.min(2,semifGironi.length)||1);
-    tabHtml+=renderFaseSection(sortFase(finalGironi),'🏆','Tabellone Finale',1);
-    tabHtml+=renderFaseSection(sortFase(playoutElimGironi),'⬇️','Tabellone Playout',Math.min(2,playoutElimGironi.length)||1);
+    tabHtml+=renderFaseSection(ottaviGironi,'🎯','Tabellone Ottavi di Finale');
+    tabHtml+=renderFaseSection(quartiGironi,'⚔️','Tabellone Quarti di Finale');
+    tabHtml+=renderFaseSection(semifGironi,'🥊','Tabellone Semifinali');
+    tabHtml+=renderFaseSection(finalPairs,'🏆','Tabellone Finale');
+    tabHtml+=renderFaseSection(playoutElimPairs,'⬇️','Tabellone Playout');
     // Il tabellone va su riga separata, in un div block (non dentro il flex dei gironi)
     cards+=tabHtml;
   }
