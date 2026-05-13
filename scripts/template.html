@@ -15816,7 +15816,13 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   function giColor(gi,fallback){
     var gl=(gi||'').toLowerCase();
     // Azzurro varianti A/B/C
-    if(/azzurr/i.test(gi)&&/\ba\b|\s+a$/i.test(gi))return'#1565c0';
+    if(/aranci/i.test(gi)&&/nord/i.test(gi))return'#e65100';
+    if(/aranci/i.test(gi)&&/sud/i.test(gi))return'#bf360c';
+    if(/aranci/i.test(gi))return'#e65100';
+    if(/viola/i.test(gi)&&/nord/i.test(gi))return'#4a148c';
+    if(/viola/i.test(gi)&&/sud/i.test(gi))return'#6a1b9a';
+    if(/viola/i.test(gi))return'#7b1fa2';
+    // Azzurro varianti A/B/C
     if(/azzurr/i.test(gi)&&/\bb\b|\s+b$/i.test(gi))return'#0288d1';
     if(/azzurr/i.test(gi)&&/\bc\b|\s+c$/i.test(gi))return'#0097a7';
     if(/azzurr/i.test(gi))return'#1565c0';
@@ -16100,7 +16106,6 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   fasiGroups.forEach(function(grp,grpIdx){
     var isFirstFase=(grpIdx===0);
     var isPlayout=/playout/i.test(grp.fase);
-    // Colore sezione: se la fase ha un colore nel nome usalo, altrimenti default
     var sezClr=isPlayout?'#b84c00':giColorGrad(grp.items.length?grp.items[0].girone:'')||'var(--bl)';
     var sezBg=isPlayout?'linear-gradient(90deg,#fff0e0,#fff8f0)':'linear-gradient(90deg,#e8f0ff,#f5f8ff)';
     var rowLabel=grp.fase
@@ -16109,22 +16114,52 @@ function grtClassifiche(gironi,garecamp,camp,clr){
         :'<div style="padding:6px 12px;background:'+sezBg+';border-radius:8px;border-left:4px solid '+sezClr+';font-size:.78rem;font-weight:700;color:'+sezClr+';margin-bottom:8px">📋 '+escH(grp.fase)+'</div>'
       )
       :'';
-    var baseCards='',accCards='';
+
+    // Raggruppa i gironi per famiglia colore (Arancio Nord+Sud sulla stessa riga, Verde Nord+Sud ecc.)
+    // Famiglie: arancio, verde, azzurro, viola, rosso, nord, sud, altro
+    function famGirone(gi){
+      var g=gi.toLowerCase();
+      if(/aranci/i.test(g))return 'arancio';
+      if(/verde/i.test(g))return 'verde';
+      if(/azzurr/i.test(g))return 'azzurro';
+      if(/viola/i.test(g))return 'viola';
+      if(/ross/i.test(g))return 'rosso';
+      if(/oro/i.test(g))return 'oro';
+      if(/argent/i.test(g))return 'argento';
+      return gi; // ogni girone da solo
+    }
+
+    // Raggruppa items per famiglia
+    var famMap={};
+    var famOrder=[];
     grp.items.forEach(function(item){
-      var gi=item.girone,gGi=item.gare,sqSet=item.sqSet;
-      var giClr=isPlayout&&!hasFamClr(gi)?'#b84c00':giColorGrad(gi);
-      var pMap=isFirstFase?null:sqPosizioneGirone;
-      baseCards+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
-      if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
-        var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
-        accCards+=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,accClr,true,gi+' Accumulato',sqPosizioneGirone);
-      }
+      var fam=famGirone(item.girone);
+      if(!famMap[fam]){famMap[fam]=[];famOrder.push(fam);}
+      famMap[fam].push(item);
     });
-    cards+='<div>'
-      +rowLabel
-      +'<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;padding-bottom:6px">'
-      +baseCards+accCards
-      +'</div></div>';
+
+    var htmlRows='';
+    famOrder.forEach(function(fam){
+      var items=famMap[fam];
+      var n=items.length;
+      // Grid con n colonne uguali per riempire tutta la larghezza
+      var rowHtml='';
+      var accHtml='';
+      items.forEach(function(item){
+        var gi=item.girone,gGi=item.gare,sqSet=item.sqSet;
+        var giClr=isPlayout&&!hasFamClr(gi)?'#b84c00':giColorGrad(gi);
+        var pMap=isFirstFase?null:sqPosizioneGirone;
+        rowHtml+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
+        if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
+          var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
+          accHtml+=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,accClr,true,gi+' Accumulato',sqPosizioneGirone);
+        }
+      });
+      htmlRows+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start">'+rowHtml+'</div>';
+      if(accHtml) htmlRows+='<div style="display:grid;grid-template-columns:repeat('+items.length+',1fr);gap:10px;align-items:flex-start">'+accHtml+'</div>';
+    });
+
+    cards+='<div>'+rowLabel+htmlRows+'</div>';
   });
 
   cards+='</div>';
@@ -16135,8 +16170,12 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   var ottaviGironi=gironi.filter(function(gi){return /\bottav/i.test(gi)&&!/playout/i.test(gi);});
   var quartiGironi=gironi.filter(function(gi){return /\bquart/i.test(gi)&&!/\bottav/i.test(gi)&&!/playout/i.test(gi);});
   var semifGironi=gironi.filter(function(gi){return /\bsemifinal/i.test(gi)&&!/playout/i.test(gi);});
-  var finalGironi=gironi.filter(function(gi){return /\bfinal/i.test(gi)&&!/\bsemifinal/i.test(gi)&&!/\bottav/i.test(gi)&&!/\bquart/i.test(gi)&&!/playout/i.test(gi);});
-  var playoutElimGironi=gironi.filter(function(gi){return /playout/i.test(gi)&&isFaseElim(gi);});
+  // finalGironi: gironi elim con "finale" nel nome, esclude semifinale, ottavi, quarti, playout-girone
+  // MA include gironi elim-diretta che appartengono a una fase playout (es. girone "Finale" in "Fase Playout")
+  var playoutFaseGironi=new Set();
+  garecamp.forEach(function(g){if(/playout/i.test(g['Fase']||'')&&g['Girone'])playoutFaseGironi.add(g['Girone']);});
+  var finalGironi=gironi.filter(function(gi){return /\bfinal/i.test(gi)&&!/\bsemifinal/i.test(gi)&&!/\bottav/i.test(gi)&&!/\bquart/i.test(gi)&&!playoutFaseGironi.has(gi);});
+  var playoutElimGironi=gironi.filter(function(gi){return (/playout/i.test(gi)&&isFaseElim(gi))||playoutFaseGironi.has(gi);});
   if(fasiElimGironi.length>=1){
     var gironiRegolari=gironi.filter(function(gi){return!isFaseElim(gi);});
     // Mappa squadra → posizione nel girone regolare
@@ -16226,9 +16265,9 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       var h='<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;color:var(--bl);margin-bottom:8px;padding:6px 12px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl)">'+icon+' '+escH(label)+'</div>';
       if(n>4){
         // Riga orizzontale scrollabile per ottavi con tanti gironi
-        h+='<div style="display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;padding-bottom:6px">';
+        h+='<div style="display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding-bottom:8px">';
         sorted.forEach(function(gi){
-          h+='<div style="flex:0 0 auto;width:170px">'+renderGironeElim(gi)+'</div>';
+          h+='<div style="flex:0 0 auto;width:220px">'+renderGironeElim(gi)+'</div>';
         });
       } else {
         // Grid che occupa tutta la larghezza: ogni card si espande uguale
