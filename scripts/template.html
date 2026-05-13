@@ -16117,47 +16117,21 @@ function grtClassifiche(gironi,garecamp,camp,clr){
 
     // Raggruppa i gironi per famiglia colore (Arancio Nord+Sud sulla stessa riga, Verde Nord+Sud ecc.)
     // Famiglie: arancio, verde, azzurro, viola, rosso, nord, sud, altro
-    function famGirone(gi){
-      var g=gi.toLowerCase();
-      if(/aranci/i.test(g))return 'arancio';
-      if(/verde/i.test(g))return 'verde';
-      if(/azzurr/i.test(g))return 'azzurro';
-      if(/viola/i.test(g))return 'viola';
-      if(/ross/i.test(g))return 'rosso';
-      if(/oro/i.test(g))return 'oro';
-      if(/argent/i.test(g))return 'argento';
-      return gi; // ogni girone da solo
-    }
-
-    // Raggruppa items per famiglia
-    var famMap={};
-    var famOrder=[];
+    var rowHtml='';
+    var accHtml='';
     grp.items.forEach(function(item){
-      var fam=famGirone(item.girone);
-      if(!famMap[fam]){famMap[fam]=[];famOrder.push(fam);}
-      famMap[fam].push(item);
+      var gi=item.girone,gGi=item.gare,sqSet=item.sqSet;
+      var giClr=isPlayout?'#b84c00':giColorGrad(gi);
+      var pMap=isFirstFase?null:sqPosizioneGirone;
+      rowHtml+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
+      if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
+        var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
+        accHtml+=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,accClr,true,gi+' Accumulato',sqPosizioneGirone);
+      }
     });
-
-    var htmlRows='';
-    famOrder.forEach(function(fam){
-      var items=famMap[fam];
-      var n=items.length;
-      // Grid con n colonne uguali per riempire tutta la larghezza
-      var rowHtml='';
-      var accHtml='';
-      items.forEach(function(item){
-        var gi=item.girone,gGi=item.gare,sqSet=item.sqSet;
-        var giClr=isPlayout&&!hasFamClr(gi)?'#b84c00':giColorGrad(gi);
-        var pMap=isFirstFase?null:sqPosizioneGirone;
-        rowHtml+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
-        if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
-          var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
-          accHtml+=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,accClr,true,gi+' Accumulato',sqPosizioneGirone);
-        }
-      });
-      htmlRows+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start">'+rowHtml+'</div>';
-      if(accHtml) htmlRows+='<div style="display:grid;grid-template-columns:repeat('+items.length+',1fr);gap:10px;align-items:flex-start">'+accHtml+'</div>';
-    });
+    var n=grp.items.length||1;
+    var htmlRows='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start">'+rowHtml+'</div>';
+    if(accHtml) htmlRows+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start">'+accHtml+'</div>';
 
     cards+='<div>'+rowLabel+htmlRows+'</div>';
   });
