@@ -15899,7 +15899,7 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     garecamp.filter(function(g){return g['Fase']===fase1&&g['Risultato'];}).forEach(function(){}); // init
     var giF1=[...new Set(garecamp.filter(function(g){return g['Fase']===fase1;}).map(function(g){return g['Girone']||'';}).filter(Boolean))];
     giF1.forEach(function(gi){
-      var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
+      var gGi=garecamp.filter(function(g){return g['Girone']===gi&&g['Fase']===fase1;});
       var sqSet2=new Set();
       gGi.forEach(function(g){if(g['Squadra Casa'])sqSet2.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqSet2.add(g['Squadra Ospite']);});
       var st2={};[...sqSet2].forEach(function(sq){st2[sq]={pt:0,v:0,p:0,pf:0,ps:0};});
@@ -15924,20 +15924,24 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   var FAMILY_PALETTES={
     azzurro:['#0d47a1','#1565c0','#1976d2','#0288d1','#0097a7'],
     verde:  ['#1b5e20','#2e7d32','#388e3c','#43a047','#4caf50'],
-    nord:   ['#004d40','#00695c','#00796b','#00838f','#0097a7'],
-    sud:    ['#4a148c','#6a1b9a','#7b1fa2','#8e24aa','#9c27b0'],
+    arancio:['#bf360c','#e64a19','#f4511e','#f57c00','#ff9800'],
+    viola:  ['#4a148c','#6a1b9a','#7b1fa2','#8e24aa','#9c27b0'],
     rosso:  ['#b71c1c','#c62828','#d32f2f','#e53935','#f44336'],
+    nord:   ['#004d40','#00695c','#00796b','#00838f','#0097a7'],
+    sud:    ['#37474f','#455a64','#546e7a','#607d8b','#78909c'],
     bianco: ['#37474f','#455a64','#546e7a','#607d8b','#78909c'],
-    oro:    ['#bf360c','#e64a19','#f4511e','#f57c00','#ff9800'],
+    oro:    ['#f57f17','#f9a825','#fbc02d','#fdd835','#ffee58'],
     argento:['#455a64','#546e7a','#607d8b','#78909c','#90a4ae'],
     bronzo: ['#4e342e','#5d4037','#6d4c41','#795548','#8d6e63']
   };
   function getFam(gi){
     if(/azzurr/i.test(gi))return'azzurro';
     if(/verde/i.test(gi))return'verde';
+    if(/aranci/i.test(gi))return'arancio';
+    if(/viola/i.test(gi))return'viola';
+    if(/ross/i.test(gi))return'rosso';
     if(/nord/i.test(gi))return'nord';
     if(/sud/i.test(gi))return'sud';
-    if(/ross/i.test(gi))return'rosso';
     if(/bian/i.test(gi))return'bianco';
     if(/\boro\b/i.test(gi))return'oro';
     if(/argent/i.test(gi))return'argento';
@@ -16101,13 +16105,57 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   });
 
   // Costruisce HTML
+  // Fasi con un solo "Girone Unico" vengono affiancate sulla stessa riga (es. Serie B: Qualificazione + Orologio)
+  var singleUnicoIdxs=[];
+  fasiGroups.forEach(function(g,i){if(g.items.length===1&&/unico/i.test(g.items[0].girone))singleUnicoIdxs.push(i);});
+
   var cards='<div style="display:flex;flex-direction:column;gap:18px">';
+  var skipIdxs=new Set();
 
   fasiGroups.forEach(function(grp,grpIdx){
-    var isFirstFase=(grpIdx===0);
+    if(skipIdxs.has(grpIdx))return;
+    var isFirstFase=(grpIdx===0&&singleUnicoIdxs.indexOf(0)<0)||(grpIdx===singleUnicoIdxs[0]);
     var isPlayout=/playout/i.test(grp.fase);
     var sezClr=isPlayout?'#b84c00':giColorGrad(grp.items.length?grp.items[0].girone:'')||'var(--bl)';
     var sezBg=isPlayout?'linear-gradient(90deg,#fff0e0,#fff8f0)':'linear-gradient(90deg,#e8f0ff,#f5f8ff)';
+
+    // Se questo gruppo ha solo Girone Unico, cerca se il prossimo ha anche solo Girone Unico → affianca
+    var nextSingle=singleUnicoIdxs.indexOf(grpIdx)>=0&&grpIdx+1<fasiGroups.length&&fasiGroups[grpIdx+1].items.length===1&&/unico/i.test(fasiGroups[grpIdx+1].items[0].girone);
+
+    function buildGroupHtml(g,isFirst){
+      var ip=/playout/i.test(g.fase);
+      var sc=ip?'#b84c00':giColorGrad(g.items.length?g.items[0].girone:'')||'var(--bl)';
+      var sb=ip?'linear-gradient(90deg,#fff0e0,#fff8f0)':'linear-gradient(90deg,#e8f0ff,#f5f8ff)';
+      var lbl=g.fase?'<div style="padding:4px 10px;background:'+sb+';border-radius:6px;border-left:4px solid '+sc+';font-size:.75rem;font-weight:700;color:'+sc+';margin-bottom:6px">'+(ip?'⬇️ ':'📋 ')+escH(g.fase)+(ip?' — Salvezza':'')+'</div>':'';
+      var fm={};var fo=[];
+      g.items.forEach(function(item){var fam=getFam(item.girone)||'__altro__';if(!fm[fam]){fm[fam]=[];fo.push(fam);}fm[fam].push(item);});
+      var hr='';
+      fo.forEach(function(fam){
+        var its=fm[fam];var n=its.length;var rh='',ah='';
+        its.forEach(function(item){
+          var gi=item.girone,gGi=item.gare,sqSet=item.sqSet;
+          var giClr=ip?'#b84c00':giColorGrad(gi);
+          var pMap=isFirst?null:sqPosizioneGirone;
+          rh+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
+          if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){var ac=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';ah+=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,ac,true,gi+' Accumulato',sqPosizioneGirone);}
+        });
+        hr+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start;margin-bottom:10px">'+rh+'</div>';
+        if(ah)hr+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start;margin-bottom:10px">'+ah+'</div>';
+      });
+      return lbl+hr;
+    }
+
+    if(nextSingle){
+      // Affianca questo gruppo col prossimo
+      var next=fasiGroups[grpIdx+1];
+      skipIdxs.add(grpIdx+1);
+      cards+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:flex-start">'
+        +'<div>'+buildGroupHtml(grp,true)+'</div>'
+        +'<div>'+buildGroupHtml(next,false)+'</div>'
+        +'</div>';
+      return;
+    }
+
     var rowLabel=grp.fase
       ?(isPlayout
         ?'<div style="padding:6px 12px;background:'+sezBg+';border-radius:8px;border-left:4px solid '+sezClr+';font-size:.78rem;font-weight:700;color:'+sezClr+';margin-bottom:8px">⬇️ '+escH(grp.fase)+' — Salvezza</div>'
@@ -16115,23 +16163,32 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       )
       :'';
 
-    // Raggruppa i gironi per famiglia colore (Arancio Nord+Sud sulla stessa riga, Verde Nord+Sud ecc.)
-    // Famiglie: arancio, verde, azzurro, viola, rosso, nord, sud, altro
-    var rowHtml='';
-    var accHtml='';
+    var famMap={};
+    var famOrder=[];
     grp.items.forEach(function(item){
-      var gi=item.girone,gGi=item.gare,sqSet=item.sqSet;
-      var giClr=isPlayout?'#b84c00':giColorGrad(gi);
-      var pMap=isFirstFase?null:sqPosizioneGirone;
-      rowHtml+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
-      if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
-        var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
-        accHtml+=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,accClr,true,gi+' Accumulato',sqPosizioneGirone);
-      }
+      var fam=getFam(item.girone)||'__altro__';
+      if(!famMap[fam]){famMap[fam]=[];famOrder.push(fam);}
+      famMap[fam].push(item);
     });
-    var n=grp.items.length||1;
-    var htmlRows='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start">'+rowHtml+'</div>';
-    if(accHtml) htmlRows+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start">'+accHtml+'</div>';
+
+    var htmlRows='';
+    famOrder.forEach(function(fam){
+      var items=famMap[fam];
+      var n=items.length;
+      var rowHtml='',accHtml='';
+      items.forEach(function(item){
+        var gi=item.girone,gGi=item.gare,sqSet=item.sqSet;
+        var giClr=isPlayout?'#b84c00':giColorGrad(gi);
+        var pMap=isFirstFase?null:sqPosizioneGirone;
+        rowHtml+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
+        if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
+          var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
+          accHtml+=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,accClr,true,gi+' Accumulato',sqPosizioneGirone);
+        }
+      });
+      htmlRows+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start;margin-bottom:10px">'+rowHtml+'</div>';
+      if(accHtml)htmlRows+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start;margin-bottom:10px">'+accHtml+'</div>';
+    });
 
     cards+='<div>'+rowLabel+htmlRows+'</div>';
   });
