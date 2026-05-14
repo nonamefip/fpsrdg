@@ -16263,7 +16263,13 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       if(!fasiArr.length)return'';
       // Supporta sia array di stringhe (gironi) che array di oggetti {fase,girone}
       var pairs=fasiArr.map(function(x){return typeof x==='string'?{girone:x,fase:''}:x;});
-      pairs.sort(function(a,b){return a.girone.localeCompare(b.girone,'it');});
+      pairs.sort(function(a,b){
+        var al=a.girone.toLowerCase(),bl=b.girone.toLowerCase();
+        var ai=ordFase.findIndex(function(x){return al.includes(x);});
+        var bi=ordFase.findIndex(function(x){return bl.includes(x);});
+        if(ai<0)ai=99;if(bi<0)bi=99;
+        return ai-bi||a.girone.localeCompare(b.girone,'it');
+      });
       var n=pairs.length;
       var h='<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;color:var(--bl);margin-bottom:8px;padding:6px 12px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl)">'+icon+' '+escH(label)+'</div>';
       if(n>4){
