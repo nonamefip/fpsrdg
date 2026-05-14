@@ -11989,7 +11989,7 @@ ${body}
     </div>
   </div>
 </div>
-</body></html>`);
+</body><!-- REBUILD --></html>`);
   w.document.close();w.focus();setTimeout(()=>w.print(),600);
 }
 
@@ -15816,7 +15816,13 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   function giColor(gi,fallback){
     var gl=(gi||'').toLowerCase();
     // Azzurro varianti A/B/C
-    if(/azzurr/i.test(gi)&&/\ba\b|\s+a$/i.test(gi))return'#1565c0';
+    if(/aranci/i.test(gi)&&/nord/i.test(gi))return'#e65100';
+    if(/aranci/i.test(gi)&&/sud/i.test(gi))return'#bf360c';
+    if(/aranci/i.test(gi))return'#e65100';
+    if(/viola/i.test(gi)&&/nord/i.test(gi))return'#4a148c';
+    if(/viola/i.test(gi)&&/sud/i.test(gi))return'#6a1b9a';
+    if(/viola/i.test(gi))return'#7b1fa2';
+    // Azzurro varianti A/B/C
     if(/azzurr/i.test(gi)&&/\bb\b|\s+b$/i.test(gi))return'#0288d1';
     if(/azzurr/i.test(gi)&&/\bc\b|\s+c$/i.test(gi))return'#0097a7';
     if(/azzurr/i.test(gi))return'#1565c0';
@@ -15836,14 +15842,10 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     if(/sud.*\bc\b|sud.*\s+c$/i.test(gi))return'#8e24aa';
     if(/\bsud/i.test(gi))return'#4a148c';
     // Oro/Argento/Bronzo
-    if(/\boro\b/i.test(gi))return'#e65100';
+    if(/\boro/i.test(gi))return'#e65100';
     if(/argent/i.test(gi))return'#607d8b';
     if(/bronz/i.test(gi))return'#795548';
-    // Colori per nome (arancio, giallo, viola, rosa, rosso, bianco, unico)
-    if(/aranci/i.test(gi))return'#e64a19';
-    if(/giall/i.test(gi))return'#f9a825';
-    if(/viol/i.test(gi))return'#6a1b9a';
-    if(/ros[ae]/i.test(gi))return'#c2185b';
+    // Colori per nome (rosso, bianco, unico)
     if(/ross/i.test(gi))return'#b71c1c';
     if(/bian/i.test(gi))return'#455a64';
     if(/unic/i.test(gi))return fallback;
@@ -15916,8 +15918,8 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   }
 
   // ── COLORI CON GRADAZIONI PER FAMIGLIA ───────────────────────────────────
-  function isFaseElim(gi){return /\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff|\bplayout/i.test(gi);}
-  function isFasePlayout(gi){return /playout|play.out/i.test(gi);}
+  function isFaseElim(gi){return /\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff/i.test(gi)&&!/playout/i.test(gi);}
+  function isFasePlayout(gi,fase){return /playout/i.test(gi)||/playout/i.test(fase||'');}
 
   var FAMILY_PALETTES={
     azzurro:['#0d47a1','#1565c0','#1976d2','#0288d1','#0097a7'],
@@ -15928,21 +15930,13 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     bianco: ['#37474f','#455a64','#546e7a','#607d8b','#78909c'],
     oro:    ['#bf360c','#e64a19','#f4511e','#f57c00','#ff9800'],
     argento:['#455a64','#546e7a','#607d8b','#78909c','#90a4ae'],
-    bronzo: ['#4e342e','#5d4037','#6d4c41','#795548','#8d6e63'],
-    arancio:['#bf360c','#d84315','#e64a19','#f4511e','#ff7043'],
-    giallo: ['#e65100','#f57f17','#f9a825','#fbc02d','#fdd835'],
-    viola:  ['#4a148c','#6a1b9a','#7b1fa2','#8e24aa','#ab47bc'],
-    rosa:   ['#880e4f','#ad1457','#c2185b','#d81b60','#e91e63']
+    bronzo: ['#4e342e','#5d4037','#6d4c41','#795548','#8d6e63']
   };
   function getFam(gi){
     if(/azzurr/i.test(gi))return'azzurro';
     if(/verde/i.test(gi))return'verde';
     if(/nord/i.test(gi))return'nord';
     if(/sud/i.test(gi))return'sud';
-    if(/aranci/i.test(gi))return'arancio';
-    if(/giall/i.test(gi))return'giallo';
-    if(/viol/i.test(gi))return'viola';
-    if(/ros[ae]/i.test(gi))return'rosa';
     if(/ross/i.test(gi))return'rosso';
     if(/bian/i.test(gi))return'bianco';
     if(/\boro\b/i.test(gi))return'oro';
@@ -16097,11 +16091,7 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   });
   _fgList.forEach(function(x){
     var gi=x.girone,fa=x.fase;
-    // Usa TUTTE le gare del girone (non filtrare per Fase) per avere la classifica aggiornata
-    // La Fase serve solo per il raggruppamento visivo, non per il calcolo punti
-    var gGiAll=garecamp.filter(function(g){return g['Girone']===gi;});
-    var gGi=fa?gGiAll.filter(function(g){return !g['Fase']||g['Fase']===fa;}) : gGiAll;
-    if(!gGi.length)gGi=gGiAll; // fallback: usa tutto
+    var gGi=garecamp.filter(function(g){return g['Girone']===gi&&g['Fase']===fa;});
     var sqSet=new Set();
     gGi.forEach(function(g){if(g['Squadra Casa'])sqSet.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqSet.add(g['Squadra Ospite']);});
     if(!sqSet.size)return;
@@ -16116,7 +16106,6 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   fasiGroups.forEach(function(grp,grpIdx){
     var isFirstFase=(grpIdx===0);
     var isPlayout=/playout/i.test(grp.fase);
-    // Colore sezione: se la fase ha un colore nel nome usalo, altrimenti default
     var sezClr=isPlayout?'#b84c00':giColorGrad(grp.items.length?grp.items[0].girone:'')||'var(--bl)';
     var sezBg=isPlayout?'linear-gradient(90deg,#fff0e0,#fff8f0)':'linear-gradient(90deg,#e8f0ff,#f5f8ff)';
     var rowLabel=grp.fase
@@ -16125,22 +16114,26 @@ function grtClassifiche(gironi,garecamp,camp,clr){
         :'<div style="padding:6px 12px;background:'+sezBg+';border-radius:8px;border-left:4px solid '+sezClr+';font-size:.78rem;font-weight:700;color:'+sezClr+';margin-bottom:8px">📋 '+escH(grp.fase)+'</div>'
       )
       :'';
-    var baseCards='',accCards='';
+
+    // Raggruppa i gironi per famiglia colore (Arancio Nord+Sud sulla stessa riga, Verde Nord+Sud ecc.)
+    // Famiglie: arancio, verde, azzurro, viola, rosso, nord, sud, altro
+    var rowHtml='';
+    var accHtml='';
     grp.items.forEach(function(item){
       var gi=item.girone,gGi=item.gare,sqSet=item.sqSet;
-      var giClr=isPlayout&&!hasFamClr(gi)?'#b84c00':giColorGrad(gi);
+      var giClr=isPlayout?'#b84c00':giColorGrad(gi);
       var pMap=isFirstFase?null:sqPosizioneGirone;
-      baseCards+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
+      rowHtml+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
       if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
         var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
-        accCards+=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,accClr,true,gi+' Accumulato',sqPosizioneGirone);
+        accHtml+=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,accClr,true,gi+' Accumulato',sqPosizioneGirone);
       }
     });
-    cards+='<div>'
-      +rowLabel
-      +'<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;padding-bottom:6px">'
-      +baseCards+accCards
-      +'</div></div>';
+    var n=grp.items.length||1;
+    var htmlRows='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start">'+rowHtml+'</div>';
+    if(accHtml) htmlRows+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start">'+accHtml+'</div>';
+
+    cards+='<div>'+rowLabel+htmlRows+'</div>';
   });
 
   cards+='</div>';
@@ -16148,11 +16141,40 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   // ── TABELLONE OTTAVI ──────────────────────────────────────────────
   // Rileva gironi tipo "Ottavo Ottavo", "Primo Ottavo", "Quarto Ottavo" ecc.
   var fasiElimGironi=gironi.filter(function(gi){return isFaseElim(gi);});
-  var ottaviGironi=gironi.filter(function(gi){return /\bottav/i.test(gi)&&!/playout/i.test(gi);});
-  var quartiGironi=gironi.filter(function(gi){return /\bquart/i.test(gi)&&!/\bottav/i.test(gi)&&!/playout/i.test(gi);});
-  var semifGironi=gironi.filter(function(gi){return /\bsemifinal/i.test(gi)&&!/playout/i.test(gi);});
-  var finalGironi=gironi.filter(function(gi){return /\bfinal/i.test(gi)&&!/\bsemifinal/i.test(gi)&&!/\bottav/i.test(gi)&&!/\bquart/i.test(gi)&&!/playout/i.test(gi);});
-  var playoutElimGironi=gironi.filter(function(gi){return /playout/i.test(gi)&&isFaseElim(gi);});
+  // Usa coppie Fase+Girone per distinguere "Finale" del Playoff da "Finale" del Playout
+  var _elimPairs=[];
+  var _elimSeen=new Set();
+  garecamp.forEach(function(g){
+    var gi=g['Girone']||'',fa=g['Fase']||'';
+    if(!gi||!isFaseElim(gi))return;
+    var key=fa+'|||'+gi;
+    if(!_elimSeen.has(key)){_elimSeen.add(key);_elimPairs.push({fase:fa,girone:gi});}
+  });
+  // Aggiunge anche i gironi playout con elim diretta (es. "Fase Playout" con girone "Finale")
+  garecamp.forEach(function(g){
+    var gi=g['Girone']||'',fa=g['Fase']||'';
+    if(!gi||!/playout/i.test(fa))return;
+    var key=fa+'|||'+gi;
+    if(!_elimSeen.has(key)){_elimSeen.add(key);_elimPairs.push({fase:fa,girone:gi});}
+  });
+
+  var ottaviPairs=_elimPairs.filter(function(x){return /\bottav/i.test(x.girone)&&!/playout/i.test(x.fase);});
+  var spareggiPairs=_elimPairs.filter(function(x){return /spareggi/i.test(x.fase)&&/quart/i.test(x.girone);});
+  var quartiPairs=_elimPairs.filter(function(x){return /\bquart/i.test(x.girone)&&!/\bottav/i.test(x.girone)&&!/playout/i.test(x.fase)&&!/spareggi/i.test(x.fase);});
+  var semifPairs=_elimPairs.filter(function(x){return /\bsemifinal/i.test(x.girone)&&!/playout/i.test(x.fase);});
+
+  // Per compatibilità con renderFaseSection che accetta anche stringhe
+  var ottaviGironi=ottaviPairs;
+  var quartiGironi=quartiPairs;
+  var semifGironi=semifPairs;
+
+  // Finale Playoff: coppie con girone "Finale" e fase NON playout
+  var finalPairs=_elimPairs.filter(function(x){return /\bfinal/i.test(x.girone)&&!/\bsemifinal/i.test(x.girone)&&!/\bottav/i.test(x.girone)&&!/\bquart/i.test(x.girone)&&!/playout/i.test(x.fase);});
+  var finalGironi=finalPairs.map(function(x){return x.girone;});
+
+  // Playout elim: coppie con fase playout
+  var playoutElimPairs=_elimPairs.filter(function(x){return /playout/i.test(x.fase);});
+  var playoutElimGironi=playoutElimPairs.map(function(x){return x.girone;});
   if(fasiElimGironi.length>=1){
     var gironiRegolari=gironi.filter(function(gi){return!isFaseElim(gi);});
     // Mappa squadra → posizione nel girone regolare
@@ -16184,45 +16206,21 @@ function grtClassifiche(gironi,garecamp,camp,clr){
       if(ai<0)ai=99;if(bi<0)bi=99;
       return ai-bi;
     });}
-    function renderGironeElim(gi,isPlayout){
-      // Trova la fase corretta per questo girone
-      var faGi=garecamp.find(function(g){return g['Girone']===gi;});
-      var faseGi=faGi?faGi['Fase']||'':'';
-      var gGi=garecamp.filter(function(g){return g['Girone']===gi&&(!faseGi||g['Fase']===faseGi);});
+    function renderGironeElim(gi,faseFilter){
+      var gGi=garecamp.filter(function(g){
+        if(g['Girone']!==gi)return false;
+        if(faseFilter)return g['Fase']===faseFilter;
+        return isFaseElim(gi)||/playout/i.test(g['Fase']||'');
+      });
       var sqSet=new Set();
       gGi.forEach(function(g){if(g['Squadra Casa'])sqSet.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqSet.add(g['Squadra Ospite']);});
       var sqs=[...sqSet];
       if(!sqs.length)return'';
-
-      // Colore: usa giColorGrad per rispettare il colore del nome (es. "Girone Arancio")
-      var giClr=isPlayout?'#b84c00':giColorGrad(gi)||clr;
-
-      // Calcola classifica/statistiche per le squadre nel girone eliminatorio
-      var gGiConRis=gGi.filter(function(g){return g['Risultato'];});
-      var sqSt={};
-      sqs.forEach(function(sq){sqSt[sq]={v:0,p:0,pf:0,ps:0};});
-      gGiConRis.forEach(function(g){
-        var pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
-        var sc=g['Squadra Casa'],so=g['Squadra Ospite'];
-        if(sqSt[sc]&&sqSt[so]){
-          sqSt[sc].pf+=pc;sqSt[sc].ps+=po;sqSt[so].pf+=po;sqSt[so].ps+=pc;
-          if(pc>po){sqSt[sc].v++;sqSt[so].p++;}else if(po>pc){sqSt[so].v++;sqSt[sc].p++;}
-        }
-      });
-
-      var h='<div style="min-width:240px;flex:1;border:2px solid '+giClr+'55;border-radius:8px;overflow:hidden;margin-bottom:4px;background:#fff">';
-      h+='<div style="background:'+giClr+';color:#fff;padding:5px 10px;font-size:.78rem;font-weight:700">'+escH(gi)+'</div>';
-
-      // Tabella squadre con provenienza E statistiche (se ci sono gare giocate)
-      var hasSt=gGiConRis.length>0;
-      h+='<table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="background:'+giClr+'15">';
-      if(hasSt){
-        h+='<th style="padding:3px 6px;text-align:left">Squadra</th><th style="padding:3px 4px;text-align:center;font-size:.62rem;color:var(--mu)">Prov.</th><th style="padding:3px 4px;text-align:center;font-size:.62rem;color:var(--mu)">Pos.</th><th style="padding:3px 4px;text-align:center;font-size:.62rem;color:var(--green)" title="Vinte">V</th><th style="padding:3px 4px;text-align:center;font-size:.62rem;color:var(--red)" title="Perse">P</th><th style="padding:3px 4px;text-align:center;font-size:.62rem;color:var(--bl)">PF</th><th style="padding:3px 4px;text-align:center;font-size:.62rem;color:#aaa">PS</th>';
-      } else {
-        h+='<th style="padding:3px 6px;text-align:left">Squadra</th><th style="padding:3px 6px;text-align:center;font-size:.62rem;color:var(--mu)">Girone</th><th style="padding:3px 6px;text-align:center;font-size:.62rem;color:var(--mu)">Pos.</th>';
-      }
+      var h='<div style="min-width:170px;flex:1;border:2px solid '+clr+'55;border-radius:8px;overflow:hidden;margin-bottom:4px">';
+      h+='<div style="background:'+clr+';color:#fff;padding:5px 10px;font-size:.78rem;font-weight:700">'+escH(gi)+'</div>';
+      h+='<table style="width:100%;border-collapse:collapse;font-size:.72rem"><thead><tr style="background:#f0f4ff">';
+      h+='<th style="padding:3px 6px;text-align:left">Squadra</th><th style="padding:3px 6px;text-align:center">Girone</th><th style="padding:3px 6px;text-align:center">Pos.</th>';
       h+='</tr></thead><tbody>';
-
       sqs.sort(function(a,b){
         var pa=sqPosizioneGirone[a],pb=sqPosizioneGirone[b];
         if(!pa&&!pb)return a.localeCompare(b);
@@ -16235,111 +16233,58 @@ function grtClassifiche(gironi,garecamp,camp,clr){
         var posClr=pos===1?'var(--gold)':pos===2?'#aaa':pos===3?'#cd7f32':'var(--mu)';
         var posLabel=pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':pos+'°';
         var rowBg=idx%2?'#f8faff':'#fff';
-        // Determina se questa squadra ha vinto nel girone eliminatorio
-        var st=sqSt[sq]||{v:0,p:0,pf:0,ps:0};
-        var isWinner=hasSt&&st.v>st.p;
-        var trophyIcon=isWinner?'🏆 ':'';
-        if(hasSt){
-          h+='<tr style="background:'+rowBg+';border-bottom:1px solid #f0f0f0;'+(isWinner?'font-weight:700;':'')+(isWinner?'border-left:3px solid '+giClr:'')+'">'
-            +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+escH(sq)+'">'+trophyIcon+escH(sq)+'</span></td>'
-            +'<td style="padding:3px 4px;text-align:center;font-size:.62rem;color:var(--mu)">'+escH(gironeName)+'</td>'
-            +'<td style="padding:3px 4px;text-align:center;font-weight:700;color:'+posClr+'">'+posLabel+'</td>'
-            +'<td style="padding:3px 4px;text-align:center;color:var(--green);font-weight:700;font-size:.72rem">'+st.v+'</td>'
-            +'<td style="padding:3px 4px;text-align:center;color:var(--red);font-size:.72rem">'+st.p+'</td>'
-            +'<td style="padding:3px 4px;text-align:center;font-size:.72rem">'+st.pf+'</td>'
-            +'<td style="padding:3px 4px;text-align:center;color:#aaa;font-size:.72rem">'+st.ps+'</td>'
-            +'</tr>';
-        } else {
-          h+='<tr style="background:'+rowBg+';border-bottom:1px solid #f0f0f0">'
-            +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+escH(sq)+'">'+escH(sq)+'</span></td>'
-            +'<td style="padding:4px 6px;text-align:center;font-size:.65rem;color:var(--mu)">'+escH(gironeName)+'</td>'
-            +'<td style="padding:4px 6px;text-align:center;font-weight:700;color:'+posClr+'">'+posLabel+'</td>'
-            +'</tr>';
-        }
+        h+='<tr style="background:'+rowBg+';border-bottom:1px solid #f0f0f0">'
+          +'<td style="padding:4px 6px"><span class="rn rn-sq" style="font-size:.7rem" onclick="openSquadra(this.dataset.sq)" data-sq="'+escH(sq)+'">'+escH(sq)+'</span></td>'
+          +'<td style="padding:4px 6px;text-align:center;font-size:.65rem;color:var(--mu)">'+escH(gironeName)+'</td>'
+          +'<td style="padding:4px 6px;text-align:center;font-weight:700;color:'+posClr+'">'+posLabel+'</td>'
+          +'</tr>';
       });
       h+='</tbody></table>';
-
-      // ── RISULTATI GARE GIOCATE ─────────────────────────────────────────
-      if(gGiConRis.length>0){
-        h+='<div style="border-top:1px solid '+giClr+'33;padding:4px 0 2px">';
-        // Raggruppa per giornata/gara
-        var byG={};
-        gGi.forEach(function(g){
-          var gg=g['Giornata']||g['giornata']||'';
-          if(!byG[gg])byG[gg]=[];
-          byG[gg].push(g);
-        });
-        var ggKeys=Object.keys(byG).sort(function(a,b){var na=parseInt(a)||0,nb=parseInt(b)||0;return na-nb||a.localeCompare(b);});
-        ggKeys.forEach(function(gg){
-          var gare=byG[gg];
-          if(gg){h+='<div style="font-size:.6rem;font-weight:700;color:'+giClr+';padding:3px 8px 1px;opacity:.7">Gara '+escH(gg)+'</div>';}
-          gare.forEach(function(g){
-            var sc=g['Risultato']||'';
-            var casaN=g['Squadra Casa']||'–';var ospN=g['Squadra Ospite']||'–';
-            var pc=g['Punti Casa']||'',po=g['Punti Ospite']||'';
-            var haRes=!!sc&&pc!==''&&po!=='';
-            var casaW=haRes&&parseInt(pc)>parseInt(po);
-            var ospW=haRes&&parseInt(po)>parseInt(pc);
-            h+='<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-bottom:0.5px solid #f0f0f0;font-size:.7rem">';
-            h+='<span style="flex:1;text-align:right;'+(casaW?'font-weight:700;color:var(--bl)':ospW?'color:#aaa':'')+'" title="'+escH(casaN)+'">'+escH(casaN.length>22?casaN.slice(0,20)+'…':casaN)+'</span>';
-            if(haRes){
-              h+='<span style="flex-shrink:0;min-width:56px;text-align:center;font-weight:800;font-size:.78rem;background:'+giClr+'15;border-radius:4px;padding:1px 4px">'+escH(pc)+' – '+escH(po)+'</span>';
-            } else {
-              h+='<span style="flex-shrink:0;min-width:56px;text-align:center;font-size:.6rem;color:#ccc">vs</span>';
-            }
-            h+='<span style="flex:1;text-align:left;'+(ospW?'font-weight:700;color:var(--bl)':casaW?'color:#aaa':'')+'" title="'+escH(ospN)+'">'+escH(ospN.length>22?ospN.slice(0,20)+'…':ospN)+'</span>';
-            h+='</div>';
-          });
+      // Risultati gare disputate
+      var giocate=gGi.filter(function(g){return g['Risultato']&&g['Risultato']!=='-';});
+      if(giocate.length){
+        h+='<div style="border-top:1px solid #e0e8ff;padding:4px 6px;background:#f8faff">';
+        h+='<div style="font-size:.62rem;font-weight:700;color:var(--mu);margin-bottom:3px">RISULTATI</div>';
+        giocate.forEach(function(g){
+          var numG=g['Numero Gara']||'';
+          var label=numG?'G'+numG.slice(-2):'';
+          h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #eef;font-size:.65rem">'
+            +'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escH(g['Squadra Casa'])+'">'+escH(g['Squadra Casa'])+'</span>'
+            +'<span style="font-weight:700;margin:0 4px;color:'+clr+';white-space:nowrap">'+escH(g['Risultato'])+'</span>'
+            +'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right" title="'+escH(g['Squadra Ospite'])+'">'+escH(g['Squadra Ospite'])+'</span>'
+            +'</div>';
         });
         h+='</div>';
       }
       h+='</div>';
       return h;
     }
-    function renderFaseSection(fasiArr,icon,label,isPlayoutSec){
+    function renderFaseSection(fasiArr,icon,label,cols){
       if(!fasiArr.length)return'';
-      var sorted=sortFase(fasiArr);
-      var n=sorted.length;
-      // Per sezioni con molti gironi (ottavi: fino a 8) usa scroll orizzontale con card fisse
-      var useScroll=n>4;
-      var cardW=n<=2?'300px':n<=4?'260px':'240px';
-      var sezClr=isPlayoutSec?'#b84c00':'var(--bl)';
-      var sezBg=isPlayoutSec?'#fff0e0':'#e8f0ff';
-      var h='<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;color:'+sezClr+';margin-bottom:8px;padding:6px 12px;background:'+sezBg+';border-radius:6px;border-left:4px solid '+sezClr+'">'+icon+' '+escH(label)+'</div>';
-      if(useScroll){
-        h+='<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;align-items:flex-start">';
-        sorted.forEach(function(gi){
-          h+='<div style="flex-shrink:0;width:'+cardW+'">'+renderGironeElim(gi,isPlayoutSec)+'</div>';
+      // Supporta sia array di stringhe (gironi) che array di oggetti {fase,girone}
+      var pairs=fasiArr.map(function(x){return typeof x==='string'?{girone:x,fase:''}:x;});
+      pairs.sort(function(a,b){return a.girone.localeCompare(b.girone,'it');});
+      var n=pairs.length;
+      var h='<div style="margin-top:16px"><div style="font-weight:700;font-size:.85rem;color:var(--bl);margin-bottom:8px;padding:6px 12px;background:#e8f0ff;border-radius:6px;border-left:4px solid var(--bl)">'+icon+' '+escH(label)+'</div>';
+      if(n>4){
+        h+='<div style="display:flex;flex-wrap:nowrap;gap:8px;overflow-x:auto;padding-bottom:8px">';
+        pairs.forEach(function(p){
+          h+='<div style="flex:0 0 auto;width:220px">'+renderGironeElim(p.girone,p.fase)+'</div>';
         });
-        h+='</div>';
       } else {
-        h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax('+cardW+',1fr));gap:8px;align-items:start">';
-        sorted.forEach(function(gi){h+=renderGironeElim(gi,isPlayoutSec);});
-        h+='</div>';
+        h+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:8px;align-items:start">';
+        pairs.forEach(function(p){h+=renderGironeElim(p.girone,p.fase);});
       }
-      h+='</div>';
+      h+='</div></div>';
       return h;
     }
-    // Separazione corretta Finale playoff vs Finale playout:
-    // Usa la Fase della gara per distinguere, non solo il nome del girone
-    var finalPOGironi=finalGironi.filter(function(gi){
-      var faGi=garecamp.find(function(g){return g['Girone']===gi;});
-      var fase=(faGi?faGi['Fase']||'':'').toLowerCase();
-      return!/playout|play.out|salvezza/i.test(fase);
-    });
-    var finalPLGironi=finalGironi.filter(function(gi){
-      var faGi=garecamp.find(function(g){return g['Girone']===gi;});
-      var fase=(faGi?faGi['Fase']||'':'').toLowerCase();
-      return/playout|play.out|salvezza/i.test(fase);
-    });
-    // Aggiunge gironi playout-elim che non erano catturati
-    var allPlayoutElim=playoutElimGironi.concat(finalPLGironi.filter(function(gi){return playoutElimGironi.indexOf(gi)<0;}));
     var tabHtml='';
-    tabHtml+=renderFaseSection(sortFase(ottaviGironi),'🎯','Tabellone Ottavi di Finale',false);
-    tabHtml+=renderFaseSection(sortFase(quartiGironi),'⚔️','Tabellone Quarti di Finale',false);
-    tabHtml+=renderFaseSection(sortFase(semifGironi),'🥊','Tabellone Semifinali',false);
-    tabHtml+=renderFaseSection(sortFase(finalPOGironi),'🏆','Tabellone Finale',false);
-    tabHtml+=renderFaseSection(sortFase(allPlayoutElim),'⬇️','Tabellone Playout — Salvezza',true);
+    tabHtml+=renderFaseSection(ottaviGironi,'🎯','Tabellone Ottavi di Finale');
+    tabHtml+=renderFaseSection(spareggiPairs,'🎯','Spareggi Playoff');
+    tabHtml+=renderFaseSection(quartiGironi,'⚔️','Tabellone Quarti di Finale');
+    tabHtml+=renderFaseSection(semifGironi,'🥊','Tabellone Semifinali');
+    tabHtml+=renderFaseSection(finalPairs,'🏆','Tabellone Finale');
+    tabHtml+=renderFaseSection(playoutElimPairs,'⬇️','Tabellone Playout');
     // Il tabellone va su riga separata, in un div block (non dentro il flex dei gironi)
     cards+=tabHtml;
   }
