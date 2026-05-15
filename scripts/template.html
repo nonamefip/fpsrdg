@@ -10542,8 +10542,47 @@ function openCampionato(camp){
           </div>`:''}
         </div>`;
       })()}
+
+      <!-- Classifica finale campionato (1°-8° posto) + partite mancanti -->
+      ${(()=>{
+        const fase1=[...new Set(allCampGare.map(g=>g['Fase']||'').filter(Boolean))][0]||'';
+        const gareF1=allCampGare.filter(g=>!fase1||g['Fase']===fase1);
+        const sqAll=[...new Set(gareF1.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean))];
+        const ptMap={};
+        sqAll.forEach(sq=>{ptMap[sq]={pt:0,pg:0,v:0,p:0,pf:0,ps:0,manc:0};});
+        gareF1.forEach(g=>{
+          const sc=g['Squadra Casa'],so=g['Squadra Ospite'];
+          const pc=parseInt(g['Punti Casa']||0),po=parseInt(g['Punti Ospite']||0);
+          if(g['Risultato']){
+            if(ptMap[sc]){ptMap[sc].pg++;ptMap[sc].pf+=pc;ptMap[sc].ps+=po;if(pc>po){ptMap[sc].pt+=2;ptMap[sc].v++;}else ptMap[sc].p++;}
+            if(ptMap[so]){ptMap[so].pg++;ptMap[so].pf+=po;ptMap[so].ps+=pc;if(po>pc){ptMap[so].pt+=2;ptMap[so].v++;}else ptMap[so].p++;}
+          } else {
+            if(ptMap[sc])ptMap[sc].manc++;
+            if(ptMap[so])ptMap[so].manc++;
+          }
+        });
+        const ranked=Object.entries(ptMap).sort((a,b)=>b[1].pt-a[1].pt||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps)));
+        if(!ranked.length)return'';
+        const medals=['🥇','🥈','🥉'];
+        return`<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+          <div class="card" style="flex:1;min-width:220px;margin-bottom:0">
+            <div class="card-title">🏆 Classifica Finale (1ª Fase)</div>
+            ${ranked.slice(0,8).map(([sq,s],i)=>`<div style="display:flex;align-items:center;gap:6px;margin:3px 0;font-size:.72rem;${i<3?'font-weight:700':''}">
+              <span style="min-width:20px;text-align:center">${i<3?medals[i]:'<span style=\'color:var(--mu2);font-size:.7rem\'>'+(i+1)+'°</span>'}</span>
+              <span class="rn rn-sq" style="flex:1" onclick="openSquadra('${esc(sq)}','${esc(camp)}')">${escH(sq.length>22?sq.slice(0,22)+'…':sq)}</span>
+              <span style="font-weight:700;color:var(--bl);min-width:24px;text-align:right">${s.pt}</span>
+            </div>`).join('')}
+          </div>
+          <div class="card" style="flex:1;min-width:220px;margin-bottom:0">
+            <div class="card-title">⏳ Partite Mancanti per Squadra</div>
+            ${ranked.filter(([,s])=>s.manc>0).slice(0,12).map(([sq,s])=>`<div style="display:flex;align-items:center;gap:6px;margin:3px 0;font-size:.72rem">
+              <span class="rn rn-sq" style="flex:1" onclick="openSquadra('${esc(sq)}','${esc(camp)}')">${escH(sq.length>22?sq.slice(0,22)+'…':sq)}</span>
+              <span style="background:${s.manc>=3?'var(--red)':s.manc>=1?'var(--gold)':'var(--green)'};color:#fff;border-radius:10px;padding:1px 8px;font-size:.7rem;font-weight:700">${s.manc} da giocare</span>
+            </div>`).join('')||'<div style="color:var(--mu);font-size:.75rem">Tutte le partite giocate ✅</div>'}
+          </div>
+        </div>`;
+      })()}
     </div>
-    <div class="mtc hidden" id="mct-1" data-camp="${esc(camp)}">
       <div id="camp-cl-${esc(camp)}"></div>
     </div>
     <div class="mtc hidden" id="mct-2">
@@ -16046,7 +16085,29 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     return rowsAcc;
   }
 
-  // ── RAGGRUPPA GIRONI PER FASE → UNA RIGA PER FASE ────────────────────────
+  // Calcola classifica cumulativa sommando punti di più fasi con Girone Unico
+  function calcCumulativo(items){
+    var totMap={};
+    items.forEach(function(item){
+      var rows=calcSt(item.gare,[...item.sqSet].sort());
+      rows.forEach(function(e){
+        var sq=e[0],s=e[1];
+        if(!totMap[sq])totMap[sq]={pt:0,pg:0,v:0,p:0,pf:0,ps:0};
+        totMap[sq].pt+=s.pt;
+        totMap[sq].pg+=s.pg;
+        totMap[sq].v+=s.v;
+        totMap[sq].p+=s.p;
+        totMap[sq].pf+=s.pf;
+        totMap[sq].ps+=s.ps;
+      });
+    });
+    var arr=Object.entries(totMap).sort(function(a,b){
+      return b[1].pt-a[1].pt||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps));
+    });
+    return arr;
+  }
+
+
   var gironiOrdinati=gironi.slice().filter(function(gi){
     if(/accumulato/i.test(gi))return false;
     if(/\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff/i.test(gi))return false; // elim diretta
@@ -16146,13 +16207,21 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     }
 
     if(nextSingle){
-      // Affianca questo gruppo col prossimo
+      // Affianca questo gruppo col prossimo + card cumulativa
       var next=fasiGroups[grpIdx+1];
       skipIdxs.add(grpIdx+1);
-      cards+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:flex-start">'
+      // Card cumulativa: somma punti di tutte le fasi Girone Unico
+      var cumItems=grp.items.concat(next.items);
+      var cumRows=calcCumulativo(cumItems);
+      var cumAllGare=cumItems.reduce(function(a,i){return a.concat(i.gare);},[]);
+      var cumClr='#1a237e';
+      var cumCard=renderCardNew(cumRows,cumAllGare,'Classifica Finale',cumClr,false,'Classifica Finale (Cumulativa)',null);
+      cards+='<div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:flex-start">'
         +'<div>'+buildGroupHtml(grp,true)+'</div>'
         +'<div>'+buildGroupHtml(next,false)+'</div>'
-        +'</div>';
+        +'<div><div style="padding:4px 10px;background:linear-gradient(90deg,#e8eaf6,#f5f5f5);border-radius:6px;border-left:4px solid #1a237e;font-size:.75rem;font-weight:700;color:#1a237e;margin-bottom:6px">🏆 Classifica Finale</div>'+cumCard+'</div>'
+        +'</div></div>';
       return;
     }
 
