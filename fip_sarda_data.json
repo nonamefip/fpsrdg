@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-05-14 22:18",
+  "aggiornato": "2026-05-16 09:27",
   "campionati": [
     {
       "nome": "Serie C",
@@ -4956,18 +4956,18 @@
               "gara": 1
             },
             {
-              "casa": "G.S.DIL. BASKET FERRINI",
-              "ospite": "BASKET SAN SPERATE",
-              "data": "16 Maggio 2026",
-              "ora": "18:00",
-              "giornata": 5,
-              "gara": 5
-            },
-            {
               "casa": "BASKET ASSEMINI",
               "ospite": "SANTA CROCE OLBIA",
               "data": "17 Maggio 2026",
               "ora": "18:30",
+              "giornata": 5,
+              "gara": 5
+            },
+            {
+              "casa": "G.S.DIL. BASKET FERRINI",
+              "ospite": "BASKET SAN SPERATE",
+              "data": "30 Giugno 2026",
+              "ora": "18:00",
               "giornata": 5,
               "gara": 5
             }
@@ -5350,12 +5350,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 42,
-              "pg": 28,
-              "vinte": 21,
+              "punti": 44,
+              "pg": 29,
+              "vinte": 22,
               "perse": 7,
-              "pf": 2106,
-              "ps": 1740
+              "pf": 2186,
+              "ps": 1817
             },
             {
               "pos": 5,
@@ -5391,41 +5391,41 @@
               "pos": 8,
               "squadra": "BASKET IGLESIAS",
               "punti": 32,
-              "pg": 28,
+              "pg": 29,
               "vinte": 16,
-              "perse": 12,
-              "pf": 1850,
-              "ps": 1821
+              "perse": 13,
+              "pf": 1913,
+              "ps": 1887
             },
             {
               "pos": 9,
               "squadra": "A.S.D. GENNERUXI",
-              "punti": 28,
-              "pg": 28,
-              "vinte": 14,
+              "punti": 30,
+              "pg": 29,
+              "vinte": 15,
               "perse": 14,
-              "pf": 1736,
-              "ps": 1693
+              "pf": 1806,
+              "ps": 1747
             },
             {
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
-              "punti": 24,
-              "pg": 25,
-              "vinte": 12,
+              "punti": 28,
+              "pg": 27,
+              "vinte": 14,
               "perse": 13,
-              "pf": 1706,
-              "ps": 1675
+              "pf": 1828,
+              "ps": 1791
             },
             {
               "pos": 11,
               "squadra": "POL. PRIMAVERA",
               "punti": 22,
-              "pg": 26,
+              "pg": 27,
               "vinte": 11,
-              "perse": 15,
-              "pf": 1557,
-              "ps": 1593
+              "perse": 16,
+              "pf": 1610,
+              "ps": 1649
             },
             {
               "pos": 12,
@@ -5441,11 +5441,11 @@
               "pos": 13,
               "squadra": "SCUOLA BASKET CARBONIA",
               "punti": 10,
-              "pg": 24,
+              "pg": 25,
               "vinte": 5,
-              "perse": 19,
-              "pf": 1319,
-              "ps": 1639
+              "perse": 20,
+              "pf": 1373,
+              "ps": 1709
             },
             {
               "pos": 14,
@@ -5471,11 +5471,11 @@
               "pos": 16,
               "squadra": "A.S.D. BETA",
               "punti": 4,
-              "pg": 28,
+              "pg": 29,
               "vinte": 2,
-              "perse": 26,
-              "pf": 1437,
-              "ps": 2039
+              "perse": 27,
+              "pf": 1514,
+              "ps": 2119
             }
           ],
           "risultati": [
@@ -7244,6 +7244,15 @@
               "leg": "R"
             },
             {
+              "casa": "A.S.D. BETA",
+              "ospite": "AZZURRA ORISTANO",
+              "data": "14 Maggio 2026",
+              "ora": "21:00",
+              "giornata": 10,
+              "punteggio": "77-80",
+              "leg": "R"
+            },
+            {
               "casa": "POL. SERRAMANNA",
               "ospite": "POL. PRIMAVERA",
               "data": "19 Aprile 2026",
@@ -7487,12 +7496,39 @@
               "leg": "R"
             },
             {
+              "casa": "BASKET IGLESIAS",
+              "ospite": "BASKET ANTONIANUM",
+              "data": "09 Maggio 2026",
+              "ora": "18:30",
+              "giornata": 14,
+              "punteggio": "63-66",
+              "leg": "R"
+            },
+            {
               "casa": "CAGLIARI BASKET",
               "ospite": "P.G.S. CONDOR",
               "data": "10 Maggio 2026",
               "ora": "20:30",
               "giornata": 14,
               "punteggio": "46-66",
+              "leg": "R"
+            },
+            {
+              "casa": "SCUOLA BASKET CARBONIA",
+              "ospite": "A.S.D. GENNERUXI",
+              "data": "12 Maggio 2026",
+              "ora": "20:30",
+              "giornata": 14,
+              "punteggio": "54-70",
+              "leg": "R"
+            },
+            {
+              "casa": "POL. SERRAMANNA",
+              "ospite": "LA CASA DEL SORRISO",
+              "data": "15 Maggio 2026",
+              "ora": "20:45",
+              "giornata": 15,
+              "punteggio": "78-58",
               "leg": "R"
             }
           ],
@@ -7522,14 +7558,6 @@
               "leg": "R"
             },
             {
-              "casa": "A.S.D. BETA",
-              "ospite": "AZZURRA ORISTANO",
-              "data": "14 Maggio 2026",
-              "ora": "21:00",
-              "giornata": 10,
-              "leg": "R"
-            },
-            {
               "casa": "BASKET ANTONIANUM",
               "ospite": "SCUOLA BASKET CARBONIA",
               "data": "23 Maggio 2026",
@@ -7538,35 +7566,11 @@
               "leg": "R"
             },
             {
-              "casa": "BASKET IGLESIAS",
-              "ospite": "BASKET ANTONIANUM",
-              "data": "09 Maggio 2026",
-              "ora": "18:30",
-              "giornata": 14,
-              "leg": "R"
-            },
-            {
-              "casa": "SCUOLA BASKET CARBONIA",
-              "ospite": "A.S.D. GENNERUXI",
-              "data": "12 Maggio 2026",
-              "ora": "20:30",
-              "giornata": 14,
-              "leg": "R"
-            },
-            {
               "casa": "POL. PRIMAVERA",
               "ospite": "C.G.P. CARLOFORTE",
               "data": "27 Maggio 2026",
               "ora": "21:00",
               "giornata": 14,
-              "leg": "R"
-            },
-            {
-              "casa": "POL. SERRAMANNA",
-              "ospite": "LA CASA DEL SORRISO",
-              "data": "15 Maggio 2026",
-              "ora": "20:45",
-              "giornata": 15,
               "leg": "R"
             },
             {
@@ -9609,12 +9613,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 42,
-              "pg": 28,
-              "vinte": 21,
+              "punti": 44,
+              "pg": 29,
+              "vinte": 22,
               "perse": 7,
-              "pf": 2106,
-              "ps": 1740
+              "pf": 2186,
+              "ps": 1817
             },
             {
               "pos": 5,
@@ -9650,41 +9654,41 @@
               "pos": 8,
               "squadra": "BASKET IGLESIAS",
               "punti": 32,
-              "pg": 28,
+              "pg": 29,
               "vinte": 16,
-              "perse": 12,
-              "pf": 1850,
-              "ps": 1821
+              "perse": 13,
+              "pf": 1913,
+              "ps": 1887
             },
             {
               "pos": 9,
               "squadra": "A.S.D. GENNERUXI",
-              "punti": 28,
-              "pg": 28,
-              "vinte": 14,
+              "punti": 30,
+              "pg": 29,
+              "vinte": 15,
               "perse": 14,
-              "pf": 1736,
-              "ps": 1693
+              "pf": 1806,
+              "ps": 1747
             },
             {
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
-              "punti": 24,
-              "pg": 25,
-              "vinte": 12,
+              "punti": 28,
+              "pg": 27,
+              "vinte": 14,
               "perse": 13,
-              "pf": 1706,
-              "ps": 1675
+              "pf": 1828,
+              "ps": 1791
             },
             {
               "pos": 11,
               "squadra": "POL. PRIMAVERA",
               "punti": 22,
-              "pg": 26,
+              "pg": 27,
               "vinte": 11,
-              "perse": 15,
-              "pf": 1557,
-              "ps": 1593
+              "perse": 16,
+              "pf": 1610,
+              "ps": 1649
             },
             {
               "pos": 12,
@@ -9700,11 +9704,11 @@
               "pos": 13,
               "squadra": "SCUOLA BASKET CARBONIA",
               "punti": 10,
-              "pg": 24,
+              "pg": 25,
               "vinte": 5,
-              "perse": 19,
-              "pf": 1319,
-              "ps": 1639
+              "perse": 20,
+              "pf": 1373,
+              "ps": 1709
             },
             {
               "pos": 14,
@@ -9730,11 +9734,11 @@
               "pos": 16,
               "squadra": "A.S.D. BETA",
               "punti": 4,
-              "pg": 28,
+              "pg": 29,
               "vinte": 2,
-              "perse": 26,
-              "pf": 1437,
-              "ps": 2039
+              "perse": 27,
+              "pf": 1514,
+              "ps": 2119
             }
           ],
           "risultati": [
@@ -9788,12 +9792,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 42,
-              "pg": 28,
-              "vinte": 21,
+              "punti": 44,
+              "pg": 29,
+              "vinte": 22,
               "perse": 7,
-              "pf": 2106,
-              "ps": 1740
+              "pf": 2186,
+              "ps": 1817
             },
             {
               "pos": 5,
@@ -9829,41 +9833,41 @@
               "pos": 8,
               "squadra": "BASKET IGLESIAS",
               "punti": 32,
-              "pg": 28,
+              "pg": 29,
               "vinte": 16,
-              "perse": 12,
-              "pf": 1850,
-              "ps": 1821
+              "perse": 13,
+              "pf": 1913,
+              "ps": 1887
             },
             {
               "pos": 9,
               "squadra": "A.S.D. GENNERUXI",
-              "punti": 28,
-              "pg": 28,
-              "vinte": 14,
+              "punti": 30,
+              "pg": 29,
+              "vinte": 15,
               "perse": 14,
-              "pf": 1736,
-              "ps": 1693
+              "pf": 1806,
+              "ps": 1747
             },
             {
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
-              "punti": 24,
-              "pg": 25,
-              "vinte": 12,
+              "punti": 28,
+              "pg": 27,
+              "vinte": 14,
               "perse": 13,
-              "pf": 1706,
-              "ps": 1675
+              "pf": 1828,
+              "ps": 1791
             },
             {
               "pos": 11,
               "squadra": "POL. PRIMAVERA",
               "punti": 22,
-              "pg": 26,
+              "pg": 27,
               "vinte": 11,
-              "perse": 15,
-              "pf": 1557,
-              "ps": 1593
+              "perse": 16,
+              "pf": 1610,
+              "ps": 1649
             },
             {
               "pos": 12,
@@ -9879,11 +9883,11 @@
               "pos": 13,
               "squadra": "SCUOLA BASKET CARBONIA",
               "punti": 10,
-              "pg": 24,
+              "pg": 25,
               "vinte": 5,
-              "perse": 19,
-              "pf": 1319,
-              "ps": 1639
+              "perse": 20,
+              "pf": 1373,
+              "ps": 1709
             },
             {
               "pos": 14,
@@ -9909,11 +9913,11 @@
               "pos": 16,
               "squadra": "A.S.D. BETA",
               "punti": 4,
-              "pg": 28,
+              "pg": 29,
               "vinte": 2,
-              "perse": 26,
-              "pf": 1437,
-              "ps": 2039
+              "perse": 27,
+              "pf": 1514,
+              "ps": 2119
             }
           ],
           "risultati": [
@@ -9967,12 +9971,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 42,
-              "pg": 28,
-              "vinte": 21,
+              "punti": 44,
+              "pg": 29,
+              "vinte": 22,
               "perse": 7,
-              "pf": 2106,
-              "ps": 1740
+              "pf": 2186,
+              "ps": 1817
             },
             {
               "pos": 5,
@@ -10008,41 +10012,41 @@
               "pos": 8,
               "squadra": "BASKET IGLESIAS",
               "punti": 32,
-              "pg": 28,
+              "pg": 29,
               "vinte": 16,
-              "perse": 12,
-              "pf": 1850,
-              "ps": 1821
+              "perse": 13,
+              "pf": 1913,
+              "ps": 1887
             },
             {
               "pos": 9,
               "squadra": "A.S.D. GENNERUXI",
-              "punti": 28,
-              "pg": 28,
-              "vinte": 14,
+              "punti": 30,
+              "pg": 29,
+              "vinte": 15,
               "perse": 14,
-              "pf": 1736,
-              "ps": 1693
+              "pf": 1806,
+              "ps": 1747
             },
             {
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
-              "punti": 24,
-              "pg": 25,
-              "vinte": 12,
+              "punti": 28,
+              "pg": 27,
+              "vinte": 14,
               "perse": 13,
-              "pf": 1706,
-              "ps": 1675
+              "pf": 1828,
+              "ps": 1791
             },
             {
               "pos": 11,
               "squadra": "POL. PRIMAVERA",
               "punti": 22,
-              "pg": 26,
+              "pg": 27,
               "vinte": 11,
-              "perse": 15,
-              "pf": 1557,
-              "ps": 1593
+              "perse": 16,
+              "pf": 1610,
+              "ps": 1649
             },
             {
               "pos": 12,
@@ -10058,11 +10062,11 @@
               "pos": 13,
               "squadra": "SCUOLA BASKET CARBONIA",
               "punti": 10,
-              "pg": 24,
+              "pg": 25,
               "vinte": 5,
-              "perse": 19,
-              "pf": 1319,
-              "ps": 1639
+              "perse": 20,
+              "pf": 1373,
+              "ps": 1709
             },
             {
               "pos": 14,
@@ -10088,11 +10092,11 @@
               "pos": 16,
               "squadra": "A.S.D. BETA",
               "punti": 4,
-              "pg": 28,
+              "pg": 29,
               "vinte": 2,
-              "perse": 26,
-              "pf": 1437,
-              "ps": 2039
+              "perse": 27,
+              "pf": 1514,
+              "ps": 2119
             }
           ],
           "risultati": [
@@ -10146,12 +10150,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 42,
-              "pg": 28,
-              "vinte": 21,
+              "punti": 44,
+              "pg": 29,
+              "vinte": 22,
               "perse": 7,
-              "pf": 2106,
-              "ps": 1740
+              "pf": 2186,
+              "ps": 1817
             },
             {
               "pos": 5,
@@ -10187,41 +10191,41 @@
               "pos": 8,
               "squadra": "BASKET IGLESIAS",
               "punti": 32,
-              "pg": 28,
+              "pg": 29,
               "vinte": 16,
-              "perse": 12,
-              "pf": 1850,
-              "ps": 1821
+              "perse": 13,
+              "pf": 1913,
+              "ps": 1887
             },
             {
               "pos": 9,
               "squadra": "A.S.D. GENNERUXI",
-              "punti": 28,
-              "pg": 28,
-              "vinte": 14,
+              "punti": 30,
+              "pg": 29,
+              "vinte": 15,
               "perse": 14,
-              "pf": 1736,
-              "ps": 1693
+              "pf": 1806,
+              "ps": 1747
             },
             {
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
-              "punti": 24,
-              "pg": 25,
-              "vinte": 12,
+              "punti": 28,
+              "pg": 27,
+              "vinte": 14,
               "perse": 13,
-              "pf": 1706,
-              "ps": 1675
+              "pf": 1828,
+              "ps": 1791
             },
             {
               "pos": 11,
               "squadra": "POL. PRIMAVERA",
               "punti": 22,
-              "pg": 26,
+              "pg": 27,
               "vinte": 11,
-              "perse": 15,
-              "pf": 1557,
-              "ps": 1593
+              "perse": 16,
+              "pf": 1610,
+              "ps": 1649
             },
             {
               "pos": 12,
@@ -10237,11 +10241,11 @@
               "pos": 13,
               "squadra": "SCUOLA BASKET CARBONIA",
               "punti": 10,
-              "pg": 24,
+              "pg": 25,
               "vinte": 5,
-              "perse": 19,
-              "pf": 1319,
-              "ps": 1639
+              "perse": 20,
+              "pf": 1373,
+              "ps": 1709
             },
             {
               "pos": 14,
@@ -10267,11 +10271,11 @@
               "pos": 16,
               "squadra": "A.S.D. BETA",
               "punti": 4,
-              "pg": 28,
+              "pg": 29,
               "vinte": 2,
-              "perse": 26,
-              "pf": 1437,
-              "ps": 2039
+              "perse": 27,
+              "pf": 1514,
+              "ps": 2119
             }
           ],
           "risultati": [
@@ -10325,12 +10329,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 42,
-              "pg": 28,
-              "vinte": 21,
+              "punti": 44,
+              "pg": 29,
+              "vinte": 22,
               "perse": 7,
-              "pf": 2106,
-              "ps": 1740
+              "pf": 2186,
+              "ps": 1817
             },
             {
               "pos": 5,
@@ -10366,41 +10370,41 @@
               "pos": 8,
               "squadra": "BASKET IGLESIAS",
               "punti": 32,
-              "pg": 28,
+              "pg": 29,
               "vinte": 16,
-              "perse": 12,
-              "pf": 1850,
-              "ps": 1821
+              "perse": 13,
+              "pf": 1913,
+              "ps": 1887
             },
             {
               "pos": 9,
               "squadra": "A.S.D. GENNERUXI",
-              "punti": 28,
-              "pg": 28,
-              "vinte": 14,
+              "punti": 30,
+              "pg": 29,
+              "vinte": 15,
               "perse": 14,
-              "pf": 1736,
-              "ps": 1693
+              "pf": 1806,
+              "ps": 1747
             },
             {
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
-              "punti": 24,
-              "pg": 25,
-              "vinte": 12,
+              "punti": 28,
+              "pg": 27,
+              "vinte": 14,
               "perse": 13,
-              "pf": 1706,
-              "ps": 1675
+              "pf": 1828,
+              "ps": 1791
             },
             {
               "pos": 11,
               "squadra": "POL. PRIMAVERA",
               "punti": 22,
-              "pg": 26,
+              "pg": 27,
               "vinte": 11,
-              "perse": 15,
-              "pf": 1557,
-              "ps": 1593
+              "perse": 16,
+              "pf": 1610,
+              "ps": 1649
             },
             {
               "pos": 12,
@@ -10416,11 +10420,11 @@
               "pos": 13,
               "squadra": "SCUOLA BASKET CARBONIA",
               "punti": 10,
-              "pg": 24,
+              "pg": 25,
               "vinte": 5,
-              "perse": 19,
-              "pf": 1319,
-              "ps": 1639
+              "perse": 20,
+              "pf": 1373,
+              "ps": 1709
             },
             {
               "pos": 14,
@@ -10446,11 +10450,11 @@
               "pos": 16,
               "squadra": "A.S.D. BETA",
               "punti": 4,
-              "pg": 28,
+              "pg": 29,
               "vinte": 2,
-              "perse": 26,
-              "pf": 1437,
-              "ps": 2039
+              "perse": 27,
+              "pf": 1514,
+              "ps": 2119
             }
           ],
           "risultati": [],
@@ -10511,12 +10515,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 42,
-              "pg": 28,
-              "vinte": 21,
+              "punti": 44,
+              "pg": 29,
+              "vinte": 22,
               "perse": 7,
-              "pf": 2106,
-              "ps": 1740
+              "pf": 2186,
+              "ps": 1817
             },
             {
               "pos": 5,
@@ -10552,41 +10556,41 @@
               "pos": 8,
               "squadra": "BASKET IGLESIAS",
               "punti": 32,
-              "pg": 28,
+              "pg": 29,
               "vinte": 16,
-              "perse": 12,
-              "pf": 1850,
-              "ps": 1821
+              "perse": 13,
+              "pf": 1913,
+              "ps": 1887
             },
             {
               "pos": 9,
               "squadra": "A.S.D. GENNERUXI",
-              "punti": 28,
-              "pg": 28,
-              "vinte": 14,
+              "punti": 30,
+              "pg": 29,
+              "vinte": 15,
               "perse": 14,
-              "pf": 1736,
-              "ps": 1693
+              "pf": 1806,
+              "ps": 1747
             },
             {
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
-              "punti": 24,
-              "pg": 25,
-              "vinte": 12,
+              "punti": 28,
+              "pg": 27,
+              "vinte": 14,
               "perse": 13,
-              "pf": 1706,
-              "ps": 1675
+              "pf": 1828,
+              "ps": 1791
             },
             {
               "pos": 11,
               "squadra": "POL. PRIMAVERA",
               "punti": 22,
-              "pg": 26,
+              "pg": 27,
               "vinte": 11,
-              "perse": 15,
-              "pf": 1557,
-              "ps": 1593
+              "perse": 16,
+              "pf": 1610,
+              "ps": 1649
             },
             {
               "pos": 12,
@@ -10602,11 +10606,11 @@
               "pos": 13,
               "squadra": "SCUOLA BASKET CARBONIA",
               "punti": 10,
-              "pg": 24,
+              "pg": 25,
               "vinte": 5,
-              "perse": 19,
-              "pf": 1319,
-              "ps": 1639
+              "perse": 20,
+              "pf": 1373,
+              "ps": 1709
             },
             {
               "pos": 14,
@@ -10632,11 +10636,11 @@
               "pos": 16,
               "squadra": "A.S.D. BETA",
               "punti": 4,
-              "pg": 28,
+              "pg": 29,
               "vinte": 2,
-              "perse": 26,
-              "pf": 1437,
-              "ps": 2039
+              "perse": 27,
+              "pf": 1514,
+              "ps": 2119
             }
           ],
           "risultati": [],
@@ -10653,7 +10657,7 @@
               "casa": "MERCEDE ALGHERO",
               "ospite": "POL. S. ELENE",
               "data": "24 Maggio 2026",
-              "ora": "08:00",
+              "ora": "18:00",
               "giornata": 2,
               "gara": 2
             }
@@ -10697,12 +10701,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 42,
-              "pg": 28,
-              "vinte": 21,
+              "punti": 44,
+              "pg": 29,
+              "vinte": 22,
               "perse": 7,
-              "pf": 2106,
-              "ps": 1740
+              "pf": 2186,
+              "ps": 1817
             },
             {
               "pos": 5,
@@ -10738,41 +10742,41 @@
               "pos": 8,
               "squadra": "BASKET IGLESIAS",
               "punti": 32,
-              "pg": 28,
+              "pg": 29,
               "vinte": 16,
-              "perse": 12,
-              "pf": 1850,
-              "ps": 1821
+              "perse": 13,
+              "pf": 1913,
+              "ps": 1887
             },
             {
               "pos": 9,
               "squadra": "A.S.D. GENNERUXI",
-              "punti": 28,
-              "pg": 28,
-              "vinte": 14,
+              "punti": 30,
+              "pg": 29,
+              "vinte": 15,
               "perse": 14,
-              "pf": 1736,
-              "ps": 1693
+              "pf": 1806,
+              "ps": 1747
             },
             {
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
-              "punti": 24,
-              "pg": 25,
-              "vinte": 12,
+              "punti": 28,
+              "pg": 27,
+              "vinte": 14,
               "perse": 13,
-              "pf": 1706,
-              "ps": 1675
+              "pf": 1828,
+              "ps": 1791
             },
             {
               "pos": 11,
               "squadra": "POL. PRIMAVERA",
               "punti": 22,
-              "pg": 26,
+              "pg": 27,
               "vinte": 11,
-              "perse": 15,
-              "pf": 1557,
-              "ps": 1593
+              "perse": 16,
+              "pf": 1610,
+              "ps": 1649
             },
             {
               "pos": 12,
@@ -10788,11 +10792,11 @@
               "pos": 13,
               "squadra": "SCUOLA BASKET CARBONIA",
               "punti": 10,
-              "pg": 24,
+              "pg": 25,
               "vinte": 5,
-              "perse": 19,
-              "pf": 1319,
-              "ps": 1639
+              "perse": 20,
+              "pf": 1373,
+              "ps": 1709
             },
             {
               "pos": 14,
@@ -10818,11 +10822,11 @@
               "pos": 16,
               "squadra": "A.S.D. BETA",
               "punti": 4,
-              "pg": 28,
+              "pg": 29,
               "vinte": 2,
-              "perse": 26,
-              "pf": 1437,
-              "ps": 2039
+              "perse": 27,
+              "pf": 1514,
+              "ps": 2119
             }
           ],
           "risultati": [],
@@ -10883,12 +10887,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 42,
-              "pg": 28,
-              "vinte": 21,
+              "punti": 44,
+              "pg": 29,
+              "vinte": 22,
               "perse": 7,
-              "pf": 2106,
-              "ps": 1740
+              "pf": 2186,
+              "ps": 1817
             },
             {
               "pos": 5,
@@ -10924,41 +10928,41 @@
               "pos": 8,
               "squadra": "BASKET IGLESIAS",
               "punti": 32,
-              "pg": 28,
+              "pg": 29,
               "vinte": 16,
-              "perse": 12,
-              "pf": 1850,
-              "ps": 1821
+              "perse": 13,
+              "pf": 1913,
+              "ps": 1887
             },
             {
               "pos": 9,
               "squadra": "A.S.D. GENNERUXI",
-              "punti": 28,
-              "pg": 28,
-              "vinte": 14,
+              "punti": 30,
+              "pg": 29,
+              "vinte": 15,
               "perse": 14,
-              "pf": 1736,
-              "ps": 1693
+              "pf": 1806,
+              "ps": 1747
             },
             {
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
-              "punti": 24,
-              "pg": 25,
-              "vinte": 12,
+              "punti": 28,
+              "pg": 27,
+              "vinte": 14,
               "perse": 13,
-              "pf": 1706,
-              "ps": 1675
+              "pf": 1828,
+              "ps": 1791
             },
             {
               "pos": 11,
               "squadra": "POL. PRIMAVERA",
               "punti": 22,
-              "pg": 26,
+              "pg": 27,
               "vinte": 11,
-              "perse": 15,
-              "pf": 1557,
-              "ps": 1593
+              "perse": 16,
+              "pf": 1610,
+              "ps": 1649
             },
             {
               "pos": 12,
@@ -10974,11 +10978,11 @@
               "pos": 13,
               "squadra": "SCUOLA BASKET CARBONIA",
               "punti": 10,
-              "pg": 24,
+              "pg": 25,
               "vinte": 5,
-              "perse": 19,
-              "pf": 1319,
-              "ps": 1639
+              "perse": 20,
+              "pf": 1373,
+              "ps": 1709
             },
             {
               "pos": 14,
@@ -11004,11 +11008,11 @@
               "pos": 16,
               "squadra": "A.S.D. BETA",
               "punti": 4,
-              "pg": 28,
+              "pg": 29,
               "vinte": 2,
-              "perse": 26,
-              "pf": 1437,
-              "ps": 2039
+              "perse": 27,
+              "pf": 1514,
+              "ps": 2119
             }
           ],
           "risultati": [],
@@ -14750,7 +14754,7 @@
             {
               "casa": "POL. DINAMO SRL",
               "ospite": "FERRINI PISANO ARREDAMENTI",
-              "data": "17 Maggio 2026",
+              "data": "30 Giugno 2026",
               "ora": "18:30",
               "giornata": 2,
               "leg": "R"
@@ -18044,12 +18048,12 @@
             {
               "pos": 1,
               "squadra": "S.A.P. ALGHERO",
-              "punti": 8,
-              "pg": 4,
-              "vinte": 4,
+              "punti": 10,
+              "pg": 5,
+              "vinte": 5,
               "perse": 0,
-              "pf": 397,
-              "ps": 170
+              "pf": 499,
+              "ps": 218
             },
             {
               "pos": 2,
@@ -18115,11 +18119,11 @@
               "pos": 8,
               "squadra": "ACCADEMIA OLMEDO",
               "punti": 0,
-              "pg": 4,
+              "pg": 5,
               "vinte": 0,
-              "perse": 4,
-              "pf": 146,
-              "ps": 214
+              "perse": 5,
+              "pf": 194,
+              "ps": 316
             }
           ],
           "risultati": [
@@ -18223,6 +18227,15 @@
               "leg": "R"
             },
             {
+              "casa": "ACCADEMIA OLMEDO",
+              "ospite": "S.A.P. ALGHERO",
+              "data": "13 Maggio 2026",
+              "ora": "20:30",
+              "giornata": 2,
+              "punteggio": "48-102",
+              "leg": "R"
+            },
+            {
               "casa": "SHARDANA BASKET",
               "ospite": "ACCADEMIA OLMEDO",
               "data": "03 Maggio 2026",
@@ -18247,6 +18260,15 @@
               "ora": "15:00",
               "giornata": 3,
               "punteggio": "46-33",
+              "leg": "R"
+            },
+            {
+              "casa": "BASKET SU PLANU",
+              "ospite": "ASTRO SSDRL",
+              "data": "13 Maggio 2026",
+              "ora": "19:15",
+              "giornata": 3,
+              "punteggio": "53-65",
               "leg": "R"
             },
             {
@@ -18304,26 +18326,10 @@
             {
               "casa": "ARZACHENA BASKET",
               "ospite": "ASTRO SSDRL",
-              "data": "30 Giugno 2026",
-              "ora": "11:30",
+              "data": "07 Giugno 2026",
+              "ora": "12:30",
               "giornata": 3,
               "leg": "A"
-            },
-            {
-              "casa": "ARZACHENA BASKET",
-              "ospite": "ACLI SUPERGA",
-              "data": "26 Aprile 2026",
-              "ora": "15:00",
-              "giornata": 2,
-              "leg": "R"
-            },
-            {
-              "casa": "ACCADEMIA OLMEDO",
-              "ospite": "S.A.P. ALGHERO",
-              "data": "13 Maggio 2026",
-              "ora": "20:30",
-              "giornata": 2,
-              "leg": "R"
             },
             {
               "casa": "BASKET SU PLANU",
@@ -18334,19 +18340,19 @@
               "leg": "R"
             },
             {
-              "casa": "NOVA PALLACANESTRO",
-              "ospite": "ASTRO SSDRL",
-              "data": "30 Giugno 2026",
-              "ora": "12:30",
+              "casa": "ARZACHENA BASKET",
+              "ospite": "ACLI SUPERGA",
+              "data": "31 Maggio 2026",
+              "ora": "16:30",
               "giornata": 2,
               "leg": "R"
             },
             {
-              "casa": "BASKET SU PLANU",
+              "casa": "NOVA PALLACANESTRO",
               "ospite": "ASTRO SSDRL",
-              "data": "13 Maggio 2026",
-              "ora": "19:15",
-              "giornata": 3,
+              "data": "21 Giugno 2026",
+              "ora": "12:30",
+              "giornata": 2,
               "leg": "R"
             },
             {
@@ -20586,12 +20592,12 @@
             {
               "pos": 2,
               "squadra": "S.A.A.B. TERRALBA",
-              "punti": 18,
-              "pg": 11,
-              "vinte": 9,
+              "punti": 20,
+              "pg": 12,
+              "vinte": 10,
               "perse": 2,
-              "pf": 893,
-              "ps": 602
+              "pf": 969,
+              "ps": 652
             },
             {
               "pos": 3,
@@ -20647,11 +20653,11 @@
               "pos": 8,
               "squadra": "BASKET 90",
               "punti": 4,
-              "pg": 9,
+              "pg": 10,
               "vinte": 2,
-              "perse": 7,
-              "pf": 520,
-              "ps": 655
+              "perse": 8,
+              "pf": 570,
+              "ps": 731
             }
           ],
           "risultati": [
@@ -23529,7 +23535,7 @@
               "casa": "PALL. SENNORI",
               "ospite": "NOVA PALLACANESTRO",
               "data": "16 Maggio 2026",
-              "ora": "17:00",
+              "ora": "16:00",
               "giornata": 7,
               "leg": "R"
             },
@@ -24788,6 +24794,15 @@
               "leg": "A"
             },
             {
+              "casa": "A.S.D. U.S. ACLI SUPERGA",
+              "ospite": "BASKET S.SALVATORE",
+              "data": "11 Maggio 2026",
+              "ora": "19:15",
+              "giornata": 1,
+              "punteggio": "36-43",
+              "leg": "A"
+            },
+            {
               "casa": "ASTRO SSDRL",
               "ospite": "BASKET MOGORO",
               "data": "14 Marzo 2026",
@@ -24984,17 +24999,18 @@
               "giornata": 4,
               "punteggio": "59-52",
               "leg": "R"
+            },
+            {
+              "casa": "BASKET DECIMO",
+              "ospite": "A.S.D. OLIMPIA CAGLIARI",
+              "data": "14 Maggio 2026",
+              "ora": "19:15",
+              "giornata": 4,
+              "punteggio": "53-49",
+              "leg": "R"
             }
           ],
           "prossime": [
-            {
-              "casa": "A.S.D. U.S. ACLI SUPERGA",
-              "ospite": "BASKET S.SALVATORE",
-              "data": "11 Maggio 2026",
-              "ora": "19:15",
-              "giornata": 1,
-              "leg": "A"
-            },
             {
               "casa": "AZZURRA ORISTANO",
               "ospite": "POL. IL GABBIANO",
@@ -25049,14 +25065,6 @@
               "data": "22 Maggio 2026",
               "ora": "18:00",
               "giornata": 3,
-              "leg": "R"
-            },
-            {
-              "casa": "BASKET DECIMO",
-              "ospite": "A.S.D. OLIMPIA CAGLIARI",
-              "data": "14 Maggio 2026",
-              "ora": "19:15",
-              "giornata": 4,
               "leg": "R"
             }
           ]
@@ -25438,8 +25446,8 @@
             {
               "casa": "BASKET MACOMER 2.0",
               "ospite": "BASKET FERRINI",
-              "data": "29 Giugno 2026",
-              "ora": "08:00",
+              "data": "16 Maggio 2026",
+              "ora": "18:00",
               "giornata": 1,
               "gara": 1
             }
@@ -28769,16 +28777,16 @@
           ],
           "prossime": [
             {
-              "casa": "BASKET CORAL 93",
-              "ospite": "SANTA CROCE OLBIA",
-              "data": "20 Maggio 2026",
-              "ora": "18:30",
+              "casa": "BASKET 90",
+              "ospite": "POL. DINAMO",
+              "data": "19 Maggio 2026",
+              "ora": "18:00",
               "giornata": 2,
               "leg": "R"
             },
             {
-              "casa": "BASKET 90",
-              "ospite": "POL. DINAMO",
+              "casa": "BASKET CORAL 93",
+              "ospite": "SANTA CROCE OLBIA",
               "data": "20 Maggio 2026",
               "ora": "18:30",
               "giornata": 2,
@@ -28933,12 +28941,30 @@
               "leg": "A"
             },
             {
+              "casa": "G.S.O. ELMAS",
+              "ospite": "BASKET ANTONIANUM",
+              "data": "15 Maggio 2026",
+              "ora": "17:15",
+              "giornata": 3,
+              "punteggio": "106-60",
+              "leg": "A"
+            },
+            {
               "casa": "AZZURRA BASKET",
               "ospite": "ESPERIA A.S. DIL.",
               "data": "08 Maggio 2026",
               "ora": "18:00",
               "giornata": 1,
               "punteggio": "62-87",
+              "leg": "R"
+            },
+            {
+              "casa": "ASTRO SSDRL",
+              "ospite": "BASKET ANTONIANUM",
+              "data": "13 Maggio 2026",
+              "ora": "18:15",
+              "giornata": 1,
+              "punteggio": "69-45",
               "leg": "R"
             },
             {
@@ -28986,22 +29012,6 @@
               "ora": "08:00",
               "giornata": 1,
               "leg": "A"
-            },
-            {
-              "casa": "G.S.O. ELMAS",
-              "ospite": "BASKET ANTONIANUM",
-              "data": "30 Giugno 2026",
-              "ora": "17:15",
-              "giornata": 3,
-              "leg": "A"
-            },
-            {
-              "casa": "ASTRO SSDRL",
-              "ospite": "BASKET ANTONIANUM",
-              "data": "13 Maggio 2026",
-              "ora": "18:15",
-              "giornata": 1,
-              "leg": "R"
             },
             {
               "casa": "AZZURRA BASKET",
@@ -29171,7 +29181,7 @@
             {
               "casa": "BASKET MACOMER 2.0",
               "ospite": "C.M.B. PORTO TORRES",
-              "data": "14 Maggio 2026",
+              "data": "28 Maggio 2026",
               "ora": "18:30",
               "giornata": 3,
               "leg": "A"
@@ -29179,8 +29189,8 @@
             {
               "casa": "VIRTUS OLBIA",
               "ospite": "BASKET S. FRANCESCO",
-              "data": "29 Giugno 2026",
-              "ora": "08:00",
+              "data": "05 Giugno 2026",
+              "ora": "18:00",
               "giornata": 3,
               "leg": "A"
             },
@@ -29201,14 +29211,6 @@
               "leg": "R"
             },
             {
-              "casa": "MERCEDE ALGHERO",
-              "ospite": "C.M.B. PORTO TORRES",
-              "data": "15 Maggio 2026",
-              "ora": "18:00",
-              "giornata": 2,
-              "leg": "R"
-            },
-            {
               "casa": "NEW BASKET TEMPIO",
               "ospite": "BASKET S. FRANCESCO",
               "data": "16 Maggio 2026",
@@ -29225,18 +29227,26 @@
               "leg": "R"
             },
             {
-              "casa": "C.M.B. PORTO TORRES",
-              "ospite": "BASKET MACOMER 2.0",
-              "data": "24 Maggio 2026",
-              "ora": "11:00",
-              "giornata": 3,
+              "casa": "MERCEDE ALGHERO",
+              "ospite": "C.M.B. PORTO TORRES",
+              "data": "30 Giugno 2026",
+              "ora": "18:00",
+              "giornata": 2,
               "leg": "R"
             },
             {
               "casa": "BASKET S. FRANCESCO",
               "ospite": "VIRTUS OLBIA",
-              "data": "29 Giugno 2026",
-              "ora": "08:00",
+              "data": "18 Maggio 2026",
+              "ora": "18:00",
+              "giornata": 3,
+              "leg": "R"
+            },
+            {
+              "casa": "C.M.B. PORTO TORRES",
+              "ospite": "BASKET MACOMER 2.0",
+              "data": "24 Maggio 2026",
+              "ora": "11:00",
               "giornata": 3,
               "leg": "R"
             },
@@ -29390,7 +29400,7 @@
             {
               "casa": "A.S.D. GENNERUXI",
               "ospite": "SCUOLA BASKET CARBONIA",
-              "data": "30 Maggio 2026",
+              "data": "31 Maggio 2026",
               "ora": "17:00",
               "giornata": 3,
               "leg": "A"
@@ -29616,18 +29626,18 @@
               "leg": "A"
             },
             {
-              "casa": "PALL. S. ELENE",
-              "ospite": "PALL. SENNORI",
-              "data": "31 Maggio 2026",
-              "ora": "11:30",
+              "casa": "CUS SASSARI",
+              "ospite": "ROOSTERS TEMPIO",
+              "data": "16 Maggio 2026",
+              "ora": "17:00",
               "giornata": 3,
               "leg": "A"
             },
             {
-              "casa": "CUS SASSARI",
-              "ospite": "ROOSTERS TEMPIO",
-              "data": "29 Giugno 2026",
-              "ora": "08:00",
+              "casa": "PALL. S. ELENE",
+              "ospite": "PALL. SENNORI",
+              "data": "31 Maggio 2026",
+              "ora": "11:30",
               "giornata": 3,
               "leg": "A"
             },
@@ -33549,8 +33559,8 @@
             {
               "casa": "DEMONES BLAZERS",
               "ospite": "POL. DINAMO THUNDER",
-              "data": "29 Giugno 2026",
-              "ora": "08:00",
+              "data": "16 Maggio 2026",
+              "ora": "17:00",
               "giornata": 1,
               "leg": "A"
             },
@@ -33611,10 +33621,18 @@
               "leg": "R"
             },
             {
+              "casa": "OROSEI PELICANS",
+              "ospite": "DEMONES BLAZERS",
+              "data": "24 Maggio 2026",
+              "ora": "11:30",
+              "giornata": 2,
+              "leg": "R"
+            },
+            {
               "casa": "ARZACHENA GRIZZLIES",
               "ospite": "OLMEDO MAVERICKS",
-              "data": "14 Maggio 2026",
-              "ora": "19:00",
+              "data": "31 Maggio 2026",
+              "ora": "11:30",
               "giornata": 2,
               "leg": "R"
             },
@@ -33627,14 +33645,6 @@
               "leg": "R"
             },
             {
-              "casa": "OROSEI PELICANS",
-              "ospite": "DEMONES BLAZERS",
-              "data": "30 Giugno 2026",
-              "ora": "16:30",
-              "giornata": 2,
-              "leg": "R"
-            },
-            {
               "casa": "DEMONES BLAZERS",
               "ospite": "OLMEDO MAVERICKS",
               "data": "28 Marzo 2026",
@@ -33643,16 +33653,16 @@
               "leg": "R"
             },
             {
-              "casa": "OROSEI PELICANS",
-              "ospite": "ROOSTERS AMPURIAS ROCKETS",
-              "data": "29 Giugno 2026",
-              "ora": "08:00",
+              "casa": "VIRTUS OLBIA JAZZ",
+              "ospite": "POL. DINAMO THUNDER",
+              "data": "07 Giugno 2026",
+              "ora": "10:30",
               "giornata": 3,
               "leg": "R"
             },
             {
-              "casa": "VIRTUS OLBIA JAZZ",
-              "ospite": "POL. DINAMO THUNDER",
+              "casa": "OROSEI PELICANS",
+              "ospite": "ROOSTERS AMPURIAS ROCKETS",
               "data": "29 Giugno 2026",
               "ora": "08:00",
               "giornata": 3,
@@ -33970,7 +33980,7 @@
               "casa": "DECIMO CAVALIERS",
               "ospite": "SAN SALVATORE KNICKS",
               "data": "19 Maggio 2026",
-              "ora": "17:45",
+              "ora": "19:15",
               "giornata": 1,
               "leg": "R"
             },
@@ -34002,7 +34012,7 @@
               "casa": "DECIMO CAVALIERS",
               "ospite": "SU PLANU HAWKS",
               "data": "16 Maggio 2026",
-              "ora": "17:45",
+              "ora": "17:00",
               "giornata": 5,
               "leg": "R"
             },
@@ -34082,6 +34092,15 @@
           ],
           "risultati": [
             {
+              "casa": "PANDA 76ERS",
+              "ospite": "JOLLY PELICANS",
+              "data": "14 Maggio 2026",
+              "ora": "19:15",
+              "giornata": 1,
+              "punteggio": "53-36",
+              "leg": "A"
+            },
+            {
               "casa": "JOANNESB ROCKETS",
               "ospite": "JOLLY PELICANS",
               "data": "22 Aprile 2026",
@@ -34155,14 +34174,6 @@
             }
           ],
           "prossime": [
-            {
-              "casa": "PANDA 76ERS",
-              "ospite": "JOLLY PELICANS",
-              "data": "14 Maggio 2026",
-              "ora": "19:15",
-              "giornata": 1,
-              "leg": "A"
-            },
             {
               "casa": "SULCISPES TIMBERWOLVES",
               "ospite": "ELMAS BUCKS",
@@ -34438,7 +34449,7 @@
               "casa": "ASSEMINI HORNETS",
               "ospite": "LANUSEI THUNDER",
               "data": "17 Maggio 2026",
-              "ora": "15:30",
+              "ora": "18:00",
               "giornata": 1,
               "leg": "R"
             },
@@ -40105,8 +40116,8 @@
             {
               "casa": "A.S.D. BETA",
               "ospite": "PALL. NUORO",
-              "data": "30 Giugno 2026",
-              "ora": "16:45",
+              "data": "30 Maggio 2026",
+              "ora": "17:00",
               "giornata": 1,
               "leg": "A"
             },
@@ -40129,10 +40140,18 @@
             {
               "casa": "ASTRO SSDRL",
               "ospite": "DINAMO BASKET 2000",
-              "data": "29 Giugno 2026",
-              "ora": "08:00",
+              "data": "02 Giugno 2026",
+              "ora": "12:00",
               "giornata": 3,
               "leg": "A"
+            },
+            {
+              "casa": "A.S.D. BETA",
+              "ospite": "DINAMO BASKET 2000",
+              "data": "17 Maggio 2026",
+              "ora": "11:30",
+              "giornata": 2,
+              "leg": "R"
             },
             {
               "casa": "ASTRO SSDRL",
@@ -40152,25 +40171,17 @@
             },
             {
               "casa": "A.S.D. BETA",
-              "ospite": "DINAMO BASKET 2000",
-              "data": "30 Giugno 2026",
-              "ora": "16:45",
-              "giornata": 2,
+              "ospite": "ANTONIANUM BASKET",
+              "data": "28 Maggio 2026",
+              "ora": "19:30",
+              "giornata": 3,
               "leg": "R"
             },
             {
               "casa": "DINAMO BASKET 2000",
               "ospite": "ASTRO SSDRL",
-              "data": "29 Giugno 2026",
-              "ora": "08:00",
-              "giornata": 3,
-              "leg": "R"
-            },
-            {
-              "casa": "A.S.D. BETA",
-              "ospite": "ANTONIANUM BASKET",
-              "data": "29 Giugno 2026",
-              "ora": "08:00",
+              "data": "30 Maggio 2026",
+              "ora": "17:30",
               "giornata": 3,
               "leg": "R"
             }
@@ -42360,17 +42371,18 @@
               "ps": 1158
             }
           ],
-          "risultati": [],
-          "prossime": [
+          "risultati": [
             {
               "casa": "S.A.P. ALGHERO",
               "ospite": "G.S. ORATORIO ELMAS",
               "data": "15 Maggio 2026",
               "ora": "19:00",
               "giornata": 1,
+              "punteggio": "68-38",
               "gara": 1
             }
-          ]
+          ],
+          "prossime": []
         },
         {
           "nome": "Playoff - Quarti – Terzo Quarto",
