@@ -16041,26 +16041,32 @@ function grtClassifiche(gironi,garecamp,camp,clr){
   }
 
   // ── RAGGRUPPA GIRONI PER FASE → UNA RIGA PER FASE ────────────────────────
-  var gironiOrdinati=gironi.slice().filter(function(gi){return!/accumulato/i.test(gi)&&!isFaseElim(gi);}).sort(function(a,b){
-    var ga=garecamp.find(function(g){return g['Girone']===a;});
-    var gb=garecamp.find(function(g){return g['Girone']===b;});
-    var pa=fasePrio(ga?ga['Fase']||'':'');
-    var pb=fasePrio(gb?gb['Fase']||'':'');
-    return pa-pb||a.localeCompare(b,'it');
+  // Usa coppie {fase,girone} per evitare che "Girone Unico" della Qualificazione
+  // e "Girone Unico" della Fase Orologio vengano deduplicate
+  var _fgPairs=[];
+  var _fgSeen=new Set();
+  garecamp.forEach(function(g){
+    var gi=g['Girone']||'',fa=g['Fase']||'';
+    if(!gi||/accumulato/i.test(gi)||isFaseElim(gi))return;
+    var key=fa+'|||'+gi;
+    if(!_fgSeen.has(key)){_fgSeen.add(key);_fgPairs.push({fase:fa,girone:gi,key:key});}
   });
-  var minPrio=99;
-  gironiOrdinati.forEach(function(gx){var fx=garecamp.find(function(g){return g['Girone']===gx;});if(fx){var p=fasePrio(fx['Fase']||'');if(p<minPrio)minPrio=p;}});
+  _fgPairs.sort(function(a,b){return fasePrio(a.fase)-fasePrio(b.fase)||a.girone.localeCompare(b.girone,'it');});
 
   // Raggruppa per fase
   var fasiGroups=[];
   var faseGruppoMap={};
-  gironiOrdinati.forEach(function(gi){
-    var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
-    if(!(sqByGi[gi]&&sqByGi[gi].size))return;
-    var faseGi=(gGi.map(function(g){return g['Fase']||'';}).filter(Boolean)[0])||'';
-    var key=faseGi||'__nofase__';
-    if(!faseGruppoMap[key]){faseGruppoMap[key]={fase:faseGi,gironi:[]};fasiGroups.push(faseGruppoMap[key]);}
-    faseGruppoMap[key].gironi.push(gi);
+  _fgPairs.forEach(function(fp){
+    var sqSet=new Set();
+    garecamp.forEach(function(g){
+      if(g['Girone']!==fp.girone||g['Fase']!==fp.fase)return;
+      if(g['Squadra Casa'])sqSet.add(g['Squadra Casa']);
+      if(g['Squadra Ospite'])sqSet.add(g['Squadra Ospite']);
+    });
+    if(!sqSet.size)return;
+    var mapKey=fp.fase||'__nofase__';
+    if(!faseGruppoMap[mapKey]){faseGruppoMap[mapKey]={fase:fp.fase,pairs:[]};fasiGroups.push(faseGruppoMap[mapKey]);}
+    faseGruppoMap[mapKey].pairs.push({girone:fp.girone,fase:fp.fase,sqSet:sqSet});
   });
 
   // Costruisce HTML
@@ -16068,29 +16074,29 @@ function grtClassifiche(gironi,garecamp,camp,clr){
 
   fasiGroups.forEach(function(grp,grpIdx){
     var isFirstFase=(grpIdx===0);
-    var hasPlayout=grp.gironi.some(function(gi){return isFasePlayout(gi);});
+    var hasPlayout=grp.pairs.some(function(p){return isFasePlayout(p.girone)||/playout/i.test(p.fase);});
     var rowLabel=grp.fase
       ?(hasPlayout
-        ?'<div style="padding:6px 12px;background:linear-gradient(90deg,#fff0e0,#fff8f0);border-radius:8px;border-left:4px solid #b84c00;font-size:.78rem;font-weight:700;color:#b84c00;margin-bottom:8px">⬇️ '+escH(grp.fase)+' — Salvezza (Playout)</div>'
+        ?'<div style="padding:6px 12px;background:linear-gradient(90deg,#fff0e0,#fff8f0);border-radius:8px;border-left:4px solid #b84c00;font-size:.78rem;font-weight:700;color:#b84c00;margin-bottom:8px">⬇️ '+escH(grp.fase)+' — Salvezza</div>'
         :'<div style="padding:6px 12px;background:linear-gradient(90deg,#e8f0ff,#f5f8ff);border-radius:8px;border-left:4px solid var(--bl);font-size:.78rem;font-weight:700;color:var(--bl);margin-bottom:8px">📋 '+escH(grp.fase)+'</div>'
       )
       :(hasPlayout?'<div style="padding:6px 12px;background:linear-gradient(90deg,#fff0e0,#fff8f0);border-radius:8px;border-left:4px solid #b84c00;font-size:.78rem;font-weight:700;color:#b84c00;margin-bottom:8px">⬇️ Playout — Salvezza</div>':'');
-    // Raggruppa gironi per famiglia colore → stessa riga
+    // Raggruppa per famiglia colore → stessa riga
     var famMap={};var famOrd=[];
-    grp.gironi.forEach(function(gi){
-      var fam=getFam(gi)||'__altro__';
+    grp.pairs.forEach(function(p){
+      var fam=getFam(p.girone)||'__altro__';
       if(!famMap[fam]){famMap[fam]=[];famOrd.push(fam);}
-      famMap[fam].push(gi);
+      famMap[fam].push(p);
     });
     var htmlRows='',accRows='';
     famOrd.forEach(function(fam){
-      var gis=famMap[fam];var n=gis.length;
+      var ps=famMap[fam];var n=ps.length;
       var rh='',ah='';
-      gis.forEach(function(gi){
-        var gGi=garecamp.filter(function(g){return g['Girone']===gi;});
-        var sqSet=sqByGi[gi]||new Set();
-        if(!sqSet.size)return;
-        var giClr=isFasePlayout(gi)?'#b84c00':giColorGrad(gi);
+      ps.forEach(function(p){
+        var gi=p.girone,fa=p.fase,sqSet=p.sqSet;
+        var gGi=garecamp.filter(function(g){return g['Girone']===gi&&g['Fase']===fa;});
+        var isPlay=isFasePlayout(gi)||/playout/i.test(fa);
+        var giClr=isPlay?'#b84c00':giColorGrad(gi);
         var pMap=isFirstFase?null:sqPosizioneGirone;
         rh+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
         if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
