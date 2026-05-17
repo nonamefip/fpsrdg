@@ -6504,7 +6504,6 @@ function renderCamp(){
       <td style="text-align:center">${cs.n_squadre}</td>
       <td style="font-size:.68rem;max-width:200px">
         ${(()=>{
-          // Calcola classifica dalla prima fase
           const gcmp=GARE.filter(g=>g['Campionato']===c);
           const fase1=[...new Set(gcmp.map(g=>g['Fase']||'').filter(Boolean))][0]||'';
           const gF=gcmp.filter(g=>!fase1||g['Fase']===fase1);
@@ -6519,13 +6518,12 @@ function renderCamp(){
             if(pc>po){sqPt[sc].pt+=2;}else if(po>pc){sqPt[so].pt+=2;}else{sqPt[sc].pt++;sqPt[so].pt++;}
           });
           const rnk=Object.entries(sqPt).sort((a,b)=>b[1].pt-a[1].pt||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps)));
-          if(!rnk.length)return'<span style="color:var(--mu2)">–</span>';
-          const medals=['🥇','🥈','🥉'];
-          return rnk.slice(0,3).map(([sq],i)=>`<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${medals[i]} <span style="cursor:pointer;color:${campColor(c)}" onclick="openSquadra('${esc(sq)}','${esc(c)}')">${escH(sq.length>18?sq.slice(0,18)+'…':sq)}</span></div>`).join('');
+          if(!rnk.length)return'\u2013';
+          const med=['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49'];
+          return rnk.slice(0,3).map(([sq],i)=>med[i]+' '+escH(sq.length>16?sq.slice(0,16)+'\u2026':sq)).join('<br>');
         })()}
       </td>
-
-    // Sub-rows gironi
+    </tr>`;
     if(gironi.length>0){
       const garePerGirone={};
       GARE.filter(g=>g['Campionato']===c).forEach(g=>{if(g['Girone'])garePerGirone[g['Girone']]=(garePerGirone[g['Girone']]||0)+1;});
