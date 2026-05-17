@@ -6502,7 +6502,28 @@ function renderCamp(){
       <td>${compBar}</td>
       <td>${covHtml}</td>
       <td style="text-align:center">${cs.n_squadre}</td>
-    </tr>`;
+      <td style="font-size:.68rem;max-width:200px">
+        ${(()=>{
+          // Calcola classifica dalla prima fase
+          const gcmp=GARE.filter(g=>g['Campionato']===c);
+          const fase1=[...new Set(gcmp.map(g=>g['Fase']||'').filter(Boolean))][0]||'';
+          const gF=gcmp.filter(g=>!fase1||g['Fase']===fase1);
+          const sqPt={};
+          gF.forEach(g=>{
+            const sc=g['Squadra Casa'],so=g['Squadra Ospite'];
+            if(!sc||!so||!g['Risultato'])return;
+            if(!sqPt[sc])sqPt[sc]={pt:0,pf:0,ps:0};
+            if(!sqPt[so])sqPt[so]={pt:0,pf:0,ps:0};
+            const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+            sqPt[sc].pf+=pc;sqPt[sc].ps+=po;sqPt[so].pf+=po;sqPt[so].ps+=pc;
+            if(pc>po){sqPt[sc].pt+=2;}else if(po>pc){sqPt[so].pt+=2;}else{sqPt[sc].pt++;sqPt[so].pt++;}
+          });
+          const rnk=Object.entries(sqPt).sort((a,b)=>b[1].pt-a[1].pt||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps)));
+          if(!rnk.length)return'<span style="color:var(--mu2)">–</span>';
+          const medals=['🥇','🥈','🥉'];
+          return rnk.slice(0,3).map(([sq],i)=>`<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${medals[i]} <span style="cursor:pointer;color:${campColor(c)}" onclick="openSquadra('${esc(sq)}','${esc(c)}')">${escH(sq.length>18?sq.slice(0,18)+'…':sq)}</span></div>`).join('');
+        })()}
+      </td>
 
     // Sub-rows gironi
     if(gironi.length>0){
@@ -6531,6 +6552,7 @@ function renderCamp(){
     <td style="text-align:center;color:#90CAF9">${totGare}</td>
     <td></td><td></td><td></td>
     <td style="text-align:center;color:#90CAF9">${totSq}</td>
+    <td></td>
   </tr>`;
 
   document.getElementById('camp-list').innerHTML=`<p class="il">${camps.length} campionati</p>
@@ -6546,6 +6568,7 @@ function renderCamp(){
     <th onclick="sT('tbl-camp',8,event)" style="cursor:pointer">Completam.</th>
     <th onclick="sT('tbl-camp',9,event)" style="cursor:pointer">Copertura</th>
     <th onclick="sT('tbl-camp',10,event)" style="text-align:center">Squadre</th>
+    <th style="min-width:160px">Classifica (Top 3)</th>
   </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
@@ -9929,8 +9952,50 @@ function openCampionato(camp){
           </div>`:''}
         </div>`;
       })()}
+
+      <!-- Partite mancanti + Classifica finale -->
+      ${(()=>{
+        // Calcola partite mancanti per squadra (prima fase)
+        const fase1=[...new Set(allCampGare.map(g=>g['Fase']||'').filter(Boolean))][0]||'';
+        const gF=allCampGare.filter(g=>!fase1||g['Fase']===fase1);
+        const sqM={};
+        gF.forEach(g=>{
+          const sc=g['Squadra Casa'],so=g['Squadra Ospite'];
+          if(!sc||!so)return;
+          if(!sqM[sc])sqM[sc]={pt:0,g:0,v:0,p:0,pf:0,ps:0,manc:0};
+          if(!sqM[so])sqM[so]={pt:0,g:0,v:0,p:0,pf:0,ps:0,manc:0};
+          if(g['Risultato']){
+            const pc=parseInt(g['Punti Casa'])||0,po=parseInt(g['Punti Ospite'])||0;
+            sqM[sc].g++;sqM[so].g++;sqM[sc].pf+=pc;sqM[sc].ps+=po;sqM[so].pf+=po;sqM[so].ps+=pc;
+            if(pc>po){sqM[sc].pt+=2;sqM[sc].v++;sqM[so].p++;}
+            else if(po>pc){sqM[so].pt+=2;sqM[so].v++;sqM[sc].p++;}
+            else{sqM[sc].pt++;sqM[so].pt++;}
+          } else {
+            sqM[sc].manc++;sqM[so].manc++;
+          }
+        });
+        const ranked=Object.entries(sqM).sort((a,b)=>b[1].pt-a[1].pt||((b[1].pf-b[1].ps)-(a[1].pf-a[1].ps)));
+        const conManc=ranked.filter(([,s])=>s.manc>0);
+        const medals=['🥇','🥈','🥉'];
+        return`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title">🏆 Classifica Finale</div>
+            ${ranked.slice(0,8).map(([sq,s],i)=>`<div style="display:flex;align-items:center;gap:5px;margin:3px 0;font-size:.72rem;${i<3?'font-weight:700':''}">
+              <span style="min-width:20px;text-align:center">${i<3?medals[i]:(i+1)+'°'}</span>
+              <span class="rn rn-sq" style="flex:1" onclick="openSquadra('${esc(sq)}','${esc(camp)}')">${escH(sq.length>22?sq.slice(0,22)+'…':sq)}</span>
+              <b style="color:var(--bl)">${s.pt}</b>
+            </div>`).join('')}
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title">⏳ Partite Mancanti</div>
+            ${conManc.length?conManc.map(([sq,s])=>`<div style="display:flex;align-items:center;gap:5px;margin:3px 0;font-size:.72rem">
+              <span class="rn rn-sq" style="flex:1" onclick="openSquadra('${esc(sq)}','${esc(camp)}')">${escH(sq.length>22?sq.slice(0,22)+'…':sq)}</span>
+              <span style="background:${s.manc>=3?'var(--red)':s.manc>=1?'var(--gold)':'var(--green)'};color:#fff;border-radius:10px;padding:1px 8px;font-size:.68rem;font-weight:700">${s.manc}</span>
+            </div>`).join(''):'<div style="color:var(--mu);font-size:.73rem">✅ Tutte le partite giocate</div>'}
+          </div>
+        </div>`;
+      })()}
     </div>
-    <div class="mtc hidden" id="mct-1" data-camp="${esc(camp)}">
       <div id="camp-cl-${esc(camp)}"></div>
     </div>
     <div class="mtc hidden" id="mct-2">
