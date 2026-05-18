@@ -11885,7 +11885,7 @@ function openCampionato(camp){
         });
         const totMancanti=gareMancanti.length;
         const totGiocate=gareGiocate.length;
-        const totGare=allCampGare.filter(g=>g['Girone']&&!isFaseElim(g['Girone'])).length;
+        const totGare=allCampGare.filter(g=>g['Girone']&&!/\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff|\bplayout/i.test(g['Girone'])).length;
         const pctComp=totGare?Math.round(totGiocate/totGare*100):0;
         // Raggruppa per girone
         let html='<div style="margin-bottom:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">';
@@ -17625,3 +17625,4 @@ x<!-- REBUILD2 -->
 <!-- REBUILD5 -->
 <!-- REBUILD6 -->
 <!-- REBUILD7 -->
+<!-- REBUILD8 -->
