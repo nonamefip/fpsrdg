@@ -3013,9 +3013,9 @@ function renderPersonsTable(cid,persons,opts={}){
         </td>`;
       })():''}
       ${showCat?`<td><span class="badge bc-${p.categoria}">${escH(p.categoria)}</span></td>`:''}
-      <td ${tdAtt} data-val="${nGareOggi}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}"
-        title="Gare regionali fatte (Arb+UDC+Oss). Escluse nazionali (colonna 🇮🇹)."
-        data-n="${p.nome}" onclick="event.stopPropagation();openPersona(this.dataset.n)">${nGareOggi}</td>
+      <td ${tdAtt} data-val="${nGareOggi+nGareNaz}" style="font-weight:700;text-align:center;cursor:pointer;color:${pvColor}"
+        title="Gare totali: regionali (${nGareOggi})${nGareNaz?' + nazionali ('+nGareNaz+')':''}."
+        data-n="${p.nome}" onclick="event.stopPropagation();openPersona(this.dataset.n)">${nGareOggi+nGareNaz}</td>
       <td ${tdAtt} data-val="${nGareArbOggiDisp}" style="text-align:center">${(nGareArbOggiDisp&&(isArb||cid==='arb-list'))?mkLink(nGareArbOggiDisp,1,pvColor):(nGareArbOggiDisp&&isDual?`<span style="color:var(--mu2);font-size:.68rem" title="Gare come arbitro (ruolo secondario)">${nGareArbOggiDisp}</span>`:'')}</td>
       ${isArb?(()=>{
         const _gM=(p.gare_arbitro||[]).filter(g=>!/femmin/i.test(g['Campionato']||g.c||'')).length;
@@ -17628,3 +17628,4 @@ x<!-- REBUILD2 -->
 <!-- REBUILD8 -->
 <!-- REBUILD9 -->
 <!-- REBUILD10 -->
+<!-- REBUILD11 -->
