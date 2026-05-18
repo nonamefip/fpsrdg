@@ -6210,6 +6210,7 @@ function renderSq(){
   h+=`<th onclick="sT('tbl-sq',10,event)" style="${TH}">V-Osp</th>`;
   h+=`<th onclick="sT('tbl-sq',11,event)" style="${TH}">P-Osp</th>`;
   h+=`<th onclick="sT('tbl-sq',12,event)" style="${TH}">Win%</th>`;
+  h+=`<th onclick="sT('tbl-sq',13,event)" style="${TH};color:var(--red)" title="Gare programmate non ancora giocate">Manc.</th>`;
   h+=`</tr></thead><tbody>`;
 
   // Funzione per trovare il nome della squadra con campionato di livello più alto nel gruppo
@@ -6258,6 +6259,10 @@ function renderSq(){
     h+=`<td data-val="${s.vinte_osp||0}" style="text-align:center">${s.vinte_osp||0}</td>`;
     h+=`<td data-val="${s.perse_osp||0}" style="text-align:center">${s.perse_osp||0}</td>`;
     h+=`<td data-val="${wp}" style="font-weight:700;color:${wp>50?'var(--green)':wp<50?'var(--red)':'var(--mu)'}">${wp}%</td>`;
+    // Gare mancanti: programmate senza risultato
+    var nManc=(s.gare||[]).filter(g=>!g['Risultato']||g['Risultato']==='-').length;
+    var mancClr=nManc===0?'var(--green)':nManc<=2?'var(--gold)':'var(--red)';
+    h+=`<td data-val="${nManc}" style="text-align:center;font-weight:${nManc>0?700:400};color:${mancClr}">${nManc||'—'}</td>`;
     h+=`</tr>`;
 
     // Sotto-righe per campionato
@@ -6308,6 +6313,9 @@ function renderSq(){
         h+=`<td data-val="${vosp}" style="text-align:center;font-size:.72rem">${vosp}</td>`;
         h+=`<td data-val="${posp}" style="text-align:center;font-size:.72rem">${posp}</td>`;
         h+=`<td data-val="${cwp}" style="text-align:center;font-size:.72rem;font-weight:700;color:${cwp>50?'var(--green)':cwp<50?'var(--red)':'var(--mu)'}">${cwp}%</td>`;
+        var cManc=(s.gare||[]).filter(g=>g['Campionato']===cn&&(!g['Risultato']||g['Risultato']==='-')).length;
+        var cMancClr=cManc===0?'var(--green)':cManc<=2?'var(--gold)':'var(--red)';
+        h+=`<td data-val="${cManc}" style="text-align:center;font-size:.72rem;font-weight:${cManc>0?700:400};color:${cMancClr}">${cManc||'—'}</td>`;
         h+=`</tr>`;
       });
     }
@@ -17629,3 +17637,4 @@ x<!-- REBUILD2 -->
 <!-- REBUILD9 -->
 <!-- REBUILD10 -->
 <!-- REBUILD11 -->
+<!-- REBUILD12 -->
