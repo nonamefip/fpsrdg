@@ -806,6 +806,7 @@ tr.loss-row td{background:#fdecea!important;}
   </div>
 
   <button class="nav-btn" onclick="showPage('fiplive')" title="Classifiche e risultati live da fip.it">🌐 FIP Live</button>
+  <button class="nav-btn" onclick="openAlboOro()" title="Classifiche finali per campionato">🏅 Albo d'Oro</button>
   <button class="nav-btn" onclick="showPage('aggiornamento')" title="Impostazioni">⚙️</button>
 </div>
 <div class="kpi-strip">
@@ -1488,6 +1489,13 @@ tr.loss-row td{background:#fdecea!important;}
   <button class="mbtn" onclick="printMo('mo-camp')">🖨</button><button class="mbtn" onclick="toggleMoFullscreen('mo-camp')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-camp')">✕</button></div>
   <div class="mbody" id="mc-body"></div>
   <div class="mfoot"><button class="btn b-go" onclick="printMo('mo-camp')">🖨</button><button class="btn b-gr" onclick="closeMo('mo-camp')">Chiudi</button></div>
+</div></div>
+
+<div class="mo" id="mo-albo"><div class="mbox" style="max-width:1200px;width:98%">
+  <div class="mhd"><span style="font-size:1.1rem">🏅</span><h3>Albo d'Oro — Classifiche Finali</h3>
+  <button class="mbtn" onclick="toggleMoFullscreen('mo-albo')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-albo')">✕</button></div>
+  <div class="mbody" id="mo-albo-body"></div>
+  <div class="mfoot"><button class="btn b-gr" onclick="closeMo('mo-albo')">Chiudi</button></div>
 </div></div>
 
 <div class="mo" id="mo-gare"><div class="mbox" id="mo-gare-box">
@@ -10434,6 +10442,64 @@ function openProvincia(pv){
 }
 
 // MODAL CAMPIONATO
+function openAlboOro(){
+  const campOrd=Object.keys(CS).sort((a,b)=>{
+    const ma=CAMP_META[a]||{},mb=CAMP_META[b]||{};
+    return (livelloC?livelloC(b)-livelloC(a):0)||a.localeCompare(b,'it');
+  });
+  const medals=['🥇','🥈','🥉','4°','5°','6°','7°','8°'];
+  const medalClr=['#c98a00','#888','#cd7f32','#1e3a6e','#1e3a6e','#1e3a6e','#1e3a6e','#1e3a6e'];
+  let html='<div style="overflow-x:auto">';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:.75rem">';
+  html+='<thead><tr style="background:var(--bl);color:#fff">';
+  html+='<th style="padding:8px 12px;text-align:left;min-width:180px">Campionato</th>';
+  medals.forEach((m,i)=>{
+    html+='<th style="padding:8px 10px;text-align:center;min-width:140px"><span style="color:'+medalClr[i]+'">'+m+'</span></th>';
+  });
+  html+='</tr></thead><tbody>';
+  campOrd.forEach((camp,ri)=>{
+    const cs=CS[camp];if(!cs)return;
+    const meta=CAMP_META[camp]||{};
+    const col=campColor(camp);
+    // Prende la classifica del girone principale (qualificazione o unico)
+    const gironiData=cs.girone_data||{};
+    // Cerca il girone con la classifica più lunga (quello principale)
+    let bestCl=[];
+    Object.values(gironiData).forEach(gd=>{
+      const cl=gd.classifica||[];
+      if(cl.length>bestCl.length)bestCl=cl;
+    });
+    // Fallback: usa sq_stats
+    if(!bestCl.length){
+      const sqStats=cs.sq_stats||{};
+      bestCl=Object.entries(sqStats).sort((a,b)=>(b[1].pt||0)-(a[1].pt||0)).map(([sq,st],i)=>({pos:i+1,squadra:sq}));
+    }
+    const top8=bestCl.slice(0,8);
+    const rowBg=ri%2?'var(--tbl-even)':'#fff';
+    html+='<tr style="background:'+rowBg+';border-bottom:1px solid var(--tbl-bd)">';
+    html+='<td style="padding:7px 10px"><span style="background:'+col+';color:#fff;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700;cursor:pointer;white-space:nowrap" onclick="openCampionato(\''+esc(camp)+'\')">'+escH(camp.replace('COMITATO REGIONALE SARDEGNA ',''))+'</span>';
+    if(meta.genere==='F')html+=' <span style="font-size:.62rem;color:#c0176e">♀</span>';
+    if(meta.livello)html+=' <span style="font-size:.6rem;color:var(--mu)">'+escH(meta.livello)+'</span>';
+    html+='</td>';
+    medals.forEach((m,i)=>{
+      const sq=top8[i];
+      if(sq){
+        const pvClr=SQ[sq.squadra]?.prov?PC[SQ[sq.squadra].prov]||'#888':'#888';
+        html+='<td style="padding:5px 8px;text-align:center">';
+        html+='<span class="rn rn-sq" style="font-size:.7rem;display:block;cursor:pointer;font-weight:'+(i<3?700:400)+';color:'+(i<3?medalClr[i]:'var(--tx)')+'" onclick="openSquadra(\''+esc(sq.squadra)+'\')">'+escH(sq.squadra)+'</span>';
+        if(SQ[sq.squadra]?.prov)html+='<span style="background:'+pvClr+';color:#fff;border-radius:3px;padding:0 4px;font-size:.55rem">'+escH(SQ[sq.squadra].prov)+'</span>';
+        html+='</td>';
+      } else {
+        html+='<td style="text-align:center;color:var(--mu2)">—</td>';
+      }
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  document.getElementById('mo-albo-body').innerHTML=html;
+  openMo('mo-albo');
+}
+
 function openCampionato(camp){
   const cs=CS[camp];if(!cs)return;
   const allCampGare=(D.gare||[]).filter(g=>g.Campionato===camp).sort((a,b)=>b.Data.localeCompare(a.Data));
@@ -10470,6 +10536,7 @@ function openCampionato(camp){
       <button class="mt" onclick="swTab(this,'mct-')">📅 Gare (${allCampGare.length})</button>
       <button class="mt" onclick="swTab(this,'mct-')">📆 Calendario</button>
       <button class="mt" onclick="swTab(this,'mct-')">🏆 Tabellone</button>
+      <button class="mt" onclick="swTab(this,'mct-')">📉 Completamento</button>
     </div>
     <div class="mtc active" id="mct-0">
       <div class="scs">
@@ -11780,6 +11847,76 @@ function openCampionato(camp){
         const bracketHtml=(plHtml&&poHtml)?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'+plHtml+poHtml+'</div>':(plHtml||poHtml);
         if(!fasiIntHtml&&!bracketHtml) return '<div style="padding:30px;text-align:center;color:var(--mu);font-size:.82rem">Nessuna fase avanzata disponibile per questo campionato</div>';
         return fasiIntHtml+bracketHtml;
+      })()}
+    </div>
+    <div class="mtc hidden" id="mct-8">
+      ${(()=>{
+        // Gare mancanti per squadra: programmate senza risultato
+        const gareMancanti=allCampGare.filter(g=>!g['Risultato']||g['Risultato']==='-'||g['Risultato']==='');
+        const gareGiocate=allCampGare.filter(g=>g['Risultato']&&g['Risultato']!=='-'&&g['Risultato']!=='');
+        // Per girone
+        const gironiSet=[...new Set(allCampGare.map(g=>g['Girone']||'').filter(Boolean))].filter(gi=>!isFaseElim(gi));
+        // Mappa squadra -> {giocate, mancanti, prossima}
+        const sqMap={};
+        allCampGare.forEach(g=>{
+          [g['Squadra Casa'],g['Squadra Ospite']].forEach(sq=>{
+            if(!sq)return;
+            if(!sqMap[sq])sqMap[sq]={giocate:0,mancanti:0,prossima:null,girone:g['Girone']||''};
+          });
+          const hasRis=g['Risultato']&&g['Risultato']!=='-';
+          if(hasRis){
+            if(sqMap[g['Squadra Casa']])sqMap[g['Squadra Casa']].giocate++;
+            if(sqMap[g['Squadra Ospite']])sqMap[g['Squadra Ospite']].giocate++;
+          } else {
+            if(sqMap[g['Squadra Casa']]){
+              sqMap[g['Squadra Casa']].mancanti++;
+              if(!sqMap[g['Squadra Casa']].prossima||g['Data']<sqMap[g['Squadra Casa']].prossima)
+                sqMap[g['Squadra Casa']].prossima=g['Data'];
+            }
+            if(sqMap[g['Squadra Ospite']]){
+              sqMap[g['Squadra Ospite']].mancanti++;
+              if(!sqMap[g['Squadra Ospite']].prossima||g['Data']<sqMap[g['Squadra Ospite']].prossima)
+                sqMap[g['Squadra Ospite']].prossima=g['Data'];
+            }
+          }
+        });
+        const totMancanti=gareMancanti.length;
+        const totGiocate=gareGiocate.length;
+        const totGare=allCampGare.filter(g=>g['Girone']&&!isFaseElim(g['Girone'])).length;
+        const pctComp=totGare?Math.round(totGiocate/totGare*100):0;
+        // Raggruppa per girone
+        let html='<div style="margin-bottom:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">';
+        html+='<div style="font-size:.82rem"><b style="color:var(--green)">${totGiocate}</b> gare giocate · <b style="color:var(--red)">${totMancanti}</b> mancanti</div>';
+        html+='<div style="flex:1;min-width:120px;max-width:200px"><div style="height:8px;background:#eee;border-radius:4px"><div style="height:8px;background:var(--green);border-radius:4px;width:${pctComp}%"></div></div><div style="font-size:.68rem;color:var(--mu);margin-top:2px">${pctComp}% completato</div></div>';
+        html+='</div>';
+        html=html.replace(/\$\{totGiocate\}/g,totGiocate).replace(/\$\{totMancanti\}/g,totMancanti).replace(/\$\{pctComp\}/g,pctComp);
+        // Tabella per girone
+        gironiSet.forEach(gi=>{
+          const sqGi=Object.entries(sqMap).filter(([sq,d])=>d.girone===gi||allCampGare.some(g=>g['Girone']===gi&&(g['Squadra Casa']===sq||g['Squadra Ospite']===sq)));
+          // Usa solo le squadre che hanno gare in questo girone
+          const sqGiSet=new Set();
+          allCampGare.filter(g=>g['Girone']===gi).forEach(g=>{if(g['Squadra Casa'])sqGiSet.add(g['Squadra Casa']);if(g['Squadra Ospite'])sqGiSet.add(g['Squadra Ospite']);});
+          const rows=[...sqGiSet].map(sq=>{
+            const d=sqMap[sq]||{giocate:0,mancanti:0,prossima:null};
+            const tot=d.giocate+d.mancanti;
+            const pct=tot?Math.round(d.giocate/tot*100):0;
+            const clr=d.mancanti===0?'var(--green)':d.mancanti<=2?'var(--gold)':'var(--red)';
+            return`<tr>
+              <td><span class="rn rn-sq" onclick="openSquadra('${esc(sq)}')">${escH(sq)}</span></td>
+              <td style="text-align:center;font-weight:700;color:var(--green)">${d.giocate}</td>
+              <td style="text-align:center;font-weight:700;color:${clr}">${d.mancanti}</td>
+              <td style="text-align:center">${tot}</td>
+              <td style="min-width:80px"><div style="height:6px;background:#eee;border-radius:3px"><div style="height:6px;background:${clr};border-radius:3px;width:${pct}%"></div></div><div style="font-size:.6rem;color:var(--mu);text-align:center">${pct}%</div></td>
+              <td style="font-size:.68rem;color:var(--mu)">${d.prossima||'—'}</td>
+            </tr>`;
+          }).join('');
+          const giClr=giColorGrad(gi)||'var(--bl)';
+          html+='<div style="margin-bottom:16px"><div style="padding:6px 12px;background:'+giClr+';color:#fff;border-radius:8px 8px 0 0;font-size:.8rem;font-weight:700">'+escH(gi)+'</div>';
+          html+=mkTbl(rows,['Squadra','Giocate','Mancanti','Totale','%','Prossima'],'tbl-comp-'+gi.replace(/\s/g,'_'));
+          html+='</div>';
+        });
+        if(!gironiSet.length) html+='<div style="padding:20px;text-align:center;color:var(--mu)">Nessun dato disponibile</div>';
+        return html;
       })()}
     </div>`;
 
@@ -17483,3 +17620,4 @@ x<!-- REBUILD2 -->
 <!-- REBUILD3 -->
 <!-- REBUILD4 -->
 <!-- REBUILD5 -->
+<!-- REBUILD6 -->
