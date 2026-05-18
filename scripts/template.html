@@ -11913,7 +11913,7 @@ function openCampionato(camp){
               <td style="font-size:.68rem;color:var(--mu)">${d.prossima||'—'}</td>
             </tr>`;
           }).join('');
-          const giClr=giColorGrad(gi)||'var(--bl)';
+          const giClr=campColor(camp)||'var(--bl)';
           html+='<div style="margin-bottom:16px"><div style="padding:6px 12px;background:'+giClr+';color:#fff;border-radius:8px 8px 0 0;font-size:.8rem;font-weight:700">'+escH(gi)+'</div>';
           html+=mkTbl(rows,['Squadra','Giocate','Mancanti','Totale','%','Prossima'],'tbl-comp-'+gi.replace(/\s/g,'_'));
           html+='</div>';
@@ -17626,3 +17626,4 @@ x<!-- REBUILD2 -->
 <!-- REBUILD6 -->
 <!-- REBUILD7 -->
 <!-- REBUILD8 -->
+<!-- REBUILD9 -->
