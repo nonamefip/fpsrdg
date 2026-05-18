@@ -3038,7 +3038,7 @@ function renderPersonsTable(cid,persons,opts={}){
       `:''}
       <td ${tdFare} data-val="${nFut}" style="text-align:center;font-weight:${nFut>0?700:400};color:${fareClr}">${nFut||'—'}</td>
       ${isArb?(()=>{const _nFN=(D.nazionale?.arbitri_fuori_sardegna||[]).find(a=>a.nome===p.nome);const nFutN=_nFN?(_nFN.n_gare_future||0):0;return nFutN?'<td data-val="'+nFutN+'" style="text-align:center;background:#fdecea;font-weight:700;color:#c0392b" title="Gare nazionali da arbitrare">🇮🇹 '+nFutN+'</td>':'<td data-val="0" style="text-align:center;color:var(--mu2)">—</td>';})():''}
-      <td ${tdFare} data-val="${nGareOggi+nFut}" style="text-align:center;font-size:.75rem;color:var(--mu)" title="Fatte oggi (${nGareOggi}) + future (${nFut})">${nGareOggi+nFut}</td>
+      <td ${tdFare} data-val="${nGareOggi+nFut+nGareNaz}" style="text-align:center;font-size:.75rem;color:var(--mu)" title="Fatte oggi (${nGareOggi}) + future (${nFut})${nGareNaz?' + nazionali ('+nGareNaz+')':''}">${nGareOggi+nFut+(nGareNaz?('<span style="color:#c0392b;font-size:.65rem"> +🇮🇹'+nGareNaz+'</span>'):'')}</td>
       <td ${tdCamp} data-val="${nCampi}" style="text-align:center">${nCampi?mkLink(nCampi,3,pvColor):0}</td>
       <td ${tdCamp} data-val="${nColl}" style="text-align:center">${nColl?mkLink(nColl,2,pvColor):0}</td>
       <td ${tdCamp} data-val="${nCamp}" style="text-align:center;font-weight:700;color:${pvColor}">${nCamp}</td>
@@ -17627,3 +17627,4 @@ x<!-- REBUILD2 -->
 <!-- REBUILD7 -->
 <!-- REBUILD8 -->
 <!-- REBUILD9 -->
+<!-- REBUILD10 -->
