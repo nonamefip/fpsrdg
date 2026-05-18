@@ -10461,18 +10461,21 @@ function openAlboOro(){
     const cs=CS[camp];if(!cs)return;
     const meta=CAMP_META[camp]||{};
     const col=campColor(camp);
-    // Prende la classifica del girone principale (qualificazione o unico)
+    // Prende la classifica della fase di qualificazione (prima fase, girone unico o principale)
     const gironiData=cs.girone_data||{};
-    // Cerca il girone con la classifica più lunga (quello principale)
     let bestCl=[];
-    Object.values(gironiData).forEach(gd=>{
-      const cl=gd.classifica||[];
+    // Prima cerca girone di qualificazione
+    const qualKeys=Object.keys(gironiData).filter(k=>/qualific/i.test(k));
+    const otherKeys=Object.keys(gironiData).filter(k=>!/qualific/i.test(k)&&!/playoff|\bplayout|\bottav|\bquart|\bsemifinal|\bfinal/i.test(k));
+    const keysToCheck=qualKeys.length?qualKeys:otherKeys;
+    keysToCheck.forEach(k=>{
+      const cl=gironiData[k]?.classifica||[];
       if(cl.length>bestCl.length)bestCl=cl;
     });
-    // Fallback: usa sq_stats
+    // Fallback: usa sq_stats ordinato per punti
     if(!bestCl.length){
       const sqStats=cs.sq_stats||{};
-      bestCl=Object.entries(sqStats).sort((a,b)=>(b[1].pt||0)-(a[1].pt||0)).map(([sq,st],i)=>({pos:i+1,squadra:sq}));
+      bestCl=Object.entries(sqStats).sort((a,b)=>(b[1].pt||0)-(a[1].pt||0)||(b[1].v||0)-(a[1].v||0)).map(([sq,st],i)=>({pos:i+1,squadra:sq}));
     }
     const top8=bestCl.slice(0,8);
     const rowBg=ri%2?'var(--tbl-even)':'#fff';
@@ -11855,7 +11858,7 @@ function openCampionato(camp){
         const gareMancanti=allCampGare.filter(g=>!g['Risultato']||g['Risultato']==='-'||g['Risultato']==='');
         const gareGiocate=allCampGare.filter(g=>g['Risultato']&&g['Risultato']!=='-'&&g['Risultato']!=='');
         // Per girone
-        const gironiSet=[...new Set(allCampGare.map(g=>g['Girone']||'').filter(Boolean))].filter(gi=>!isFaseElim(gi));
+        const gironiSet=[...new Set(allCampGare.map(g=>g['Girone']||'').filter(Boolean))].filter(gi=>!/\bottav|\bquart|\bsemifinal|\bfinal|\bplayoff|\bplayout/i.test(gi));
         // Mappa squadra -> {giocate, mancanti, prossima}
         const sqMap={};
         allCampGare.forEach(g=>{
@@ -17621,3 +17624,4 @@ x<!-- REBUILD2 -->
 <!-- REBUILD4 -->
 <!-- REBUILD5 -->
 <!-- REBUILD6 -->
+<!-- REBUILD7 -->
