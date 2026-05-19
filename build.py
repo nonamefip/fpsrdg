@@ -8,7 +8,14 @@ import json, os, hashlib, datetime, re
 DATA_FILE     = 'cache/data_v5_new.json'
 TEMPLATE_FILE = 'scripts/template.html'
 OUTPUT_FILE   = 'docs/index.html'
-FIP_DATA_FILE = 'fip_sarda_data.json'
+FIP_DATA_FILE = next(
+    (p for p in [
+        'fip_sarda_data.json',
+        'scripts/fip_sarda_data.json',
+        'cache/fip_sarda_data.json',
+    ] if os.path.exists(p)),
+    'fip_sarda_data.json'  # default (mostrerà messaggio se non trovato)
+)
 FIP_PLACEHOLDER = '__FIP_SARDA_JSON__'
 
 if not os.path.exists(DATA_FILE):
@@ -104,8 +111,6 @@ if FIP_PLACEHOLDER in template:
 
             fip_clean = {'aggiornato': str(fip_raw.get('aggiornato', '')), 'campionati': camps_validi}
             fip_json = json.dumps(fip_clean, ensure_ascii=False, separators=(',', ':'))
-            # Escape </script> per evitare che il browser chiuda il tag script prematuramente
-            fip_json = fip_json.replace('<', '\u003c')
 
             # Verifica finale che sia JSON valido
             json.loads(fip_json)
@@ -131,7 +136,6 @@ if f"#{hash4}" not in template:
         ver_str
     )
 
-data = data.replace('<', '\u003c')
 output = template.replace('__DATA__', data)
 
 os.makedirs('docs', exist_ok=True)
