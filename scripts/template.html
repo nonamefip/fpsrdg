@@ -6211,6 +6211,8 @@ function renderSq(){
   h+=`<th onclick="sT('tbl-sq',11,event)" style="${TH}">P-Osp</th>`;
   h+=`<th onclick="sT('tbl-sq',12,event)" style="${TH}">Win%</th>`;
   h+=`<th onclick="sT('tbl-sq',13,event)" style="${TH};color:var(--red)" title="Gare programmate non ancora giocate">Manc.</th>`;
+  h+=`<th onclick="sT('tbl-sq',14,event)" style="${TH};color:var(--red)" title="Gare mancanti in casa">🏠Manc.</th>`;
+  h+=`<th onclick="sT('tbl-sq',15,event)" style="${TH};color:var(--red)" title="Gare mancanti in trasferta">✈Manc.</th>`;
   h+=`</tr></thead><tbody>`;
 
   // Funzione per trovare il nome della squadra con campionato di livello più alto nel gruppo
@@ -6261,8 +6263,14 @@ function renderSq(){
     h+=`<td data-val="${wp}" style="font-weight:700;color:${wp>50?'var(--green)':wp<50?'var(--red)':'var(--mu)'}">${wp}%</td>`;
     // Gare mancanti: programmate senza risultato
     var nManc=(s.gare||[]).filter(g=>!g['Risultato']||g['Risultato']==='-').length;
+    var nMancCasa=(s.gare||[]).filter(g=>(!g['Risultato']||g['Risultato']==='-')&&g['Squadra Casa']===s.nome).length;
+    var nMancOsp=(s.gare||[]).filter(g=>(!g['Risultato']||g['Risultato']==='-')&&g['Squadra Ospite']===s.nome).length;
     var mancClr=nManc===0?'var(--green)':nManc<=2?'var(--gold)':'var(--red)';
-    h+=`<td data-val="${nManc}" style="text-align:center;font-weight:${nManc>0?700:400};color:${mancClr}">${nManc||'—'}</td>`;
+    var mancCasaClr=nMancCasa===0?'var(--green)':nMancCasa<=2?'var(--gold)':'var(--red)';
+    var mancOspClr=nMancOsp===0?'var(--green)':nMancOsp<=2?'var(--gold)':'var(--red)';
+    h+=`<td data-val="${nManc}" style="text-align:center;font-weight:${nManc>0?700:400};color:${mancClr};cursor:${nManc>0?'pointer':'default'}" onclick="${nManc>0?`openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)`:''}">` + (nManc||'—') + `</td>`;
+    h+=`<td data-val="${nMancCasa}" style="text-align:center;font-weight:${nMancCasa>0?700:400};color:${mancCasaClr};cursor:${nMancCasa>0?'pointer':'default'}" onclick="${nMancCasa>0?`openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)`:''}">` + (nMancCasa||'—') + `</td>`;
+    h+=`<td data-val="${nMancOsp}" style="text-align:center;font-weight:${nMancOsp>0?700:400};color:${mancOspClr};cursor:${nMancOsp>0?'pointer':'default'}" onclick="${nMancOsp>0?`openSquadra('${esc(s.nome)}');setTimeout(()=>document.querySelectorAll('#ms-body .mt')[1]?.click(),300)`:''}">` + (nMancOsp||'—') + `</td>`;
     h+=`</tr>`;
 
     // Sotto-righe per campionato
@@ -6314,8 +6322,14 @@ function renderSq(){
         h+=`<td data-val="${posp}" style="text-align:center;font-size:.72rem">${posp}</td>`;
         h+=`<td data-val="${cwp}" style="text-align:center;font-size:.72rem;font-weight:700;color:${cwp>50?'var(--green)':cwp<50?'var(--red)':'var(--mu)'}">${cwp}%</td>`;
         var cManc=(s.gare||[]).filter(g=>g['Campionato']===cn&&(!g['Risultato']||g['Risultato']==='-')).length;
+        var cMancCasa=(s.gare||[]).filter(g=>g['Campionato']===cn&&(!g['Risultato']||g['Risultato']==='-')&&g['Squadra Casa']===s.nome).length;
+        var cMancOsp=(s.gare||[]).filter(g=>g['Campionato']===cn&&(!g['Risultato']||g['Risultato']==='-')&&g['Squadra Ospite']===s.nome).length;
         var cMancClr=cManc===0?'var(--green)':cManc<=2?'var(--gold)':'var(--red)';
+        var cMancCasaClr=cMancCasa===0?'var(--green)':cMancCasa<=2?'var(--gold)':'var(--red)';
+        var cMancOspClr=cMancOsp===0?'var(--green)':cMancOsp<=2?'var(--gold)':'var(--red)';
         h+=`<td data-val="${cManc}" style="text-align:center;font-size:.72rem;font-weight:${cManc>0?700:400};color:${cMancClr}">${cManc||'—'}</td>`;
+        h+=`<td data-val="${cMancCasa}" style="text-align:center;font-size:.72rem;font-weight:${cMancCasa>0?700:400};color:${cMancCasaClr}">${cMancCasa||'—'}</td>`;
+        h+=`<td data-val="${cMancOsp}" style="text-align:center;font-size:.72rem;font-weight:${cMancOsp>0?700:400};color:${cMancOspClr}">${cMancOsp||'—'}</td>`;
         h+=`</tr>`;
       });
     }
@@ -17638,3 +17652,4 @@ x<!-- REBUILD2 -->
 <!-- REBUILD10 -->
 <!-- REBUILD11 -->
 <!-- REBUILD12 -->
+<!-- REBUILD13 -->
