@@ -10466,60 +10466,155 @@ function openProvincia(pv){
 // MODAL CAMPIONATO
 function openAlboOro(){
   const campOrd=Object.keys(CS).sort((a,b)=>{
-    const ma=CAMP_META[a]||{},mb=CAMP_META[b]||{};
     return (livelloC?livelloC(b)-livelloC(a):0)||a.localeCompare(b,'it');
   });
   const medals=['🥇','🥈','🥉','4°','5°','6°','7°','8°'];
   const medalClr=['#c98a00','#888','#cd7f32','#1e3a6e','#1e3a6e','#1e3a6e','#1e3a6e','#1e3a6e'];
+
+  // Costruisce classifica finale tenendo conto dei playoff
+  function buildFinalRanking(camp){
+    const cs=CS[camp]; if(!cs) return [];
+    const gare=(D.gare||[]).filter(g=>g.Campionato===camp);
+    const gironiData=cs.girone_data||{};
+
+    // Cerca girone finale playoff (non playout)
+    const finaleKey=Object.keys(gironiData).find(k=>/\bfinal/i.test(k)&&!/semifinal|ottav|quart|playout/i.test(k));
+    // Cerca girone semifinale
+    const semifKey=Object.keys(gironiData).find(k=>/semifinal/i.test(k)&&!/playout/i.test(k));
+    // Cerca gironi quarti
+    const quartiKeys=Object.keys(gironiData).filter(k=>/quart/i.test(k)&&!/playout/i.test(k));
+
+    let ranking=[];
+
+    if(finaleKey){
+      // Dal girone finale estrai vincitore e finalista
+      const finGare=gare.filter(g=>g['Girone']===finaleKey&&g['Risultato']&&g['Risultato']!=='-');
+      const winCount={};
+      finGare.forEach(g=>{
+        const pc=parseInt(g['Punti Casa']||0), po=parseInt(g['Punti Ospite']||0);
+        if(pc>po){winCount[g['Squadra Casa']]=(winCount[g['Squadra Casa']]||0)+1;}
+        else if(po>pc){winCount[g['Squadra Ospite']]=(winCount[g['Squadra Ospite']]||0)+1;}
+      });
+      const finSq=[...new Set(finGare.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean))];
+      finSq.sort((a,b)=>(winCount[b]||0)-(winCount[a]||0));
+      ranking=finSq.map((sq,i)=>({pos:i+1,squadra:sq,fase:'Finale'}));
+    }
+
+    if(semifKey){
+      const sfGare=gare.filter(g=>g['Girone']===semifKey&&g['Risultato']&&g['Risultato']!=='-');
+      const sfSq=[...new Set(sfGare.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean))];
+      // Chi non è già in ranking viene aggiunto come 3°/4°
+      sfSq.forEach(sq=>{
+        if(!ranking.find(r=>r.squadra===sq))
+          ranking.push({pos:ranking.length+1,squadra:sq,fase:'Semifinale'});
+      });
+    }
+
+    quartiKeys.forEach(qk=>{
+      const qGare=gare.filter(g=>g['Girone']===qk&&g['Risultato']&&g['Risultato']!=='-');
+      const qSq=[...new Set(qGare.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean))];
+      qSq.forEach(sq=>{
+        if(!ranking.find(r=>r.squadra===sq))
+          ranking.push({pos:ranking.length+1,squadra:sq,fase:'Quarti'});
+      });
+    });
+
+    // Aggiungi dalla classifica qualificazione chi non è già in ranking
+    const qualKeys=Object.keys(gironiData).filter(k=>/qualific/i.test(k));
+    const regKeys=Object.keys(gironiData).filter(k=>!/playoff|playout|\bottav|\bquart|\bsemifinal|\bfinal/i.test(k));
+    const clKeys=qualKeys.length?qualKeys:regKeys;
+    clKeys.forEach(k=>{
+      (gironiData[k]?.classifica||[]).forEach(r=>{
+        if(r.squadra&&!ranking.find(x=>x.squadra===r.squadra))
+          ranking.push({pos:ranking.length+1,squadra:r.squadra,fase:'Qualificazione',posQ:r.pos});
+      });
+    });
+
+    // Fallback sq_stats
+    if(!ranking.length){
+      const sqStats=cs.sq_stats||{};
+      ranking=Object.entries(sqStats).sort((a,b)=>(b[1].pt||0)-(a[1].pt||0)).map(([sq],i)=>({pos:i+1,squadra:sq}));
+    }
+
+    return ranking;
+  }
+
+  // Controlla se il campionato ha gironi separati (Nord/Sud o A/B)
+  function getGironiGroups(camp){
+    const cs=CS[camp]; if(!cs) return null;
+    const gironiData=cs.girone_data||{};
+    const regKeys=Object.keys(gironiData).filter(k=>!/playoff|playout|\bottav|\bquart|\bsemifinal|\bfinal/i.test(k));
+    // Se ci sono più gironi regolari con nomi diversi → mostra separatamente
+    if(regKeys.length>1) return regKeys;
+    return null;
+  }
+
   let html='<div style="overflow-x:auto">';
   html+='<table style="width:100%;border-collapse:collapse;font-size:.75rem">';
   html+='<thead><tr style="background:var(--bl);color:#fff">';
   html+='<th style="padding:8px 12px;text-align:left;min-width:180px">Campionato</th>';
   medals.forEach((m,i)=>{
-    html+='<th style="padding:8px 10px;text-align:center;min-width:140px"><span style="color:'+medalClr[i]+'">'+m+'</span></th>';
+    html+='<th style="padding:8px 10px;text-align:center;min-width:130px"><span style="color:'+medalClr[i]+'">'+m+'</span></th>';
   });
   html+='</tr></thead><tbody>';
-  campOrd.forEach((camp,ri)=>{
-    const cs=CS[camp];if(!cs)return;
+
+  let ri=0;
+  campOrd.forEach(camp=>{
+    const cs=CS[camp]; if(!cs) return;
     const meta=CAMP_META[camp]||{};
     const col=campColor(camp);
-    // Prende la classifica della fase di qualificazione (prima fase, girone unico o principale)
-    const gironiData=cs.girone_data||{};
-    let bestCl=[];
-    // Prima cerca girone di qualificazione
-    const qualKeys=Object.keys(gironiData).filter(k=>/qualific/i.test(k));
-    const otherKeys=Object.keys(gironiData).filter(k=>!/qualific/i.test(k)&&!/playoff|\bplayout|\bottav|\bquart|\bsemifinal|\bfinal/i.test(k));
-    const keysToCheck=qualKeys.length?qualKeys:otherKeys;
-    keysToCheck.forEach(k=>{
-      const cl=gironiData[k]?.classifica||[];
-      if(cl.length>bestCl.length)bestCl=cl;
-    });
-    // Fallback: usa sq_stats ordinato per punti
-    if(!bestCl.length){
-      const sqStats=cs.sq_stats||{};
-      bestCl=Object.entries(sqStats).sort((a,b)=>(b[1].pt||0)-(a[1].pt||0)||(b[1].v||0)-(a[1].v||0)).map(([sq,st],i)=>({pos:i+1,squadra:sq}));
-    }
-    const top8=bestCl.slice(0,8);
+    const gironiGroups=getGironiGroups(camp);
     const rowBg=ri%2?'var(--tbl-even)':'#fff';
-    html+='<tr style="background:'+rowBg+';border-bottom:1px solid var(--tbl-bd)">';
-    html+='<td style="padding:7px 10px"><span style="background:'+col+';color:#fff;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700;cursor:pointer;white-space:nowrap" onclick="openCampionato(\''+esc(camp)+'\')">'+escH(camp.replace('COMITATO REGIONALE SARDEGNA ',''))+'</span>';
-    if(meta.genere==='F')html+=' <span style="font-size:.62rem;color:#c0176e">♀</span>';
-    if(meta.livello)html+=' <span style="font-size:.6rem;color:var(--mu)">'+escH(meta.livello)+'</span>';
-    html+='</td>';
-    medals.forEach((m,i)=>{
-      const sq=top8[i];
-      if(sq){
-        const pvClr=SQ[sq.squadra]?.prov?PC[SQ[sq.squadra].prov]||'#888':'#888';
-        html+='<td style="padding:5px 8px;text-align:center">';
-        html+='<span class="rn rn-sq" style="font-size:.7rem;display:block;cursor:pointer;font-weight:'+(i<3?700:400)+';color:'+(i<3?medalClr[i]:'var(--tx)')+'" onclick="openSquadra(\''+esc(sq.squadra)+'\')">'+escH(sq.squadra)+'</span>';
-        if(SQ[sq.squadra]?.prov)html+='<span style="background:'+pvClr+';color:#fff;border-radius:3px;padding:0 4px;font-size:.55rem">'+escH(SQ[sq.squadra].prov)+'</span>';
-        html+='</td>';
+
+    function renderRow(label, ranking, bg, isSubRow){
+      let r='<tr style="background:'+bg+';border-bottom:1px solid var(--tbl-bd)">';
+      const fs=isSubRow?'.68rem':'.72rem';
+      r+='<td style="padding:'+(isSubRow?'4px 10px 4px 20px':'7px 10px')+'">';
+      if(!isSubRow){
+        r+='<span style="background:'+col+';color:#fff;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700;cursor:pointer;white-space:nowrap" onclick="openCampionato(\''+esc(camp)+'\')">'+escH(camp.replace('COMITATO REGIONALE SARDEGNA ',''))+'</span>';
+        if(meta.genere==='F') r+=' <span style="font-size:.62rem;color:#c0176e">♀</span>';
+        if(meta.livello) r+=' <span style="font-size:.6rem;color:var(--mu)">'+escH(meta.livello)+'</span>';
       } else {
-        html+='<td style="text-align:center;color:var(--mu2)">—</td>';
+        r+='<span style="font-size:.68rem;color:var(--mu);font-style:italic">'+escH(label)+'</span>';
       }
-    });
-    html+='</tr>';
+      r+='</td>';
+      medals.forEach((m,i)=>{
+        const sq=ranking[i];
+        if(sq){
+          const pvClr=SQ[sq.squadra]?.prov?PC[SQ[sq.squadra].prov]||'#888':'#888';
+          r+='<td style="padding:4px 6px;text-align:center">';
+          r+='<span class="rn rn-sq" style="font-size:'+fs+';display:block;cursor:pointer;font-weight:'+(i<3?700:400)+';color:'+(i<3?medalClr[i]:'var(--tx)')+'" onclick="openSquadra(\''+esc(sq.squadra)+'\')">'+escH(sq.squadra)+'</span>';
+          if(SQ[sq.squadra]?.prov) r+='<span style="background:'+pvClr+';color:#fff;border-radius:3px;padding:0 4px;font-size:.55rem">'+escH(SQ[sq.squadra].prov)+'</span>';
+          if(sq.fase&&!isSubRow) r+='<span style="font-size:.55rem;color:var(--mu);display:block">'+sq.fase+'</span>';
+          r+='</td>';
+        } else {
+          r+='<td style="text-align:center;color:var(--mu2)">—</td>';
+        }
+      });
+      r+='</tr>';
+      return r;
+    }
+
+    if(gironiGroups&&gironiGroups.length>1){
+      // Riga campionato senza dati
+      html+='<tr style="background:'+rowBg+';border-bottom:1px solid var(--tbl-bd)">';
+      html+='<td colspan="'+(medals.length+1)+'" style="padding:6px 10px"><span style="background:'+col+';color:#fff;border-radius:4px;padding:2px 7px;font-size:.68rem;font-weight:700;cursor:pointer" onclick="openCampionato(\''+esc(camp)+'\')">'+escH(camp.replace('COMITATO REGIONALE SARDEGNA ',''))+'</span>';
+      if(meta.genere==='F') html+=' <span style="font-size:.62rem;color:#c0176e">♀</span>';
+      if(meta.livello) html+=' <span style="font-size:.6rem;color:var(--mu)"> '+escH(meta.livello)+'</span>';
+      html+='</td></tr>';
+      // Sotto-righe per girone
+      gironiGroups.forEach(gk=>{
+        const gd=cs.girone_data[gk];
+        const cl=(gd?.classifica||[]).map((r,i)=>({pos:i+1,squadra:r.squadra}));
+        html+=renderRow(gk,cl,ri%2?'#f0f4ff':'#f8faff',true);
+      });
+    } else {
+      const ranking=buildFinalRanking(camp);
+      html+=renderRow('',ranking,rowBg,false);
+    }
+    ri++;
   });
+
   html+='</tbody></table></div>';
   document.getElementById('mo-albo-body').innerHTML=html;
   openMo('mo-albo');
@@ -17655,3 +17750,4 @@ x<!-- REBUILD2 -->
 <!-- REBUILD13 -->
 <!-- REBUILD14 -->
 <!-- REBUILD15 -->
+<!-- REBUILD16 -->
