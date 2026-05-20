@@ -1494,7 +1494,16 @@ tr.loss-row td{background:#fdecea!important;}
 <div class="mo" id="mo-albo"><div class="mbox" style="max-width:1200px;width:98%">
   <div class="mhd"><span style="font-size:1.1rem">🏅</span><h3>Albo d'Oro — Classifiche Finali</h3>
   <button class="mbtn" onclick="toggleMoFullscreen('mo-albo')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-albo')">✕</button></div>
-  <div class="mbody" id="mo-albo-body"></div>
+  <div style="display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--br);background:#f8faff">
+    <button class="mt active" onclick="swTab(this,'mao-')" style="font-size:.75rem">🏆 Classifiche</button>
+    <button class="mt" onclick="swTab(this,'mao-')" style="font-size:.75rem">🥇 Vincitori</button>
+    <button class="mt" onclick="swTab(this,'mao-')" style="font-size:.75rem">📍 Per Provincia</button>
+  </div>
+  <div class="mbody">
+    <div class="mtc active" id="mao-0" style="padding:0"><div id="mo-albo-body"></div></div>
+    <div class="mtc hidden" id="mao-1" style="padding:8px"><div id="mo-albo-vincitori"></div></div>
+    <div class="mtc hidden" id="mao-2" style="padding:8px"><div id="mo-albo-province"></div></div>
+  </div>
   <div class="mfoot"><button class="btn b-gr" onclick="closeMo('mo-albo')">Chiudi</button></div>
 </div></div>
 
@@ -3627,7 +3636,7 @@ function setTlMode(m){_tlMode=m;_tlOffset=0;['future','tutto','passate'].forEach
 function navTl(dir){_tlOffset+=dir*7;renderTimeline();}
 function renderTimeline(){
   var el=document.getElementById('h-timeline7'),footer=document.getElementById('tl-footer');if(!el)return;
-  var _ts=(typeof D!=='undefined'&&D.generated)?D.generated.slice(0,10):(new Date().toISOString().split('T')[0]);
+  var _ts=new Date().toISOString().split('T')[0];
   var _pf={};(D.gare_future||[]).forEach(function(g){var d=g['Data'];if(d)_pf[d]=(_pf[d]||0)+1;});
   var _pg=(typeof GS!=='undefined'&&GS&&GS.per_giorno)||{};
   var _cov={};(D.gare_future||[]).forEach(function(g){var d=g['Data'];if(!d)return;if(!_cov[d])_cov[d]={t:0,c:0};_cov[d].t++;if((g['Arbitro 1']||'').trim()||(g['Arbitro 2']||'').trim())_cov[d].c++;});
@@ -10514,22 +10523,24 @@ function openAlboOro(){
     let ranking=[];
     const gironiFasi=Object.keys(gironiGare).filter(gi=>fasePrio(gi)>0).sort((a,b)=>fasePrio(b)-fasePrio(a));
 
-    // Prima i playoff (finale, semifinale, quarti, ottavi)
+    // Prima i playoff (finale, semifinale, quarti, ottavi) - pari merito per stessa fase
     gironiFasi.forEach(gi=>{
-      if(/playout/i.test(gi)) return; // playout dopo
+      if(/playout/i.test(gi)) return;
       const sqs=squadreDaGirone(gi);
+      const posPartenza=ranking.length+1;
       sqs.forEach(sq=>{
         if(!ranking.find(r=>r.squadra===sq))
-          ranking.push({pos:ranking.length+1,squadra:sq,fase:gi});
+          ranking.push({pos:posPartenza,squadra:sq,fase:gi});
       });
     });
 
-    // Poi i playout
+    // Poi i playout - pari merito per stessa fase
     gironiFasi.filter(gi=>/playout/i.test(gi)).forEach(gi=>{
       const sqs=squadreDaGirone(gi);
+      const posPartenza=ranking.length+1;
       sqs.forEach(sq=>{
         if(!ranking.find(r=>r.squadra===sq))
-          ranking.push({pos:ranking.length+1,squadra:sq,fase:gi});
+          ranking.push({pos:posPartenza,squadra:sq,fase:gi});
       });
     });
 
@@ -10634,6 +10645,65 @@ function openAlboOro(){
 
   html+='</tbody></table></div>';
   document.getElementById('mo-albo-body').innerHTML=html;
+
+  // Tab Vincitori
+  const vincitori={}; // squadra -> [{camp, pos}]
+  campOrd.forEach(camp=>{
+    const groups=getGironiGroups(camp);
+    if(groups){
+      groups.forEach(gk=>{
+        const gare=(D.gare||[]).filter(g=>g.Campionato===camp&&g['Girone']===gk);
+        const sqStats=CS[camp]?.sq_stats||{};
+        const sqSet=new Set(gare.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean));
+        const top=[...sqSet].sort((a,b)=>(sqStats[b]?.pt||0)-(sqStats[a]?.pt||0));
+        if(top[0]){if(!vincitori[top[0]])vincitori[top[0]]=[];vincitori[top[0]].push({camp:camp+' ('+gk+')',pos:1});}
+      });
+    } else {
+      const rank=buildFinalRanking(camp);
+      if(rank[0]){if(!vincitori[rank[0].squadra])vincitori[rank[0].squadra]=[];vincitori[rank[0].squadra].push({camp,pos:1});}
+    }
+  });
+  const vincSort=Object.entries(vincitori).sort((a,b)=>b[1].length-a[1].length);
+  let vHtml='<table style="width:100%;border-collapse:collapse;font-size:.78rem"><thead><tr style="background:var(--bl);color:#fff"><th style="padding:8px">Squadra</th><th style="padding:8px;text-align:center">Titoli</th><th style="padding:8px">Campionati vinti</th></tr></thead><tbody>';
+  vincSort.forEach(([sq,camps],i)=>{
+    const pvClr=SQ[sq]?.prov?PC[SQ[sq].prov]||'#888':'#888';
+    const bg=i%2?'var(--tbl-even)':'#fff';
+    vHtml+='<tr style="background:'+bg+';border-bottom:1px solid var(--tbl-bd)">'
+      +'<td style="padding:6px 10px"><span class="rn rn-sq" style="font-weight:700;cursor:pointer" onclick="openSquadra(\''+esc(sq)+'\')">'+escH(sq)+'</span>'
+      +(SQ[sq]?.prov?'<span style="background:'+pvClr+';color:#fff;border-radius:3px;padding:0 4px;font-size:.6rem;margin-left:4px">'+escH(SQ[sq].prov)+'</span>':'')
+      +'</td>'
+      +'<td style="text-align:center;font-weight:700;font-size:1.1rem;color:var(--gold)">'+camps.length+'</td>'
+      +'<td style="padding:6px 10px;font-size:.7rem;color:var(--mu)">'+camps.map(c=>escH(c.camp)).join(' · ')+'</td>'
+      +'</tr>';
+  });
+  vHtml+='</tbody></table>';
+  document.getElementById('mo-albo-vincitori').innerHTML=vHtml;
+
+  // Tab Per Provincia
+  const provMap={}; // prov -> [{sq, camp, titoli}]
+  vincSort.forEach(([sq,camps])=>{
+    const pv=SQ[sq]?.prov||'??';
+    if(!provMap[pv])provMap[pv]=[];
+    provMap[pv].push({sq,titoli:camps.length,camps:camps.map(c=>c.camp)});
+  });
+  const provSort=Object.entries(provMap).sort((a,b)=>b[1].reduce((s,x)=>s+x.titoli,0)-a[1].reduce((s,x)=>s+x.titoli,0));
+  let pHtml='';
+  provSort.forEach(([pv,sqs])=>{
+    const pvClr=PC[pv]||'#888';
+    const totTitoli=sqs.reduce((s,x)=>s+x.titoli,0);
+    pHtml+='<div style="margin-bottom:16px"><div style="padding:6px 12px;background:'+pvClr+';color:#fff;border-radius:8px;font-weight:700;font-size:.85rem;margin-bottom:6px">📍 '+escH(pv)+' — '+totTitoli+' titol'+(totTitoli===1?'o':'i')+'</div>';
+    pHtml+='<table style="width:100%;border-collapse:collapse;font-size:.75rem"><tbody>';
+    sqs.sort((a,b)=>b.titoli-a.titoli).forEach((x,i)=>{
+      pHtml+='<tr style="background:'+(i%2?'var(--tbl-even)':'#fff')+';border-bottom:1px solid var(--tbl-bd)">'
+        +'<td style="padding:5px 10px"><span class="rn rn-sq" style="cursor:pointer" onclick="openSquadra(\''+esc(x.sq)+'\')">'+escH(x.sq)+'</span></td>'
+        +'<td style="text-align:center;font-weight:700;color:var(--gold);width:40px">'+x.titoli+'</td>'
+        +'<td style="padding:5px 10px;font-size:.68rem;color:var(--mu)">'+x.camps.map(c=>escH(c)).join(' · ')+'</td>'
+        +'</tr>';
+    });
+    pHtml+='</tbody></table></div>';
+  });
+  document.getElementById('mo-albo-province').innerHTML=pHtml;
+
   openMo('mo-albo');
 }
 
@@ -17754,4 +17824,4 @@ function renderCampiTbl(filtCitta,filtProv){
   }).join('');
 }
 x
-<!-- BUILD:20260520072452 -->
+<!-- BUILD:20260520074242 -->
