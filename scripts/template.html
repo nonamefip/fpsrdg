@@ -10473,86 +10473,91 @@ function openAlboOro(){
 
   // Costruisce classifica finale tenendo conto dei playoff
   function buildFinalRanking(camp){
-    const cs=CS[camp]; if(!cs) return [];
     const gare=(D.gare||[]).filter(g=>g.Campionato===camp);
-    const gironiData=cs.girone_data||{};
+    if(!gare.length) return [];
 
-    // Cerca girone finale playoff (non playout)
-    const finaleKey=Object.keys(gironiData).find(k=>/\bfinal/i.test(k)&&!/semifinal|ottav|quart|playout/i.test(k));
-    // Cerca girone semifinale
-    const semifKey=Object.keys(gironiData).find(k=>/semifinal/i.test(k)&&!/playout/i.test(k));
-    // Cerca gironi quarti
-    const quartiKeys=Object.keys(gironiData).filter(k=>/quart/i.test(k)&&!/playout/i.test(k));
+    // Raggruppa gare per girone
+    const gironiGare={};
+    gare.forEach(g=>{
+      const gi=g['Girone']||'';
+      if(!gironiGare[gi]) gironiGare[gi]=[];
+      gironiGare[gi].push(g);
+    });
+
+    // Classifica le fasi per importanza
+    function fasePrio(gi){
+      gi=gi.toLowerCase();
+      if(/\bfinal\b/.test(gi)&&!/semifinal|quart|ottav/.test(gi)) return 10;
+      if(/semifinal/.test(gi)) return 9;
+      if(/quart/.test(gi)) return 8;
+      if(/ottav/.test(gi)) return 7;
+      if(/playoff/.test(gi)) return 6;
+      if(/playout/.test(gi)) return 5;
+      return 0; // qualificazione/gironi regolari
+    }
+
+    // Estrae squadre da un girone ordinandole per vittorie
+    function squadreDaGirone(gi){
+      const gg=gironiGare[gi]||[];
+      const giocate=gg.filter(g=>g['Risultato']&&g['Risultato']!=='-');
+      if(!giocate.length) return [...new Set(gg.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean))];
+      const wins={};
+      giocate.forEach(g=>{
+        const pc=parseInt(g['Punti Casa']||0),po=parseInt(g['Punti Ospite']||0);
+        const c=g['Squadra Casa'],o=g['Squadra Ospite'];
+        if(!wins[c])wins[c]=0; if(!wins[o])wins[o]=0;
+        if(pc>po)wins[c]++; else if(po>pc)wins[o]++;
+      });
+      return Object.keys(wins).sort((a,b)=>wins[b]-wins[a]);
+    }
 
     let ranking=[];
+    const gironiFasi=Object.keys(gironiGare).filter(gi=>fasePrio(gi)>0).sort((a,b)=>fasePrio(b)-fasePrio(a));
 
-    if(finaleKey){
-      // Dal girone finale estrai vincitore e finalista
-      const finGare=gare.filter(g=>g['Girone']===finaleKey&&g['Risultato']&&g['Risultato']!=='-');
-      const winCount={};
-      finGare.forEach(g=>{
-        const pc=parseInt(g['Punti Casa']||0), po=parseInt(g['Punti Ospite']||0);
-        if(pc>po){winCount[g['Squadra Casa']]=(winCount[g['Squadra Casa']]||0)+1;}
-        else if(po>pc){winCount[g['Squadra Ospite']]=(winCount[g['Squadra Ospite']]||0)+1;}
-      });
-      const finSq=[...new Set(finGare.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean))];
-      finSq.sort((a,b)=>(winCount[b]||0)-(winCount[a]||0));
-      ranking=finSq.map((sq,i)=>({pos:i+1,squadra:sq,fase:'Finale'}));
-    }
-
-    if(semifKey){
-      const sfGare=gare.filter(g=>g['Girone']===semifKey&&g['Risultato']&&g['Risultato']!=='-');
-      const sfSq=[...new Set(sfGare.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean))];
-      // Chi non è già in ranking viene aggiunto come 3°/4°
-      sfSq.forEach(sq=>{
+    // Prima i playoff (finale, semifinale, quarti, ottavi)
+    gironiFasi.forEach(gi=>{
+      if(/playout/i.test(gi)) return; // playout dopo
+      const sqs=squadreDaGirone(gi);
+      sqs.forEach(sq=>{
         if(!ranking.find(r=>r.squadra===sq))
-          ranking.push({pos:ranking.length+1,squadra:sq,fase:'Semifinale'});
-      });
-    }
-
-    quartiKeys.forEach(qk=>{
-      const qGare=gare.filter(g=>g['Girone']===qk&&g['Risultato']&&g['Risultato']!=='-');
-      const qSq=[...new Set(qGare.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean))];
-      qSq.forEach(sq=>{
-        if(!ranking.find(r=>r.squadra===sq))
-          ranking.push({pos:ranking.length+1,squadra:sq,fase:'Quarti'});
+          ranking.push({pos:ranking.length+1,squadra:sq,fase:gi});
       });
     });
 
-    // Aggiungi dalla classifica qualificazione chi non è già in ranking
-    // Usa sq_stats ordinato per punti — più affidabile di girone_data
-    const sqStats=cs.sq_stats||{};
-    const sqOrdinati=Object.entries(sqStats)
-      .filter(([sq])=>sq&&sq.length>2&&!/giornata|quart|semifin|final|playout|playoff|ottav|primo|secondo|terzo|quarto/i.test(sq))
-      .sort((a,b)=>(b[1].pt||0)-(a[1].pt||0)||(b[1].v||0)-(a[1].v||0));
-    sqOrdinati.forEach(([sq])=>{
-      if(!ranking.find(x=>x.squadra===sq))
-        ranking.push({pos:ranking.length+1,squadra:sq,fase:'Qualificazione'});
+    // Poi i playout
+    gironiFasi.filter(gi=>/playout/i.test(gi)).forEach(gi=>{
+      const sqs=squadreDaGirone(gi);
+      sqs.forEach(sq=>{
+        if(!ranking.find(r=>r.squadra===sq))
+          ranking.push({pos:ranking.length+1,squadra:sq,fase:gi});
+      });
     });
 
-    // Fallback girone_data se sq_stats è vuoto
-    if(!ranking.length){
-      const qualKeys=Object.keys(gironiData).filter(k=>/qualific/i.test(k));
-      const regKeys=Object.keys(gironiData).filter(k=>!/playoff|playout|\bottav|\bquart|\bsemifinal|\bfinal|primo|secondo|terzo|quarto/i.test(k));
-      const clKeys=qualKeys.length?qualKeys:regKeys;
-      clKeys.forEach(k=>{
-        (gironiData[k]?.classifica||[]).forEach(r=>{
-          if(r.squadra&&r.squadra.length>2&&!ranking.find(x=>x.squadra===r.squadra))
-            ranking.push({pos:ranking.length+1,squadra:r.squadra});
-        });
+    // Infine qualificazione (sq_stats ordinato per punti)
+    const cs=CS[camp];
+    const sqStats=cs?.sq_stats||{};
+    Object.entries(sqStats)
+      .sort((a,b)=>(b[1].pt||0)-(a[1].pt||0)||(b[1].v||0)-(a[1].v||0))
+      .forEach(([sq])=>{
+        if(sq&&sq.length>2&&!ranking.find(r=>r.squadra===sq))
+          ranking.push({pos:ranking.length+1,squadra:sq,fase:'Qualificazione'});
       });
-    }
 
     return ranking;
   }
 
-  // Controlla se il campionato ha gironi separati (Nord/Sud o A/B)
+  // Controlla se il campionato ha gironi separati che non si incontrano (es. DR2 Nord/Sud)
   function getGironiGroups(camp){
-    const cs=CS[camp]; if(!cs) return null;
-    const gironiData=cs.girone_data||{};
-    const regKeys=Object.keys(gironiData).filter(k=>!/playoff|playout|\bottav|\bquart|\bsemifinal|\bfinal/i.test(k));
-    // Se ci sono più gironi regolari con nomi diversi → mostra separatamente
-    if(regKeys.length>1) return regKeys;
+    const gare=(D.gare||[]).filter(g=>g.Campionato===camp);
+    const gironiReg=new Set();
+    gare.forEach(g=>{
+      const gi=g['Girone']||'';
+      if(gi&&!/quart|semifinal|\bfinal\b|ottav|playoff|playout/i.test(gi))
+        gironiReg.add(gi);
+    });
+    const arr=[...gironiReg];
+    // Se ci sono più gironi regolari con nomi diversi (non solo "Girone Unico")
+    if(arr.length>1&&arr.some(g=>!/unico/i.test(g))) return arr;
     return null;
   }
 
@@ -10611,8 +10616,13 @@ function openAlboOro(){
       html+='</td></tr>';
       // Sotto-righe per girone
       gironiGroups.forEach(gk=>{
-        const gd=cs.girone_data[gk];
-        const cl=(gd?.classifica||[]).map((r,i)=>({pos:i+1,squadra:r.squadra}));
+        const gareGi=(D.gare||[]).filter(g=>g.Campionato===camp&&g['Girone']===gk);
+        const sqStats=CS[camp]?.sq_stats||{};
+        // Squadre del girone ordinate per punti
+        const sqGiSet=new Set(gareGi.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean));
+        const cl=[...sqGiSet].map(sq=>({squadra:sq,pt:sqStats[sq]?.pt||0,v:sqStats[sq]?.v||0}))
+          .sort((a,b)=>(b.pt-a.pt)||(b.v-a.v))
+          .map((r,i)=>({pos:i+1,squadra:r.squadra}));
         html+=renderRow(gk,cl,ri%2?'#f0f4ff':'#f8faff',true);
       });
     } else {
@@ -17744,4 +17754,4 @@ function renderCampiTbl(filtCitta,filtProv){
   }).join('');
 }
 x
-<!-- BUILD:20260519213651 -->
+<!-- BUILD:20260520072452 -->
