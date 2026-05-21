@@ -1494,10 +1494,10 @@ tr.loss-row td{background:#fdecea!important;}
 <div class="mo" id="mo-albo"><div class="mbox" style="max-width:1200px;width:98%">
   <div class="mhd"><span style="font-size:1.1rem">🏅</span><h3>Albo d'Oro — Classifiche Finali</h3>
   <button class="mbtn" onclick="toggleMoFullscreen('mo-albo')" title="Espandi/Riduci">⛶</button><button class="mbtn" onclick="closeMo('mo-albo')">✕</button></div>
-  <div style="display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--br);background:#f8faff">
-    <button class="mt active" onclick="swTab(this,'mao-')" style="font-size:.75rem">🏆 Classifiche</button>
-    <button class="mt" onclick="swTab(this,'mao-')" style="font-size:.75rem">🥇 Vincitori</button>
-    <button class="mt" onclick="swTab(this,'mao-')" style="font-size:.75rem">📍 Per Provincia</button>
+  <div class="mts" style="display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--br);background:#f8faff">
+    <button class="mt active" onclick="swTabId(this,'mao-0')" style="font-size:.75rem">🏆 Classifiche</button>
+    <button class="mt" onclick="swTabId(this,'mao-1')" style="font-size:.75rem">🥇 Vincitori</button>
+    <button class="mt" onclick="swTabId(this,'mao-2')" style="font-size:.75rem">📍 Per Provincia</button>
   </div>
   <div class="mbody">
     <div class="mtc active" id="mao-0" style="padding:0"><div id="mo-albo-body"></div></div>
@@ -17824,4 +17824,4 @@ function renderCampiTbl(filtCitta,filtProv){
   }).join('');
 }
 x
-<!-- BUILD:20260520074242 -->
+<!-- BUILD:20260521054230 -->
