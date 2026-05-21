@@ -16538,21 +16538,35 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     famOrder.forEach(function(fam){
       var items=famMap[fam];
       var n=items.length;
-      // Grid con n colonne uguali per riempire tutta la larghezza
-      var rowHtml='';
-      var accHtml='';
-      items.forEach(function(item){
-        var gi=item.girone,gGi=item.gare,sqSet=item.sqSet;
-        var giClr=isPlayout&&!hasFamClr(gi)?'#b84c00':giColorGrad(gi);
-        var pMap=isFirstFase?null:sqPosizioneGirone;
-        rowHtml+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
-        if(isDR2&&(/azzurr/i.test(gi)||/verde/i.test(gi))){
-          var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
-          accHtml+=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,accClr,true,gi+' Accumulato',sqPosizioneGirone);
-        }
-      });
-      htmlRows+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start">'+rowHtml+'</div>';
-      if(accHtml) htmlRows+='<div style="display:grid;grid-template-columns:repeat('+items.length+',1fr);gap:10px;align-items:flex-start">'+accHtml+'</div>';
+      // Controlla se ci sono accumulati
+      var hasAcc=isDR2&&items.some(function(item){return /azzurr/i.test(item.girone)||/verde/i.test(item.girone);});
+      if(hasAcc){
+        // Ogni girone con accumulato occupa 2 colonne: base + accumulato affiancati
+        var pairHtml='';
+        items.forEach(function(item){
+          var gi=item.girone,gGi=item.gare,sqSet=item.sqSet;
+          var giClr=isPlayout&&!hasFamClr(gi)?'#b84c00':giColorGrad(gi);
+          var pMap=isFirstFase?null:sqPosizioneGirone;
+          var baseCard=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
+          if(/azzurr/i.test(gi)||/verde/i.test(gi)){
+            var accClr=/azzurr/i.test(gi)?'#0d47a1':'#1b5e20';
+            var accCard=renderCardNew(calcAccumulato(gi,sqSet,gGi),gGi,gi,accClr,true,gi+' Accumulato',sqPosizioneGirone);
+            pairHtml+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:flex-start">'+baseCard+accCard+'</div>';
+          } else {
+            pairHtml+='<div>'+baseCard+'</div>';
+          }
+        });
+        htmlRows+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start">'+pairHtml+'</div>';
+      } else {
+        var rowHtml='';
+        items.forEach(function(item){
+          var gi=item.girone,gGi=item.gare,sqSet=item.sqSet;
+          var giClr=isPlayout&&!hasFamClr(gi)?'#b84c00':giColorGrad(gi);
+          var pMap=isFirstFase?null:sqPosizioneGirone;
+          rowHtml+=renderCardNew(calcSt(gGi,[...sqSet].sort()),gGi,gi,giClr,false,gi,pMap);
+        });
+        htmlRows+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:10px;align-items:flex-start">'+rowHtml+'</div>';
+      }
     });
 
     cards+='<div>'+rowLabel+htmlRows+'</div>';
@@ -17870,4 +17884,4 @@ function renderCampiTbl(filtCitta,filtProv){
   }).join('');
 }
 x
-<!-- BUILD:20260521061247 -->
+<!-- BUILD:20260521114851 -->
