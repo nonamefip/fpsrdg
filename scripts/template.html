@@ -10646,62 +10646,108 @@ function openAlboOro(){
   html+='</tbody></table></div>';
   document.getElementById('mo-albo-body').innerHTML=html;
 
-  // Tab Vincitori
-  const vincitori={}; // squadra -> [{camp, pos}]
+  // Raccoglie classifica per ogni campionato/girone per Vincitori e Province
+  // pos1=vincitore playoff finale, pos2=finalista, pos3=semifinalisti
+  const allRankings=[]; // {camp, label, sq, pos}
   campOrd.forEach(camp=>{
     const groups=getGironiGroups(camp);
     if(groups){
       groups.forEach(gk=>{
-        const gare=(D.gare||[]).filter(g=>g.Campionato===camp&&g['Girone']===gk);
+        const gareGi=(D.gare||[]).filter(g=>g.Campionato===camp&&g['Girone']===gk);
         const sqStats=CS[camp]?.sq_stats||{};
-        const sqSet=new Set(gare.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean));
-        const top=[...sqSet].sort((a,b)=>(sqStats[b]?.pt||0)-(sqStats[a]?.pt||0));
-        if(top[0]){if(!vincitori[top[0]])vincitori[top[0]]=[];vincitori[top[0]].push({camp:camp+' ('+gk+')',pos:1});}
+        const sqSet=new Set(gareGi.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean));
+        [...sqSet].sort((a,b)=>(sqStats[b]?.pt||0)-(sqStats[a]?.pt||0)).forEach((sq,i)=>{
+          allRankings.push({camp,label:camp+' — '+gk,sq,pos:i+1,girone:true});
+        });
+      });
+    } else {
+      buildFinalRanking(camp).forEach(r=>{
+        allRankings.push({camp,label:camp,sq:r.squadra,pos:r.pos,girone:false,fase:r.fase});
+      });
+    }
+  });
+
+  // Tab Vincitori: solo chi ha vinto una finale playoff (pos=1, fase contiene "Finale" o è il primo di un girone)
+  // Vincitore assoluto = pos 1 con fase=Finale (o pos 1 se non ci sono playoff)
+  const vincitoriMap={}; // sq -> [{label, pos}]
+  campOrd.forEach(camp=>{
+    const groups=getGironiGroups(camp);
+    if(groups){
+      // Per campionati multi-girone: vincitore del girone
+      groups.forEach(gk=>{
+        const r=allRankings.find(x=>x.camp===camp&&x.label===camp+' — '+gk&&x.pos===1);
+        if(r){if(!vincitoriMap[r.sq])vincitoriMap[r.sq]=[];vincitoriMap[r.sq].push({label:r.label,pos:1,tipo:'girone'});}
       });
     } else {
       const rank=buildFinalRanking(camp);
-      if(rank[0]){if(!vincitori[rank[0].squadra])vincitori[rank[0].squadra]=[];vincitori[rank[0].squadra].push({camp,pos:1});}
+      // Vincitore assoluto: pos=1
+      const v=rank.find(r=>r.pos===1);
+      if(v){if(!vincitoriMap[v.squadra])vincitoriMap[v.squadra]=[];vincitoriMap[v.squadra].push({label:camp,pos:1,tipo:'finale'});}
     }
   });
-  const vincSort=Object.entries(vincitori).sort((a,b)=>b[1].length-a[1].length);
-  let vHtml='<table style="width:100%;border-collapse:collapse;font-size:.78rem"><thead><tr style="background:var(--bl);color:#fff"><th style="padding:8px">Squadra</th><th style="padding:8px;text-align:center">Titoli</th><th style="padding:8px">Campionati vinti</th></tr></thead><tbody>';
-  vincSort.forEach(([sq,camps],i)=>{
+
+  const vincSort=Object.entries(vincitoriMap)
+    .sort((a,b)=>b[1].filter(x=>x.tipo==='finale').length-a[1].filter(x=>x.tipo==='finale').length||b[1].length-a[1].length);
+
+  let vHtml='<div style="margin-bottom:8px;font-size:.75rem;color:var(--mu)">Solo vincitori di campionato (playoff finale) e gironi</div>';
+  vHtml+='<table style="width:100%;border-collapse:collapse;font-size:.78rem"><thead><tr style="background:var(--bl);color:#fff">'
+    +'<th style="padding:8px">Squadra</th><th style="padding:8px;text-align:center">Titoli finali</th><th style="padding:8px;text-align:center">Titoli girone</th><th style="padding:8px">Campionati</th></tr></thead><tbody>';
+  vincSort.forEach(([sq,wins],i)=>{
     const pvClr=SQ[sq]?.prov?PC[SQ[sq].prov]||'#888':'#888';
     const bg=i%2?'var(--tbl-even)':'#fff';
+    const titoliFin=wins.filter(x=>x.tipo==='finale').length;
+    const titoliGir=wins.filter(x=>x.tipo==='girone').length;
     vHtml+='<tr style="background:'+bg+';border-bottom:1px solid var(--tbl-bd)">'
       +'<td style="padding:6px 10px"><span class="rn rn-sq" style="font-weight:700;cursor:pointer" onclick="openSquadra(\''+esc(sq)+'\')">'+escH(sq)+'</span>'
       +(SQ[sq]?.prov?'<span style="background:'+pvClr+';color:#fff;border-radius:3px;padding:0 4px;font-size:.6rem;margin-left:4px">'+escH(SQ[sq].prov)+'</span>':'')
       +'</td>'
-      +'<td style="text-align:center;font-weight:700;font-size:1.1rem;color:var(--gold)">'+camps.length+'</td>'
-      +'<td style="padding:6px 10px;font-size:.7rem;color:var(--mu)">'+camps.map(c=>escH(c.camp)).join(' · ')+'</td>'
+      +'<td style="text-align:center;font-weight:700;font-size:1rem;color:var(--gold)">'+(titoliFin||'—')+'</td>'
+      +'<td style="text-align:center;font-size:.85rem;color:var(--mu)">'+(titoliGir||'—')+'</td>'
+      +'<td style="padding:6px 10px;font-size:.7rem;color:var(--mu)">'+wins.map(c=>escH(c.label)).join(' · ')+'</td>'
       +'</tr>';
   });
   vHtml+='</tbody></table>';
   document.getElementById('mo-albo-vincitori').innerHTML=vHtml;
 
-  // Tab Per Provincia
-  const provMap={}; // prov -> [{sq, camp, titoli}]
-  vincSort.forEach(([sq,camps])=>{
-    const pv=SQ[sq]?.prov||'??';
-    if(!provMap[pv])provMap[pv]=[];
-    provMap[pv].push({sq,titoli:camps.length,camps:camps.map(c=>c.camp)});
-  });
-  const provSort=Object.entries(provMap).sort((a,b)=>b[1].reduce((s,x)=>s+x.titoli,0)-a[1].reduce((s,x)=>s+x.titoli,0));
-  let pHtml='';
-  provSort.forEach(([pv,sqs])=>{
-    const pvClr=PC[pv]||'#888';
-    const totTitoli=sqs.reduce((s,x)=>s+x.titoli,0);
-    pHtml+='<div style="margin-bottom:16px"><div style="padding:6px 12px;background:'+pvClr+';color:#fff;border-radius:8px;font-weight:700;font-size:.85rem;margin-bottom:6px">📍 '+escH(pv)+' — '+totTitoli+' titol'+(totTitoli===1?'o':'i')+'</div>';
-    pHtml+='<table style="width:100%;border-collapse:collapse;font-size:.75rem"><tbody>';
-    sqs.sort((a,b)=>b.titoli-a.titoli).forEach((x,i)=>{
-      pHtml+='<tr style="background:'+(i%2?'var(--tbl-even)':'#fff')+';border-bottom:1px solid var(--tbl-bd)">'
-        +'<td style="padding:5px 10px"><span class="rn rn-sq" style="cursor:pointer" onclick="openSquadra(\''+esc(x.sq)+'\')">'+escH(x.sq)+'</span></td>'
-        +'<td style="text-align:center;font-weight:700;color:var(--gold);width:40px">'+x.titoli+'</td>'
-        +'<td style="padding:5px 10px;font-size:.68rem;color:var(--mu)">'+x.camps.map(c=>escH(c)).join(' · ')+'</td>'
-        +'</tr>';
+  // Tab Per Provincia: mostra 1°, 2°, 3° separatamente per campionati con finale
+  const provData={}; // prov -> {pos1:[], pos2:[], pos3:[]}
+  campOrd.forEach(camp=>{
+    if(getGironiGroups(camp)) return; // salta multi-girone per questa vista
+    const rank=buildFinalRanking(camp);
+    [1,2,3].forEach(pos=>{
+      const sqs=rank.filter(r=>r.pos===pos);
+      sqs.forEach(r=>{
+        const pv=SQ[r.squadra]?.prov||'??';
+        if(!provData[pv])provData[pv]={pos1:[],pos2:[],pos3:[]};
+        provData[pv]['pos'+pos].push({sq:r.squadra,camp});
+      });
     });
-    pHtml+='</tbody></table></div>';
   });
+  const provSort=Object.entries(provData).sort((a,b)=>b[1].pos1.length-a[1].pos1.length||b[1].pos2.length-a[1].pos2.length);
+  let pHtml='<table style="width:100%;border-collapse:collapse;font-size:.75rem"><thead><tr style="background:var(--bl);color:#fff">'
+    +'<th style="padding:8px">Provincia</th>'
+    +'<th style="padding:8px;text-align:center">🥇 1°</th>'
+    +'<th style="padding:8px;text-align:center">🥈 2°</th>'
+    +'<th style="padding:8px;text-align:center">🥉 3°</th>'
+    +'<th style="padding:8px">Dettaglio</th>'
+    +'</tr></thead><tbody>';
+  provSort.forEach(([pv,data],i)=>{
+    const pvClr=PC[pv]||'#888';
+    const bg=i%2?'var(--tbl-even)':'#fff';
+    function sqBadges(arr){return arr.map(x=>'<span class="rn rn-sq" style="font-size:.65rem;cursor:pointer" onclick="openSquadra(\''+esc(x.sq)+'\')">'+escH(x.sq)+'</span>').join(' ');}
+    pHtml+='<tr style="background:'+bg+';border-bottom:1px solid var(--tbl-bd)">'
+      +'<td style="padding:6px 10px"><span style="background:'+pvClr+';color:#fff;border-radius:4px;padding:2px 8px;font-weight:700;font-size:.8rem">'+escH(pv)+'</span></td>'
+      +'<td style="text-align:center;font-weight:700;color:var(--gold);font-size:1rem">'+data.pos1.length+'</td>'
+      +'<td style="text-align:center;font-weight:700;color:#888;font-size:.95rem">'+data.pos2.length+'</td>'
+      +'<td style="text-align:center;font-weight:700;color:#cd7f32;font-size:.9rem">'+data.pos3.length+'</td>'
+      +'<td style="padding:4px 8px;font-size:.68rem">'
+        +(data.pos1.length?'<div>🥇 '+sqBadges(data.pos1)+'</div>':'')
+        +(data.pos2.length?'<div>🥈 '+sqBadges(data.pos2)+'</div>':'')
+        +(data.pos3.length?'<div>🥉 '+sqBadges(data.pos3)+'</div>':'')
+      +'</td>'
+      +'</tr>';
+  });
+  pHtml+='</tbody></table>';
   document.getElementById('mo-albo-province').innerHTML=pHtml;
 
   openMo('mo-albo');
@@ -17824,4 +17870,4 @@ function renderCampiTbl(filtCitta,filtProv){
   }).join('');
 }
 x
-<!-- BUILD:20260521054230 -->
+<!-- BUILD:20260521061247 -->
