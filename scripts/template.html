@@ -16668,9 +16668,8 @@ function grtClassifiche(gironi,garecamp,camp,clr){
 
       // Se non trova risultati in garecamp, cerca in FIP_SARDA (fip_sarda_data.json)
       if(!giocate.length && typeof FIP_SARDA!=='undefined' && FIP_SARDA.campionati){
-        var campNome=cs.nome||'';
         FIP_SARDA.campionati.forEach(function(c){
-          if(c.nome!==campNome) return;
+          if(c.nome!==camp) return;
           (c.gironi||[]).forEach(function(gr){
             // il nome girone in FIP_SARDA può essere "Playoff - Quarti – Primo Quarto"
             // gi è "Primo Quarto" o il nome completo
