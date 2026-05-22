@@ -1,5 +1,5 @@
 {
-  "aggiornato": "2026-05-19 09:26",
+  "aggiornato": "2026-05-22 09:31",
   "campionati": [
     {
       "nome": "Serie C",
@@ -2348,6 +2348,44 @@
             }
           ],
           "prossime": []
+        },
+        {
+          "nome": "Spareggio Interregio – Spareggio Interr. Ritorno",
+          "fase": "Spareggio Interregio",
+          "elim": false,
+          "classifica": [
+            {
+              "pos": 1,
+              "squadra": "CLEMAN IMPIANTI SARNO",
+              "punti": 0,
+              "pg": 0,
+              "vinte": 0,
+              "perse": 0,
+              "pf": 0,
+              "ps": 0
+            },
+            {
+              "pos": 2,
+              "squadra": "SEF TORRES",
+              "punti": 0,
+              "pg": 0,
+              "vinte": 0,
+              "perse": 0,
+              "pf": 0,
+              "ps": 0
+            }
+          ],
+          "risultati": [],
+          "prossime": [
+            {
+              "casa": "SEF TORRES",
+              "ospite": "CLEMAN IMPIANTI SARNO",
+              "data": "30 Maggio 2026",
+              "ora": "18:30",
+              "giornata": 1,
+              "leg": "R"
+            }
+          ]
         }
       ]
     },
@@ -4881,94 +4919,85 @@
               "ps": 235
             }
           ],
-          "risultati": [
+          "risultati": [],
+          "prossime": [
             {
-              "casa": "BASKET MOGORO",
-              "ospite": "BASKET SAN SPERATE",
-              "data": "18 Aprile 2026",
+              "casa": "BASKET SAN SPERATE",
+              "ospite": "BASKET MOGORO",
+              "data": "23 Maggio 2026",
               "ora": "19:00",
               "giornata": 1,
-              "punteggio": "72-95",
               "gara": 1
+            },
+            {
+              "casa": "BASKET ASSEMINI",
+              "ospite": "G.S.DIL. BASKET FERRINI",
+              "data": "23 Maggio 2026",
+              "ora": "19:30",
+              "giornata": 1,
+              "gara": 1
+            },
+            {
+              "casa": "BASKET MOGORO",
+              "ospite": "G.S.DIL. BASKET FERRINI",
+              "data": "30 Maggio 2026",
+              "ora": "19:00",
+              "giornata": 2,
+              "gara": 2
+            },
+            {
+              "casa": "SANTA CROCE OLBIA",
+              "ospite": "BASKET SAN SPERATE",
+              "data": "31 Maggio 2026",
+              "ora": "18:30",
+              "giornata": 2,
+              "gara": 2
+            },
+            {
+              "casa": "BASKET MOGORO",
+              "ospite": "SANTA CROCE OLBIA",
+              "data": "05 Giugno 2026",
+              "ora": "19:00",
+              "giornata": 3,
+              "gara": 3
             },
             {
               "casa": "BASKET SAN SPERATE",
-              "ospite": "SANTA CROCE OLBIA",
-              "data": "25 Aprile 2026",
-              "ora": "18:30",
-              "giornata": 2,
-              "punteggio": "110-93",
-              "gara": 2
-            },
-            {
-              "casa": "G.S.DIL. BASKET FERRINI",
-              "ospite": "BASKET MOGORO",
-              "data": "26 Aprile 2026",
-              "ora": "19:00",
-              "giornata": 2,
-              "punteggio": "85-68",
-              "gara": 2
-            },
-            {
-              "casa": "BASKET ASSEMINI",
-              "ospite": "BASKET SAN SPERATE",
-              "data": "03 Maggio 2026",
+              "ospite": "BASKET ASSEMINI",
+              "data": "06 Giugno 2026",
               "ora": "19:30",
               "giornata": 3,
-              "punteggio": "77-88",
               "gara": 3
             },
             {
-              "casa": "SANTA CROCE OLBIA",
-              "ospite": "BASKET MOGORO",
-              "data": "03 Maggio 2026",
-              "ora": "19:30",
-              "giornata": 3,
-              "punteggio": "97-53",
-              "gara": 3
-            },
-            {
-              "casa": "SANTA CROCE OLBIA",
-              "ospite": "G.S.DIL. BASKET FERRINI",
-              "data": "09 Maggio 2026",
-              "ora": "18:30",
-              "giornata": 4,
-              "punteggio": "92-65",
-              "gara": 4
-            },
-            {
-              "casa": "BASKET MOGORO",
-              "ospite": "BASKET ASSEMINI",
-              "data": "09 Maggio 2026",
-              "ora": "19:00",
-              "giornata": 4,
-              "punteggio": "63-56",
-              "gara": 4
-            },
-            {
-              "casa": "BASKET ASSEMINI",
+              "casa": "G.S.DIL. BASKET FERRINI",
               "ospite": "SANTA CROCE OLBIA",
-              "data": "17 Maggio 2026",
-              "ora": "18:30",
-              "giornata": 5,
-              "punteggio": "74-84",
-              "gara": 5
-            }
-          ],
-          "prossime": [
-            {
-              "casa": "G.S.DIL. BASKET FERRINI",
-              "ospite": "BASKET ASSEMINI",
-              "data": "30 Giugno 2026",
-              "ora": "20:30",
-              "giornata": 1,
-              "gara": 1
-            },
-            {
-              "casa": "G.S.DIL. BASKET FERRINI",
-              "ospite": "BASKET SAN SPERATE",
-              "data": "30 Giugno 2026",
+              "data": "14 Giugno 2026",
               "ora": "18:00",
+              "giornata": 4,
+              "gara": 4
+            },
+            {
+              "casa": "BASKET ASSEMINI",
+              "ospite": "BASKET MOGORO",
+              "data": "14 Giugno 2026",
+              "ora": "20:30",
+              "giornata": 4,
+              "gara": 4
+            },
+            {
+              "casa": "BASKET SAN SPERATE",
+              "ospite": "G.S.DIL. BASKET FERRINI",
+              "data": "09 Giugno 2026",
+              "ora": "20:30",
+              "giornata": 5,
+              "gara": 5
+            },
+            {
+              "casa": "SANTA CROCE OLBIA",
+              "ospite": "BASKET ASSEMINI",
+              "data": "20 Giugno 2026",
+              "ora": "18:30",
               "giornata": 5,
               "gara": 5
             }
@@ -5136,7 +5165,7 @@
               "casa": "C.M.B. PORTO TORRES",
               "ospite": "ASTRO SSDRL",
               "data": "23 Maggio 2026",
-              "ora": "18:00",
+              "ora": "17:15",
               "giornata": 2,
               "gara": 2
             }
@@ -5355,12 +5384,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 44,
-              "pg": 29,
-              "vinte": 22,
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
               "perse": 7,
-              "pf": 2186,
-              "ps": 1817
+              "pf": 2271,
+              "ps": 1884
             },
             {
               "pos": 5,
@@ -5416,11 +5445,11 @@
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
               "punti": 28,
-              "pg": 27,
+              "pg": 28,
               "vinte": 14,
-              "perse": 13,
-              "pf": 1828,
-              "ps": 1791
+              "perse": 14,
+              "pf": 1895,
+              "ps": 1876
             },
             {
               "pos": 11,
@@ -6265,6 +6294,15 @@
               "ora": "19:00",
               "giornata": 11,
               "punteggio": "49-63",
+              "leg": "A"
+            },
+            {
+              "casa": "SCUOLA BASKET CARBONIA",
+              "ospite": "BASKET ANTONIANUM",
+              "data": "19 Maggio 2026",
+              "ora": "20:30",
+              "giornata": 11,
+              "punteggio": "50-72",
               "leg": "A"
             },
             {
@@ -7603,14 +7641,6 @@
           "prossime": [
             {
               "casa": "SCUOLA BASKET CARBONIA",
-              "ospite": "BASKET ANTONIANUM",
-              "data": "19 Maggio 2026",
-              "ora": "20:30",
-              "giornata": 11,
-              "leg": "A"
-            },
-            {
-              "casa": "SCUOLA BASKET CARBONIA",
               "ospite": "ASD POL. MARRUBIU",
               "data": "26 Maggio 2026",
               "ora": "20:30",
@@ -7629,7 +7659,7 @@
               "casa": "BASKET ANTONIANUM",
               "ospite": "SCUOLA BASKET CARBONIA",
               "data": "23 Maggio 2026",
-              "ora": "19:45",
+              "ora": "18:45",
               "giornata": 11,
               "leg": "R"
             },
@@ -9590,7 +9620,7 @@
         {
           "nome": "Spareggi Playoff Nor – Primo Quarto",
           "fase": "Spareggi Playoff Nor",
-          "elim": true,
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -9625,12 +9655,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 44,
-              "pg": 29,
-              "vinte": 22,
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
               "perse": 7,
-              "pf": 2186,
-              "ps": 1817
+              "pf": 2271,
+              "ps": 1884
             },
             {
               "pos": 5,
@@ -9686,11 +9716,11 @@
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
               "punti": 28,
-              "pg": 27,
+              "pg": 28,
               "vinte": 14,
-              "perse": 13,
-              "pf": 1828,
-              "ps": 1791
+              "perse": 14,
+              "pf": 1895,
+              "ps": 1876
             },
             {
               "pos": 11,
@@ -9754,6 +9784,15 @@
             }
           ],
           "risultati": [
+            {
+              "casa": "C.M.B. PORTO TORRES",
+              "ospite": "PALL. OLIMPIA OLBIA",
+              "data": "26 Aprile 2026",
+              "ora": "18:30",
+              "giornata": 1,
+              "punteggio": "70-95",
+              "leg": "A"
+            },
             {
               "casa": "PALL. OLIMPIA OLBIA",
               "ospite": "C.M.B. PORTO TORRES",
@@ -9761,7 +9800,7 @@
               "ora": "18:30",
               "giornata": 1,
               "punteggio": "67-50",
-              "gara": 1
+              "leg": "R"
             }
           ],
           "prossime": []
@@ -9769,7 +9808,7 @@
         {
           "nome": "Spareggi Playoff Nor – Secondo Quarto",
           "fase": "Spareggi Playoff Nor",
-          "elim": true,
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -9804,12 +9843,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 44,
-              "pg": 29,
-              "vinte": 22,
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
               "perse": 7,
-              "pf": 2186,
-              "ps": 1817
+              "pf": 2271,
+              "ps": 1884
             },
             {
               "pos": 5,
@@ -9865,11 +9904,11 @@
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
               "punti": 28,
-              "pg": 27,
+              "pg": 28,
               "vinte": 14,
-              "perse": 13,
-              "pf": 1828,
-              "ps": 1791
+              "perse": 14,
+              "pf": 1895,
+              "ps": 1876
             },
             {
               "pos": 11,
@@ -9933,6 +9972,15 @@
             }
           ],
           "risultati": [
+            {
+              "casa": "ACCADEMIA OLMEDO",
+              "ospite": "SHARDANA BASKET",
+              "data": "29 Aprile 2026",
+              "ora": "20:30",
+              "giornata": 1,
+              "punteggio": "62-76",
+              "leg": "A"
+            },
             {
               "casa": "SHARDANA BASKET",
               "ospite": "ACCADEMIA OLMEDO",
@@ -9940,7 +9988,7 @@
               "ora": "20:00",
               "giornata": 1,
               "punteggio": "90-50",
-              "gara": 1
+              "leg": "R"
             }
           ],
           "prossime": []
@@ -9948,7 +9996,7 @@
         {
           "nome": "Spareggi Playoff Nor – Terzo Quarto",
           "fase": "Spareggi Playoff Nor",
-          "elim": true,
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -9983,12 +10031,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 44,
-              "pg": 29,
-              "vinte": 22,
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
               "perse": 7,
-              "pf": 2186,
-              "ps": 1817
+              "pf": 2271,
+              "ps": 1884
             },
             {
               "pos": 5,
@@ -10044,11 +10092,11 @@
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
               "punti": 28,
-              "pg": 27,
+              "pg": 28,
               "vinte": 14,
-              "perse": 13,
-              "pf": 1828,
-              "ps": 1791
+              "perse": 14,
+              "pf": 1895,
+              "ps": 1876
             },
             {
               "pos": 11,
@@ -10112,6 +10160,15 @@
             }
           ],
           "risultati": [
+            {
+              "casa": "ARZACHENA BASKET",
+              "ospite": "POL. S. ELENE",
+              "data": "25 Aprile 2026",
+              "ora": "18:00",
+              "giornata": 1,
+              "punteggio": "60-51",
+              "leg": "A"
+            },
             {
               "casa": "POL. S. ELENE",
               "ospite": "ARZACHENA BASKET",
@@ -10119,7 +10176,7 @@
               "ora": "18:00",
               "giornata": 1,
               "punteggio": "77-55",
-              "gara": 1
+              "leg": "R"
             }
           ],
           "prossime": []
@@ -10127,7 +10184,7 @@
         {
           "nome": "Spareggi Playoff Nor – Quarto Quarto",
           "fase": "Spareggi Playoff Nor",
-          "elim": true,
+          "elim": false,
           "classifica": [
             {
               "pos": 1,
@@ -10162,12 +10219,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 44,
-              "pg": 29,
-              "vinte": 22,
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
               "perse": 7,
-              "pf": 2186,
-              "ps": 1817
+              "pf": 2271,
+              "ps": 1884
             },
             {
               "pos": 5,
@@ -10223,11 +10280,11 @@
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
               "punti": 28,
-              "pg": 27,
+              "pg": 28,
               "vinte": 14,
-              "perse": 13,
-              "pf": 1828,
-              "ps": 1791
+              "perse": 14,
+              "pf": 1895,
+              "ps": 1876
             },
             {
               "pos": 11,
@@ -10292,13 +10349,22 @@
           ],
           "risultati": [
             {
+              "casa": "VIRTUS OLBIA",
+              "ospite": "DINAMO BASKET 2000",
+              "data": "26 Aprile 2026",
+              "ora": "18:00",
+              "giornata": 1,
+              "punteggio": "75-72",
+              "leg": "A"
+            },
+            {
               "casa": "DINAMO BASKET 2000",
               "ospite": "VIRTUS OLBIA",
               "data": "02 Maggio 2026",
               "ora": "18:30",
               "giornata": 1,
               "punteggio": "94-84",
-              "gara": 1
+              "leg": "R"
             }
           ],
           "prossime": []
@@ -10341,12 +10407,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 44,
-              "pg": 29,
-              "vinte": 22,
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
               "perse": 7,
-              "pf": 2186,
-              "ps": 1817
+              "pf": 2271,
+              "ps": 1884
             },
             {
               "pos": 5,
@@ -10402,11 +10468,11 @@
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
               "punti": 28,
-              "pg": 27,
+              "pg": 28,
               "vinte": 14,
-              "perse": 13,
-              "pf": 1828,
-              "ps": 1791
+              "perse": 14,
+              "pf": 1895,
+              "ps": 1876
             },
             {
               "pos": 11,
@@ -10520,12 +10586,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 44,
-              "pg": 29,
-              "vinte": 22,
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
               "perse": 7,
-              "pf": 2186,
-              "ps": 1817
+              "pf": 2271,
+              "ps": 1884
             },
             {
               "pos": 5,
@@ -10581,11 +10647,11 @@
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
               "punti": 28,
-              "pg": 27,
+              "pg": 28,
               "vinte": 14,
-              "perse": 13,
-              "pf": 1828,
-              "ps": 1791
+              "perse": 14,
+              "pf": 1895,
+              "ps": 1876
             },
             {
               "pos": 11,
@@ -10708,12 +10774,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 44,
-              "pg": 29,
-              "vinte": 22,
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
               "perse": 7,
-              "pf": 2186,
-              "ps": 1817
+              "pf": 2271,
+              "ps": 1884
             },
             {
               "pos": 5,
@@ -10769,11 +10835,11 @@
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
               "punti": 28,
-              "pg": 27,
+              "pg": 28,
               "vinte": 14,
-              "perse": 13,
-              "pf": 1828,
-              "ps": 1791
+              "perse": 14,
+              "pf": 1895,
+              "ps": 1876
             },
             {
               "pos": 11,
@@ -10836,25 +10902,18 @@
               "ps": 2199
             }
           ],
-          "risultati": [],
-          "prossime": [
+          "risultati": [
             {
               "casa": "SHARDANA BASKET",
               "ospite": "MASTERS SASSARI",
               "data": "17 Maggio 2026",
               "ora": "18:00",
               "giornata": 1,
+              "punteggio": "67-84",
               "gara": 1
-            },
-            {
-              "casa": "MASTERS SASSARI",
-              "ospite": "SHARDANA BASKET",
-              "data": "24 Maggio 2026",
-              "ora": "08:00",
-              "giornata": 2,
-              "gara": 2
             }
-          ]
+          ],
+          "prossime": []
         },
         {
           "nome": "Playoff - Quarti – Quarto Quarto",
@@ -10894,12 +10953,12 @@
             {
               "pos": 4,
               "squadra": "AZZURRA ORISTANO",
-              "punti": 44,
-              "pg": 29,
-              "vinte": 22,
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
               "perse": 7,
-              "pf": 2186,
-              "ps": 1817
+              "pf": 2271,
+              "ps": 1884
             },
             {
               "pos": 5,
@@ -10955,11 +11014,11 @@
               "pos": 10,
               "squadra": "BASKET ANTONIANUM",
               "punti": 28,
-              "pg": 27,
+              "pg": 28,
               "vinte": 14,
-              "perse": 13,
-              "pf": 1828,
-              "ps": 1791
+              "perse": 14,
+              "pf": 1895,
+              "ps": 1876
             },
             {
               "pos": 11,
@@ -11034,6 +11093,362 @@
             }
           ],
           "prossime": []
+        },
+        {
+          "nome": "Playoff SF Sud – Prima Semifinale",
+          "fase": "Playoff SF Sud",
+          "elim": true,
+          "classifica": [
+            {
+              "pos": 1,
+              "squadra": "POL. SERRAMANNA",
+              "punti": 52,
+              "pg": 30,
+              "vinte": 26,
+              "perse": 4,
+              "pf": 2381,
+              "ps": 1768
+            },
+            {
+              "pos": 2,
+              "squadra": "CUS CAGLIARI",
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
+              "perse": 7,
+              "pf": 1971,
+              "ps": 1556
+            },
+            {
+              "pos": 3,
+              "squadra": "P.G.S. CONDOR",
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
+              "perse": 7,
+              "pf": 1956,
+              "ps": 1620
+            },
+            {
+              "pos": 4,
+              "squadra": "AZZURRA ORISTANO",
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
+              "perse": 7,
+              "pf": 2271,
+              "ps": 1884
+            },
+            {
+              "pos": 5,
+              "squadra": "CAGLIARI BASKET",
+              "punti": 42,
+              "pg": 30,
+              "vinte": 21,
+              "perse": 9,
+              "pf": 2003,
+              "ps": 1806
+            },
+            {
+              "pos": 6,
+              "squadra": "LA CASA DEL SORRISO",
+              "punti": 40,
+              "pg": 30,
+              "vinte": 20,
+              "perse": 10,
+              "pf": 1955,
+              "ps": 1736
+            },
+            {
+              "pos": 7,
+              "squadra": "C.G.P. CARLOFORTE",
+              "punti": 36,
+              "pg": 29,
+              "vinte": 18,
+              "perse": 11,
+              "pf": 1881,
+              "ps": 1773
+            },
+            {
+              "pos": 8,
+              "squadra": "BASKET IGLESIAS",
+              "punti": 34,
+              "pg": 30,
+              "vinte": 17,
+              "perse": 13,
+              "pf": 1987,
+              "ps": 1939
+            },
+            {
+              "pos": 9,
+              "squadra": "A.S.D. GENNERUXI",
+              "punti": 32,
+              "pg": 30,
+              "vinte": 16,
+              "perse": 14,
+              "pf": 1877,
+              "ps": 1808
+            },
+            {
+              "pos": 10,
+              "squadra": "BASKET ANTONIANUM",
+              "punti": 28,
+              "pg": 28,
+              "vinte": 14,
+              "perse": 14,
+              "pf": 1895,
+              "ps": 1876
+            },
+            {
+              "pos": 11,
+              "squadra": "POL. PRIMAVERA",
+              "punti": 22,
+              "pg": 28,
+              "vinte": 11,
+              "perse": 17,
+              "pf": 1671,
+              "ps": 1720
+            },
+            {
+              "pos": 12,
+              "squadra": "BASKET SETTIMO 2023",
+              "punti": 20,
+              "pg": 30,
+              "vinte": 10,
+              "perse": 20,
+              "pf": 1783,
+              "ps": 1954
+            },
+            {
+              "pos": 13,
+              "squadra": "SCUOLA BASKET CARBONIA",
+              "punti": 10,
+              "pg": 26,
+              "vinte": 5,
+              "perse": 21,
+              "pf": 1417,
+              "ps": 1776
+            },
+            {
+              "pos": 14,
+              "squadra": "ASD POL. MARRUBIU",
+              "punti": 8,
+              "pg": 29,
+              "vinte": 4,
+              "perse": 25,
+              "pf": 1692,
+              "ps": 2097
+            },
+            {
+              "pos": 15,
+              "squadra": "POL. IL GABBIANO",
+              "punti": 4,
+              "pg": 30,
+              "vinte": 2,
+              "perse": 28,
+              "pf": 1492,
+              "ps": 2299
+            },
+            {
+              "pos": 16,
+              "squadra": "A.S.D. BETA",
+              "punti": 4,
+              "pg": 30,
+              "vinte": 2,
+              "perse": 28,
+              "pf": 1579,
+              "ps": 2199
+            }
+          ],
+          "risultati": [],
+          "prossime": [
+            {
+              "casa": "POL. SERRAMANNA",
+              "ospite": "AZZURRA ORISTANO",
+              "data": "23 Maggio 2026",
+              "ora": "18:00",
+              "giornata": 1,
+              "gara": 1
+            }
+          ]
+        },
+        {
+          "nome": "Playoff SF Sud – Seconda Semifinale",
+          "fase": "Playoff SF Sud",
+          "elim": true,
+          "classifica": [
+            {
+              "pos": 1,
+              "squadra": "POL. SERRAMANNA",
+              "punti": 52,
+              "pg": 30,
+              "vinte": 26,
+              "perse": 4,
+              "pf": 2381,
+              "ps": 1768
+            },
+            {
+              "pos": 2,
+              "squadra": "CUS CAGLIARI",
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
+              "perse": 7,
+              "pf": 1971,
+              "ps": 1556
+            },
+            {
+              "pos": 3,
+              "squadra": "P.G.S. CONDOR",
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
+              "perse": 7,
+              "pf": 1956,
+              "ps": 1620
+            },
+            {
+              "pos": 4,
+              "squadra": "AZZURRA ORISTANO",
+              "punti": 46,
+              "pg": 30,
+              "vinte": 23,
+              "perse": 7,
+              "pf": 2271,
+              "ps": 1884
+            },
+            {
+              "pos": 5,
+              "squadra": "CAGLIARI BASKET",
+              "punti": 42,
+              "pg": 30,
+              "vinte": 21,
+              "perse": 9,
+              "pf": 2003,
+              "ps": 1806
+            },
+            {
+              "pos": 6,
+              "squadra": "LA CASA DEL SORRISO",
+              "punti": 40,
+              "pg": 30,
+              "vinte": 20,
+              "perse": 10,
+              "pf": 1955,
+              "ps": 1736
+            },
+            {
+              "pos": 7,
+              "squadra": "C.G.P. CARLOFORTE",
+              "punti": 36,
+              "pg": 29,
+              "vinte": 18,
+              "perse": 11,
+              "pf": 1881,
+              "ps": 1773
+            },
+            {
+              "pos": 8,
+              "squadra": "BASKET IGLESIAS",
+              "punti": 34,
+              "pg": 30,
+              "vinte": 17,
+              "perse": 13,
+              "pf": 1987,
+              "ps": 1939
+            },
+            {
+              "pos": 9,
+              "squadra": "A.S.D. GENNERUXI",
+              "punti": 32,
+              "pg": 30,
+              "vinte": 16,
+              "perse": 14,
+              "pf": 1877,
+              "ps": 1808
+            },
+            {
+              "pos": 10,
+              "squadra": "BASKET ANTONIANUM",
+              "punti": 28,
+              "pg": 28,
+              "vinte": 14,
+              "perse": 14,
+              "pf": 1895,
+              "ps": 1876
+            },
+            {
+              "pos": 11,
+              "squadra": "POL. PRIMAVERA",
+              "punti": 22,
+              "pg": 28,
+              "vinte": 11,
+              "perse": 17,
+              "pf": 1671,
+              "ps": 1720
+            },
+            {
+              "pos": 12,
+              "squadra": "BASKET SETTIMO 2023",
+              "punti": 20,
+              "pg": 30,
+              "vinte": 10,
+              "perse": 20,
+              "pf": 1783,
+              "ps": 1954
+            },
+            {
+              "pos": 13,
+              "squadra": "SCUOLA BASKET CARBONIA",
+              "punti": 10,
+              "pg": 26,
+              "vinte": 5,
+              "perse": 21,
+              "pf": 1417,
+              "ps": 1776
+            },
+            {
+              "pos": 14,
+              "squadra": "ASD POL. MARRUBIU",
+              "punti": 8,
+              "pg": 29,
+              "vinte": 4,
+              "perse": 25,
+              "pf": 1692,
+              "ps": 2097
+            },
+            {
+              "pos": 15,
+              "squadra": "POL. IL GABBIANO",
+              "punti": 4,
+              "pg": 30,
+              "vinte": 2,
+              "perse": 28,
+              "pf": 1492,
+              "ps": 2299
+            },
+            {
+              "pos": 16,
+              "squadra": "A.S.D. BETA",
+              "punti": 4,
+              "pg": 30,
+              "vinte": 2,
+              "perse": 28,
+              "pf": 1579,
+              "ps": 2199
+            }
+          ],
+          "risultati": [],
+          "prossime": [
+            {
+              "casa": "CUS CAGLIARI",
+              "ospite": "P.G.S. CONDOR",
+              "data": "22 Maggio 2026",
+              "ora": "20:30",
+              "giornata": 1,
+              "gara": 1
+            }
+          ]
         }
       ]
     },
@@ -14748,7 +15163,7 @@
             {
               "casa": "POL. DINAMO SRL",
               "ospite": "ASTRO SSDRL",
-              "data": "30 Giugno 2026",
+              "data": "31 Maggio 2026",
               "ora": "18:00",
               "giornata": 2,
               "leg": "A"
@@ -14756,16 +15171,16 @@
             {
               "casa": "POL. DINAMO SRL",
               "ospite": "FERRINI PISANO ARREDAMENTI",
-              "data": "30 Giugno 2026",
-              "ora": "18:30",
+              "data": "02 Giugno 2026",
+              "ora": "18:00",
               "giornata": 2,
               "leg": "R"
             },
             {
               "casa": "DINAMO BASKET 2000",
               "ospite": "POL. DINAMO SRL",
-              "data": "30 Giugno 2026",
-              "ora": "20:45",
+              "data": "28 Maggio 2026",
+              "ora": "20:30",
               "giornata": 3,
               "leg": "R"
             }
@@ -18256,6 +18671,15 @@
               "leg": "R"
             },
             {
+              "casa": "BASKET SU PLANU",
+              "ospite": "SHARDANA BASKET",
+              "data": "16 Maggio 2026",
+              "ora": "17:00",
+              "giornata": 2,
+              "punteggio": "72-79",
+              "leg": "R"
+            },
+            {
               "casa": "SHARDANA BASKET",
               "ospite": "ACCADEMIA OLMEDO",
               "data": "03 Maggio 2026",
@@ -18334,14 +18758,6 @@
               "ora": "12:30",
               "giornata": 3,
               "leg": "A"
-            },
-            {
-              "casa": "BASKET SU PLANU",
-              "ospite": "SHARDANA BASKET",
-              "data": "16 Maggio 2026",
-              "ora": "17:00",
-              "giornata": 2,
-              "leg": "R"
             },
             {
               "casa": "ARZACHENA BASKET",
@@ -18581,6 +18997,15 @@
               "leg": "R"
             },
             {
+              "casa": "C.M.B. WILLIAM AUTO",
+              "ospite": "BASKET MACOMER 2.0",
+              "data": "19 Maggio 2026",
+              "ora": "18:30",
+              "giornata": 3,
+              "punteggio": "68-46",
+              "leg": "R"
+            },
+            {
               "casa": "BASKET MACOMER 2.0",
               "ospite": "PHOENIX CAPOTERRA",
               "data": "09 Maggio 2026",
@@ -18626,18 +19051,10 @@
               "leg": "R"
             },
             {
-              "casa": "C.M.B. WILLIAM AUTO",
-              "ospite": "BASKET MACOMER 2.0",
-              "data": "19 Maggio 2026",
-              "ora": "18:30",
-              "giornata": 3,
-              "leg": "R"
-            },
-            {
               "casa": "PHOENIX CAPOTERRA",
               "ospite": "PALL. SENNORI",
               "data": "24 Maggio 2026",
-              "ora": "11:00",
+              "ora": "11:30",
               "giornata": 3,
               "leg": "R"
             }
@@ -19365,6 +19782,15 @@
               "giornata": 3,
               "punteggio": "54-73",
               "leg": "R"
+            },
+            {
+              "casa": "G.S.O. ELMAS",
+              "ospite": "BASKET ANTONIANUM",
+              "data": "20 Maggio 2026",
+              "ora": "20:15",
+              "giornata": 3,
+              "punteggio": "45-51",
+              "leg": "R"
             }
           ],
           "prossime": [
@@ -19375,14 +19801,6 @@
               "ora": "17:00",
               "giornata": 2,
               "leg": "A"
-            },
-            {
-              "casa": "G.S.O. ELMAS",
-              "ospite": "BASKET ANTONIANUM",
-              "data": "20 Maggio 2026",
-              "ora": "19:30",
-              "giornata": 3,
-              "leg": "R"
             }
           ]
         },
@@ -20725,6 +21143,15 @@
               "leg": "A"
             },
             {
+              "casa": "BASKET 90",
+              "ospite": "SANTA CROCE OLBIA",
+              "data": "21 Maggio 2026",
+              "ora": "17:30",
+              "giornata": 2,
+              "punteggio": "53-57",
+              "leg": "A"
+            },
+            {
               "casa": "BASKET FERRINI A",
               "ospite": "BASKET 90",
               "data": "28 Febbraio 2026",
@@ -21101,24 +21528,6 @@
               "giornata": 6,
               "punteggio": "74-38",
               "leg": "R"
-            }
-          ],
-          "prossime": [
-            {
-              "casa": "BASKET 90",
-              "ospite": "SANTA CROCE OLBIA",
-              "data": "21 Maggio 2026",
-              "ora": "17:30",
-              "giornata": 2,
-              "leg": "A"
-            },
-            {
-              "casa": "ICHNOS NUORO",
-              "ospite": "CUS SASSARI",
-              "data": "23 Maggio 2026",
-              "ora": "17:00",
-              "giornata": 1,
-              "leg": "R"
             },
             {
               "casa": "BASKET FERRINI A",
@@ -21126,6 +21535,17 @@
               "data": "19 Maggio 2026",
               "ora": "19:00",
               "giornata": 6,
+              "punteggio": "78-84",
+              "leg": "R"
+            }
+          ],
+          "prossime": [
+            {
+              "casa": "ICHNOS NUORO",
+              "ospite": "CUS SASSARI",
+              "data": "23 Maggio 2026",
+              "ora": "17:00",
+              "giornata": 1,
               "leg": "R"
             },
             {
@@ -21155,8 +21575,8 @@
             {
               "casa": "ICHNOS NUORO",
               "ospite": "BASKET CORAL 93",
-              "data": "24 Maggio 2026",
-              "ora": "17:00",
+              "data": "27 Maggio 2026",
+              "ora": "18:30",
               "giornata": 7,
               "leg": "R"
             }
@@ -25193,18 +25613,17 @@
               "ps": 1677
             }
           ],
-          "risultati": [
+          "risultati": [],
+          "prossime": [
             {
-              "casa": "BASKET IGLESIAS",
-              "ospite": "A.S.DIL. BASKET CORAL 93",
-              "data": "18 Maggio 2026",
+              "casa": "A.S.DIL. BASKET CORAL 93",
+              "ospite": "BASKET IGLESIAS",
+              "data": "23 Maggio 2026",
               "ora": "18:00",
               "giornata": 1,
-              "punteggio": "35-67",
               "gara": 1
             }
-          ],
-          "prossime": []
+          ]
         },
         {
           "nome": "Playoff - Quarti – Secondo Quarto",
@@ -25322,18 +25741,17 @@
               "ps": 1677
             }
           ],
-          "risultati": [
+          "risultati": [],
+          "prossime": [
             {
-              "casa": "SCUOLA BASKET CARBONIA",
-              "ospite": "PALL. OLIMPIA OLBIA",
-              "data": "16 Maggio 2026",
-              "ora": "16:30",
+              "casa": "PALL. OLIMPIA OLBIA",
+              "ospite": "SCUOLA BASKET CARBONIA",
+              "data": "23 Maggio 2026",
+              "ora": "17:15",
               "giornata": 1,
-              "punteggio": "53-64",
               "gara": 1
             }
-          ],
-          "prossime": []
+          ]
         },
         {
           "nome": "Playoff - Quarti – Terzo Quarto",
@@ -25451,18 +25869,17 @@
               "ps": 1677
             }
           ],
-          "risultati": [
+          "risultati": [],
+          "prossime": [
             {
-              "casa": "BASKET MACOMER 2.0",
-              "ospite": "BASKET FERRINI",
-              "data": "16 Maggio 2026",
-              "ora": "18:00",
+              "casa": "BASKET FERRINI",
+              "ospite": "BASKET MACOMER 2.0",
+              "data": "24 Maggio 2026",
+              "ora": "17:00",
               "giornata": 1,
-              "punteggio": "66-80",
               "gara": 1
             }
-          ],
-          "prossime": []
+          ]
         },
         {
           "nome": "Playoff - Quarti – Quarto Quarto",
@@ -25580,18 +25997,17 @@
               "ps": 1677
             }
           ],
-          "risultati": [
+          "risultati": [],
+          "prossime": [
             {
-              "casa": "SHARDANA FUTURA",
-              "ospite": "CALASETTA BASKET",
-              "data": "10 Maggio 2026",
-              "ora": "12:00",
+              "casa": "CALASETTA BASKET",
+              "ospite": "SHARDANA FUTURA",
+              "data": "23 Maggio 2026",
+              "ora": "17:30",
               "giornata": 1,
-              "punteggio": "42-77",
               "gara": 1
             }
-          ],
-          "prossime": []
+          ]
         }
       ]
     },
@@ -28610,15 +29026,25 @@
             {
               "pos": 2,
               "squadra": "BASKET CORAL 93",
-              "punti": 6,
-              "pg": 5,
-              "vinte": 3,
+              "punti": 8,
+              "pg": 6,
+              "vinte": 4,
               "perse": 2,
-              "pf": 363,
-              "ps": 253
+              "pf": 420,
+              "ps": 295
             },
             {
               "pos": 3,
+              "squadra": "SANTA CROCE OLBIA",
+              "punti": 6,
+              "pg": 6,
+              "vinte": 3,
+              "perse": 3,
+              "pf": 400,
+              "ps": 377
+            },
+            {
+              "pos": 4,
               "squadra": "PALL. NUORO",
               "punti": 6,
               "pg": 6,
@@ -28628,34 +29054,24 @@
               "ps": 425
             },
             {
-              "pos": 4,
-              "squadra": "SANTA CROCE OLBIA",
-              "punti": 6,
-              "pg": 5,
-              "vinte": 3,
-              "perse": 2,
-              "pf": 358,
-              "ps": 320
-            },
-            {
               "pos": 5,
               "squadra": "BASKET 90",
-              "punti": 2,
-              "pg": 5,
-              "vinte": 1,
+              "punti": 4,
+              "pg": 6,
+              "vinte": 2,
               "perse": 4,
-              "pf": 260,
-              "ps": 360
+              "pf": 347,
+              "ps": 415
             },
             {
               "pos": 6,
               "squadra": "POL. DINAMO",
               "punti": 0,
-              "pg": 5,
+              "pg": 6,
               "vinte": 0,
-              "perse": 5,
-              "pf": 196,
-              "ps": 468
+              "perse": 6,
+              "pf": 251,
+              "ps": 555
             }
           ],
           "risultati": [
@@ -28777,6 +29193,24 @@
               "leg": "R"
             },
             {
+              "casa": "BASKET 90",
+              "ospite": "POL. DINAMO",
+              "data": "19 Maggio 2026",
+              "ora": "18:00",
+              "giornata": 2,
+              "punteggio": "87-55",
+              "leg": "R"
+            },
+            {
+              "casa": "BASKET CORAL 93",
+              "ospite": "SANTA CROCE OLBIA",
+              "data": "20 Maggio 2026",
+              "ora": "18:30",
+              "giornata": 2,
+              "punteggio": "57-42",
+              "leg": "R"
+            },
+            {
               "casa": "BASKET CORAL 93",
               "ospite": "SCUOLA BASKET SASSARI",
               "data": "29 Aprile 2026",
@@ -28804,24 +29238,7 @@
               "leg": "R"
             }
           ],
-          "prossime": [
-            {
-              "casa": "BASKET 90",
-              "ospite": "POL. DINAMO",
-              "data": "19 Maggio 2026",
-              "ora": "18:00",
-              "giornata": 2,
-              "leg": "R"
-            },
-            {
-              "casa": "BASKET CORAL 93",
-              "ospite": "SANTA CROCE OLBIA",
-              "data": "20 Maggio 2026",
-              "ora": "18:30",
-              "giornata": 2,
-              "leg": "R"
-            }
-          ]
+          "prossime": []
         },
         {
           "nome": "Seconda Fase – Girone Verde Sud",
@@ -28840,6 +29257,16 @@
             },
             {
               "pos": 2,
+              "squadra": "G.S.O. ELMAS",
+              "punti": 12,
+              "pg": 6,
+              "vinte": 6,
+              "perse": 0,
+              "pf": 568,
+              "ps": 433
+            },
+            {
+              "pos": 3,
               "squadra": "ASTRO SSDRL",
               "punti": 10,
               "pg": 6,
@@ -28849,34 +29276,24 @@
               "ps": 351
             },
             {
-              "pos": 3,
-              "squadra": "G.S.O. ELMAS",
-              "punti": 8,
-              "pg": 4,
-              "vinte": 4,
-              "perse": 0,
-              "pf": 411,
-              "ps": 310
-            },
-            {
               "pos": 4,
               "squadra": "BASKET ANTONIANUM",
               "punti": 2,
-              "pg": 5,
+              "pg": 6,
               "vinte": 1,
-              "perse": 4,
-              "pf": 248,
-              "ps": 380
+              "perse": 5,
+              "pf": 305,
+              "ps": 463
             },
             {
               "pos": 5,
               "squadra": "BASKET FERRINI",
               "punti": 0,
-              "pg": 5,
+              "pg": 6,
               "vinte": 0,
-              "perse": 5,
-              "pf": 322,
-              "ps": 389
+              "perse": 6,
+              "pf": 388,
+              "ps": 463
             },
             {
               "pos": 6,
@@ -28906,6 +29323,15 @@
               "ora": "16:00",
               "giornata": 1,
               "punteggio": "57-54",
+              "leg": "A"
+            },
+            {
+              "casa": "G.S.O. ELMAS",
+              "ospite": "BASKET FERRINI",
+              "data": "20 Maggio 2026",
+              "ora": "18:15",
+              "giornata": 1,
+              "punteggio": "74-66",
               "leg": "A"
             },
             {
@@ -29033,16 +29459,6 @@
               "giornata": 3,
               "punteggio": "73-69",
               "leg": "R"
-            }
-          ],
-          "prossime": [
-            {
-              "casa": "G.S.O. ELMAS",
-              "ospite": "BASKET FERRINI",
-              "data": "20 Maggio 2026",
-              "ora": "18:15",
-              "giornata": 1,
-              "leg": "A"
             },
             {
               "casa": "BASKET ANTONIANUM",
@@ -29050,9 +29466,11 @@
               "data": "19 Maggio 2026",
               "ora": "19:20",
               "giornata": 3,
+              "punteggio": "57-83",
               "leg": "R"
             }
-          ]
+          ],
+          "prossime": []
         },
         {
           "nome": "Seconda Fase – Girone Arancio Nord",
@@ -29262,8 +29680,8 @@
             {
               "casa": "C.M.B. PORTO TORRES",
               "ospite": "BASKET MACOMER 2.0",
-              "data": "24 Maggio 2026",
-              "ora": "11:00",
+              "data": "25 Maggio 2026",
+              "ora": "18:15",
               "giornata": 3,
               "leg": "R"
             },
@@ -29294,6 +29712,16 @@
             },
             {
               "pos": 2,
+              "squadra": "A.S.D. GENNERUXI",
+              "punti": 2,
+              "pg": 2,
+              "vinte": 1,
+              "perse": 1,
+              "pf": 117,
+              "ps": 109
+            },
+            {
+              "pos": 3,
               "squadra": "SCUOLA BASKET CARBONIA",
               "punti": 2,
               "pg": 1,
@@ -29301,16 +29729,6 @@
               "perse": 0,
               "pf": 74,
               "ps": 37
-            },
-            {
-              "pos": 3,
-              "squadra": "CGP CARLOFORTE",
-              "punti": 2,
-              "pg": 1,
-              "vinte": 1,
-              "perse": 0,
-              "pf": 50,
-              "ps": 35
             },
             {
               "pos": 4,
@@ -29324,13 +29742,13 @@
             },
             {
               "pos": 5,
-              "squadra": "A.S.D. GENNERUXI",
-              "punti": 0,
-              "pg": 1,
-              "vinte": 0,
+              "squadra": "CGP CARLOFORTE",
+              "punti": 2,
+              "pg": 2,
+              "vinte": 1,
               "perse": 1,
-              "pf": 55,
-              "ps": 62
+              "pf": 97,
+              "ps": 97
             },
             {
               "pos": 6,
@@ -29406,6 +29824,15 @@
               "giornata": 2,
               "punteggio": "70-61",
               "leg": "R"
+            },
+            {
+              "casa": "A.S.D. GENNERUXI",
+              "ospite": "BASKET IGLESIAS",
+              "data": "21 Maggio 2026",
+              "ora": "18:15",
+              "giornata": 2,
+              "punteggio": "58-54",
+              "leg": "R"
             }
           ],
           "prossime": [
@@ -29455,14 +29882,6 @@
               "data": "04 Giugno 2026",
               "ora": "19:00",
               "giornata": 1,
-              "leg": "R"
-            },
-            {
-              "casa": "A.S.D. GENNERUXI",
-              "ospite": "BASKET IGLESIAS",
-              "data": "21 Maggio 2026",
-              "ora": "18:15",
-              "giornata": 2,
               "leg": "R"
             },
             {
@@ -29576,6 +29995,15 @@
               "leg": "A"
             },
             {
+              "casa": "PALL. S. ELENE",
+              "ospite": "PALL. OLIMPIA",
+              "data": "17 Maggio 2026",
+              "ora": "17:00",
+              "giornata": 1,
+              "punteggio": "42-69",
+              "leg": "A"
+            },
+            {
               "casa": "CUS SASSARI",
               "ospite": "PALL. OLIMPIA",
               "data": "26 Aprile 2026",
@@ -29631,14 +30059,6 @@
             }
           ],
           "prossime": [
-            {
-              "casa": "PALL. S. ELENE",
-              "ospite": "PALL. OLIMPIA",
-              "data": "17 Maggio 2026",
-              "ora": "17:00",
-              "giornata": 1,
-              "leg": "A"
-            },
             {
               "casa": "PALL. SENNORI",
               "ospite": "CUS SASSARI",
@@ -29728,6 +30148,16 @@
           "classifica": [
             {
               "pos": 1,
+              "squadra": "CALASETTA BASKET",
+              "punti": 4,
+              "pg": 3,
+              "vinte": 2,
+              "perse": 1,
+              "pf": 138,
+              "ps": 93
+            },
+            {
+              "pos": 2,
               "squadra": "ASD MISTRAL",
               "punti": 4,
               "pg": 2,
@@ -29737,27 +30167,7 @@
               "ps": 101
             },
             {
-              "pos": 2,
-              "squadra": "NUOVO BASKET",
-              "punti": 2,
-              "pg": 1,
-              "vinte": 1,
-              "perse": 0,
-              "pf": 55,
-              "ps": 54
-            },
-            {
               "pos": 3,
-              "squadra": "CALASETTA BASKET",
-              "punti": 2,
-              "pg": 2,
-              "vinte": 1,
-              "perse": 1,
-              "pf": 118,
-              "ps": 93
-            },
-            {
-              "pos": 4,
               "squadra": "VITALIS BASKET",
               "punti": 2,
               "pg": 2,
@@ -29767,14 +30177,24 @@
               "ps": 89
             },
             {
+              "pos": 4,
+              "squadra": "NUOVO BASKET",
+              "punti": 2,
+              "pg": 1,
+              "vinte": 1,
+              "perse": 0,
+              "pf": 55,
+              "ps": 54
+            },
+            {
               "pos": 5,
               "squadra": "P.G.S. PANDA",
               "punti": 2,
-              "pg": 3,
+              "pg": 4,
               "vinte": 1,
-              "perse": 2,
+              "perse": 3,
               "pf": 154,
-              "ps": 159
+              "ps": 179
             },
             {
               "pos": 6,
@@ -29788,6 +30208,15 @@
             }
           ],
           "risultati": [
+            {
+              "casa": "CALASETTA BASKET",
+              "ospite": "P.G.S. PANDA",
+              "data": "19 Maggio 2026",
+              "ora": "18:45",
+              "giornata": 2,
+              "punteggio": "20-0",
+              "leg": "A"
+            },
             {
               "casa": "NUOVO BASKET",
               "ospite": "CALASETTA BASKET",
@@ -29869,14 +30298,6 @@
               "leg": "A"
             },
             {
-              "casa": "CALASETTA BASKET",
-              "ospite": "P.G.S. PANDA",
-              "data": "19 Maggio 2026",
-              "ora": "18:45",
-              "giornata": 2,
-              "leg": "A"
-            },
-            {
               "casa": "VITALIS BASKET",
               "ospite": "SINNAI BASKET",
               "data": "26 Maggio 2026",
@@ -29939,6 +30360,438 @@
               "ora": "19:00",
               "giornata": 3,
               "leg": "R"
+            }
+          ]
+        },
+        {
+          "nome": "Playoff - Quarti – Primo Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
+          "classifica": [
+            {
+              "pos": 1,
+              "squadra": "BASKET CORAL 93",
+              "punti": 32,
+              "pg": 16,
+              "vinte": 16,
+              "perse": 0,
+              "pf": 1557,
+              "ps": 615
+            },
+            {
+              "pos": 2,
+              "squadra": "PALL. NUORO",
+              "punti": 28,
+              "pg": 16,
+              "vinte": 14,
+              "perse": 2,
+              "pf": 1519,
+              "ps": 701
+            },
+            {
+              "pos": 3,
+              "squadra": "BASKET 90",
+              "punti": 24,
+              "pg": 16,
+              "vinte": 12,
+              "perse": 4,
+              "pf": 1186,
+              "ps": 778
+            },
+            {
+              "pos": 4,
+              "squadra": "BASKET S. FRANCESCO",
+              "punti": 20,
+              "pg": 16,
+              "vinte": 10,
+              "perse": 6,
+              "pf": 885,
+              "ps": 864
+            },
+            {
+              "pos": 5,
+              "squadra": "BASKET MACOMER 2.0",
+              "punti": 14,
+              "pg": 16,
+              "vinte": 7,
+              "perse": 9,
+              "pf": 977,
+              "ps": 945
+            },
+            {
+              "pos": 6,
+              "squadra": "MERCEDE ALGHERO",
+              "punti": 14,
+              "pg": 16,
+              "vinte": 7,
+              "perse": 9,
+              "pf": 700,
+              "ps": 1087
+            },
+            {
+              "pos": 7,
+              "squadra": "ICHNOS BASKET",
+              "punti": 6,
+              "pg": 16,
+              "vinte": 3,
+              "perse": 13,
+              "pf": 612,
+              "ps": 1100
+            },
+            {
+              "pos": 8,
+              "squadra": "CUS SASSARI",
+              "punti": 4,
+              "pg": 16,
+              "vinte": 2,
+              "perse": 14,
+              "pf": 674,
+              "ps": 1290
+            },
+            {
+              "pos": 9,
+              "squadra": "PALL. S. ELENE",
+              "punti": 2,
+              "pg": 16,
+              "vinte": 1,
+              "perse": 15,
+              "pf": 485,
+              "ps": 1215
+            }
+          ],
+          "risultati": [],
+          "prossime": [
+            {
+              "casa": "BASKET FERRINI",
+              "ospite": "SCUOLA BASKET SASSARI",
+              "data": "24 Maggio 2026",
+              "ora": "08:00",
+              "giornata": 1,
+              "gara": 1
+            }
+          ]
+        },
+        {
+          "nome": "Playoff - Quarti – Secondo Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
+          "classifica": [
+            {
+              "pos": 1,
+              "squadra": "BASKET CORAL 93",
+              "punti": 32,
+              "pg": 16,
+              "vinte": 16,
+              "perse": 0,
+              "pf": 1557,
+              "ps": 615
+            },
+            {
+              "pos": 2,
+              "squadra": "PALL. NUORO",
+              "punti": 28,
+              "pg": 16,
+              "vinte": 14,
+              "perse": 2,
+              "pf": 1519,
+              "ps": 701
+            },
+            {
+              "pos": 3,
+              "squadra": "BASKET 90",
+              "punti": 24,
+              "pg": 16,
+              "vinte": 12,
+              "perse": 4,
+              "pf": 1186,
+              "ps": 778
+            },
+            {
+              "pos": 4,
+              "squadra": "BASKET S. FRANCESCO",
+              "punti": 20,
+              "pg": 16,
+              "vinte": 10,
+              "perse": 6,
+              "pf": 885,
+              "ps": 864
+            },
+            {
+              "pos": 5,
+              "squadra": "BASKET MACOMER 2.0",
+              "punti": 14,
+              "pg": 16,
+              "vinte": 7,
+              "perse": 9,
+              "pf": 977,
+              "ps": 945
+            },
+            {
+              "pos": 6,
+              "squadra": "MERCEDE ALGHERO",
+              "punti": 14,
+              "pg": 16,
+              "vinte": 7,
+              "perse": 9,
+              "pf": 700,
+              "ps": 1087
+            },
+            {
+              "pos": 7,
+              "squadra": "ICHNOS BASKET",
+              "punti": 6,
+              "pg": 16,
+              "vinte": 3,
+              "perse": 13,
+              "pf": 612,
+              "ps": 1100
+            },
+            {
+              "pos": 8,
+              "squadra": "CUS SASSARI",
+              "punti": 4,
+              "pg": 16,
+              "vinte": 2,
+              "perse": 14,
+              "pf": 674,
+              "ps": 1290
+            },
+            {
+              "pos": 9,
+              "squadra": "PALL. S. ELENE",
+              "punti": 2,
+              "pg": 16,
+              "vinte": 1,
+              "perse": 15,
+              "pf": 485,
+              "ps": 1215
+            }
+          ],
+          "risultati": [],
+          "prossime": [
+            {
+              "casa": "G.S.O. ELMAS",
+              "ospite": "BASKET CORAL 93",
+              "data": "25 Maggio 2026",
+              "ora": "17:45",
+              "giornata": 1,
+              "gara": 1
+            }
+          ]
+        },
+        {
+          "nome": "Playoff - Quarti – Terzo Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
+          "classifica": [
+            {
+              "pos": 1,
+              "squadra": "BASKET CORAL 93",
+              "punti": 32,
+              "pg": 16,
+              "vinte": 16,
+              "perse": 0,
+              "pf": 1557,
+              "ps": 615
+            },
+            {
+              "pos": 2,
+              "squadra": "PALL. NUORO",
+              "punti": 28,
+              "pg": 16,
+              "vinte": 14,
+              "perse": 2,
+              "pf": 1519,
+              "ps": 701
+            },
+            {
+              "pos": 3,
+              "squadra": "BASKET 90",
+              "punti": 24,
+              "pg": 16,
+              "vinte": 12,
+              "perse": 4,
+              "pf": 1186,
+              "ps": 778
+            },
+            {
+              "pos": 4,
+              "squadra": "BASKET S. FRANCESCO",
+              "punti": 20,
+              "pg": 16,
+              "vinte": 10,
+              "perse": 6,
+              "pf": 885,
+              "ps": 864
+            },
+            {
+              "pos": 5,
+              "squadra": "BASKET MACOMER 2.0",
+              "punti": 14,
+              "pg": 16,
+              "vinte": 7,
+              "perse": 9,
+              "pf": 977,
+              "ps": 945
+            },
+            {
+              "pos": 6,
+              "squadra": "MERCEDE ALGHERO",
+              "punti": 14,
+              "pg": 16,
+              "vinte": 7,
+              "perse": 9,
+              "pf": 700,
+              "ps": 1087
+            },
+            {
+              "pos": 7,
+              "squadra": "ICHNOS BASKET",
+              "punti": 6,
+              "pg": 16,
+              "vinte": 3,
+              "perse": 13,
+              "pf": 612,
+              "ps": 1100
+            },
+            {
+              "pos": 8,
+              "squadra": "CUS SASSARI",
+              "punti": 4,
+              "pg": 16,
+              "vinte": 2,
+              "perse": 14,
+              "pf": 674,
+              "ps": 1290
+            },
+            {
+              "pos": 9,
+              "squadra": "PALL. S. ELENE",
+              "punti": 2,
+              "pg": 16,
+              "vinte": 1,
+              "perse": 15,
+              "pf": 485,
+              "ps": 1215
+            }
+          ],
+          "risultati": [],
+          "prossime": [
+            {
+              "casa": "SANTA CROCE OLBIA",
+              "ospite": "ASTRO SSDRL",
+              "data": "24 Maggio 2026",
+              "ora": "08:00",
+              "giornata": 1,
+              "gara": 1
+            }
+          ]
+        },
+        {
+          "nome": "Playoff - Quarti – Quarto Quarto",
+          "fase": "Playoff - Quarti",
+          "elim": true,
+          "classifica": [
+            {
+              "pos": 1,
+              "squadra": "BASKET CORAL 93",
+              "punti": 32,
+              "pg": 16,
+              "vinte": 16,
+              "perse": 0,
+              "pf": 1557,
+              "ps": 615
+            },
+            {
+              "pos": 2,
+              "squadra": "PALL. NUORO",
+              "punti": 28,
+              "pg": 16,
+              "vinte": 14,
+              "perse": 2,
+              "pf": 1519,
+              "ps": 701
+            },
+            {
+              "pos": 3,
+              "squadra": "BASKET 90",
+              "punti": 24,
+              "pg": 16,
+              "vinte": 12,
+              "perse": 4,
+              "pf": 1186,
+              "ps": 778
+            },
+            {
+              "pos": 4,
+              "squadra": "BASKET S. FRANCESCO",
+              "punti": 20,
+              "pg": 16,
+              "vinte": 10,
+              "perse": 6,
+              "pf": 885,
+              "ps": 864
+            },
+            {
+              "pos": 5,
+              "squadra": "BASKET MACOMER 2.0",
+              "punti": 14,
+              "pg": 16,
+              "vinte": 7,
+              "perse": 9,
+              "pf": 977,
+              "ps": 945
+            },
+            {
+              "pos": 6,
+              "squadra": "MERCEDE ALGHERO",
+              "punti": 14,
+              "pg": 16,
+              "vinte": 7,
+              "perse": 9,
+              "pf": 700,
+              "ps": 1087
+            },
+            {
+              "pos": 7,
+              "squadra": "ICHNOS BASKET",
+              "punti": 6,
+              "pg": 16,
+              "vinte": 3,
+              "perse": 13,
+              "pf": 612,
+              "ps": 1100
+            },
+            {
+              "pos": 8,
+              "squadra": "CUS SASSARI",
+              "punti": 4,
+              "pg": 16,
+              "vinte": 2,
+              "perse": 14,
+              "pf": 674,
+              "ps": 1290
+            },
+            {
+              "pos": 9,
+              "squadra": "PALL. S. ELENE",
+              "punti": 2,
+              "pg": 16,
+              "vinte": 1,
+              "perse": 15,
+              "pf": 485,
+              "ps": 1215
+            }
+          ],
+          "risultati": [],
+          "prossime": [
+            {
+              "casa": "PALL. NUORO",
+              "ospite": "ESPERIA A.S. DIL.",
+              "data": "23 Maggio 2026",
+              "ora": "19:00",
+              "giornata": 1,
+              "gara": 1
             }
           ]
         }
@@ -33756,22 +34609,22 @@
             {
               "pos": 3,
               "squadra": "SU PLANU HAWKS",
-              "punti": 6,
-              "pg": 8,
-              "vinte": 3,
+              "punti": 8,
+              "pg": 9,
+              "vinte": 4,
               "perse": 5,
-              "pf": 332,
-              "ps": 384
+              "pf": 371,
+              "ps": 411
             },
             {
               "pos": 4,
               "squadra": "EOS SPORT GRIZZLIES",
               "punti": 4,
-              "pg": 7,
+              "pg": 8,
               "vinte": 2,
-              "perse": 5,
-              "pf": 268,
-              "ps": 302
+              "perse": 6,
+              "pf": 295,
+              "ps": 341
             },
             {
               "pos": 5,
@@ -34003,6 +34856,15 @@
               "leg": "R"
             },
             {
+              "casa": "SU PLANU HAWKS",
+              "ospite": "EOS SPORT GRIZZLIES",
+              "data": "18 Maggio 2026",
+              "ora": "17:45",
+              "giornata": 4,
+              "punteggio": "39-27",
+              "leg": "R"
+            },
+            {
               "casa": "DECIMO CAVALIERS",
               "ospite": "SU PLANU HAWKS",
               "data": "16 Maggio 2026",
@@ -34034,14 +34896,6 @@
               "ospite": "SAN SALVATORE KNICKS",
               "data": "17 Maggio 2026",
               "ora": "18:45",
-              "giornata": 4,
-              "leg": "R"
-            },
-            {
-              "casa": "SU PLANU HAWKS",
-              "ospite": "EOS SPORT GRIZZLIES",
-              "data": "18 Maggio 2026",
-              "ora": "17:45",
               "giornata": 4,
               "leg": "R"
             },
@@ -34193,6 +35047,15 @@
               "leg": "R"
             },
             {
+              "casa": "SULCISPES TIMBERWOLVES",
+              "ospite": "PANDA 76ERS",
+              "data": "17 Maggio 2026",
+              "ora": "12:00",
+              "giornata": 4,
+              "punteggio": "72-45",
+              "leg": "R"
+            },
+            {
               "casa": "JOANNESB ROCKETS",
               "ospite": "SULCISPES TIMBERWOLVES",
               "data": "17 Aprile 2026",
@@ -34268,14 +35131,6 @@
               "leg": "R"
             },
             {
-              "casa": "SULCISPES TIMBERWOLVES",
-              "ospite": "PANDA 76ERS",
-              "data": "17 Maggio 2026",
-              "ora": "12:00",
-              "giornata": 4,
-              "leg": "R"
-            },
-            {
               "casa": "ELMAS BUCKS",
               "ospite": "JOANNESB ROCKETS",
               "data": "29 Giugno 2026",
@@ -34286,8 +35141,8 @@
             {
               "casa": "JOLLY PELICANS",
               "ospite": "ELMAS BUCKS",
-              "data": "24 Maggio 2026",
-              "ora": "18:00",
+              "data": "27 Maggio 2026",
+              "ora": "18:45",
               "giornata": 5,
               "leg": "R"
             }
@@ -34463,7 +35318,7 @@
             {
               "casa": "EOS SPORT BLAZERS",
               "ospite": "SINNAI NUGGETS",
-              "data": "24 Maggio 2026",
+              "data": "07 Giugno 2026",
               "ora": "11:00",
               "giornata": 1,
               "leg": "A"
@@ -34487,8 +35342,8 @@
             {
               "casa": "ASSEMINI HORNETS",
               "ospite": "ASTRO WIZARDS",
-              "data": "29 Giugno 2026",
-              "ora": "08:00",
+              "data": "25 Maggio 2026",
+              "ora": "19:00",
               "giornata": 5,
               "leg": "A"
             },
@@ -35636,12 +36491,12 @@
             {
               "pos": 6,
               "squadra": "BASKET SU PLANU",
-              "punti": 18,
-              "pg": 23,
-              "vinte": 9,
+              "punti": 20,
+              "pg": 24,
+              "vinte": 10,
               "perse": 14,
-              "pf": 1278,
-              "ps": 1314
+              "pf": 1352,
+              "ps": 1352
             },
             {
               "pos": 7,
@@ -35667,11 +36522,11 @@
               "pos": 9,
               "squadra": "PALL. NUORO",
               "punti": 0,
-              "pg": 23,
+              "pg": 24,
               "vinte": 0,
-              "perse": 23,
-              "pf": 1092,
-              "ps": 1680
+              "perse": 24,
+              "pf": 1130,
+              "ps": 1754
             }
           ],
           "risultati": [
@@ -35808,6 +36663,15 @@
               "ora": "20:45",
               "giornata": 4,
               "punteggio": "65-55",
+              "leg": "A"
+            },
+            {
+              "casa": "BASKET SU PLANU",
+              "ospite": "PALL. NUORO",
+              "data": "19 Maggio 2026",
+              "ora": "20:00",
+              "giornata": 4,
+              "punteggio": "74-38",
               "leg": "A"
             },
             {
@@ -35991,16 +36855,7 @@
               "leg": "R"
             }
           ],
-          "prossime": [
-            {
-              "casa": "BASKET SU PLANU",
-              "ospite": "PALL. NUORO",
-              "data": "19 Maggio 2026",
-              "ora": "20:00",
-              "giornata": 4,
-              "leg": "A"
-            }
-          ]
+          "prossime": []
         }
       ]
     },
@@ -38816,7 +39671,7 @@
               "casa": "BASKET 90",
               "ospite": "BASKET SAN SPERATE",
               "data": "23 Maggio 2026",
-              "ora": "17:00",
+              "ora": "16:00",
               "giornata": 2,
               "leg": "A"
             },
@@ -38831,7 +39686,7 @@
             {
               "casa": "BASKET SU PLANU",
               "ospite": "BASKET 90",
-              "data": "30 Giugno 2026",
+              "data": "30 Maggio 2026",
               "ora": "17:30",
               "giornata": 5,
               "leg": "R"
@@ -40175,7 +41030,7 @@
               "casa": "ANTONIANUM BASKET",
               "ospite": "A.S.D. BETA",
               "data": "23 Maggio 2026",
-              "ora": "17:00",
+              "ora": "16:30",
               "giornata": 3,
               "leg": "A"
             },
@@ -42703,17 +43558,18 @@
               "ps": 1158
             }
           ],
-          "risultati": [],
-          "prossime": [
+          "risultati": [
             {
               "casa": "MERCEDE ALGHERO",
               "ospite": "DINAMO BASKET 2000",
               "data": "20 Maggio 2026",
               "ora": "18:30",
               "giornata": 1,
+              "punteggio": "62-42",
               "gara": 1
             }
-          ]
+          ],
+          "prossime": []
         },
         {
           "nome": "Final 4 - Semifinali – Seconda Semifinale",
@@ -42801,17 +43657,18 @@
               "ps": 1158
             }
           ],
-          "risultati": [],
-          "prossime": [
+          "risultati": [
             {
               "casa": "S.A.P. ALGHERO",
               "ospite": "DINAMO LAB",
               "data": "20 Maggio 2026",
               "ora": "20:30",
               "giornata": 1,
+              "punteggio": "72-36",
               "gara": 1
             }
-          ]
+          ],
+          "prossime": []
         },
         {
           "nome": "Final 4 - Finale – Finale",
@@ -42899,17 +43756,18 @@
               "ps": 1158
             }
           ],
-          "risultati": [],
-          "prossime": [
+          "risultati": [
             {
-              "casa": "Vincente gara N. 5373",
-              "ospite": "Vincente gara N. 5374",
+              "casa": "MERCEDE ALGHERO",
+              "ospite": "S.A.P. ALGHERO",
               "data": "21 Maggio 2026",
               "ora": "19:30",
               "giornata": 1,
+              "punteggio": "47-43",
               "gara": 1
             }
-          ]
+          ],
+          "prossime": []
         }
       ]
     },
