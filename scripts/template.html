@@ -1498,11 +1498,13 @@ tr.loss-row td{background:#fdecea!important;}
     <button class="mt active" onclick="swTabId(this,'mao-0')" style="font-size:.75rem">🏆 Classifiche</button>
     <button class="mt" onclick="swTabId(this,'mao-1')" style="font-size:.75rem">🥇 Vincitori</button>
     <button class="mt" onclick="swTabId(this,'mao-2')" style="font-size:.75rem">📍 Per Provincia</button>
+    <button class="mt" onclick="swTabId(this,'mao-3')" style="font-size:.75rem">🔀 Percorso</button>
   </div>
   <div class="mbody">
     <div class="mtc active" id="mao-0" style="padding:0"><div id="mo-albo-body"></div></div>
     <div class="mtc hidden" id="mao-1" style="padding:8px"><div id="mo-albo-vincitori"></div></div>
     <div class="mtc hidden" id="mao-2" style="padding:8px"><div id="mo-albo-province"></div></div>
+    <div class="mtc hidden" id="mao-3" style="padding:8px"><div id="mo-albo-percorso"></div></div>
   </div>
   <div class="mfoot"><button class="btn b-gr" onclick="closeMo('mo-albo')">Chiudi</button></div>
 </div></div>
@@ -10750,8 +10752,71 @@ function openAlboOro(){
   pHtml+='</tbody></table>';
   document.getElementById('mo-albo-province').innerHTML=pHtml;
 
+  // TAB PERCORSO
+  var bHtml='<div style="margin-bottom:8px;font-size:.72rem;color:var(--mu)">Seleziona un campionato:</div>';
+  bHtml+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">';
+  campOrd.forEach(function(c2){
+    var gare2=(D.gare||[]).filter(function(g){return g.Campionato===c2;});
+    var hasFasi=gare2.some(function(g){var gi=(g['Girone']||'').toLowerCase();return /quart|semifinal|\bfinal\b|ottav/.test(gi);});
+    if(!hasFasi&&typeof FIP_SARDA!=='undefined'&&FIP_SARDA.campionati){
+      FIP_SARDA.campionati.forEach(function(fc){
+        if(fc.nome===c2)(fc.gironi||[]).forEach(function(gr){if(/quart|semifinal|final|ottav|playoff/i.test(gr.nome||''))hasFasi=true;});
+      });
+    }
+    if(!hasFasi)return;
+    var col2=campColor(c2);
+    bHtml+='<button onclick="_showBracket(\''+esc(c2)+'\')" style="background:'+col2+';color:#fff;border:none;border-radius:4px;padding:3px 10px;font-size:.7rem;cursor:pointer">'+escH(c2.replace('COMITATO REGIONALE SARDEGNA ',''))+'</button>';
+  });
+  bHtml+='</div><div id="mo-bracket-content"></div>';
+  document.getElementById('mo-albo-percorso').innerHTML=bHtml;
+
   openMo('mo-albo');
 }
+
+
+window._showBracket=function(camp){
+  var PL={1:'Ottavi',2:'Quarti',3:'Semifinali',4:'Finale'};
+  function fp(gi){gi=(gi||'').toLowerCase();if(/\bfinal\b/.test(gi)&&!/semifinal|quart|ottav/.test(gi))return 4;if(/semifinal/.test(gi))return 3;if(/quart/.test(gi))return 2;if(/ottav/.test(gi))return 1;return 0;}
+  var FM={};
+  function ag(gi,g){var p=fp(gi);if(!p)return;var parts=gi.split(/–|–/).map(function(s){return s.trim();});var fg=parts[0],gb=parts[parts.length-1];if(!FM[p])FM[p]={p:p,n:fg,s:{}};if(!FM[p].s[gb])FM[p].s[gb]=[];FM[p].s[gb].push(g);}
+  (D.gare||[]).filter(function(g){return g.Campionato===camp;}).forEach(function(g){var gi=g['Girone']||'';if(!fp(gi))return;var ok=g['Risultato']&&g['Risultato']!=='-';ag(gi,{casa:g['Squadra Casa'],ospite:g['Squadra Ospite'],pt:ok?g['Risultato']:null,data:g.Data||'',src:'v5'});});
+  if(typeof FIP_SARDA!=='undefined'&&FIP_SARDA.campionati)FIP_SARDA.campionati.forEach(function(c){if(c.nome!==camp)return;(c.gironi||[]).forEach(function(gr){var gi=gr.nome||'';if(!fp(gi))return;(gr.risultati||[]).forEach(function(r){ag(gi,{casa:r.casa,ospite:r.ospite,pt:r.punteggio,data:r.data||'',src:'sa'});});(gr.prossime||[]).forEach(function(r){ag(gi,{casa:r.casa,ospite:r.ospite,pt:null,data:r.data||'',src:'sa'});});});});
+  var FO=Object.values(FM).sort(function(a,b){return a.p-b.p;});
+  if(!FO.length){document.getElementById('mo-bracket-content').innerHTML='<p style="color:var(--mu);padding:12px">Nessuna fase playoff trovata.</p>';return;}
+  var h='<div style="overflow-x:auto"><div style="display:flex;gap:16px;align-items:flex-start;min-width:max-content">';
+  FO.forEach(function(fase){
+    h+='<div style="min-width:200px"><div style="font-size:.65rem;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;padding:0 0 8px 0">'+(PL[fase.p]||fase.n)+'</div><div style="display:flex;flex-direction:column;gap:10px">';
+    Object.entries(fase.s).forEach(function(e){
+      var gn=e[0],gg=e[1];
+      // deduplicazione
+      var seen=new Set();gg=gg.filter(function(g){var k=(g.casa||'')+'|'+(g.ospite||'')+'|'+(g.data||'');if(seen.has(k))return false;seen.add(k);return true;});
+      var gioc=gg.filter(function(g){return g.pt;});
+      var sq=[...new Set(gg.flatMap(function(g){return[g.casa,g.ospite];}).filter(Boolean))];
+      var W={};sq.forEach(function(s){W[s]=0;});
+      gioc.forEach(function(g){var p=(g.pt||'0-0').split('-');var pc=parseInt(p[0]||0),po=parseInt(p[1]||0);if(pc>po)W[g.casa]=(W[g.casa]||0)+1;else if(po>pc)W[g.ospite]=(W[g.ospite]||0)+1;});
+      var mw=Math.max.apply(null,Object.values(W).concat([0]));
+      var vin=mw>0?sq.find(function(s){return W[s]===mw;}):null;
+      h+='<div style="border:0.5px solid var(--tbl-bd);border-radius:8px;overflow:hidden">';
+      h+='<div style="font-size:.58rem;color:var(--mu);padding:3px 8px;background:var(--tbl-even);border-bottom:0.5px solid var(--tbl-bd)">'+escH(gn)+'</div>';
+      sq.slice(0,2).forEach(function(sq1){
+        var iw=vin===sq1,pv=SQ[sq1]&&SQ[sq1].prov?PC[SQ[sq1].prov]||'#888':'#888';
+        h+='<div style="padding:5px 8px;display:flex;justify-content:space-between;align-items:center;'+(iw?'background:#fffde7':'background:var(--bg)')+';border-bottom:0.5px solid var(--tbl-bd)">';
+        h+='<div style="display:flex;align-items:center;gap:4px;min-width:0">';
+        if(SQ[sq1]&&SQ[sq1].prov)h+='<span style="background:'+pv+';color:#fff;border-radius:3px;padding:0 3px;font-size:.52rem;flex-shrink:0">'+escH(SQ[sq1].prov)+'</span>';
+        h+='<span class="rn rn-sq" style="font-size:.7rem;cursor:pointer;font-weight:'+(iw?700:400)+';color:'+(iw?'#b8860b':'var(--tx)')+'" onclick="openSquadra(\''+esc(sq1)+'\')">'+escH(sq1)+'</span></div>';
+        h+='<div style="display:flex;gap:5px;align-items:center;flex-shrink:0">';
+        gioc.forEach(function(g){var p=(g.pt||'0-0').split('-');var m=g.casa===sq1?parseInt(p[0]||0):parseInt(p[1]||0);h+='<span style="font-size:.65rem;font-weight:'+(iw?700:400)+';color:'+(iw?'#b8860b':'var(--mu)')+'">'+m+'</span>';});
+        if(gioc.length)h+='<span style="font-size:.58rem;background:'+(iw?'#b8860b':'var(--mu)')+';color:#fff;border-radius:3px;padding:0 4px">'+(W[sq1]||0)+'V</span>';
+        h+='</div></div>';
+      });
+      if(!gioc.length)h+='<div style="padding:3px 8px;font-size:.62rem;color:var(--mu2)">📅 Da giocare</div>';
+      h+='</div>';
+    });
+    h+='</div></div>';
+  });
+  h+='</div></div>';
+  document.getElementById('mo-bracket-content').innerHTML=h;
+};
 
 function openCampionato(camp){
   const cs=CS[camp];if(!cs)return;
