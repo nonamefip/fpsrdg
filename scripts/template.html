@@ -10778,9 +10778,22 @@ window._showBracket=function(camp){
   var PL={1:'Ottavi',2:'Quarti',3:'Semifinali',4:'Finale'};
   function fp(gi){gi=(gi||'').toLowerCase();if(/\bfinal\b/.test(gi)&&!/semifinal|quart|ottav/.test(gi))return 4;if(/semifinal/.test(gi))return 3;if(/quart/.test(gi))return 2;if(/ottav/.test(gi))return 1;return 0;}
   var FM={};
-  function ag(gi,g){var p=fp(gi);if(!p)return;var parts=gi.split(/–|–/).map(function(s){return s.trim();});var fg=parts[0],gb=parts[parts.length-1];if(!FM[p])FM[p]={p:p,n:fg,s:{}};if(!FM[p].s[gb])FM[p].s[gb]=[];FM[p].s[gb].push(g);}
-  (D.gare||[]).filter(function(g){return g.Campionato===camp;}).forEach(function(g){var gi=g['Girone']||'';if(!fp(gi))return;var ok=g['Risultato']&&g['Risultato']!=='-';ag(gi,{casa:g['Squadra Casa'],ospite:g['Squadra Ospite'],pt:ok?g['Risultato']:null,data:g.Data||'',src:'v5'});});
-  if(typeof FIP_SARDA!=='undefined'&&FIP_SARDA.campionati)FIP_SARDA.campionati.forEach(function(c){if(c.nome!==camp)return;(c.gironi||[]).forEach(function(gr){var gi=gr.nome||'';if(!fp(gi))return;(gr.risultati||[]).forEach(function(r){ag(gi,{casa:r.casa,ospite:r.ospite,pt:r.punteggio,data:r.data||'',src:'sa'});});(gr.prossime||[]).forEach(function(r){ag(gi,{casa:r.casa,ospite:r.ospite,pt:null,data:r.data||'',src:'sa'});});});});
+  function ag(gi,g){
+    var p=fp(gi);if(!p)return;
+    var parts=gi.indexOf('–')>=0?gi.split('–').map(function(s){return s.trim();}):gi.indexOf('-')>0&&gi.indexOf(' - ')>0?gi.split(' - ').map(function(s){return s.trim();}): [gi,gi];
+    var fg=parts[0],gb=parts[parts.length-1];
+    if(!FM[p])FM[p]={p:p,n:fg,s:{}};
+    if(!FM[p].s[gb])FM[p].s[gb]=[];
+    // deduplicazione immediata
+    var key=(g.casa||'')+'|'+(g.ospite||'')+'|'+(g.data||'')+'|'+(g.pt||'');
+    var dup=FM[p].s[gb].some(function(x){return (x.casa||'')+'|'+(x.ospite||'')+'|'+(x.data||'')+'|'+(x.pt||'')===key;});
+    if(!dup)FM[p].s[gb].push(g);
+  }
+  // Usa FIP_SARDA come fonte primaria per playoff regionali
+  var usedSarda=false;
+  if(typeof FIP_SARDA!=='undefined'&&FIP_SARDA.campionati)FIP_SARDA.campionati.forEach(function(c){if(c.nome!==camp)return;(c.gironi||[]).forEach(function(gr){var gi=gr.nome||'';if(!fp(gi))return;usedSarda=true;(gr.risultati||[]).forEach(function(r){ag(gi,{casa:r.casa,ospite:r.ospite,pt:r.punteggio,data:r.data||''});});(gr.prossime||[]).forEach(function(r){ag(gi,{casa:r.casa,ospite:r.ospite,pt:null,data:r.data||''});});});});
+  // Usa data_v5 solo se FIP_SARDA non aveva dati playoff per questo camp
+  if(!usedSarda)(D.gare||[]).filter(function(g){return g.Campionato===camp;}).forEach(function(g){var gi=g['Girone']||'';if(!fp(gi))return;var ok=g['Risultato']&&g['Risultato']!=='-';ag(gi,{casa:g['Squadra Casa'],ospite:g['Squadra Ospite'],pt:ok?g['Risultato']:null,data:g.Data||''});});
   var FO=Object.values(FM).sort(function(a,b){return a.p-b.p;});
   if(!FO.length){document.getElementById('mo-bracket-content').innerHTML='<p style="color:var(--mu);padding:12px">Nessuna fase playoff trovata.</p>';return;}
   var h='<div style="overflow-x:auto"><div style="display:flex;gap:16px;align-items:flex-start;min-width:max-content">';
@@ -10821,6 +10834,44 @@ window._showBracket=function(camp){
 function openCampionato(camp){
   const cs=CS[camp];if(!cs)return;
   const allCampGare=(D.gare||[]).filter(g=>g.Campionato===camp).sort((a,b)=>b.Data.localeCompare(a.Data));
+  // Aggiungi gare da FIP_SARDA (playoff regionali non in data_v5)
+  if(typeof FIP_SARDA!=='undefined'&&FIP_SARDA.campionati){
+    const sardaCamp=FIP_SARDA.campionati.find(c=>c.nome===camp);
+    if(sardaCamp){
+      const sardaGare=[];
+      (sardaCamp.gironi||[]).forEach(gr=>{
+        const nomeGirone=gr.nome||'';
+        // Estrai fase e girone dal nome composto "Fase – Girone"
+        const parts=nomeGirone.includes('–')?nomeGirone.split('–').map(s=>s.trim()):[nomeGirone,nomeGirone];
+        const faseNome=parts[0], gironeNome=parts[parts.length-1];
+        // Converti risultati in formato D.gare
+        (gr.risultati||[]).forEach(r=>{
+          const pts=(r.punteggio||'').split('-');
+          sardaGare.push({
+            'Campionato':camp,'Fase':faseNome,'Girone':nomeGirone,
+            'Squadra Casa':r.casa,'Squadra Ospite':r.ospite,
+            'Punti Casa':pts[0]||'','Punti Ospite':pts[1]||'',
+            'Risultato':r.punteggio||'','Data':r.data||'','Ora':r.ora||'',
+            'Numero Gara':String(r.gara||''),'_sarda':true
+          });
+        });
+        (gr.prossime||[]).forEach(r=>{
+          sardaGare.push({
+            'Campionato':camp,'Fase':faseNome,'Girone':nomeGirone,
+            'Squadra Casa':r.casa,'Squadra Ospite':r.ospite,
+            'Punti Casa':'','Punti Ospite':'','Risultato':'',
+            'Data':r.data||'','Ora':r.ora||'','Numero Gara':'','_sarda':true
+          });
+        });
+      });
+      // Aggiungi solo gare non già presenti (deduplicazione per squadre+data)
+      const esistenti=new Set(allCampGare.map(g=>`${g['Squadra Casa']}|${g['Squadra Ospite']}|${g['Data']}`));
+      sardaGare.forEach(g=>{
+        const k=`${g['Squadra Casa']}|${g['Squadra Ospite']}|${g['Data']}`;
+        if(!esistenti.has(k)){esistenti.add(k);allCampGare.push(g);}
+      });
+    }
+  }
   const meta_c=CAMP_META[camp]||{};
   const gironiData=cs.girone_data||{};
   // Stats arbitri
@@ -16794,8 +16845,30 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     }
     var tabHtml='';
     tabHtml+=renderFaseSection(sortFase(ottaviGironi),'🎯','Tabellone Ottavi di Finale',Math.min(4,ottaviGironi.length)||1);
-    tabHtml+=renderFaseSection(sortFase(quartiGironi),'⚔️','Tabellone Quarti di Finale',Math.min(4,quartiGironi.length)||1);
-    tabHtml+=renderFaseSection(sortFase(semifGironi),'🥊','Tabellone Semifinali',Math.min(2,semifGironi.length)||1);
+    // Separa i quarti per fase (es. DR2 ha Spareggi Nord e Playoff Quarti separati)
+    var quartiByFase={};
+    sortFase(quartiGironi).forEach(function(gi){
+      var prefix=gi.includes('–')?gi.split('–')[0].trim():(gi.includes(' - ')&&gi.indexOf(' - ')<gi.length-3?gi.split(' - ').slice(0,-1).join(' - ').trim():gi);
+      if(!quartiByFase[prefix])quartiByFase[prefix]=[];
+      quartiByFase[prefix].push(gi);
+    });
+    Object.entries(quartiByFase).forEach(function(e){
+      var prefix=e[0],gis=e[1];
+      var lbl=/spareggi/i.test(prefix)?'Spareggi Playoff':/quart/i.test(prefix)?'Tabellone Quarti di Finale':'Tabellone '+prefix;
+      tabHtml+=renderFaseSection(gis,'⚔️',lbl,Math.min(4,gis.length)||1);
+    });
+    // Separa le semifinali per fase
+    var semifByFase={};
+    sortFase(semifGironi).forEach(function(gi){
+      var prefix=gi.includes('–')?gi.split('–')[0].trim():gi;
+      if(!semifByFase[prefix])semifByFase[prefix]=[];
+      semifByFase[prefix].push(gi);
+    });
+    Object.entries(semifByFase).forEach(function(e){
+      var prefix=e[0],gis=e[1];
+      var lbl=/sud/i.test(prefix)?'Tabellone Semifinali Sud':/nord/i.test(prefix)?'Tabellone Semifinali Nord':'Tabellone Semifinali';
+      tabHtml+=renderFaseSection(gis,'🥊',lbl,Math.min(2,gis.length)||1);
+    });
     tabHtml+=renderFaseSection(sortFase(finalGironi),'🏆','Tabellone Finale',1);
     tabHtml+=renderFaseSection(sortFase(playoutElimGironi),'⬇️','Tabellone Playout',Math.min(2,playoutElimGironi.length)||1);
     // Il tabellone va su riga separata, in un div block (non dentro il flex dei gironi)
