@@ -10943,16 +10943,20 @@ function openCampionato(camp){
         const nomeGirone=gr.nome||'';
         const parts=nomeGirone.includes('–')?nomeGirone.split('–').map(s=>s.trim()):[nomeGirone,nomeGirone];
         const faseNome=parts[0];
+        // Per gironi regolari (qualificazione, seconda fase) usa Fase='' per non duplicare
+        // con le gare già presenti in data_v5. Solo per playoff/elim usa la fase.
+        const isFaseElimSarda=/quart|semifinal|final|ottav|playoff|spareggi/i.test(nomeGirone);
+        const faseDaUsare=isFaseElimSarda?faseNome:'';
         (gr.risultati||[]).forEach(r=>{
           const pts=(r.punteggio||'').split('-');
-          sardaGare.push({'Campionato':camp,'Fase':faseNome,'Girone':nomeGirone,
+          sardaGare.push({'Campionato':camp,'Fase':faseDaUsare,'Girone':nomeGirone,
             'Squadra Casa':r.casa,'Squadra Ospite':r.ospite,
             'Punti Casa':pts[0]||'','Punti Ospite':pts[1]||'',
             'Risultato':r.punteggio||'','Data':r.data||'','Ora':r.ora||'',
             'Numero Gara':String(r.gara||''),'_sarda':true});
         });
         (gr.prossime||[]).forEach(r=>{
-          sardaGare.push({'Campionato':camp,'Fase':faseNome,'Girone':nomeGirone,
+          sardaGare.push({'Campionato':camp,'Fase':faseDaUsare,'Girone':nomeGirone,
             'Squadra Casa':r.casa,'Squadra Ospite':r.ospite,
             'Punti Casa':'','Punti Ospite':'','Risultato':'',
             'Data':r.data||'','Ora':r.ora||'','Numero Gara':'','_sarda':true});
