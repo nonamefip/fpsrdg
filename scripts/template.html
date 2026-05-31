@@ -807,6 +807,7 @@ tr.loss-row td{background:#fdecea!important;}
 
   <button class="nav-btn" onclick="showPage('fiplive')" title="Classifiche e risultati live da fip.it">🌐 FIP Live</button>
   <button class="nav-btn" onclick="openAlboOro()" title="Classifiche finali per campionato">🏅 Albo d'Oro</button>
+  <button class="nav-btn" onclick="openMatriceSq()" title="Squadre per campionato">⊞ Matrice</button>
   <button class="nav-btn" onclick="showPage('aggiornamento')" title="Impostazioni">⚙️</button>
 </div>
 <div class="kpi-strip">
@@ -1490,6 +1491,25 @@ tr.loss-row td{background:#fdecea!important;}
   <div class="mbody" id="mc-body"></div>
   <div class="mfoot"><button class="btn b-go" onclick="printMo('mo-camp')">🖨</button><button class="btn b-gr" onclick="closeMo('mo-camp')">Chiudi</button></div>
 </div></div>
+
+<div class="mo" id="mo-matrice"><div class="mbox" style="max-width:98vw;width:98%;height:90vh;display:flex;flex-direction:column">
+  <div class="mhd"><span style="font-size:1.1rem">⊞</span><h3 id="mo-matrice-title">Matrice Squadre × Campionati</h3><button class="mcl" onclick="closeMo('mo-matrice')">✕</button></div>
+  <div style="padding:8px 12px;border-bottom:0.5px solid var(--tbl-bd);display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <select id="mat-prov" onchange="renderMatrice()" style="font-size:12px;padding:3px 8px;border-radius:4px;border:0.5px solid var(--tbl-bd);background:var(--bg)">
+      <option value="">Tutte le province</option>
+      <option>CA</option><option>SS</option><option>NU</option><option>OR</option><option>SU</option>
+    </select>
+    <select id="mat-ord" onchange="renderMatrice()" style="font-size:12px;padding:3px 8px;border-radius:4px;border:0.5px solid var(--tbl-bd);background:var(--bg)">
+      <option value="cat">N. categorie ↓</option>
+      <option value="nome">Nome A-Z</option>
+      <option value="v">Vittorie ↓</option>
+      <option value="pv">Provincia</option>
+    </select>
+    <span id="mat-count" style="font-size:11px;color:var(--mu)"></span>
+  </div>
+  <div id="mo-matrice-body" style="overflow:auto;flex:1;padding:0"></div>
+</div></div>
+
 
 <div class="mo" id="mo-albo"><div class="mbox" style="max-width:1200px;width:98%">
   <div class="mhd"><span style="font-size:1.1rem">🏅</span><h3>Albo d'Oro — Classifiche Finali</h3>
@@ -10930,6 +10950,157 @@ window._showBracket=function(camp){
   h+='</div></div>';
   document.getElementById('mo-bracket-content').innerHTML=h;
 };
+
+
+// ── MATRICE SQUADRE × CAMPIONATI ─────────────────────────────────────
+const _CAMP_ORDER_MAT = [
+  {n:'Serie B Femminile',s:'SBF',f:true},
+  {n:'Serie C',s:'SC',f:false},
+  {n:'Divisione regionale 1',s:'DR1',f:false},
+  {n:'Divisione regionale 2',s:'DR2',f:false},
+  {n:'Under 19 Maschile Gold',s:'U19MG',f:false},
+  {n:'Under 19 Femminile Regionale',s:'U19F',f:true},
+  {n:'Under 17 Maschile Eccellenza',s:'U17ME',f:false},
+  {n:'Under 17 Maschile Gold',s:'U17MG',f:false},
+  {n:'Under 17 Maschile Regionale',s:'U17MR',f:false},
+  {n:'Under 17 Femminile Regionale',s:'U17F',f:true},
+  {n:'Under 15 Maschile Eccellenza',s:'U15ME',f:false},
+  {n:'Under 15 Maschile Regionale',s:'U15MR',f:false},
+  {n:'Under 15 Femminile Regionale',s:'U15F',f:true},
+  {n:'Under 14 Maschile Regionale',s:'U14MR',f:false},
+  {n:'Under 14 Femminile Regionale',s:'U14F',f:true},
+  {n:'Under 13 Maschile Regionale',s:'U13MR',f:false},
+  {n:'Under 13 Femminile Regionale',s:'U13F',f:true},
+  {n:'Esordienti Femminile',s:'EsF',f:true},
+  {n:'Trofeo Esordienti',s:'TrEs',f:false},
+];
+
+function _findCampKey(nomeParziale){
+  return Object.keys(CS).find(k=>{
+    const kc=k.replace('COMITATO REGIONALE SARDEGNA ','').trim().toLowerCase();
+    const nc=nomeParziale.toLowerCase();
+    return kc===nc||kc.includes(nc)||nc.includes(kc);
+  });
+}
+
+function openMatriceSq(){
+  // Pre-calcola campKey per ogni campionato
+  _CAMP_ORDER_MAT.forEach(c=>{c._key=_findCampKey(c.n);});
+  openMo('mo-matrice');
+  renderMatrice();
+}
+
+function renderMatrice(){
+  const provFilt=document.getElementById('mat-prov')?.value||'';
+  const ordFilt=document.getElementById('mat-ord')?.value||'cat';
+
+  // Costruisci lista squadre con dati per ogni campionato
+  const sqData={};
+  Object.entries(SQ).forEach(([nome,sq])=>{
+    if(!nome||nome.length<2) return;
+    if(provFilt&&sq.prov!==provFilt) return;
+    sqData[nome]={nome,prov:sq.prov||'',cats:[],totalG:0,totalV:0};
+  });
+
+  // Per ogni campionato, cerca le squadre
+  _CAMP_ORDER_MAT.forEach((c,ci)=>{
+    const campKey=c._key;
+    if(!campKey) return;
+    const cs=CS[campKey];
+    if(!cs) return;
+    const clr=campColor(campKey);
+    // Cerca posizioni dalle classifiche gironi
+    const sqPos={};
+    (cs.gironi||[]).forEach(gr=>{
+      (gr.classifica||[]).forEach(r=>{
+        if(r.squadra&&(!sqPos[r.squadra]||r.pos<sqPos[r.squadra].pos)){
+          sqPos[r.squadra]={pos:r.pos,pg:r.pg||0,vinte:r.vinte||0,clr};
+        }
+      });
+    });
+    // Cerca anche nelle gare dirette
+    const gCamp=(D.gare||[]).filter(g=>g.Campionato===campKey);
+    const sqInGare=new Set(gCamp.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean));
+    sqInGare.forEach(sq=>{
+      if(!sqPos[sq]){
+        const gg=gCamp.filter(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
+        const giocate=gg.filter(g=>g['Risultato']&&g['Risultato']!=='-');
+        let v=0;
+        giocate.forEach(g=>{
+          const isCasa=g['Squadra Casa']===sq;
+          const pc=parseInt(g['Punti Casa']||0),po=parseInt(g['Punti Ospite']||0);
+          if(isCasa?pc>po:po>pc) v++;
+        });
+        sqPos[sq]={pos:0,pg:giocate.length,vinte:v,clr};
+      }
+    });
+    // Aggiorna sqData
+    Object.entries(sqPos).forEach(([sqNome,data])=>{
+      if(!sqData[sqNome]){
+        if(provFilt) return;
+        const sq=SQ[sqNome];
+        if(!sq) return;
+        sqData[sqNome]={nome:sqNome,prov:sq.prov||'',cats:[],totalG:0,totalV:0};
+      }
+      sqData[sqNome].cats[ci]={pos:data.pos,pg:data.pg,vinte:data.vinte,clr:data.clr};
+      sqData[sqNome].totalG+=data.pg;
+      sqData[sqNome].totalV+=data.vinte;
+    });
+  });
+
+  // Ordina squadre
+  let sqArr=Object.values(sqData).filter(s=>s.cats.some(c=>c));
+  if(ordFilt==='cat') sqArr.sort((a,b)=>b.cats.filter(c=>c).length-a.cats.filter(c=>c).length||a.nome.localeCompare(b.nome,'it'));
+  else if(ordFilt==='nome') sqArr.sort((a,b)=>a.nome.localeCompare(b.nome,'it'));
+  else if(ordFilt==='v') sqArr.sort((a,b)=>b.totalV-a.totalV||a.nome.localeCompare(b.nome,'it'));
+  else if(ordFilt==='pv') sqArr.sort((a,b)=>a.prov.localeCompare(b.prov)||a.nome.localeCompare(b.nome,'it'));
+
+  document.getElementById('mat-count').textContent=sqArr.length+' squadre';
+
+  // Costruisci HTML
+  const femBg='#fff0f3', femHd='#ffd6df';
+  let h='<table style="border-collapse:collapse;font-size:11px;white-space:nowrap;min-width:max-content">';
+
+  // Header con nomi campionati ruotati
+  h+='<thead><tr style="background:var(--bl);color:#fff">';
+  h+='<th style="position:sticky;left:0;z-index:3;background:var(--bl);padding:5px 10px;text-align:left;min-width:180px;font-size:12px">Squadra</th>';
+  _CAMP_ORDER_MAT.forEach(c=>{
+    const bg=c.f?femHd:'var(--bl)';
+    const col=c.f?'#8b0000':'#fff';
+    h+=`<th style="background:${bg};color:${col};padding:4px 3px;text-align:center;width:52px;max-width:52px">
+      <div style="writing-mode:vertical-lr;transform:rotate(180deg);height:80px;font-size:9px;font-weight:500;display:flex;align-items:center;justify-content:center">${escH(c.s)}</div>
+    </th>`;
+  });
+  h+='</tr></thead><tbody>';
+
+  // Righe squadre
+  sqArr.forEach((sq,ri)=>{
+    const pvClr=PC[sq.prov]||'#888';
+    const rowBg=ri%2?'var(--tbl-even)':'var(--bg)';
+    h+=`<tr style="background:${rowBg}">`;
+    h+=`<td style="position:sticky;left:0;z-index:2;background:${rowBg};padding:4px 8px;border-right:1px solid var(--tbl-bd)">
+      <span style="background:${pvClr};color:#fff;border-radius:3px;padding:0 4px;font-size:9px;font-weight:500;margin-right:4px">${escH(sq.prov)}</span>
+      <span class="rn rn-sq" style="font-size:11px;font-weight:500;cursor:pointer" onclick="openSquadra('${esc(sq.nome)}')">${escH(sq.nome)}</span>
+    </td>`;
+    _CAMP_ORDER_MAT.forEach((c,ci)=>{
+      const cat=sq.cats[ci];
+      const cellBg=c.f?(ri%2?'#fff0f3':'#ffe8ed'):(ri%2?'var(--tbl-even)':'var(--bg)');
+      if(cat){
+        const label=cat.pos>0?cat.pos+'°':'✓';
+        const bg=cat.clr||'#185FA5';
+        h+=`<td style="background:${cellBg};text-align:center;padding:3px 2px">
+          <span style="background:${bg};color:#fff;border-radius:3px;padding:2px 5px;font-size:10px;font-weight:500;cursor:pointer;display:inline-block" onclick="openCampionato('${esc(c._key||c.n)}')">${label}</span>
+        </td>`;
+      } else {
+        h+=`<td style="background:${cellBg};text-align:center;color:var(--mu2);font-size:12px">—</td>`;
+      }
+    });
+    h+='</tr>';
+  });
+
+  h+='</tbody></table>';
+  document.getElementById('mo-matrice-body').innerHTML=h;
+}
 
 function openCampionato(camp){
   const cs=CS[camp];if(!cs)return;
