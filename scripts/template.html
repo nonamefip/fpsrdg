@@ -1493,13 +1493,26 @@ tr.loss-row td{background:#fdecea!important;}
 </div></div>
 
 <div class="mo" id="mo-matrice"><div class="mbox" style="max-width:98vw;width:98%;height:90vh;display:flex;flex-direction:column">
-  <div class="mhd"><span style="font-size:1.1rem">⊞</span><h3 id="mo-matrice-title">Matrice Squadre × Campionati</h3><button class="mcl" onclick="closeMo('mo-matrice')">✕</button></div>
-  <div style="padding:8px 12px;border-bottom:0.5px solid var(--tbl-bd);display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-    <select id="mat-prov" onchange="renderMatrice()" style="font-size:12px;padding:3px 8px;border-radius:4px;border:0.5px solid var(--tbl-bd);background:var(--bg)">
+  <div class="mhd"><span style="font-size:1.1rem">⊞</span><h3>Matrice Squadre × Campionati</h3><button class="mcl" onclick="closeMo('mo-matrice')">✕</button></div>
+  <div style="padding:6px 12px;border-bottom:0.5px solid var(--tbl-bd);display:flex;gap:4px;align-items:center">
+    <button id="mat-tab-sq" onclick="matSwTab('sq')" style="padding:5px 14px;font-size:12px;background:var(--bl);color:#fff;border:none;border-radius:4px;cursor:pointer">Squadre</button>
+    <button id="mat-tab-agg" onclick="matSwTab('agg')" style="padding:5px 14px;font-size:12px;background:none;color:var(--tx);border:0.5px solid var(--tbl-bd);border-radius:4px;cursor:pointer">Aggregata per società</button>
+  </div>
+  <div style="padding:6px 12px;border-bottom:0.5px solid var(--tbl-bd);display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <select id="mat-prov" onchange="renderMatrice()" style="font-size:11px;padding:3px 6px;border-radius:4px;border:0.5px solid var(--tbl-bd);background:var(--bg)">
       <option value="">Tutte le province</option>
       <option>CA</option><option>SS</option><option>NU</option><option>OR</option><option>SU</option>
     </select>
-    <select id="mat-ord" onchange="renderMatrice()" style="font-size:12px;padding:3px 8px;border-radius:4px;border:0.5px solid var(--tbl-bd);background:var(--bg)">
+    <select id="mat-camp" onchange="renderMatrice()" style="font-size:11px;padding:3px 6px;border-radius:4px;border:0.5px solid var(--tbl-bd);background:var(--bg)">
+      <option value="">Tutti i campionati</option>
+    </select>
+    <select id="mat-gen" onchange="renderMatrice()" style="font-size:11px;padding:3px 6px;border-radius:4px;border:0.5px solid var(--tbl-bd);background:var(--bg)">
+      <option value="">Tutti i generi</option>
+      <option value="M">Solo maschili</option>
+      <option value="F">Solo femminili</option>
+      <option value="MF">Misti (M+F)</option>
+    </select>
+    <select id="mat-ord" onchange="renderMatrice()" style="font-size:11px;padding:3px 6px;border-radius:4px;border:0.5px solid var(--tbl-bd);background:var(--bg)">
       <option value="cat">N. categorie ↓</option>
       <option value="nome">Nome A-Z</option>
       <option value="v">Vittorie ↓</option>
@@ -1509,7 +1522,6 @@ tr.loss-row td{background:#fdecea!important;}
   </div>
   <div id="mo-matrice-body" style="overflow:auto;flex:1;padding:0"></div>
 </div></div>
-
 
 <div class="mo" id="mo-albo"><div class="mbox" style="max-width:1200px;width:98%">
   <div class="mhd"><span style="font-size:1.1rem">🏅</span><h3>Albo d'Oro — Classifiche Finali</h3>
@@ -10975,6 +10987,8 @@ const _CAMP_ORDER_MAT = [
   {n:'Trofeo Esordienti',s:'TrEs',f:false},
 ];
 
+let _matTab='sq';
+
 function _findCampKey(nomeParziale){
   return Object.keys(CS).find(k=>{
     const kc=k.replace('COMITATO REGIONALE SARDEGNA ','').trim().toLowerCase();
@@ -10983,124 +10997,195 @@ function _findCampKey(nomeParziale){
   });
 }
 
+function matSwTab(t){
+  _matTab=t;
+  const bSq=document.getElementById('mat-tab-sq');
+  const bAgg=document.getElementById('mat-tab-agg');
+  if(bSq&&bAgg){
+    bSq.style.background=t==='sq'?'var(--bl)':'none';
+    bSq.style.color=t==='sq'?'#fff':'var(--tx)';
+    bSq.style.border=t==='sq'?'none':'0.5px solid var(--tbl-bd)';
+    bAgg.style.background=t==='agg'?'var(--bl)':'none';
+    bAgg.style.color=t==='agg'?'#fff':'var(--tx)';
+    bAgg.style.border=t==='agg'?'none':'0.5px solid var(--tbl-bd)';
+  }
+  renderMatrice();
+}
+
 function openMatriceSq(){
-  // Pre-calcola campKey per ogni campionato
   _CAMP_ORDER_MAT.forEach(c=>{c._key=_findCampKey(c.n);});
+  // Popola select campionati
+  const sel=document.getElementById('mat-camp');
+  if(sel&&sel.options.length<=1){
+    _CAMP_ORDER_MAT.forEach(c=>{
+      const o=document.createElement('option');
+      o.value=c.n; o.textContent=c.s+' — '+c.n;
+      sel.appendChild(o);
+    });
+  }
   openMo('mo-matrice');
   renderMatrice();
 }
 
-function renderMatrice(){
-  const provFilt=document.getElementById('mat-prov')?.value||'';
-  const ordFilt=document.getElementById('mat-ord')?.value||'cat';
-
-  // Costruisci lista squadre con dati per ogni campionato
+function _buildSqData(provFilt,campFilt,genFilt){
   const sqData={};
-  Object.entries(SQ).forEach(([nome,sq])=>{
-    if(!nome||nome.length<2) return;
-    if(provFilt&&sq.prov!==provFilt) return;
-    sqData[nome]={nome,prov:sq.prov||'',cats:[],totalG:0,totalV:0};
-  });
-
-  // Per ogni campionato, cerca le squadre
+  // Raccogli dati per ogni squadra
   _CAMP_ORDER_MAT.forEach((c,ci)=>{
-    const campKey=c._key;
-    if(!campKey) return;
-    const cs=CS[campKey];
-    if(!cs) return;
+    if(campFilt&&c.n!==campFilt) return;
+    if(genFilt==='M'&&c.f) return;
+    if(genFilt==='F'&&!c.f) return;
+    const campKey=c._key; if(!campKey) return;
+    const cs=CS[campKey]; if(!cs) return;
     const clr=campColor(campKey);
-    // Cerca posizioni dalle classifiche gironi
     const sqPos={};
     (cs.gironi||[]).forEach(gr=>{
       (gr.classifica||[]).forEach(r=>{
-        if(r.squadra&&(!sqPos[r.squadra]||r.pos<sqPos[r.squadra].pos)){
+        if(r.squadra&&(!sqPos[r.squadra]||r.pos<sqPos[r.squadra].pos))
           sqPos[r.squadra]={pos:r.pos,pg:r.pg||0,vinte:r.vinte||0,clr};
-        }
       });
     });
-    // Cerca anche nelle gare dirette
     const gCamp=(D.gare||[]).filter(g=>g.Campionato===campKey);
-    const sqInGare=new Set(gCamp.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean));
-    sqInGare.forEach(sq=>{
+    new Set(gCamp.flatMap(g=>[g['Squadra Casa'],g['Squadra Ospite']]).filter(Boolean)).forEach(sq=>{
       if(!sqPos[sq]){
         const gg=gCamp.filter(g=>g['Squadra Casa']===sq||g['Squadra Ospite']===sq);
-        const giocate=gg.filter(g=>g['Risultato']&&g['Risultato']!=='-');
-        let v=0;
-        giocate.forEach(g=>{
-          const isCasa=g['Squadra Casa']===sq;
-          const pc=parseInt(g['Punti Casa']||0),po=parseInt(g['Punti Ospite']||0);
-          if(isCasa?pc>po:po>pc) v++;
-        });
-        sqPos[sq]={pos:0,pg:giocate.length,vinte:v,clr};
+        const gioc=gg.filter(g=>g['Risultato']&&g['Risultato']!=='-');
+        let v=0; gioc.forEach(g=>{const ic=g['Squadra Casa']===sq;const pc=parseInt(g['Punti Casa']||0),po=parseInt(g['Punti Ospite']||0);if(ic?pc>po:po>pc)v++;});
+        sqPos[sq]={pos:0,pg:gioc.length,vinte:v,clr};
       }
     });
-    // Aggiorna sqData
     Object.entries(sqPos).forEach(([sqNome,data])=>{
-      if(!sqData[sqNome]){
-        if(provFilt) return;
-        const sq=SQ[sqNome];
-        if(!sq) return;
-        sqData[sqNome]={nome:sqNome,prov:sq.prov||'',cats:[],totalG:0,totalV:0};
-      }
+      const sq=SQ[sqNome]; if(!sq) return;
+      if(provFilt&&sq.prov!==provFilt) return;
+      if(!sqData[sqNome]) sqData[sqNome]={nome:sqNome,prov:sq.prov||'',cats:[],totalG:0,totalV:0};
       sqData[sqNome].cats[ci]={pos:data.pos,pg:data.pg,vinte:data.vinte,clr:data.clr};
-      sqData[sqNome].totalG+=data.pg;
-      sqData[sqNome].totalV+=data.vinte;
+      sqData[sqNome].totalG+=data.pg; sqData[sqNome].totalV+=data.vinte;
     });
   });
-
-  // Ordina squadre
-  let sqArr=Object.values(sqData).filter(s=>s.cats.some(c=>c));
-  if(ordFilt==='cat') sqArr.sort((a,b)=>b.cats.filter(c=>c).length-a.cats.filter(c=>c).length||a.nome.localeCompare(b.nome,'it'));
-  else if(ordFilt==='nome') sqArr.sort((a,b)=>a.nome.localeCompare(b.nome,'it'));
-  else if(ordFilt==='v') sqArr.sort((a,b)=>b.totalV-a.totalV||a.nome.localeCompare(b.nome,'it'));
-  else if(ordFilt==='pv') sqArr.sort((a,b)=>a.prov.localeCompare(b.prov)||a.nome.localeCompare(b.nome,'it'));
-
-  document.getElementById('mat-count').textContent=sqArr.length+' squadre';
-
-  // Costruisci HTML
-  const femBg='#fff0f3', femHd='#ffd6df';
-  let h='<table style="border-collapse:collapse;font-size:11px;white-space:nowrap;min-width:max-content">';
-
-  // Header con nomi campionati ruotati
-  h+='<thead><tr style="background:var(--bl);color:#fff">';
-  h+='<th style="position:sticky;left:0;z-index:3;background:var(--bl);padding:5px 10px;text-align:left;min-width:180px;font-size:12px">Squadra</th>';
-  _CAMP_ORDER_MAT.forEach(c=>{
-    const bg=c.f?femHd:'var(--bl)';
-    const col=c.f?'#8b0000':'#fff';
-    h+=`<th style="background:${bg};color:${col};padding:4px 3px;text-align:center;width:52px;max-width:52px">
-      <div style="writing-mode:vertical-lr;transform:rotate(180deg);height:80px;font-size:9px;font-weight:500;display:flex;align-items:center;justify-content:center">${escH(c.s)}</div>
-    </th>`;
-  });
-  h+='</tr></thead><tbody>';
-
-  // Righe squadre
-  sqArr.forEach((sq,ri)=>{
-    const pvClr=PC[sq.prov]||'#888';
-    const rowBg=ri%2?'var(--tbl-even)':'var(--bg)';
-    h+=`<tr style="background:${rowBg}">`;
-    h+=`<td style="position:sticky;left:0;z-index:2;background:${rowBg};padding:4px 8px;border-right:1px solid var(--tbl-bd)">
-      <span style="background:${pvClr};color:#fff;border-radius:3px;padding:0 4px;font-size:9px;font-weight:500;margin-right:4px">${escH(sq.prov)}</span>
-      <span class="rn rn-sq" style="font-size:11px;font-weight:500;cursor:pointer" onclick="openSquadra('${esc(sq.nome)}')">${escH(sq.nome)}</span>
-    </td>`;
-    _CAMP_ORDER_MAT.forEach((c,ci)=>{
-      const cat=sq.cats[ci];
-      const cellBg=c.f?(ri%2?'#fff0f3':'#ffe8ed'):(ri%2?'var(--tbl-even)':'var(--bg)');
-      if(cat){
-        const label=cat.pos>0?cat.pos+'°':'✓';
-        const bg=cat.clr||'#185FA5';
-        h+=`<td style="background:${cellBg};text-align:center;padding:3px 2px">
-          <span style="background:${bg};color:#fff;border-radius:3px;padding:2px 5px;font-size:10px;font-weight:500;cursor:pointer;display:inline-block" onclick="openCampionato('${esc(c._key||c.n)}')">${label}</span>
-        </td>`;
-      } else {
-        h+=`<td style="background:${cellBg};text-align:center;color:var(--mu2);font-size:12px">—</td>`;
-      }
-    });
-    h+='</tr>';
-  });
-
-  h+='</tbody></table>';
-  document.getElementById('mo-matrice-body').innerHTML=h;
+  return sqData;
 }
+
+function _sortSq(arr,ord){
+  if(ord==='cat') return arr.sort((a,b)=>b.cats.filter(c=>c).length-a.cats.filter(c=>c).length||a.nome.localeCompare(b.nome,'it'));
+  if(ord==='nome') return arr.sort((a,b)=>a.nome.localeCompare(b.nome,'it'));
+  if(ord==='v') return arr.sort((a,b)=>b.totalV-a.totalV||a.nome.localeCompare(b.nome,'it'));
+  if(ord==='pv') return arr.sort((a,b)=>a.prov.localeCompare(b.prov)||a.nome.localeCompare(b.nome,'it'));
+  return arr;
+}
+
+function _matHeader(campFilt,genFilt){
+  const femBg='#ffd6df', femClr='#8b0000';
+  let h='<thead><tr style="background:var(--bl);color:#fff;position:sticky;top:0;z-index:3">';
+  h+='<th style="position:sticky;left:0;z-index:4;background:var(--bl);padding:4px 6px;text-align:center;width:32px;font-size:10px">#</th>';
+  h+='<th style="position:sticky;left:32px;z-index:4;background:var(--bl);padding:4px 8px;text-align:left;min-width:180px;font-size:11px">Squadra</th>';
+  _CAMP_ORDER_MAT.forEach(c=>{
+    if(campFilt&&c.n!==campFilt) return;
+    if(genFilt==='M'&&c.f) return;
+    if(genFilt==='F'&&!c.f) return;
+    const bg=c.f?femBg:'var(--bl)', cl=c.f?femClr:'#fff';
+    h+=`<th style="background:${bg};color:${cl};padding:3px 2px;text-align:center;width:50px;max-width:50px;font-size:9px"><div style="writing-mode:vertical-lr;transform:rotate(180deg);height:72px;display:flex;align-items:center;justify-content:center;font-weight:500">${escH(c.s)}</div></th>`;
+  });
+  h+='</tr></thead>';
+  return h;
+}
+
+function renderMatrice(){
+  const provFilt=document.getElementById('mat-prov')?.value||'';
+  const campFilt=document.getElementById('mat-camp')?.value||'';
+  const genFilt=document.getElementById('mat-gen')?.value||'';
+  const ordFilt=document.getElementById('mat-ord')?.value||'cat';
+  const sqData=_buildSqData(provFilt,campFilt,genFilt);
+
+  if(_matTab==='sq'){
+    let sqArr=_sortSq(Object.values(sqData).filter(s=>s.cats.some(c=>c)),ordFilt);
+    document.getElementById('mat-count').textContent=sqArr.length+' squadre';
+    let h='<table style="border-collapse:collapse;white-space:nowrap;font-size:11px;min-width:max-content">';
+    h+=_matHeader(campFilt,genFilt);
+    h+='<tbody>';
+    sqArr.forEach((sq,ri)=>{
+      const pvClr=PC[sq.prov]||'#888';
+      const rb=ri%2?'var(--tbl-even)':'var(--bg)';
+      h+=`<tr style="background:${rb}">`;
+      h+=`<td style="position:sticky;left:0;z-index:2;background:${rb};text-align:center;padding:3px 4px;color:var(--mu);font-size:10px;border-right:0.5px solid var(--tbl-bd)">${ri+1}</td>`;
+      h+=`<td style="position:sticky;left:32px;z-index:2;background:${rb};padding:3px 8px;border-right:1px solid var(--tbl-bd)"><span style="background:${pvClr};color:#fff;border-radius:3px;padding:0 4px;font-size:9px;font-weight:500;margin-right:4px">${escH(sq.prov)}</span><span class="rn rn-sq" style="font-size:11px;font-weight:500;cursor:pointer" onclick="openSquadra('${esc(sq.nome)}')">${escH(sq.nome)}</span></td>`;
+      _CAMP_ORDER_MAT.forEach((c,ci)=>{
+        if(campFilt&&c.n!==campFilt) return;
+        if(genFilt==='M'&&c.f) return;
+        if(genFilt==='F'&&!c.f) return;
+        const cat=sq.cats[ci];
+        const cb=c.f?(ri%2?'#fff0f3':'#ffe8ed'):(ri%2?'var(--tbl-even)':'var(--bg)');
+        if(cat){
+          const lbl=cat.pos>0?cat.pos+'°':'✓';
+          h+=`<td style="background:${cb};text-align:center;padding:3px 2px"><span style="background:${cat.clr||'#185FA5'};color:#fff;border-radius:3px;padding:2px 5px;font-size:10px;font-weight:500;cursor:pointer" onclick="openCampionato('${esc(c._key||c.n)}')">${lbl}</span></td>`;
+        } else {
+          h+=`<td style="background:${cb};text-align:center;color:var(--mu2);font-size:12px">—</td>`;
+        }
+      });
+      h+='</tr>';
+    });
+    h+='</tbody></table>';
+    document.getElementById('mo-matrice-body').innerHTML=h;
+
+  } else {
+    // TAB AGGREGATA: raggruppa per società (nome base senza numero/suffisso)
+    // Una riga per ogni nome "base" di società con il conteggio delle squadre
+    const socData={};
+    Object.values(sqData).filter(s=>s.cats.some(c=>c)).forEach(sq=>{
+      // Usa il nome come chiave società (le squadre della stessa società hanno lo stesso nome in SQ)
+      const sqObj=SQ[sq.nome]; const soc=sqObj?.societa||sq.nome;
+      if(!socData[soc]) socData[soc]={soc,prov:sq.prov,nSq:0,cats:[],totalG:0,totalV:0};
+      socData[soc].nSq++;
+      socData[soc].totalG+=sq.totalG; socData[soc].totalV+=sq.totalV;
+      sq.cats.forEach((cat,ci)=>{
+        if(cat&&!socData[soc].cats[ci]) socData[soc].cats[ci]=cat;
+      });
+    });
+    let socArr=Object.values(socData);
+    // Ordina per numero categorie
+    socArr.sort((a,b)=>b.cats.filter(c=>c).length-a.cats.filter(c=>c).length||a.soc.localeCompare(b.soc,'it'));
+    document.getElementById('mat-count').textContent=socArr.length+' società';
+
+    let h='<table style="border-collapse:collapse;white-space:nowrap;font-size:11px;min-width:max-content">';
+    // Header con colonna Sq. aggiuntiva
+    h+='<thead><tr style="background:var(--bl);color:#fff;position:sticky;top:0;z-index:3">';
+    h+='<th style="position:sticky;left:0;z-index:4;background:var(--bl);padding:4px 6px;text-align:center;width:32px;font-size:10px">#</th>';
+    h+='<th style="position:sticky;left:32px;z-index:4;background:var(--bl);padding:4px 8px;text-align:left;min-width:180px;font-size:11px">Società</th>';
+    h+='<th style="background:var(--bl);padding:4px 8px;text-align:center;width:36px;font-size:10px">Sq.</th>';
+    _CAMP_ORDER_MAT.forEach(c=>{
+      if(campFilt&&c.n!==campFilt) return;
+      if(genFilt==='M'&&c.f) return;
+      if(genFilt==='F'&&!c.f) return;
+      const bg=c.f?'#ffd6df':'var(--bl)', cl=c.f?'#8b0000':'#fff';
+      h+=`<th style="background:${bg};color:${cl};padding:3px 2px;text-align:center;width:50px;max-width:50px;font-size:9px"><div style="writing-mode:vertical-lr;transform:rotate(180deg);height:72px;display:flex;align-items:center;justify-content:center;font-weight:500">${escH(c.s)}</div></th>`;
+    });
+    h+='</tr></thead><tbody>';
+
+    socArr.forEach((soc,ri)=>{
+      const pvClr=PC[soc.prov]||'#888';
+      const rb=ri%2?'var(--tbl-even)':'var(--bg)';
+      h+=`<tr style="background:${rb}">`;
+      h+=`<td style="position:sticky;left:0;z-index:2;background:${rb};text-align:center;padding:3px 4px;color:var(--mu);font-size:10px;border-right:0.5px solid var(--tbl-bd)">${ri+1}</td>`;
+      h+=`<td style="position:sticky;left:32px;z-index:2;background:${rb};padding:3px 8px;border-right:1px solid var(--tbl-bd)"><span style="background:${pvClr};color:#fff;border-radius:3px;padding:0 4px;font-size:9px;font-weight:500;margin-right:4px">${escH(soc.prov)}</span><span style="font-size:11px;font-weight:500">${escH(soc.soc)}</span></td>`;
+      h+=`<td style="background:${rb};text-align:center;font-weight:500;font-size:12px;padding:3px 6px;border-right:0.5px solid var(--tbl-bd)">${soc.nSq}</td>`;
+      _CAMP_ORDER_MAT.forEach((c,ci)=>{
+        if(campFilt&&c.n!==campFilt) return;
+        if(genFilt==='M'&&c.f) return;
+        if(genFilt==='F'&&!c.f) return;
+        const cat=soc.cats[ci];
+        const cb=c.f?(ri%2?'#fff0f3':'#ffe8ed'):(ri%2?'var(--tbl-even)':'var(--bg)');
+        if(cat){
+          const lbl=cat.pos>0?cat.pos+'°':'✓';
+          h+=`<td style="background:${cb};text-align:center;padding:3px 2px"><span style="background:${cat.clr||'#185FA5'};color:#fff;border-radius:3px;padding:2px 5px;font-size:10px;font-weight:500">${lbl}</span></td>`;
+        } else {
+          h+=`<td style="background:${cb};text-align:center;color:var(--mu2);font-size:12px">—</td>`;
+        }
+      });
+      h+='</tr>';
+    });
+    h+='</tbody></table>';
+    document.getElementById('mo-matrice-body').innerHTML=h;
+  }
+}
+
 
 function openCampionato(camp){
   const cs=CS[camp];if(!cs)return;
