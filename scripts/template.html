@@ -16576,6 +16576,39 @@ function renderGrt(n){
   // Unisce gare passate E future per avere tutti i gironi del campionato
   var _gareFut=(D.gare_future||[]).filter(function(g){return g['Campionato']===camp;});
   var _garePas=(D.gare||[]).filter(function(g){return g['Campionato']===camp;});
+  // Aggiungi gare playoff da FIP_SARDA non presenti in D.gare
+  if(typeof FIP_SARDA!=='undefined'&&FIP_SARDA.campionati){
+    var _sardaCamp=FIP_SARDA.campionati.find(function(c){return c.nome===camp;});
+    if(_sardaCamp){
+      var _sardaGarePas=[];
+      (_sardaCamp.gironi||[]).forEach(function(gr){
+        var gi=gr.nome||'';
+        var isElim=/quart|semifinal|final|ottav|playoff|spareggi/i.test(gi);
+        if(!isElim) return;
+        var parts=gi.includes('–')?gi.split('–').map(function(s){return s.trim();}):[gi,gi];
+        var faseNome=parts[0];
+        (gr.risultati||[]).forEach(function(r){
+          var pts=(r.punteggio||'').split('-');
+          _sardaGarePas.push({'Campionato':camp,'Fase':faseNome,'Girone':gi,
+            'Squadra Casa':r.casa,'Squadra Ospite':r.ospite,
+            'Punti Casa':pts[0]||'','Punti Ospite':pts[1]||'',
+            'Risultato':r.punteggio||'','Data':r.data||'','Ora':r.ora||'',
+            'Numero Gara':String(r.gara||''),'_sarda':true});
+        });
+        (gr.prossime||[]).forEach(function(r){
+          _sardaGarePas.push({'Campionato':camp,'Fase':faseNome,'Girone':gi,
+            'Squadra Casa':r.casa,'Squadra Ospite':r.ospite,
+            'Punti Casa':'','Punti Ospite':'','Risultato':'',
+            'Data':r.data||'','Ora':r.ora||'','Numero Gara':'','_sarda':true});
+        });
+      });
+      var _esistenti=new Set(_garePas.map(function(g){return (g['Squadra Casa']||'')+'|'+(g['Squadra Ospite']||'')+'|'+(g['Data']||'');}));
+      _sardaGarePas.forEach(function(g){
+        var k=(g['Squadra Casa']||'')+'|'+(g['Squadra Ospite']||'')+'|'+(g['Data']||'');
+        if(!_esistenti.has(k)){_esistenti.add(k);_garePas.push(g);}
+      });
+    }
+  }
   // Deduplicazione per Numero Gara (le future non hanno ancora risultato)
   var _seenNG=new Set(_garePas.map(function(g){return g['Numero Gara']||'';}));
   var _gareFutUniq=_gareFut.filter(function(g){var ng=g['Numero Gara']||'';return!ng||!_seenNG.has(ng);});
