@@ -17090,7 +17090,13 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     tabHtml+=renderFaseSection(sortFase(ottaviGironi),'🎯','Tabellone Ottavi di Finale',Math.min(4,ottaviGironi.length)||1);
     // Separa quarti per fase (Nord ha Spareggi + Quarti separati)
     var quartiByFase={};
+    // Filtra gironi duplicati: se esiste "Fase – Girone" usa solo quello,
+    // ignora il "Girone" senza prefisso fase (viene da data_v5, duplicato)
+    var _quartiConPrefisso=sortFase(quartiGironi).filter(function(gi){return gi.includes('–');});
+    var _quartiNomiConPrefisso=new Set(_quartiConPrefisso.map(function(gi){return gi.split('–').slice(-1)[0].trim().toLowerCase();}));
     sortFase(quartiGironi).forEach(function(gi){
+      // Salta gi senza prefisso se esiste già la versione con prefisso
+      if(!gi.includes('–')&&_quartiNomiConPrefisso.has(gi.trim().toLowerCase())) return;
       var prefix=gi.includes('–')?gi.split('–')[0].trim():gi;
       if(!quartiByFase[prefix])quartiByFase[prefix]=[];
       quartiByFase[prefix].push(gi);
@@ -17104,7 +17110,10 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     });
     // Separa semifinali per zona (Nord/Sud) ed evita duplicati
     var semifByFase={};
+    var _semifConPrefisso=sortFase(semifGironi).filter(function(gi){return gi.includes('–');});
+    var _semifNomiConPrefisso=new Set(_semifConPrefisso.map(function(gi){return gi.split('–').slice(-1)[0].trim().toLowerCase();}));
     sortFase(semifGironi).forEach(function(gi){
+      if(!gi.includes('–')&&_semifNomiConPrefisso.has(gi.trim().toLowerCase())) return;
       var prefix=gi.includes('–')?gi.split('–')[0].trim():gi;
       if(!semifByFase[prefix])semifByFase[prefix]=[];
       semifByFase[prefix].push(gi);
@@ -17119,7 +17128,10 @@ function grtClassifiche(gironi,garecamp,camp,clr){
     });
     // Finale: separa Nord e Sud
     var finByFase={};
+    var _finConPrefisso=sortFase(finalGironi).filter(function(gi){return gi.includes('–');});
+    var _finNomiConPrefisso=new Set(_finConPrefisso.map(function(gi){return gi.split('–').slice(-1)[0].trim().toLowerCase();}));
     sortFase(finalGironi).forEach(function(gi){
+      if(!gi.includes('–')&&_finNomiConPrefisso.has(gi.trim().toLowerCase())) return;
       var prefix=gi.includes('–')?gi.split('–')[0].trim():gi;
       if(!finByFase[prefix])finByFase[prefix]=[];
       finByFase[prefix].push(gi);
