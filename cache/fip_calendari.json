@@ -3753,15 +3753,15 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Aquilotti Small": {
     "campionato": "Aquilotti Small",
     "n_gare": 212,
-    "n_giocate": 161,
-    "n_programmate": 51,
+    "n_giocate": 162,
+    "n_programmate": 50,
     "data_inizio": "2025-12-07",
-    "data_fine": "2026-06-30",
+    "data_fine": "2026-06-15",
     "n_fasi": 1,
     "fasi_nomi": [
       "Qualificazione"
@@ -7113,7 +7113,7 @@
                 "n": 15,
                 "gare": [
                   {
-                    "Data": "2026-06-30",
+                    "Data": "2026-06-15",
                     "Ora": "12:00",
                     "Numero Gara": "003494",
                     "Campionato": "Aquilotti Small",
@@ -7121,9 +7121,9 @@
                     "Fase": "Qualificazione",
                     "Squadra Casa": "SCUOLA BASKET CARBONIA",
                     "Squadra Ospite": "SCUOLA BASKET CARBONIA A",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "0",
+                    "Punti Ospite": "0",
+                    "Risultato": "0-0",
                     "Stato Gara": "",
                     "Campo": "Cupola Geodetica, Via Deffenu 09013 CARBONIA ( SU)",
                     "Arbitro 1": "",
@@ -7139,12 +7139,24 @@
                     "_pt_cum_osp": 6
                   }
                 ],
-                "completa": false,
-                "data_label": "30 giu"
+                "completa": true,
+                "data_label": "15 giu"
               }
             ],
             "n_giornate": 15,
             "classifica": [
+              {
+                "sq": "SCUOLA BASKET CARBONIA A",
+                "g": 4,
+                "v": 3,
+                "s": 0,
+                "par": 1,
+                "pf": 43,
+                "ps": 29,
+                "punti": 7,
+                "diff": 14,
+                "pos": 1
+              },
               {
                 "sq": "BASKET IGLESIAS",
                 "g": 5,
@@ -7155,18 +7167,6 @@
                 "ps": 52,
                 "punti": 6,
                 "diff": 16,
-                "pos": 1
-              },
-              {
-                "sq": "SCUOLA BASKET CARBONIA A",
-                "g": 3,
-                "v": 3,
-                "s": 0,
-                "par": 0,
-                "pf": 43,
-                "ps": 29,
-                "punti": 6,
-                "diff": 14,
                 "pos": 2
               },
               {
@@ -7183,13 +7183,13 @@
               },
               {
                 "sq": "SCUOLA BASKET CARBONIA",
-                "g": 4,
+                "g": 5,
                 "v": 1,
                 "s": 3,
-                "par": 0,
+                "par": 1,
                 "pf": 74,
                 "ps": 84,
-                "punti": 2,
+                "punti": 3,
                 "diff": -10,
                 "pos": 4
               },
@@ -11234,15 +11234,15 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Divisione regionale 1": {
     "campionato": "Divisione regionale 1",
     "n_gare": 223,
-    "n_giocate": 212,
-    "n_programmate": 11,
+    "n_giocate": 214,
+    "n_programmate": 9,
     "data_inizio": "2025-10-04",
-    "data_fine": "2026-06-20",
+    "data_fine": "2026-06-15",
     "n_fasi": 5,
     "fasi_nomi": [
       "Qualificazione",
@@ -17137,9 +17137,9 @@
                     "Fase": "Fase Playout",
                     "Squadra Casa": "G.S.DIL. BASKET FERRINI",
                     "Squadra Ospite": "SANTA CROCE OLBIA",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "126",
+                    "Punti Ospite": "82",
+                    "Risultato": "126-82",
                     "Stato Gara": "",
                     "Campo": "Palestra S. Elena, Via Pessina 29 09045 QUARTU SANT'ELENA ( CA)",
                     "Arbitro 1": "SEU CLAUDIA di QUARTUCCIU (CA)",
@@ -17155,14 +17155,14 @@
                     "_pt_cum_osp": 10
                   }
                 ],
-                "completa": false,
+                "completa": true,
                 "data_label": "14 giu"
               },
               {
                 "n": 12,
                 "gare": [
                   {
-                    "Data": "2026-06-20",
+                    "Data": "2026-06-15",
                     "Ora": "18:30",
                     "Numero Gara": "005312",
                     "Campionato": "Divisione regionale 1",
@@ -17170,12 +17170,12 @@
                     "Fase": "Fase Playout",
                     "Squadra Casa": "SANTA CROCE OLBIA",
                     "Squadra Ospite": "BASKET ASSEMINI",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "20",
+                    "Punti Ospite": "0",
+                    "Risultato": "20-0",
                     "Stato Gara": "",
                     "Campo": "PALASPORT 'R.DA TOME', Via Frosinone 07026 OLBIA ( SS)",
-                    "Arbitro 1": "FORTUNATO DIEGO di OLBIA (SS)",
+                    "Arbitro 1": "",
                     "Arbitro 2": "",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -17183,13 +17183,13 @@
                     "24 Secondi": "",
                     "Addetto Referto": "",
                     "Osservatore": "",
-                    "Provvedimenti": "",
+                    "Provvedimenti": "soc. A.DIL. BASKET ASSEMINI:Il Giudice sportivo omologa la gara con il risultato di 0-20 a sfavore della societа Basket Assemini. Ammenda di Euro 230,00 per aver rinunciato alla disputa della gara con comunicazione effettuata almeno 48 ore prima [art. 49/1a; art. 55/1 RG]",
                     "_pt_cum_casa": 10,
                     "_pt_cum_osp": 0
                   }
                 ],
-                "completa": false,
-                "data_label": "20 giu"
+                "completa": true,
+                "data_label": "15 giu"
               }
             ],
             "n_giornate": 12,
@@ -17265,7 +17265,7 @@
                 "sq_a": "BASKET ASSEMINI",
                 "sq_b": "SANTA CROCE OLBIA",
                 "vA": 0,
-                "vB": 1,
+                "vB": 2,
                 "gare": [
                   {
                     "d": "2026-05-17",
@@ -17275,10 +17275,10 @@
                     "num": "005301"
                   },
                   {
-                    "d": "2026-06-20",
-                    "pc": "",
-                    "po": "",
-                    "ris": "",
+                    "d": "2026-06-15",
+                    "pc": "20",
+                    "po": "0",
+                    "ris": "20-0",
                     "num": "005312"
                   }
                 ]
@@ -17396,7 +17396,7 @@
               {
                 "sq_a": "G.S.DIL. BASKET FERRINI",
                 "sq_b": "SANTA CROCE OLBIA",
-                "vA": 0,
+                "vA": 1,
                 "vB": 1,
                 "gare": [
                   {
@@ -17408,9 +17408,9 @@
                   },
                   {
                     "d": "2026-06-14",
-                    "pc": "",
-                    "po": "",
-                    "ris": "",
+                    "pc": "126",
+                    "po": "82",
+                    "ris": "126-82",
                     "num": "005309"
                   }
                 ]
@@ -18264,7 +18264,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Divisione regionale 2": {
     "campionato": "Divisione regionale 2",
@@ -32239,13 +32239,13 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Esordienti Femminile": {
     "campionato": "Esordienti Femminile",
     "n_gare": 81,
-    "n_giocate": 63,
-    "n_programmate": 18,
+    "n_giocate": 64,
+    "n_programmate": 17,
     "data_inizio": "2025-11-28",
     "data_fine": "2026-06-30",
     "n_fasi": 1,
@@ -33149,7 +33149,7 @@
                 "n": 18,
                 "gare": [
                   {
-                    "Data": "2026-06-30",
+                    "Data": "2026-06-15",
                     "Ora": "10:00",
                     "Numero Gara": "002826",
                     "Campionato": "Esordienti Femminile",
@@ -33157,9 +33157,9 @@
                     "Fase": "Qualificazione",
                     "Squadra Casa": "ASTRO SSDRL",
                     "Squadra Ospite": "BASKET ANTONIANUM",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
+                    "Punti Casa": "0",
+                    "Punti Ospite": "0",
+                    "Risultato": "0-0",
                     "Stato Gara": "",
                     "Campo": "PALESTRA C.E.P., Via Talete 2 09131 CAGLIARI ( CA)",
                     "Arbitro 1": "",
@@ -33175,8 +33175,8 @@
                     "_pt_cum_osp": 6
                   }
                 ],
-                "completa": false,
-                "data_label": "30 giu"
+                "completa": true,
+                "data_label": "15 giu"
               }
             ],
             "n_giornate": 18,
@@ -33207,25 +33207,25 @@
               },
               {
                 "sq": "ASTRO SSDRL",
-                "g": 8,
+                "g": 9,
                 "v": 4,
                 "s": 4,
-                "par": 0,
+                "par": 1,
                 "pf": 107,
                 "ps": 102,
-                "punti": 8,
+                "punti": 9,
                 "diff": 5,
                 "pos": 3
               },
               {
                 "sq": "BASKET ANTONIANUM",
-                "g": 8,
+                "g": 9,
                 "v": 3,
                 "s": 5,
-                "par": 0,
+                "par": 1,
                 "pf": 56,
                 "ps": 72,
-                "punti": 6,
+                "punti": 7,
                 "diff": -16,
                 "pos": 4
               },
@@ -35019,7 +35019,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Gazzelle Big": {
     "campionato": "Gazzelle Big",
@@ -36192,7 +36192,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Gazzelle Small": {
     "campionato": "Gazzelle Small",
@@ -37588,7 +37588,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Libellule Big": {
     "campionato": "Libellule Big",
@@ -38629,7 +38629,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Scoiattoli Big": {
     "campionato": "Scoiattoli Big",
@@ -39539,7 +39539,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Scoiattoli Small": {
     "campionato": "Scoiattoli Small",
@@ -44084,7 +44084,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Serie B Femminile": {
     "campionato": "Serie B Femminile",
@@ -47422,7 +47422,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Serie C": {
     "campionato": "Serie C",
@@ -52086,7 +52086,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Trofeo Esordienti": {
     "campionato": "Trofeo Esordienti",
@@ -59882,7 +59882,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 13 Femminile Regionale": {
     "campionato": "Under 13 Femminile Regionale",
@@ -65822,7 +65822,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 13 Maschile Regionale": {
     "campionato": "Under 13 Maschile Regionale",
@@ -79428,7 +79428,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 14 Femminile Regionale": {
     "campionato": "Under 14 Femminile Regionale",
@@ -85629,7 +85629,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 14 Maschile Regionale": {
     "campionato": "Under 14 Maschile Regionale",
@@ -98950,7 +98950,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 15 Femminile Regionale": {
     "campionato": "Under 15 Femminile Regionale",
@@ -102285,7 +102285,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 15 Maschile Eccellenza": {
     "campionato": "Under 15 Maschile Eccellenza",
@@ -104966,7 +104966,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 15 Maschile Regionale": {
     "campionato": "Under 15 Maschile Regionale",
@@ -113354,7 +113354,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 17 Femminile Regionale": {
     "campionato": "Under 17 Femminile Regionale",
@@ -118710,7 +118710,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 17 Maschile Eccellenza": {
     "campionato": "Under 17 Maschile Eccellenza",
@@ -120970,7 +120970,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 17 Maschile Gold": {
     "campionato": "Under 17 Maschile Gold",
@@ -129831,7 +129831,7 @@
                     "Risultato": "",
                     "Stato Gara": "",
                     "Campo": "PALAZZETTO COMUNALE, Via Lamarmora 07024 LA MADDALENA ( SS)",
-                    "Arbitro 1": "",
+                    "Arbitro 1": "BORTOLATO FILIPPO di SASSARI (SS)",
                     "Arbitro 2": "",
                     "Arbitro 3": "",
                     "Segnapunti": "",
@@ -132074,7 +132074,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 17 Maschile Regionale": {
     "campionato": "Under 17 Maschile Regionale",
@@ -137570,7 +137570,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 19 Femminile Regionale": {
     "campionato": "Under 19 Femminile Regionale",
@@ -140556,7 +140556,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   },
   "Under 19 Maschile Gold": {
     "campionato": "Under 19 Maschile Gold",
@@ -148205,6 +148205,6 @@
         ]
       }
     ],
-    "last_update": "2026-06-16"
+    "last_update": "2026-06-17"
   }
 }
