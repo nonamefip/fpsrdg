@@ -3753,7 +3753,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Aquilotti Small": {
     "campionato": "Aquilotti Small",
@@ -11234,7 +11234,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Divisione regionale 1": {
     "campionato": "Divisione regionale 1",
@@ -18264,7 +18264,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Divisione regionale 2": {
     "campionato": "Divisione regionale 2",
@@ -32239,7 +32239,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Esordienti Femminile": {
     "campionato": "Esordienti Femminile",
@@ -35019,7 +35019,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Gazzelle Big": {
     "campionato": "Gazzelle Big",
@@ -36192,7 +36192,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Gazzelle Small": {
     "campionato": "Gazzelle Small",
@@ -37588,7 +37588,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Libellule Big": {
     "campionato": "Libellule Big",
@@ -38629,7 +38629,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Scoiattoli Big": {
     "campionato": "Scoiattoli Big",
@@ -39539,15 +39539,15 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Scoiattoli Small": {
     "campionato": "Scoiattoli Small",
     "n_gare": 132,
-    "n_giocate": 66,
-    "n_programmate": 66,
+    "n_giocate": 67,
+    "n_programmate": 65,
     "data_inizio": "2026-01-25",
-    "data_fine": "2026-06-07",
+    "data_fine": "2026-06-12",
     "n_fasi": 1,
     "fasi_nomi": [
       "Qualificazione"
@@ -42658,36 +42658,10 @@
                     "Provvedimenti": "",
                     "_pt_cum_casa": 2,
                     "_pt_cum_osp": 2
-                  },
-                  {
-                    "Data": "2026-03-01",
-                    "Ora": "11:00",
-                    "Numero Gara": "004660",
-                    "Campionato": "Scoiattoli Small",
-                    "Girone": "Girone E Sud non comp.",
-                    "Fase": "Qualificazione",
-                    "Squadra Casa": "ASTRO SSDRL B",
-                    "Squadra Ospite": "ASTRO SSDRL A",
-                    "Punti Casa": "",
-                    "Punti Ospite": "",
-                    "Risultato": "",
-                    "Stato Gara": "",
-                    "Campo": "PALESTRA C.E.P., Via Talete 2 09131 CAGLIARI ( CA)",
-                    "Arbitro 1": "",
-                    "Arbitro 2": "",
-                    "Arbitro 3": "",
-                    "Segnapunti": "",
-                    "Cronometrista": "",
-                    "24 Secondi": "",
-                    "Addetto Referto": "",
-                    "Osservatore": "",
-                    "Provvedimenti": "",
-                    "_pt_cum_casa": 0,
-                    "_pt_cum_osp": 0
                   }
                 ],
-                "completa": false,
-                "data_label": "26 feb–1 mar"
+                "completa": true,
+                "data_label": "26 feb"
               },
               {
                 "n": 7,
@@ -43306,9 +43280,42 @@
                 ],
                 "completa": false,
                 "data_label": "7 giu"
+              },
+              {
+                "n": 21,
+                "gare": [
+                  {
+                    "Data": "2026-06-12",
+                    "Ora": "17:00",
+                    "Numero Gara": "004660",
+                    "Campionato": "Scoiattoli Small",
+                    "Girone": "Girone E Sud non comp.",
+                    "Fase": "Qualificazione",
+                    "Squadra Casa": "ASTRO SSDRL B",
+                    "Squadra Ospite": "ASTRO SSDRL A",
+                    "Punti Casa": "13",
+                    "Punti Ospite": "11",
+                    "Risultato": "13-11",
+                    "Stato Gara": "",
+                    "Campo": "PALESTRA C.E.P., Via Talete 2 09131 CAGLIARI ( CA)",
+                    "Arbitro 1": "",
+                    "Arbitro 2": "",
+                    "Arbitro 3": "",
+                    "Segnapunti": "",
+                    "Cronometrista": "",
+                    "24 Secondi": "",
+                    "Addetto Referto": "",
+                    "Osservatore": "",
+                    "Provvedimenti": "",
+                    "_pt_cum_casa": 0,
+                    "_pt_cum_osp": 0
+                  }
+                ],
+                "completa": true,
+                "data_label": "12 giu"
               }
             ],
-            "n_giornate": 20,
+            "n_giornate": 21,
             "classifica": [
               {
                 "sq": "ASD MISTRAL",
@@ -43335,19 +43342,19 @@
                 "pos": 2
               },
               {
-                "sq": "ASTRO SSDRL",
-                "g": 0,
-                "v": 0,
+                "sq": "ASTRO SSDRL B",
+                "g": 1,
+                "v": 1,
                 "s": 0,
                 "par": 0,
-                "pf": 0,
-                "ps": 0,
-                "punti": 0,
-                "diff": 0,
+                "pf": 13,
+                "ps": 11,
+                "punti": 2,
+                "diff": 2,
                 "pos": 3
               },
               {
-                "sq": "ASTRO SSDRL B",
+                "sq": "ASTRO SSDRL",
                 "g": 0,
                 "v": 0,
                 "s": 0,
@@ -43360,14 +43367,14 @@
               },
               {
                 "sq": "ASTRO SSDRL A",
-                "g": 1,
+                "g": 2,
                 "v": 0,
-                "s": 1,
+                "s": 2,
                 "par": 0,
-                "pf": 10,
-                "ps": 14,
+                "pf": 21,
+                "ps": 27,
                 "punti": 0,
-                "diff": -4,
+                "diff": -6,
                 "pos": 5
               },
               {
@@ -44084,7 +44091,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Serie B Femminile": {
     "campionato": "Serie B Femminile",
@@ -47422,7 +47429,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Serie C": {
     "campionato": "Serie C",
@@ -52086,7 +52093,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Trofeo Esordienti": {
     "campionato": "Trofeo Esordienti",
@@ -59882,7 +59889,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 13 Femminile Regionale": {
     "campionato": "Under 13 Femminile Regionale",
@@ -65822,7 +65829,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 13 Maschile Regionale": {
     "campionato": "Under 13 Maschile Regionale",
@@ -74620,9 +74627,9 @@
                     "Fase": "Seconda Fase",
                     "Squadra Casa": "PLOAGHE KINGS",
                     "Squadra Ospite": "ROOSTERS AMPURIAS ROCKETS",
-                    "Punti Casa": "38",
-                    "Punti Ospite": "30",
-                    "Risultato": "38-30",
+                    "Punti Casa": "60",
+                    "Punti Ospite": "47",
+                    "Risultato": "60-47",
                     "Stato Gara": "",
                     "Campo": "Palazzetto dello Sport, Via Sardegna 2 07017 PLOAGHE ( SS)",
                     "Arbitro 1": "DETTORI ANDREA di ITTIRI (SS)",
@@ -74733,10 +74740,10 @@
                 "v": 3,
                 "s": 3,
                 "par": 1,
-                "pf": 311,
-                "ps": 327,
+                "pf": 333,
+                "ps": 344,
                 "punti": 7,
-                "diff": -16,
+                "diff": -11,
                 "pos": 3
               },
               {
@@ -74757,10 +74764,10 @@
                 "v": 3,
                 "s": 4,
                 "par": 0,
-                "pf": 256,
-                "ps": 384,
+                "pf": 273,
+                "ps": 406,
                 "punti": 6,
-                "diff": -128,
+                "diff": -133,
                 "pos": 5
               },
               {
@@ -79421,7 +79428,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 14 Femminile Regionale": {
     "campionato": "Under 14 Femminile Regionale",
@@ -85622,7 +85629,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 14 Maschile Regionale": {
     "campionato": "Under 14 Maschile Regionale",
@@ -98936,7 +98943,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 15 Femminile Regionale": {
     "campionato": "Under 15 Femminile Regionale",
@@ -102271,7 +102278,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 15 Maschile Eccellenza": {
     "campionato": "Under 15 Maschile Eccellenza",
@@ -104952,7 +104959,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 15 Maschile Regionale": {
     "campionato": "Under 15 Maschile Regionale",
@@ -113340,7 +113347,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 17 Femminile Regionale": {
     "campionato": "Under 17 Femminile Regionale",
@@ -118696,7 +118703,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 17 Maschile Eccellenza": {
     "campionato": "Under 17 Maschile Eccellenza",
@@ -120956,7 +120963,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 17 Maschile Gold": {
     "campionato": "Under 17 Maschile Gold",
@@ -132060,7 +132067,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 17 Maschile Regionale": {
     "campionato": "Under 17 Maschile Regionale",
@@ -137556,7 +137563,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 19 Femminile Regionale": {
     "campionato": "Under 19 Femminile Regionale",
@@ -140542,7 +140549,7 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   },
   "Under 19 Maschile Gold": {
     "campionato": "Under 19 Maschile Gold",
@@ -148191,6 +148198,6 @@
         ]
       }
     ],
-    "last_update": "2026-06-18"
+    "last_update": "2026-06-19"
   }
 }
