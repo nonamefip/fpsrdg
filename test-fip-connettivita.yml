@@ -1,0 +1,25 @@
+name: Test connettività fip.it
+
+# Si avvia SOLO manualmente (bottone "Run workflow" su GitHub), non in automatico.
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Scarica il codice del repository
+        uses: actions/checkout@v4
+
+      - name: Prepara Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installa le librerie necessarie
+        run: pip install requests beautifulsoup4
+
+      - name: Esegui il test di connettività verso fip.it
+        run: python test_connettivita_github.py
